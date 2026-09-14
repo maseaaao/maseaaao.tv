@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - feat/add-censored-sound
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
