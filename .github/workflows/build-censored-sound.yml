@@ -25,7 +25,16 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p src/sounds
-          cat .tmp/censored.part00 .tmp/censored.part01 .tmp/censored.part02 .tmp/censored.part03 | base64 --decode > src/sounds/censored.mp3
+          cat \
+            .tmp/censored.000 \
+            .tmp/censored.001 \
+            .tmp/censored.002 \
+            .tmp/censored.003 \
+            .tmp/censored.part02 \
+            .tmp/censored.006 \
+            .tmp/censored.007a \
+            .tmp/censored.007b \
+            | base64 --decode > src/sounds/censored.mp3
           echo "08f192b89c85c9334e0af6e7f2c86e08b218ad5f0849d8a665b926b098d5075a  src/sounds/censored.mp3" | sha256sum --check
           rm -rf .tmp
           rm -f .github/workflows/build-censored-sound.yml
