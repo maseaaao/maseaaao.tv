@@ -20,22 +20,49 @@ jobs:
         with:
           ref: feat/add-censored-sound
 
-      - name: Assemble asset
+      - name: Assemble and verify asset
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p src/sounds
-          cat \
-            .tmp/censored.000 \
-            .tmp/censored.001 \
-            .tmp/censored.002 \
-            .tmp/censored.003 \
-            .tmp/censored.part02 \
-            .tmp/censored.006 \
-            .tmp/censored.007a \
-            .tmp/censored.007b \
-            | base64 --decode > src/sounds/censored.mp3
-          echo "08f192b89c85c9334e0af6e7f2c86e08b218ad5f0849d8a665b926b098d5075a  src/sounds/censored.mp3" | sha256sum --check
+          python - <<'PY'
+          from pathlib import Path
+          import base64
+          import hashlib
+
+          parts = [
+              ".tmp/censored.000",
+              ".tmp/censored.001",
+              ".tmp/censored.002",
+              ".tmp/censored.003",
+              ".tmp/censored.part02",
+              ".tmp/censored.006",
+              ".tmp/censored.007a",
+              ".tmp/censored.007b",
+          ]
+          chunks = []
+          for part in parts:
+              chunk = Path(part).read_text().strip()
+              print(f"{part}: {len(chunk)} chars; {chunk[:8]}...{chunk[-8:]}")
+              chunks.append(chunk)
+
+          encoded = "".join(chunks)
+          print(f"Total: {len(encoded)} base64 chars")
+          invalid = [(index, char) for index, char in enumerate(encoded) if char not in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="]
+          if invalid:
+              raise RuntimeError(f"Invalid base64 characters: {invalid[:10]}")
+
+          data = base64.b64decode(encoded, validate=True)
+          digest = hashlib.sha256(data).hexdigest()
+          expected = "08f192b89c85c9334e0af6e7f2c86e08b218ad5f0849d8a665b926b098d5075a"
+          print(f"Decoded: {len(data)} bytes; sha256={digest}")
+          if digest != expected:
+              raise RuntimeError(f"Checksum mismatch: expected {expected}, got {digest}")
+
+          output = Path("src/sounds/censored.mp3")
+          output.parent.mkdir(parents=True, exist_ok=True)
+          output.write_bytes(data)
+          PY
+
           rm -rf .tmp
           rm -f .github/workflows/build-censored-sound.yml
           rmdir .github/workflows 2>/dev/null || true
