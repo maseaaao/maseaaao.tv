@@ -37,24 +37,15 @@ jobs:
               ".tmp/censored.part02",
               ".tmp/censored.006",
               ".tmp/censored.007a",
-              ".tmp/censored.007b",
+              ".tmp/censored.007b0",
+              ".tmp/censored.007b1x",
+              ".tmp/censored.007b2x",
+              ".tmp/censored.007b3",
           ]
-          chunks = []
-          for part in parts:
-              chunk = Path(part).read_text().strip()
-              print(f"{part}: {len(chunk)} chars; {chunk[:8]}...{chunk[-8:]}")
-              chunks.append(chunk)
-
-          encoded = "".join(chunks)
-          print(f"Total: {len(encoded)} base64 chars")
-          invalid = [(index, char) for index, char in enumerate(encoded) if char not in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="]
-          if invalid:
-              raise RuntimeError(f"Invalid base64 characters: {invalid[:10]}")
-
+          encoded = "".join(Path(part).read_text().strip() for part in parts)
           data = base64.b64decode(encoded, validate=True)
           digest = hashlib.sha256(data).hexdigest()
           expected = "08f192b89c85c9334e0af6e7f2c86e08b218ad5f0849d8a665b926b098d5075a"
-          print(f"Decoded: {len(data)} bytes; sha256={digest}")
           if digest != expected:
               raise RuntimeError(f"Checksum mismatch: expected {expected}, got {digest}")
 
