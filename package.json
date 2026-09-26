@@ -2,16 +2,17 @@
   "name": "maseaaao-tv",
   "private": true,
   "scripts": {
-    "render:youtube-banner": "node scripts/render-scenes.mjs --scenes-dir src/banners --scene youtube-schedule.html --output-dir src/banners/rendered --width 2048 --height 1152 --format jpeg",
-    "render:twitch-banner": "node scripts/render-scenes.mjs --scenes-dir src/banners --scene twitch-schedule.html --output-dir src/banners/rendered --width 2224 --height 570 --format jpeg",
-    "render:logo": "node scripts/render-scenes.mjs --scenes-dir src/logo --output-dir src/logo/rendered --width 1920 --height 540 --format webp --transparent",
-    "render:scenes": "node scripts/render-scenes.mjs",
+    "render:youtube-banner": "node scripts/render-scenes.mjs --scenes-dir src/banners --scene youtube-schedule.html --output-dir src/banners/rendered --width 2560 --height 1440 --format jpeg",
+    "render:twitch-banner": "node scripts/render-scenes.mjs --scenes-dir src/banners --scene twitch-schedule.html --output-dir src/banners/rendered --width 1200 --height 480 --format jpeg",
+    "render:logo": "node scripts/refresh-logo-qr.mjs",
+    "render:scenes": "node scripts/render-static-scenes.mjs",
     "render:twitch-description": "node scripts/render-scenes.mjs --scenes-dir src/twitch-description --output-dir src/twitch-description/rendered --width 320 --height 64 --format jpeg",
     "brand:assets": "node scripts/generate-brand-assets.mjs",
     "brand:subscribe": "node scripts/render-subscribe-card.mjs",
     "optimize:images": "node scripts/optimize-images.mjs",
     "full": "npm-run-all --parallel render:*",
-    "postfull": "npm run optimize:images"
+    "postfull": "npm run optimize:images",
+    "build:noir": "node scripts/build-noir-scenes.mjs"
   },
   "devDependencies": {
     "jsqr": "^1.4.0",
@@ -19,5 +20,8 @@
     "playwright-core": "^1.58.2",
     "qrcode": "^1.5.4",
     "sharp": "^0.34.5"
+  },
+  "dependencies": {
+    "opentype.js": "^1.3.4"
   }
 }

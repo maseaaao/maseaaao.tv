@@ -125,9 +125,14 @@ export async function generateQrWithLogo(options = {}) {
     color: { dark: color.dark, light: color.light },
   });
 
-  const buffer = layers.length
+  let buffer = layers.length
     ? await sharp(qr).composite(layers).png().toBuffer()
     : qr;
+
+  // Slightly rounded plate corners; outside the plate stays transparent.
+  const cornerRadius = Math.round(symbolSide * 0.07);
+  const plateMask = svg(symbolSide, symbolSide, `<rect width="${symbolSide}" height="${symbolSide}" rx="${cornerRadius}" fill="#fff"/>`);
+  buffer = await sharp(buffer).composite([{ input: plateMask, blend: "dest-in" }]).png().toBuffer();
 
   const decoded = await decodeQr(buffer);
   if (decoded !== text) {

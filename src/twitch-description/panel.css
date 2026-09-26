@@ -4,13 +4,6 @@
   color-scheme: dark;
   --panel-width: 320px;
   --panel-height: 64px;
-  --panel: rgba(28, 19, 44, 0.98);
-  --panel-strong: rgba(41, 28, 63, 0.99);
-  --border: rgba(223, 196, 255, 0.3);
-  --text: var(--brand-text);
-  --accent: var(--brand-lavender);
-  --accent-soft: rgba(223, 196, 255, 0.18);
-  --accent-glow: rgba(223, 196, 255, 0.28);
 }
 
 * {
@@ -28,45 +21,9 @@ body {
   overflow: hidden;
   display: grid;
   place-items: center;
-  font-family: "Geologica", system-ui, sans-serif;
+  font-family: var(--font-body);
   color: var(--text);
-  background: var(--brand-ink);
-}
-
-body[data-panel="about"] {
-  --accent: var(--brand-lavender);
-  --accent-soft: rgba(223, 196, 255, 0.2);
-  --accent-glow: rgba(223, 196, 255, 0.28);
-}
-
-body[data-panel="rules"] {
-  --accent: var(--brand-pink);
-  --accent-soft: rgba(255, 196, 222, 0.18);
-  --accent-glow: rgba(255, 196, 222, 0.25);
-}
-
-body[data-panel="donate"] {
-  --accent: var(--brand-yellow);
-  --accent-soft: rgba(255, 224, 138, 0.18);
-  --accent-glow: rgba(255, 224, 138, 0.24);
-}
-
-body[data-panel="devices"] {
-  --accent: var(--brand-mint);
-  --accent-soft: rgba(125, 227, 214, 0.18);
-  --accent-glow: rgba(125, 227, 214, 0.24);
-}
-
-body[data-panel="specs"] {
-  --accent: var(--brand-lavender);
-  --accent-soft: rgba(223, 196, 255, 0.18);
-  --accent-glow: rgba(223, 196, 255, 0.23);
-}
-
-body[data-panel="settings"] {
-  --accent: var(--brand-mint);
-  --accent-soft: rgba(125, 227, 214, 0.18);
-  --accent-glow: rgba(125, 227, 214, 0.24);
+  background: var(--ink);
 }
 
 .twitch-panel {
@@ -75,48 +32,31 @@ body[data-panel="settings"] {
   height: var(--panel-height);
   overflow: hidden;
   display: grid;
-  grid-template-columns: 38px minmax(0, 1fr);
+  grid-template-columns: 40px minmax(0, 1fr);
   align-items: center;
   gap: 12px;
   padding: 10px 16px 10px 12px;
-  border: 1px solid var(--border);
-  background:
-    linear-gradient(140deg, var(--accent-soft), transparent 44%),
-    linear-gradient(155deg, var(--panel-strong), var(--panel));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 14px 32px rgba(0, 0, 0, 0.26);
+  border: 0;
+  border-radius: 10px;
+  background: rgba(16, 16, 22, 0.92);
   isolation: isolate;
 }
 
-.twitch-panel::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(circle at 100% 0, var(--accent-soft), transparent 42%);
-  opacity: 0.9;
-}
-
 .twitch-panel__mark,
-.twitch-panel__title,
-.twitch-panel__line {
-  position: relative;
-  z-index: 1;
-}
+.twitch-panel__title { position: relative; z-index: 1; }
 
 .twitch-panel__mark {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
   position: relative;
   overflow: visible;
-  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 0;
+  border-radius: 8px;
   color: var(--accent);
   font-size: 0;
   line-height: 0;
-  box-shadow: none;
 }
 
 .twitch-panel__mark::before,
@@ -194,9 +134,9 @@ body[data-panel="settings"] {
   width: 18px;
   height: 18px;
   background:
-    radial-gradient(circle at 28% 17%, var(--panel-strong) 0 2px, currentColor 2.5px 4px, transparent 4.5px),
-    radial-gradient(circle at 72% 50%, var(--panel-strong) 0 2px, currentColor 2.5px 4px, transparent 4.5px),
-    radial-gradient(circle at 36% 83%, var(--panel-strong) 0 2px, currentColor 2.5px 4px, transparent 4.5px);
+    radial-gradient(circle at 28% 17%, #101016 0 2px, currentColor 2.5px 4px, transparent 4.5px),
+    radial-gradient(circle at 72% 50%, #101016 0 2px, currentColor 2.5px 4px, transparent 4.5px),
+    radial-gradient(circle at 36% 83%, #101016 0 2px, currentColor 2.5px 4px, transparent 4.5px);
 }
 
 .twitch-panel__copy {
@@ -209,29 +149,15 @@ body[data-panel="settings"] {
 .twitch-panel__title {
   margin: 0;
   overflow: hidden;
-  color: var(--brand-text);
-  font-family: "Geologica", system-ui, sans-serif;
-  font-size: 21px;
-  font-weight: 820;
-  line-height: 0.92;
-  letter-spacing: -0.025em;
-  text-transform: uppercase;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: none;
   white-space: nowrap;
   text-overflow: ellipsis;
-  text-shadow: none;
 }
 
-body[data-panel="specs"] .twitch-panel__title {
-  font-family: "Geologica", system-ui, sans-serif;
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.twitch-panel__line {
-  width: 110px;
-  height: 2px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--accent), rgba(255, 255, 255, 0));
-  box-shadow: none;
-}
+.twitch-panel__line { display: none; }

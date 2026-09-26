@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "files": [
+    {
+      "scene": "start",
+      "format": "horizontal",
+      "file": "start-horizontal.html",
+      "width": 2560,
+      "height": 1440
+    },
+    {
+      "scene": "start",
+      "format": "vertical",
+      "file": "start-vertical.html",
+      "width": 1080,
+      "height": 1920
+    },
+    {
+      "scene": "pause",
+      "format": "horizontal",
+      "file": "pause-horizontal.html",
+      "width": 2560,
+      "height": 1440
+    },
+    {
+      "scene": "pause",
+      "format": "vertical",
+      "file": "pause-vertical.html",
+      "width": 1080,
+      "height": 1920
+    },
+    {
+      "scene": "end",
+      "format": "horizontal",
+      "file": "end-horizontal.html",
+      "width": 2560,
+      "height": 1440
+    },
+    {
+      "scene": "end",
+      "format": "vertical",
+      "file": "end-vertical.html",
+      "width": 1080,
+      "height": 1920
+    }
+  ],
+  "horizontal": {
+    "canvas": [
+      2560,
+      1440
+    ],
+    "chat": {
+      "x": 1740,
+      "y": 390,
+      "width": 640,
+      "height": 560
+    },
+    "event": {
+      "x": 1740,
+      "y": 1010,
+      "width": 640,
+      "height": 120
+    },
+    "top": {
+      "x": 144,
+      "y": 1250,
+      "width": 1100,
+      "height": 64
+    }
+  },
+  "vertical": {
+    "canvas": [
+      1080,
+      1920
+    ],
+    "importantContent": {
+      "x": 120,
+      "y": 300,
+      "width": 720,
+      "height": 900
+    },
+    "chat": {
+      "x": 120,
+      "y": 780,
+      "width": 720,
+      "height": 210
+    },
+    "event": {
+      "x": 120,
+      "y": 1009,
+      "width": 720,
+      "height": 116
+    },
+    "top": {
+      "x": 120,
+      "y": 1150,
+      "width": 720,
+      "height": 50
+    }
+  },
+  "notes": [
+    "Safe region is a design margin, not a guaranteed cross-platform specification.",
+    "DonationAlerts and music require a shared queue before sharing the event rectangle.",
+    "Never enable two independent event sources in the same rectangle simultaneously."
+  ]
+}

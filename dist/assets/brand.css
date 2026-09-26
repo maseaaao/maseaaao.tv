@@ -1,66 +1,84 @@
+/* MASEAAAO — бренд-токены и шрифты (Нуар v2). Единый источник для сайта, баннеров и панелей. */
 @font-face {
-  font-family: "Aoudax";
-  src: url("./fonts/Aoudax/aoudax.ttf") format("truetype");
+  font-family: "Unbounded";
+  src: url("./fonts/unbounded-cyrillic-600-normal.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: "Unbounded";
+  src: url("./fonts/unbounded-latin-600-normal.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2212, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("./fonts/inter-cyrillic-300-normal.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("./fonts/inter-latin-300-normal.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2212, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("./fonts/inter-cyrillic-400-normal.woff2") format("woff2");
   font-style: normal;
   font-weight: 400;
   font-display: swap;
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
 }
-
 @font-face {
-  font-family: "Geologica";
-  src: url("./fonts/Geologica/variable/geologica-cyrillic-ext-wght-normal.woff2")
-    format("woff2");
+  font-family: "Inter";
+  src: url("./fonts/inter-latin-400-normal.woff2") format("woff2");
   font-style: normal;
-  font-weight: 100 900;
+  font-weight: 400;
   font-display: swap;
-  unicode-range: U+0400-052F, U+2DE0-2DFF, U+A640-A69F;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2212, U+FEFF, U+FFFD;
 }
-
 @font-face {
-  font-family: "Geologica";
-  src: url("./fonts/Geologica/variable/geologica-latin-ext-wght-normal.woff2")
-    format("woff2");
+  font-family: "Inter";
+  src: url("./fonts/inter-cyrillic-600-normal.woff2") format("woff2");
   font-style: normal;
-  font-weight: 100 900;
+  font-weight: 600;
   font-display: swap;
-  unicode-range: U+0000-024F, U+1E00-1EFF, U+20A0-20CF;
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("./fonts/inter-latin-600-normal.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2212, U+FEFF, U+FFFD;
 }
 
 :root {
   color-scheme: dark;
-  --brand-ink: #0f0b1a;
-  --brand-line: rgba(223, 196, 255, 0.28);
-  --brand-text: #fbf7ff;
-  --brand-muted: #c9bfd7;
-  --brand-lavender: #dfc4ff;
-  --brand-pink: #ffc4de;
-  --brand-mint: #7de3d6;
-  --brand-yellow: #ffe08a;
-  --brand-shadow: rgba(2, 0, 8, 0.42);
-  --brand-wordmark-gradient: linear-gradient(
-    100deg,
-    #fbf7ff 0%,
-    #dfc4ff 30%,
-    #ffc4de 62%,
-    #7de3d6 100%
-  );
-  --brand-aura:
-    radial-gradient(
-      circle at 10% 10%,
-      rgba(223, 196, 255, 0.28),
-      transparent 28%
-    ),
-    radial-gradient(
-      circle at 86% 18%,
-      rgba(255, 196, 222, 0.22),
-      transparent 31%
-    ),
-    radial-gradient(
-      circle at 48% 102%,
-      rgba(125, 227, 214, 0.18),
-      transparent 35%
-    ),
-    linear-gradient(145deg, #0d0918 0%, #171027 50%, #0e0a19 100%);
+  --ink: #070709;
+  --surface: rgba(16, 16, 22, 0.8);
+  --surface-solid: #101016;
+  --line: rgba(183, 156, 255, 0.18);
+  --line-strong: rgba(183, 156, 255, 0.32);
+  --text: #ececee;
+  --dim: #9c9ca6;
+  --accent: #b79cff;
+  --accent-2: #8d6cf0;
+  --vignette: radial-gradient(160% 120% at 50% 0%, #101014 0%, #0a0a0d 55%, #070709 100%);
+  --hairline: linear-gradient(90deg, transparent, var(--accent) 30%, var(--accent-2) 70%, transparent);
+  --font-display: "Unbounded", "Segoe UI", sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
 }
 
 * {

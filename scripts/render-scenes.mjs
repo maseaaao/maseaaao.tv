@@ -497,7 +497,7 @@ async function resolveChromeBinary() {
 
 async function waitForSceneReady(page, timeoutMs) {
   await page.evaluate(async (timeout) => {
-    const requiredFonts = ["Geologica", "Aoudax"];
+    const requiredFonts = ["Inter", "Unbounded"];
     const requiredFontSample = "AaBb0123456789АБВабвЯя";
 
     const waitForImages = async () => {
