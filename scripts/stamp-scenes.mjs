@@ -17,7 +17,7 @@ export async function stampScenes(){
  };
  for(const file of (await fs.readdir(scenes)).filter(f=>f.endsWith('.html'))){
  let html=await fs.readFile(path.join(scenes,file),'utf8');
- html=html.replace(/<image data-brand="(?:mark|qr|logo)"[^>]*\/>|<text data-brand="qr-label"[^>]*>[^<]*<\/text>|<g data-brand="qr-copy"[\s\S]*?<\/g>/g,'');
+ html=html.replace(/<image data-brand="(?:mark|qr|logo)"[^>]*\/>|<text data-brand="qr-label"[^>]*>[^<]*<\/text>|<g data-brand="(?:qr-copy|twitch)"[\s\S]*?<\/g>/g,'');
  const rule=rules[file];let extra='';
  if(rule==='wordmark-center'){
  const cs=96, tp=textPath('maseaaao.tv',cs);
@@ -32,6 +32,13 @@ export async function stampScenes(){
  extra+=label('maseaaao.tv',cx,cy,cs,'#ececee');
  }
  const vertical=file.includes('-vertical');
+ if(vertical){
+ const copy=textPath('twitch / maseaaao',30);
+ const width=48+copy.width;
+ const x=rule==='wordmark-center'?Math.round((1080-width)/2):440;
+ const y=rule==='wordmark-center'?1870:1850;
+ extra+='<g data-brand="twitch" aria-label="Twitch: maseaaao" transform="translate('+x+' '+y+')"><path fill="#b79cff" transform="translate(0 -32) scale(1.6)" d="M11.571 4.714h1.715v5.143h-1.715zm4.715 0H18v5.143h-1.714zM6 0 1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/><path fill="#ececee" transform="translate(48 0)" d="'+copy.d+'"/></g>';
+ }
  const markNode='<image data-brand="mark" x="'+(vertical?240:1280)+'" y="'+(vertical?120:20)+'" width="'+(vertical?1680:1900)+'" height="'+(vertical?1680:1900)+'" opacity="0.025" href="data:image/png;base64,'+mark+'"/>';
  // Insert after the full-canvas background, behind headings and live overlays.
  html=html.replace(/(<rect\b[^>]*width="(?:1080|2560)"[^>]*height="(?:1920|1440)"[^>]*\/>)/, '$1'+markNode);
