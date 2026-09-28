@@ -2,8 +2,8 @@
   "name": "maseaaao-tv",
   "private": true,
   "scripts": {
-    "render:youtube-banner": "node scripts/render-scenes.mjs --scenes-dir src/banners --scene youtube-schedule.html --output-dir src/banners/rendered --width 2560 --height 1440 --format jpeg",
-    "render:twitch-banner": "node scripts/render-scenes.mjs --scenes-dir src/banners --scene twitch-schedule.html --output-dir src/banners/rendered --width 1200 --height 480 --format jpeg",
+    "render:youtube-banner": "node scripts/render-scenes.mjs --scenes-dir src/banners --scene youtube-schedule.html --output-dir src/banners/rendered --width 10240 --height 5760 --format jpeg",
+    "render:twitch-banner": "node scripts/render-scenes.mjs --scenes-dir src/banners --scene twitch-schedule.html --output-dir src/banners/rendered --width 4800 --height 1920 --format jpeg",
     "render:logo": "node scripts/refresh-logo-qr.mjs",
     "render:scenes": "node scripts/render-static-scenes.mjs",
     "render:twitch-description": "node scripts/render-scenes.mjs --scenes-dir src/twitch-description --output-dir src/twitch-description/rendered --width 320 --height 64 --format jpeg",

@@ -32,6 +32,12 @@ export async function stampScenes(){
  extra+=label('maseaaao.tv',cx,cy,cs,'#ececee');
  }
  const vertical=file.includes('-vertical');
+ if(/^(01-start|02-pause|99-end)(-vertical)?\.html$/.test(file)){
+ html=html.replace(/<image data-brand="nick-logo"[^>]*\/>/g,'');
+ const size=vertical?48:64, y=vertical?285:119, nickX=vertical?184:208, baseline=vertical?320:168;
+ html=html.replace(new RegExp('translate\\((?:120|184|208) '+baseline+'\\)'), 'translate('+nickX+' '+baseline+')');
+ extra+='<image data-brand="nick-logo" x="120" y="'+y+'" width="'+size+'" height="'+size+'" href="data:image/png;base64,'+mark+'"/>';
+ }
  if(vertical){
  const copy=textPath('twitch / maseaaao',30);
  const width=48+copy.width;
