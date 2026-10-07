@@ -127,6 +127,17 @@ h1 {
   color:var(--dim)
 }
 
+.twitch-player {
+  display:block;
+  width:100%;
+  height:auto;
+  min-height:300px;
+  aspect-ratio:16/9;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--surface-solid)
+}
+
 .tiles {
   display:grid;
   gap:8px
