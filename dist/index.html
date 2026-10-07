@@ -81,7 +81,7 @@
 
             <div class="identity__copy">
               <div class="profile-meta">
-                <span class="live-badge" title="Сейчас в эфире" data-live-badge>
+                <span class="live-badge" title="Сейчас в эфире" data-live-badge hidden>
                   <span class="live-badge__dot" aria-hidden="true"></span>
                   LIVE
                 </span>
@@ -93,17 +93,48 @@
           </div>
         </header>
 
-        <section class="section" aria-labelledby="stream-title">
-          <h2 id="stream-title" class="section-label">Стрим на Twitch</h2>
-          <iframe
-            class="twitch-player"
-            src="https://player.twitch.tv/?channel=maseaaao&amp;parent=maseaaao.tv&amp;parent=www.maseaaao.tv&amp;parent=localhost&amp;autoplay=true&amp;muted=true"
-            title="Twitch-плеер MASEAAAO"
-            width="600"
-            height="338"
-            allow="autoplay; fullscreen"
-            allowfullscreen>
-          </iframe>
+        <section class="stream-layout" aria-labelledby="stream-title">
+          <div class="stream-content">
+            <h2 id="stream-title" class="section-label" aria-live="polite">Стрим на Twitch</h2>
+            <div class="stream-offline" data-stream-offline hidden>
+              <p class="stream-offline__title">Сейчас не в эфире</p>
+              <p class="stream-offline__copy">Пока можно посмотреть записи и нарезки. Анонсы следующего стрима — в Telegram.</p>
+              <div class="stream-offline__links">
+                <a href="https://www.youtube.com/@maseaaao" target="_blank" rel="noopener noreferrer">Видео на YouTube ↗</a>
+                <a href="https://www.twitch.tv/maseaaao/videos" target="_blank" rel="noopener noreferrer">Записи на Twitch ↗</a>
+                <a href="https://t.me/maseaaao" target="_blank" rel="noopener noreferrer">Анонсы в Telegram ↗</a>
+              </div>
+            </div>
+            <details class="stream-player" data-stream-player open>
+              <summary hidden data-player-summary>Открыть Twitch-плеер</summary>
+              <div id="twitch-player" class="twitch-player" role="group" aria-label="Twitch-плеер MASEAAAO">
+                <noscript>
+                  <iframe
+                    src="https://player.twitch.tv/?channel=maseaaao&amp;parent=maseaaao.tv&amp;parent=www.maseaaao.tv&amp;parent=localhost&amp;autoplay=true&amp;muted=true"
+                    title="Twitch-плеер MASEAAAO"
+                    width="600"
+                    height="338"
+                    allow="autoplay; fullscreen"
+                    allowfullscreen>
+                  </iframe>
+                </noscript>
+              </div>
+            </details>
+            <p class="stream-fallback" data-player-fallback>
+              Если плеер не загрузился, <a href="https://www.twitch.tv/maseaaao" target="_blank" rel="noopener noreferrer">открой Twitch ↗</a>.
+            </p>
+          </div>
+          <details class="stream-chat" data-stream-chat>
+            <summary>Чат Twitch</summary>
+            <iframe
+              data-chat-frame
+              data-src="https://www.twitch.tv/embed/maseaaao/chat?parent=maseaaao.tv&amp;parent=www.maseaaao.tv&amp;parent=localhost&amp;darkpopout"
+              title="Чат Twitch MASEAAAO"
+              width="320"
+              height="420">
+            </iframe>
+            <p class="stream-fallback"><a href="https://www.twitch.tv/maseaaao" target="_blank" rel="noopener noreferrer">Открыть чат на Twitch ↗</a></p>
+          </details>
         </section>
 
         <div class="actions">
@@ -240,5 +271,6 @@
         </footer>
       </section>
     </main>
+    <script src="assets/stream.js" defer></script>
   </body>
 </html>
