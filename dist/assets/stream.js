@@ -35,7 +35,7 @@
   fallbackUrl.searchParams.append("parent", window.location.hostname);
   originalFrame.remove();
 
-  const desktop = window.matchMedia("(min-width:1000px)");
+  const desktop = window.matchMedia("(min-width:651px)");
   let status = "loading";
   let chatPreference = null;
   let playerPreference = false;
@@ -60,7 +60,7 @@
   }
 
   function updateChat() {
-    chat.open = chatPreference ?? (status === "online" && desktop.matches);
+    chat.open = chatPreference ?? desktop.matches;
     loadChat();
   }
 

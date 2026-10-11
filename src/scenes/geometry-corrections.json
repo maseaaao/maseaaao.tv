@@ -1,0 +1,112 @@
+[
+  {
+    "sceneUuid": "d811782b-2a4e-4655-a4b2-59b84de6220e",
+    "itemId": 6,
+    "fieldOld": {
+      "boundsAlignment": 5
+    },
+    "expectedNew": {
+      "boundsAlignment": 9
+    }
+  },
+  {
+    "sceneUuid": "76421b68-7b35-46ec-b6df-66024e49e1f4",
+    "itemId": 45,
+    "fieldOld": {
+      "boundsAlignment": 5
+    },
+    "expectedNew": {
+      "boundsAlignment": 9
+    }
+  },
+  {
+    "sceneUuid": "b38334de-de76-4bc9-95c3-4917ef1c342c",
+    "itemId": 14,
+    "fieldOld": {
+      "boundsAlignment": 5
+    },
+    "expectedNew": {
+      "boundsAlignment": 9
+    }
+  },
+  {
+    "sceneUuid": "d811782b-2a4e-4655-a4b2-59b84de6220e",
+    "itemId": 7,
+    "fieldOld": {
+      "positionY": 840
+    },
+    "expectedNew": {
+      "positionY": 824
+    }
+  },
+  {
+    "sceneUuid": "d811782b-2a4e-4655-a4b2-59b84de6220e",
+    "itemId": 21,
+    "fieldOld": {
+      "boundsHeight": 220
+    },
+    "expectedNew": {
+      "boundsHeight": 147.4
+    }
+  },
+  {
+    "sceneUuid": "76421b68-7b35-46ec-b6df-66024e49e1f4",
+    "itemId": 32,
+    "fieldOld": {
+      "boundsHeight": 220
+    },
+    "expectedNew": {
+      "boundsHeight": 147.4
+    }
+  },
+  {
+    "sceneUuid": "b7c22be3-c0f3-40ba-b865-33667d519b77",
+    "itemId": 11,
+    "fieldOld": {
+      "boundsHeight": 144
+    },
+    "expectedNew": {
+      "boundsHeight": 96.48
+    }
+  },
+  {
+    "sceneUuid": "b38334de-de76-4bc9-95c3-4917ef1c342c",
+    "itemId": 5,
+    "fieldOld": {
+      "boundsHeight": 144
+    },
+    "expectedNew": {
+      "boundsHeight": 96.48
+    }
+  },
+  {
+    "sceneUuid": "64cac440-1237-48c4-9997-1d58ddb2a8b8",
+    "itemId": 3,
+    "fieldOld": {
+      "boundsHeight": 144
+    },
+    "expectedNew": {
+      "boundsHeight": 96.48
+    }
+  },
+  {
+    "sceneUuid": "af3921d9-a38b-4a27-93f3-fd687cbac4d3",
+    "itemId": 3,
+    "fieldOld": {
+      "boundsHeight": 144
+    },
+    "expectedNew": {
+      "boundsHeight": 96.48
+    }
+  },
+  {
+    "sceneUuid": "b38334de-de76-4bc9-95c3-4917ef1c342c",
+    "itemId": 18,
+    "fieldOld": {
+      "positionY": 1856
+    },
+    "expectedNew": {
+      "positionY": 608
+    }
+  }
+]
