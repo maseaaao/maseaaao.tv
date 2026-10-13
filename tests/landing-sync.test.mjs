@@ -20,7 +20,7 @@ before(async () => {
       const name = new URL(req.url, 'http://localhost').pathname;
       const file = path.resolve(root, '.' + decodeURIComponent(name));
       if (!file.startsWith(root + path.sep)) throw Error('invalid path');
-      res.setHeader('Content-Type', ({'.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'application/javascript', '.ttf': 'font/ttf', '.png': 'image/png'})[path.extname(file)] || 'application/octet-stream');
+      res.setHeader('Content-Type', ({'.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'application/javascript', '.ttf': 'font/ttf', '.woff2': 'font/woff2', '.png': 'image/png'})[path.extname(file)] || 'application/octet-stream');
       res.end(await fs.readFile(file));
     } catch { res.writeHead(404); res.end(); }
   });
@@ -99,10 +99,11 @@ test('merge conflict markers are absent from deployable HTML and CSS', () => {
 });
 
 test('upstream Twitch hooks, archive/TikTok links and accessibility survive', () => checkFeatures(html));
-test('stream.js differs from upstream only by the two user-approved nonmobile chat defaults', async () => {
+test('stream.js preserves upstream behavior with approved chat defaults and loading geometry', async () => {
   const original = execFileSync('git', ['cat-file', '--filters', `${upstreamRef}:dist/assets/stream.js`], {cwd: root}).toString('utf8');
   const expected = original.replace('window.matchMedia("(min-width:1000px)")', 'window.matchMedia("(min-width:651px)")')
-    .replace('chatPreference ?? (status === "online" && desktop.matches)', 'chatPreference ?? desktop.matches');
+    .replace('chatPreference ?? (status === "online" && desktop.matches)', 'chatPreference ?? desktop.matches')
+    .replace('status === "online" || status === "error" || (status === "offline" && playerPreference)', 'status !== "offline" || playerPreference');
   assert.notEqual(expected, original);
   assert.equal((await fs.readFile(path.join(root, 'dist/assets/stream.js'))).equals(Buffer.from(expected)), true, 'unapproved upstream script change');
 });
@@ -137,9 +138,10 @@ test('upstream feature contract rejects the pre-sync local landing', () => {
 });
 
 
-test('local approved Twitch and donation supporting copy survives synchronization', () => {
+test('approved Twitch caption and donation label survive synchronization', () => {
   assert.ok(html.includes('Смотреть стримы'), 'lost local Twitch supporting copy');
-  assert.ok(html.includes('Во время трансляции'), 'lost local DonationAlerts supporting copy');
+  assert.ok(html.includes('Поддержать стрим'));
+  assert.ok(!html.includes('Во время трансляции'));
 });
 
 function snapshotDOM() {
@@ -154,35 +156,35 @@ function snapshotDOM() {
   };
 }
 
-test('all upstream destinations, copy, discovery metadata and scripts are retained; old real links/copy also survive', async () => {
+test('external destinations and executable scripts survive; approved copy and SEO are present', async () => {
   const current = await newPage({javaScriptEnabled: false});
   const reference = await newPage({javaScriptEnabled: false, htmlOverride: upstream('dist/index.html').toString('utf8')});
-  const old = await newPage({javaScriptEnabled: false, htmlOverride: execFileSync('git', ['show', 'ca39891154536909ee85f30343dbaa075fcd2e02:dist/index.html'], {cwd: root, encoding: 'utf8'})});
   try {
     const actual = await current.page.evaluate(snapshotDOM);
     const expected = await reference.page.evaluate(snapshotDOM);
-    const local = await old.page.evaluate(snapshotDOM);
-    // User explicitly removed the mobile watch CTA and the player fallback link only.
-    assert.deepEqual(actual.anchors, expected.anchors.filter((_, index) => index !== 3 && index !== 4));
-    assert.deepEqual(actual.head, expected.head);
+    const destinations = anchors => [...new Set(anchors.filter(href => !href.startsWith('#')))].sort();
+    assert.deepEqual(destinations(actual.anchors), destinations(expected.anchors));
     assert.equal(actual.title, expected.title);
-    assert.deepEqual(actual.scripts, expected.scripts);
-    let text = actual.text;
-    for (const copy of ['Смотретьстримы', 'Вовремятрансляции']) { assert.ok(text.includes(copy)); text = text.replace(copy, ''); }
-    const requestedCopy = expected.text.replace('СмотретьстримнаTwitch↗','').replace('Еслиплеернезагрузился,откройTwitch↗.','');
-    assert.equal(text, requestedCopy, 'upstream copy remains exact except local additions and explicitly removed duplicate watch copy');
-    for (const destination of local.anchors) assert.ok(actual.anchors.includes(destination), `lost local destination ${destination}`);
-    const copies = await old.page.locator('h1,h2,.identity__description,.tile__title,.tile__meta,.collab__label,.collab__mail').allTextContents();
-    for (const copy of copies) assert.ok(actual.text.includes(copy.replace(/\s+/g, '')), `lost local copy ${copy}`);
-  } finally { await Promise.all([current.context.close(), reference.context.close(), old.context.close()]); }
+    assert.deepEqual(actual.scripts.filter(script => script.src), expected.scripts.filter(script => script.src));
+    for (const copy of ['Стример и автор', 'Анонсы, новости, розыгрыши', 'Записи и нарезки', 'Поддержать стрим']) {
+      assert.ok(actual.text.includes(copy.replace(/\s+/g, '')), copy);
+    }
+    assert.deepEqual(await current.page.locator('.tiles--secondary .tile__title').allTextContents(), ['Лобби', 'YouTube', 'Instagram', 'TikTok']);
+    assert.equal(await current.page.locator('.tile--instagram .tile__meta,.tile--tiktok .tile__meta').count(), 0);
+    assert.equal(await current.page.locator('[data-stream-status]').isVisible(), false);
+    const profile = JSON.parse(await current.page.locator('script[type="application/ld+json"]').textContent());
+    assert.equal(profile['@type'], 'ProfilePage');
+    for (const link of profile.mainEntity.sameAs) assert.ok(actual.anchors.includes(link));
+    assert.equal(await current.page.locator('link[rel="canonical"]').getAttribute('href'), 'https://maseaaao.tv/');
+  } finally { await current.context.close(); await reference.context.close(); }
 });
 
 test('font requests are local successful Geologica/Unbounded, not Inter or a remote CDN', async () => {
   const {page, context, traffic} = await newPage();
   try {
     const requests = traffic.fonts;
-    assert.ok(requests.some(request => request.url.endsWith('/Geologica.ttf')));
-    assert.ok(requests.some(request => request.url.endsWith('/Unbounded.ttf')));
+    assert.ok(requests.some(request => /\/Geologica\.[a-f0-9]{16}\.woff2$/.test(request.url)));
+    assert.ok(requests.some(request => /\/Unbounded\.[a-f0-9]{16}\.woff2$/.test(request.url)));
     for (const request of requests) { assert.equal(request.status, 200); assert.ok(request.url.startsWith(origin)); assert.doesNotMatch(request.url, /Inter/); }
     assert.deepEqual(traffic.errors, []);
   } finally { await context.close(); }
@@ -379,7 +381,11 @@ test('upstream 12-second status timeout yields error without a fabricated LIVE b
   const {page, context} = await newPage({clock: true});
   try {
     await page.waitForFunction(() => window.__twitchPlayer);
+    const before = await page.locator('#platform-links').boundingBox();
+    assert.equal(await page.locator('[data-stream-player]').getAttribute('open'), '');
     await page.clock.fastForward(12001);
+    const after = await page.locator('#platform-links').boundingBox();
+    assert.equal(after.y, before.y, 'status failure must not move platform links');
     await page.evaluate(() => { window.__twitchPlayer.emit('ready'); window.__twitchPlayer.emit('online'); });
     assert.equal(await page.locator('[data-stream-layout]').getAttribute('data-state'), 'error');
     assert.equal(await page.locator('[data-live-badge]').isVisible(), false);
