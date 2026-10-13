@@ -10,6 +10,7 @@ h1,h2,h3{font-family:var(--font-display);text-wrap:balance}h1{margin:0;font-weig
 .identity__top{display:flex;flex-direction:column;align-items:flex-start;gap:32px}.avatar-shell{flex:none}.avatar-frame{width:104px;height:104px;border:1px solid var(--line);padding:8px;background:var(--ink)}
 .avatar,.avatar-fallback{display:block;width:100%;height:100%;object-fit:cover}.avatar-fallback{display:grid;place-items:center;color:var(--accent);font:600 40px var(--font-display)}
 .identity__copy{min-width:0;display:grid;gap:16px}.identity h1{font-size:clamp(24px,3.1vw,34px);line-height:1.15;color:var(--accent)}
+.identity__description{margin:0;color:var(--dim);font:400 14px/1.5 var(--font-body)}
 .actions{display:grid;gap:32px;min-width:0}.section{min-width:0;display:grid;gap:12px}.section-label,.collab__label{margin:0;color:var(--dim);font:400 13px/1.4 var(--hud-mono);letter-spacing:.035em}
 .tiles{display:grid;gap:12px}.tile{position:relative;min-width:0;display:grid;grid-template-columns:28px minmax(0,1fr) 24px;gap:20px;align-items:center;min-height:80px;padding:20px 24px;color:var(--text);text-decoration:none;border:1px solid var(--line);border-radius:2px;background:var(--surface);transition:border-color 140ms,background-color 140ms}
 .tile:hover{border-color:var(--accent);background:var(--hud-raised)}.tile__icon{display:grid;place-items:center}.brandicon{display:block;width:24px;height:24px;fill:currentColor}.tile--lobby .brandicon{fill:none;stroke:currentColor}
