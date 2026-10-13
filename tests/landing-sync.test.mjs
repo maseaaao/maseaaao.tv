@@ -99,10 +99,11 @@ test('merge conflict markers are absent from deployable HTML and CSS', () => {
 });
 
 test('upstream Twitch hooks, archive/TikTok links and accessibility survive', () => checkFeatures(html));
-test('stream.js differs from upstream only by the two user-approved nonmobile chat defaults', async () => {
+test('stream.js preserves upstream behavior with approved chat defaults and loading geometry', async () => {
   const original = execFileSync('git', ['cat-file', '--filters', `${upstreamRef}:dist/assets/stream.js`], {cwd: root}).toString('utf8');
   const expected = original.replace('window.matchMedia("(min-width:1000px)")', 'window.matchMedia("(min-width:651px)")')
-    .replace('chatPreference ?? (status === "online" && desktop.matches)', 'chatPreference ?? desktop.matches');
+    .replace('chatPreference ?? (status === "online" && desktop.matches)', 'chatPreference ?? desktop.matches')
+    .replace('status === "online" || status === "error" || (status === "offline" && playerPreference)', 'status !== "offline" || playerPreference');
   assert.notEqual(expected, original);
   assert.equal((await fs.readFile(path.join(root, 'dist/assets/stream.js'))).equals(Buffer.from(expected)), true, 'unapproved upstream script change');
 });
@@ -379,7 +380,11 @@ test('upstream 12-second status timeout yields error without a fabricated LIVE b
   const {page, context} = await newPage({clock: true});
   try {
     await page.waitForFunction(() => window.__twitchPlayer);
+    const before = await page.locator('#platform-links').boundingBox();
+    assert.equal(await page.locator('[data-stream-player]').getAttribute('open'), '');
     await page.clock.fastForward(12001);
+    const after = await page.locator('#platform-links').boundingBox();
+    assert.equal(after.y, before.y, 'status failure must not move platform links');
     await page.evaluate(() => { window.__twitchPlayer.emit('ready'); window.__twitchPlayer.emit('online'); });
     assert.equal(await page.locator('[data-stream-layout]').getAttribute('data-state'), 'error');
     assert.equal(await page.locator('[data-live-badge]').isVisible(), false);

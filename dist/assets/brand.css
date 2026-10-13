@@ -1,4 +1,3 @@
 /* Cyber-Monolith: local shared fonts and semantic site aliases. */
-@import url("./cyber-monolith/tokens.css");
 :root{color-scheme:dark;--ink:var(--hud-bg);--surface:var(--hud-surface);--surface-solid:var(--hud-surface);--line:var(--hud-border);--line-strong:var(--hud-border);--text:var(--hud-text);--dim:var(--hud-muted);--accent:var(--hud-accent);--font-display:var(--hud-display);--font-body:var(--hud-body)}
 *{box-sizing:border-box}html{font-synthesis:none}[hidden]{display:none!important}

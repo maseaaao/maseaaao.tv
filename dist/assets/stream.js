@@ -102,7 +102,7 @@
       ? (blocked ? "Эфир идёт. Нажми ▶ в плеере, чтобы начать просмотр." : "Сейчас в эфире")
       : (status === "error" ? "Не удалось определить статус эфира. Можно открыть плеер или перейти на Twitch." : "Проверяем эфир…");
     playerSummary.hidden = status !== "offline";
-    playerDetails.open = wide && (status === "online" || status === "error" || (status === "offline" && playerPreference));
+    playerDetails.open = wide && (status !== "offline" || playerPreference);
     fallback.hidden = status !== "error";
     updateChat();
     attemptPlayback();
