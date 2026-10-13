@@ -20,7 +20,7 @@ before(async () => {
       const name = new URL(req.url, 'http://localhost').pathname;
       const file = path.resolve(root, '.' + decodeURIComponent(name));
       if (!file.startsWith(root + path.sep)) throw Error('invalid path');
-      res.setHeader('Content-Type', ({'.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'application/javascript', '.ttf': 'font/ttf', '.png': 'image/png'})[path.extname(file)] || 'application/octet-stream');
+      res.setHeader('Content-Type', ({'.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'application/javascript', '.ttf': 'font/ttf', '.woff2': 'font/woff2', '.png': 'image/png'})[path.extname(file)] || 'application/octet-stream');
       res.end(await fs.readFile(file));
     } catch { res.writeHead(404); res.end(); }
   });
@@ -181,8 +181,8 @@ test('font requests are local successful Geologica/Unbounded, not Inter or a rem
   const {page, context, traffic} = await newPage();
   try {
     const requests = traffic.fonts;
-    assert.ok(requests.some(request => request.url.endsWith('/Geologica.ttf')));
-    assert.ok(requests.some(request => request.url.endsWith('/Unbounded.ttf')));
+    assert.ok(requests.some(request => /\/Geologica\.[a-f0-9]{16}\.woff2$/.test(request.url)));
+    assert.ok(requests.some(request => /\/Unbounded\.[a-f0-9]{16}\.woff2$/.test(request.url)));
     for (const request of requests) { assert.equal(request.status, 200); assert.ok(request.url.startsWith(origin)); assert.doesNotMatch(request.url, /Inter/); }
     assert.deepEqual(traffic.errors, []);
   } finally { await context.close(); }
