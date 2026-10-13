@@ -13,30 +13,37 @@ h1,h2,h3{font-family:var(--font-display);text-wrap:balance}h1{margin:0;font-weig
 .identity__description{margin:0;color:var(--dim);font:400 14px/1.5 var(--font-body)}
 .actions{display:grid;gap:32px;min-width:0}.section{min-width:0;display:grid;gap:12px}.section-label,.collab__label{margin:0;color:var(--dim);font:400 13px/1.4 var(--hud-mono);letter-spacing:.035em}
 .tiles{display:grid;gap:12px}.tile{position:relative;min-width:0;display:grid;grid-template-columns:28px minmax(0,1fr) 24px;gap:20px;align-items:center;min-height:80px;padding:20px 24px;color:var(--text);text-decoration:none;border:1px solid var(--line);border-radius:2px;background:var(--surface);transition:border-color 140ms,background-color 140ms}
-.tile:hover{border-color:var(--accent);background:var(--hud-raised)}.tile__icon{display:grid;place-items:center}.brandicon{display:block;width:24px;height:24px;fill:currentColor}.tile--lobby .brandicon{fill:none;stroke:currentColor}
+.tile__icon{display:grid;place-items:center}.brandicon{display:block;width:24px;height:24px;fill:currentColor}.tile--lobby .brandicon{fill:none;stroke:currentColor}
 .tile__copy{min-width:0;display:grid;gap:4px}.tile__title{font:600 16px/1.4 var(--font-display);overflow-wrap:anywhere}.tile__meta{font:400 14px/1.5 var(--font-body);color:var(--dim);overflow-wrap:anywhere}.tile__arrow{color:var(--accent);font-size:24px;line-height:1}
-.tile--twitch{min-height:104px;background:var(--accent);border-color:var(--accent);color:var(--ink)}.tile--twitch .tile__title{font-family:var(--font-display);font-size:19px;font-weight:600}.tile--twitch .tile__meta,.tile--twitch .tile__arrow{color:var(--ink)}.tile--twitch:hover{background:#D5A9F8;border-color:#D5A9F8}
-.tile--donationalerts{border-color:#F45500}.tile--donationalerts .tile__icon,.tile--donationalerts .tile__arrow{color:#F45500}.tile--donationalerts:hover{border-color:#F45500}
-.tiles--secondary{gap:0;border-top:1px solid var(--line)}.tiles--secondary .tile{border-width:0 0 1px;border-radius:0;background:transparent;padding:18px 8px;min-height:80px}.tiles--secondary .tile:hover{background:var(--surface);border-color:var(--accent)}
-.collab{min-width:0;display:grid;gap:12px;grid-column:2;border-top:1px solid var(--line);padding-top:24px}.collab__links{display:grid;grid-template-columns:1fr 1fr;gap:12px}.collab__link{min-width:0;min-height:56px;padding:12px 16px;display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid var(--line);border-radius:2px;color:var(--text);text-decoration:none;font-size:14px;background:var(--surface);transition:border-color 140ms}.collab__link:hover{border-color:var(--accent)}.collab__mail{overflow-wrap:anywhere}.collab__arrow{color:var(--accent);flex:none}
+.tile--twitch{min-height:104px;background:var(--accent);border-color:var(--accent);color:var(--ink)}.tile--twitch .tile__title{font-family:var(--font-display);font-size:19px;font-weight:600}.tile--twitch .tile__meta,.tile--twitch .tile__arrow{color:var(--ink)}
+.tile--donationalerts{border-color:#F45500}.tile--donationalerts .tile__icon,.tile--donationalerts .tile__arrow{color:#F45500}
+.tiles--secondary{gap:0;border-top:1px solid var(--line)}.tiles--secondary .tile{border-width:0 0 1px;border-radius:0;background:transparent;padding:18px 8px;min-height:80px}
+.collab{min-width:0;display:grid;gap:12px;grid-column:2;border-top:1px solid var(--line);padding-top:24px}.collab__links{display:grid;grid-template-columns:1fr 1fr;gap:12px}.collab__link{min-width:0;min-height:56px;padding:12px 16px;display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid var(--line);border-radius:2px;color:var(--text);text-decoration:none;font-size:14px;background:var(--surface);transition:border-color 140ms}.collab__mail{overflow-wrap:anywhere}.collab__arrow{color:var(--accent);flex:none}
 @media(max-width:900px){.page{padding:40px 24px;align-content:start}.shell{grid-template-columns:minmax(0,270px) minmax(0,1fr);gap:24px}.identity{padding:32px 20px}.identity h1{font-size:27px}.collab__links{grid-template-columns:1fr}.tile{padding:20px 16px;gap:16px}.tile--twitch .tile__title{font-size:17px}}
 @media(max-width:650px){.page{padding:24px 16px 40px}.shell{grid-template-columns:1fr;gap:24px}.identity{grid-row:auto;min-height:0;padding:20px}.identity__top{flex-direction:row;align-items:center;gap:16px}.avatar-frame{width:80px;height:80px}.identity h1{font-size:clamp(20px,5vw,28px)}.identity__copy{gap:12px}.actions{gap:24px}.collab{grid-column:auto}.tile{padding:18px 16px;gap:14px}.tile--twitch .tile__title{font-size:16px}.tile--twitch{min-height:96px}.tiles--secondary .tile{padding-inline:12px}.collab__links{grid-template-columns:1fr}}
-/* A short assembly follows the reading hierarchy; content stays opaque throughout. */
-@keyframes hub-assemble{from{transform:translateY(12px)}to{transform:none}}
-@keyframes hub-lock{from{transform:scaleX(.55)}to{transform:scaleX(1)}}
+/* Motion supports reading and state changes; content is visible from the first frame. */
+@keyframes hub-arrive{from{transform:translateY(6px)}to{transform:none}}
+@keyframes stream-reveal{from{opacity:.85}to{opacity:1}}
 @keyframes live-breathe{0%,100%{opacity:1}50%{opacity:.65}}
-.page .identity,.page .stream-content,.page .stream-chat,.page .actions,.page .collab{animation:hub-assemble 560ms cubic-bezier(.2,.75,.25,1) both}
-.page .identity{animation-delay:0ms}.page .stream-content{animation-delay:60ms}.page .stream-chat{animation-delay:100ms}.page .actions{animation-delay:140ms}.page .collab{animation-delay:180ms}
-.page .identity::before,.page .identity::after{animation:hub-lock 640ms cubic-bezier(.2,.75,.25,1) both;transform-origin:left}
-.page .identity::after{transform-origin:right;animation-delay:80ms}
-.page .tile,.page .collab__link{transition:transform 180ms cubic-bezier(.2,.75,.25,1),border-color 180ms,background-color 180ms}
-.page .tile__arrow,.page .collab__arrow,.page .tile__icon{transition:transform 220ms cubic-bezier(.2,.75,.25,1)}
-.page .tile:is(:hover,:focus-visible){transform:translateY(-2px)}
-.page .tile:is(:hover,:focus-visible) .tile__arrow,.page .collab__link:is(:hover,:focus-visible) .collab__arrow{transform:translate(3px,-3px)}
-.page .tile:is(:hover,:focus-visible) .tile__icon{transform:scale(1.08)}
-.page .tile:active,.page .collab__link:active{transform:translateY(0) scale(.99)}
-.page .live-badge__dot{animation:live-breathe 2800ms ease-in-out infinite}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}.page .tile:is(:hover,:focus-visible),.page .tile:active,.page .collab__link:active,.page .tile__arrow,.page .tile__icon,.page .collab__arrow{transform:none!important}}
+.page .tile,.page .collab__link{transition:border-color 160ms ease,background-color 160ms ease}
+.page .tile__arrow,.page .collab__arrow{transition:transform 160ms cubic-bezier(.2,.75,.25,1)}
+@media(hover:hover) and (pointer:fine){
+  .page .tile:hover{border-color:var(--accent);background:var(--hud-raised)}
+  .page .tile--twitch:hover{background:#D5A9F8;border-color:#D5A9F8}
+  .page .tile--donationalerts:hover{border-color:#F45500}
+  .page .tiles--secondary .tile:hover{background:var(--surface)}
+  .page .collab__link:hover{border-color:var(--accent);background:var(--hud-raised)}
+  .page .tile:hover .tile__arrow,.page .collab__link:hover .collab__arrow{transform:translate(2px,-2px)}
+}
+.page .tile:active,.page .collab__link:active{background:var(--hud-raised)}
+.page .tile--twitch:active{background:#D5A9F8}
+@media(prefers-reduced-motion:no-preference){
+  .page .identity,.page .actions{animation:hub-arrive 280ms cubic-bezier(.2,.75,.25,1) backwards}
+  .page .actions{animation-delay:40ms}
+  .stream-layout[data-state="offline"] .stream-offline,.stream-player[open]{animation:stream-reveal 180ms ease-out}
+  .page .live-badge__dot{animation:live-breathe 2800ms ease-in-out infinite}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}.page .tile__arrow,.page .collab__arrow{transform:none!important}}
 
 /* Operational pages: retain actions, statuses and documentation structure. */
 .checker{padding:24px}.checker header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px}.checker h1{font-size:28px;line-height:1.25}.checker .global-actions,.checker .actions{display:flex;flex-wrap:wrap;gap:8px}
@@ -64,6 +71,11 @@ h1,h2,h3{font-family:var(--font-display);text-wrap:balance}h1{margin:0;font-weig
 .stream-player summary:focus-visible,.stream-chat summary:focus-visible,
 .stream-offline a:focus-visible,.stream-fallback a:focus-visible { outline:2px solid var(--accent); outline-offset:4px; }
 .stream-chat { min-width:0; border:1px solid var(--line); border-radius:2px; background:var(--surface); overflow:hidden; }
+/* A native details control keeps keyboard and screen-reader semantics. */
+.stream-chat summary{display:flex;align-items:center;justify-content:space-between;gap:12px;list-style:none}
+.stream-chat summary::-webkit-details-marker{display:none}
+.stream-chat summary::after{content:"";flex:none;width:7px;height:7px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);transition:transform 180ms ease}
+.stream-chat[open] summary::after{transform:rotate(225deg)}
 .stream-chat iframe { display:block; width:100%; height:420px; border:0; }
 .stream-chat iframe:not([src]) { display:none; }
 .stream-offline { padding:20px; border:1px solid var(--line); border-radius:2px; background:var(--surface); }
@@ -89,7 +101,7 @@ h1,h2,h3{font-family:var(--font-display);text-wrap:balance}h1{margin:0;font-weig
   .collab { grid-area:collab; }
 }
 @media(min-width:1300px) {
-  .shell:has(.stream-layout[data-state="online"]) { width:min(1440px,100%); }
+  .shell { width:min(1440px,100%); }
 }
 @media(max-width:650px) { .stream-layout { grid-column:auto; } }
 @container twitch-content (width < 402px) {
