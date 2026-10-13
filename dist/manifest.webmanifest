@@ -1,14 +1,14 @@
 {
   "name": "maseaaao",
   "short_name": "maseaaao",
-  "description": "Хаб maseaaao: Twitch, YouTube, Instagram, поддержка и контакты в одном месте.",
+  "description": "Хаб maseaaao: Twitch, Telegram, YouTube, Instagram, TikTok, поддержка и контакты в одном месте.",
   "dir": "auto",
   "lang": "ru-RU",
   "display": "standalone",
   "orientation": "any",
   "start_url": ".",
-  "background_color": "#070709",
-  "theme_color": "#070709",
+  "background_color": "#050608",
+  "theme_color": "#050608",
   "icons": [
     {
       "src": "android-chrome-512x512.png",
