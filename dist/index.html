@@ -63,14 +63,16 @@
             <div class="avatar-shell">
               <div class="avatar-frame">
                 <img
-                  src="assets/avatar-master.png"
+                  src="assets/avatar-96.webp"
+                  srcset="assets/avatar-64.webp 64w, assets/avatar-96.webp 96w, assets/avatar-128.webp 128w, assets/avatar-192.webp 192w, assets/avatar-288.webp 288w"
+                  sizes="(max-width: 650px) 62px, 86px"
                   alt="maseaaao"
                   class="avatar"
                   loading="eager"
                   fetchpriority="high"
                   decoding="async"
-                  width="144"
-                  height="144"
+                  width="96"
+                  height="96"
                   onerror="
                     this.hidden = true;
                     this.nextElementSibling.hidden = false;
@@ -166,7 +168,7 @@
                   <svg class="brandicon" viewBox="0 0 24 24" fill="#F45500" role="img" aria-label="DonationAlerts"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.9 2 3 5.4 3 9.7c0 2.4 1.2 4.6 3.1 6V21l3.8-2.6c.7.1 1.4.2 2.1.2 5.1 0 9-3.6 9-7.9S17.1 2 12 2Zm1.2 4-3.7 5h2.4l-1 3.9 3.8-5.1h-2.4l.9-3.8Z"/></svg>
                 </span>
                 <span class="tile__copy">
-                  <span class="tile__title">DonationAlerts</span>
+                  <span class="tile__title">Donation<wbr />Alerts</span>
                   <span class="tile__meta">Во время трансляции</span>
                 </span>
                 <span class="tile__arrow" aria-hidden="true">↗</span>
@@ -192,6 +194,21 @@
             <h2 id="more-title" class="section-label">Ещё на связи</h2>
             <div class="tiles tiles--secondary">
               <a
+                href="https://t.me/maseaaao_lobby"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="tile tile--lobby tile--wide"
+                title="Telegram-сообщество Лобби">
+                <span class="tile__icon" aria-hidden="true">
+                  <svg class="brandicon" viewBox="0 0 24 24" fill="none" stroke="#b79cff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Лобби"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </span>
+                <span class="tile__copy">
+                  <span class="tile__title">Лобби</span>
+                  <span class="tile__meta">Ищем тиммейтов и общаемся</span>
+                </span>
+                <span class="tile__arrow" aria-hidden="true">↗</span>
+              </a>
+              <a
                 href="https://www.youtube.com/@maseaaao"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -203,21 +220,6 @@
                 <span class="tile__copy">
                   <span class="tile__title">YouTube</span>
                   <span class="tile__meta">Нарезки, архивы и клипы</span>
-                </span>
-                <span class="tile__arrow" aria-hidden="true">↗</span>
-              </a>
-              <a
-                href="https://t.me/maseaaao_lobby"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="tile tile--lobby tile--wide"
-                title="Telegram-сообщество ЛОББИ">
-                <span class="tile__icon" aria-hidden="true">
-                  <svg class="brandicon" viewBox="0 0 24 24" fill="none" stroke="#b79cff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="ЛОББИ"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                </span>
-                <span class="tile__copy">
-                  <span class="tile__title">ЛОББИ</span>
-                  <span class="tile__meta">Ищем тиммейтов и общаемся</span>
                 </span>
                 <span class="tile__arrow" aria-hidden="true">↗</span>
               </a>
