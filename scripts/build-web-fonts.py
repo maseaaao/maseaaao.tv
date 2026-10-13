@@ -18,9 +18,12 @@ assets = root / "dist/assets/cyber-monolith"
 output = assets / "fonts"
 output.mkdir(exist_ok=True)
 names = {}
+weights = {}
 
 for family in ("Unbounded", "Geologica"):
     font = TTFont(assets / f"{family}.ttf", recalcTimestamp=False)
+    weight = next(axis for axis in font["fvar"].axes if axis.axisTag == "wght")
+    weights[family] = f"{weight.minValue:g} {weight.maxValue:g}"
     font.flavor = "woff2"
     buffer = BytesIO()
     font.save(buffer)
@@ -36,7 +39,7 @@ css = tokens.read_text()
 for family, name in names.items():
     face = (
         f"@font-face{{font-family:{family};src:url('./fonts/{name}') "
-        "format('woff2');font-weight:100 900;font-display:swap}"
+        f"format('woff2');font-weight:{weights[family]};font-display:swap}}"
     )
     css, count = re.subn(r"@font-face\{font-family:" + family + r";[^}]+\}", face, css)
     if count != 1:

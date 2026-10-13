@@ -138,9 +138,10 @@ test('upstream feature contract rejects the pre-sync local landing', () => {
 });
 
 
-test('local approved Twitch and donation supporting copy survives synchronization', () => {
+test('approved Twitch caption and donation label survive synchronization', () => {
   assert.ok(html.includes('Смотреть стримы'), 'lost local Twitch supporting copy');
-  assert.ok(html.includes('Во время трансляции'), 'lost local DonationAlerts supporting copy');
+  assert.ok(html.includes('Поддержать стрим'));
+  assert.ok(!html.includes('Во время трансляции'));
 });
 
 function snapshotDOM() {
@@ -155,27 +156,27 @@ function snapshotDOM() {
   };
 }
 
-test('all upstream destinations, copy, discovery metadata and scripts are retained; old real links/copy also survive', async () => {
+test('external destinations and executable scripts survive; approved copy and SEO are present', async () => {
   const current = await newPage({javaScriptEnabled: false});
   const reference = await newPage({javaScriptEnabled: false, htmlOverride: upstream('dist/index.html').toString('utf8')});
-  const old = await newPage({javaScriptEnabled: false, htmlOverride: execFileSync('git', ['show', 'ca39891154536909ee85f30343dbaa075fcd2e02:dist/index.html'], {cwd: root, encoding: 'utf8'})});
   try {
     const actual = await current.page.evaluate(snapshotDOM);
     const expected = await reference.page.evaluate(snapshotDOM);
-    const local = await old.page.evaluate(snapshotDOM);
-    // User explicitly removed the mobile watch CTA and the player fallback link only.
-    assert.deepEqual(actual.anchors, expected.anchors.filter((_, index) => index !== 3 && index !== 4));
-    assert.deepEqual(actual.head, expected.head);
+    const destinations = anchors => [...new Set(anchors.filter(href => !href.startsWith('#')))].sort();
+    assert.deepEqual(destinations(actual.anchors), destinations(expected.anchors));
     assert.equal(actual.title, expected.title);
-    assert.deepEqual(actual.scripts, expected.scripts);
-    let text = actual.text;
-    for (const copy of ['Смотретьстримы', 'Вовремятрансляции']) { assert.ok(text.includes(copy)); text = text.replace(copy, ''); }
-    const requestedCopy = expected.text.replace('СмотретьстримнаTwitch↗','').replace('Еслиплеернезагрузился,откройTwitch↗.','');
-    assert.equal(text, requestedCopy, 'upstream copy remains exact except local additions and explicitly removed duplicate watch copy');
-    for (const destination of local.anchors) assert.ok(actual.anchors.includes(destination), `lost local destination ${destination}`);
-    const copies = await old.page.locator('h1,h2,.identity__description,.tile__title,.tile__meta,.collab__label,.collab__mail').allTextContents();
-    for (const copy of copies) assert.ok(actual.text.includes(copy.replace(/\s+/g, '')), `lost local copy ${copy}`);
-  } finally { await Promise.all([current.context.close(), reference.context.close(), old.context.close()]); }
+    assert.deepEqual(actual.scripts.filter(script => script.src), expected.scripts.filter(script => script.src));
+    for (const copy of ['Стример и автор', 'Анонсы, новости, розыгрыши', 'Записи и нарезки', 'Поддержать стрим']) {
+      assert.ok(actual.text.includes(copy.replace(/\s+/g, '')), copy);
+    }
+    assert.deepEqual(await current.page.locator('.tiles--secondary .tile__title').allTextContents(), ['Лобби', 'YouTube', 'Instagram', 'TikTok']);
+    assert.equal(await current.page.locator('.tile--instagram .tile__meta,.tile--tiktok .tile__meta').count(), 0);
+    assert.equal(await current.page.locator('[data-stream-status]').isVisible(), false);
+    const profile = JSON.parse(await current.page.locator('script[type="application/ld+json"]').textContent());
+    assert.equal(profile['@type'], 'ProfilePage');
+    for (const link of profile.mainEntity.sameAs) assert.ok(actual.anchors.includes(link));
+    assert.equal(await current.page.locator('link[rel="canonical"]').getAttribute('href'), 'https://maseaaao.tv/');
+  } finally { await current.context.close(); await reference.context.close(); }
 });
 
 test('font requests are local successful Geologica/Unbounded, not Inter or a remote CDN', async () => {

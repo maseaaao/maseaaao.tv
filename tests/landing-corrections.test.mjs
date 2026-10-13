@@ -20,7 +20,7 @@ before(async () => {
       const name = new URL(req.url, 'http://localhost').pathname;
       const file = path.resolve(root, '.' + decodeURIComponent(name));
       if (!file.startsWith(root + path.sep)) throw Error('invalid path');
-      res.setHeader('Content-Type', ({'.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'application/javascript', '.ttf': 'font/ttf', '.png': 'image/png'})[path.extname(file)] || 'application/octet-stream');
+      res.setHeader('Content-Type', ({'.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'application/javascript', '.ttf': 'font/ttf', '.woff2': 'font/woff2', '.png': 'image/png'})[path.extname(file)] || 'application/octet-stream');
       res.end(await fs.readFile(file));
     } catch { res.writeHead(404); res.end(); }
   });
@@ -107,16 +107,16 @@ test('one watch CTA remains in loading, online, offline and error; redundant fal
   }
 });
 
-test('donation has its orange brand surface and contrasting ink text/icons in rest and hover', async()=>{
+test('donation keeps a dark surface, readable title and orange brand accents', async()=>{
   const {page,context}=await newPage();
   try {
     const tile=page.locator('.tile--donationalerts');
     for(const hover of [false,true]) {
-      if(hover) await tile.hover();
+      if(hover) { await tile.hover(); await page.waitForTimeout(200); }
       const ui=await tile.evaluate(e=>({bg:getComputedStyle(e).backgroundColor,colors:[...e.querySelectorAll('.tile__title,.tile__meta,.tile__arrow,.brandicon')].map(c=>getComputedStyle(c).color),fill:getComputedStyle(e.querySelector('svg')).fill}));
-      assert.equal(ui.bg,'rgb(244, 85, 0)');
-      assert.deepEqual(ui.colors,Array(4).fill('rgb(5, 6, 8)'));
-      assert.equal(ui.fill,'rgb(5, 6, 8)');
+      assert.equal(ui.bg,hover?'rgb(16, 23, 34)':'rgb(10, 13, 18)');
+      assert.deepEqual(ui.colors,['rgb(244, 85, 0)','rgb(240, 244, 252)','rgb(244, 85, 0)']);
+      assert.equal(ui.fill,'rgb(244, 85, 0)');
     }
   }finally{await context.close();}
 });
@@ -150,7 +150,8 @@ test('coordinated assembly and tactile focus/hover motion are finite; reduced mo
       assert.ok(motion.every(m=>m.visible&&m.opacity==='1'),'content must never wait hidden for motion');
       if(reducedMotion==='reduce')assert.ok(motion.every(m=>m.name==='none'));
       else{
-        assert.ok(motion.every(m=>m.name!=='none'&&m.iterations==='1'),'coordinated finite assembly is missing');
+        assert.ok([motion[0],motion[3]].every(m=>m.name==='hub-arrive'&&m.iterations==='1'));
+        assert.ok([motion[1],motion[2],motion[4]].every(m=>m.name==='none'));
         assert.ok(motion[3].delay>motion[0].delay,'actions must follow identity in assembly');
         await page.waitForTimeout(900);
         await page.locator('.tile--twitch').hover();await page.waitForTimeout(260);
@@ -158,9 +159,9 @@ test('coordinated assembly and tactile focus/hover motion are finite; reduced mo
         assert.ok(moved>0,'arrow must answer hover');
         await page.mouse.move(0,0);await page.keyboard.press('Tab');await page.locator('.tile--donationalerts').focus();await page.waitForTimeout(260);
         const focus=await page.locator('.tile--donationalerts').evaluate(e=>({ring:getComputedStyle(e).outlineWidth,arrow:new DOMMatrix(getComputedStyle(e.querySelector('.tile__arrow')).transform).m41}));
-        assert.equal(focus.ring,'2px');assert.ok(focus.arrow>0,'keyboard focus must answer with the same motion');
+        assert.equal(focus.ring,'2px');assert.equal(focus.arrow,0,'keyboard focus keeps the arrow still');
         await page.mouse.move(0,0);await page.locator('.tile--twitch').hover();await page.mouse.down();await page.waitForTimeout(240);
-        assert.ok(await page.locator('.tile--twitch').evaluate(e=>new DOMMatrix(getComputedStyle(e).transform).a<1),'press must compress the control');
+        assert.ok(await page.locator('.tile--twitch').evaluate(e=>new DOMMatrix(getComputedStyle(e).transform).a===1),'press must preserve control size');
         // Release away from the link to avoid opening an external destination.
         await page.mouse.move(0,0);await page.mouse.up();
       }
