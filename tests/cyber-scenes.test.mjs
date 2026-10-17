@@ -133,16 +133,31 @@ test('scene manifest: actual filenames and authoritative live-source mapping', a
   }
 });
 
-test('all exports: lossless WebP matches committed review PNGs', async () => {
-  // Compare both products of the same export operation. Re-rendering with a
-  // different OS/Chromium/font rasterizer can change antialiased glyph pixels.
-  const manifest = JSON.parse(await fs.readFile(path.join(scenes,'layout.json'),'utf8'));
-  for (const file of manifest.files) {
-    const reference = path.join(scenes,'rendered/review',`${file.name}.png`);
-    const png = await sharp(reference).ensureAlpha().raw().toBuffer();
-    const webp = await sharp(path.join(scenes,file.rendered)).ensureAlpha().raw().toBuffer();
-    assert.ok(png.equals(webp), `${file.name}: production WebP must be pixel-identical to review PNG`);
-  }
+test('scene exports match the current HTML layout within browser rasterization tolerance', async () => {
+  // Full-color changes affect large areas. Different OS/Chromium renderers can
+  // change a small number of antialiased text pixels, which is not a scene bug.
+  const standalone = await launchBrowser();
+  try {
+    const manifest = JSON.parse(await fs.readFile(path.join(scenes,'layout.json'),'utf8'));
+    for (const file of manifest.files) {
+      const page = await standalone.newPage({viewport:{width:file.width,height:file.height},deviceScaleFactor:1});
+      try {
+        await page.goto(pathToFileURL(path.join(scenes,file.file)).href);
+        await page.evaluate(()=>document.fonts.ready);
+        await page.locator('img').evaluateAll(images=>Promise.all(images.map(image=>image.decode())));
+        const capture = await page.screenshot({omitBackground:true,animations:'disabled'});
+        const actual = await sharp(capture).ensureAlpha().raw().toBuffer();
+        const exported = await sharp(path.join(scenes,file.rendered)).ensureAlpha().raw().toBuffer();
+        assert.equal(actual.length, exported.length, `${file.name}: scene dimensions changed`);
+        let differentChannels = 0;
+        for (let i = 0; i < actual.length; i++) {
+          if (actual[i] !== exported[i]) differentChannels++;
+        }
+        const ratio = differentChannels / actual.length;
+        assert.ok(ratio <= 0.02, `${file.name}: ${(ratio*100).toFixed(3)}% channels differ (maximum 2%)`);
+      } finally { await page.close(); }
+    }
+  } finally { await standalone.close(); }
 });
 
 test('scenes have no decorative corner markers', async () => {
