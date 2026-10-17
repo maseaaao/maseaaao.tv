@@ -38,8 +38,8 @@ async function render(source, target, width, height, format = "png", scale = 1) 
 
 try {
   if (requested === "all" || requested === "banners") {
-    await render("src/banners/twitch-schedule.html", "src/banners/rendered/twitch-schedule.jpeg", 1200, 480, "jpeg", 4);
-    await render("src/banners/youtube-schedule.html", "src/banners/rendered/youtube-schedule.jpeg", 2560, 1440, "jpeg", 4);
+    await render("src/banners/twitch-schedule.html", "src/banners/rendered/twitch-schedule.jpeg", 1200, 480, "jpeg");
+    await render("src/banners/youtube-schedule.html", "src/banners/rendered/youtube-schedule.jpeg", 2560, 1440, "jpeg");
   }
   if (requested === "all" || requested === "panels") {
     for (const name of (await fs.readdir(path.join(root, "src/twitch-description"))).filter(name => name.endsWith(".html"))) {
