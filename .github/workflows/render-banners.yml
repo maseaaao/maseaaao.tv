@@ -10,6 +10,8 @@ on:
       - src/banners/banner.css
       - src/banners/*.html
       - dist/assets/brand.css
+      - tests/**
+      - .github/workflows/render-banners.yml
   workflow_dispatch:
 
 permissions:
@@ -29,7 +31,7 @@ jobs:
       - run: npm ci
       - run: npm run browser:install
       - run: npm run render:twitch-banner
-      - run: node --test tests/banner-dimensions.test.mjs
+      - run: npm test
       - name: Commit refreshed banner exports
         shell: bash
         run: |
