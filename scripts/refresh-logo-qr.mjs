@@ -26,7 +26,7 @@ for(const size of [1024,512,256]) {
   await fs.writeFile(path.join(logoDir,'rendered',`avatar-circle-${size}.png`),circle);
   if(size===1024)await fs.writeFile(path.join(logoDir,'rendered','logo-circle.webp'),await sharp(circle).webp({lossless:true}).toBuffer());
 }
-const result=await generateQrWithLogo({text:url,width:800,margin:4,errorCorrectionLevel:'H',logo,logoFraction:0.20,color:{dark:'#111113',light:'#eeeeee'},tile:{fill:'#eeeeee',stroke:'#eeeeee',strokeOpacity:0}});
+const result=await generateQrWithLogo({text:url,width:800,margin:4,errorCorrectionLevel:'H',logo,logoFraction:0.20,color:{dark:'#20201e',light:'#f4f3ec'},tile:{fill:'#f4f3ec',stroke:'#f4f3ec',strokeOpacity:0}});
 const jpeg=await sharp(result.buffer).flatten({background:'#111113'}).jpeg({quality:100,chromaSubsampling:'4:4:4'}).toBuffer();
 // Check both the saved JPEG representation and stream-sized versions, not just the PNG generator result.
 const checks=[];
@@ -38,6 +38,4 @@ for(const size of [result.width,400,300,240,200]) {
 }
 await fs.writeFile(path.join(assets,'maseaaao.tv.jpeg'),jpeg);
 await fs.writeFile(path.join(assets,'maseaaao.tv.png'),result.buffer);
-const {stampScenes}=await import('./stamp-scenes.mjs');
-await stampScenes();
-console.log(`Approved logo installed; existing logo canvas retained at 1920x540. QR -> ${url}; decoded JPEG at ${checks.join(', ')} px. Scenes stamped.`);
+console.log(`Approved logo installed; existing logo canvas retained at 1920x540. QR -> ${url}; decoded JPEG at ${checks.join(', ')} px. Run build:cyber to refresh scene exports.`);
