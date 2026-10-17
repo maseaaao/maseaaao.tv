@@ -2,19 +2,20 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {spawnSync} from 'node:child_process';
-import {chromium} from 'playwright-core';
+import {launchBrowser} from './browser.mjs';
 import sharp from 'sharp';
 import jsQR from 'jsqr';
 
 const root = path.resolve(import.meta.dirname, '..');
 const scenes = path.join(root, 'src/scenes');
 const rendered = path.join(scenes, 'rendered');
-const backupScript = process.env.CYBER_BACKUP_SCRIPT || path.resolve(root, '../Streamer.bot/custom/maintenance/cyber-monolith/backup.py');
+const backupScript = process.env.CYBER_BACKUP_SCRIPT;
 const layout = JSON.parse(await fs.readFile(path.join(root, 'assets/cyber-monolith/obs-layout.json'), 'utf8'));
 
-// Reserve every destination before any generated file is written. A failed
-// backup aborts the build; existing receipt copies stay byte-for-byte intact.
+// Optional external backup integration. Without it, tracked sources and exports
+// can be restored from Git on every supported development environment.
 function reserve(files) {
+  if (!backupScript) return [];
   // Corrective checkpoints expose reserve(path), not the legacy reserve CLI.
   const args = path.basename(backupScript) === 'reserve.py'
     ? ['-c', 'import json,runpy,sys; reserve=runpy.run_path(sys.argv[1])["reserve"]; [print(json.dumps(reserve(p),ensure_ascii=True)) for p in sys.argv[2:]]', backupScript, ...files]
@@ -24,23 +25,22 @@ function reserve(files) {
   return result.stdout.trim().split(/\r?\n/).filter(Boolean).map(line => JSON.parse(line));
 }
 const at = box => `left:${box[0]}px;top:${box[1]}px;width:${box[2]}px;height:${box[3]}px`;
-const corners = `<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>`;
-const zone = (name, box, panel = false) => `<div class="zone${panel ? ' panel' : ''}" data-zone="${name}" aria-hidden="true" style="${at(box)}">${panel ? corners : ''}</div>`;
+const zone = (name, box, panel = false) => `<div class="zone${panel ? ' panel' : ''}" data-zone="${name}" aria-hidden="true" style="${at(box)}"></div>`;
 const css = `
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent}
 body{font-family:var(--hud-body);color:var(--hud-text)}.canvas{position:relative;overflow:hidden;width:var(--width);height:var(--height);background:var(--hud-bg)}
-.grid{position:absolute;inset:0;opacity:.02;background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);background-size:80px 80px;pointer-events:none}
+.grid{display:none;opacity:0}
 .identity{position:absolute;left:120px;top:112px;display:flex;align-items:center;gap:24px;font-family:var(--hud-display);font-size:32px;font-weight:600;letter-spacing:-.035em;height:64px;background:var(--hud-bg)}
 .identity img{width:64px;height:64px;object-fit:contain}.vertical .identity{top:156px;font-size:28px;gap:24px;height:48px}.vertical .identity img{width:48px;height:48px}
 .header-rule{position:absolute;left:120px;top:220px;width:1400px;height:1px;background:var(--hud-border)}.vertical .header-rule{top:244px;width:720px}
-.title-field{position:absolute;left:88px;top:400px;width:1432px;height:264px;background:var(--hud-bg)}.vertical .title-field{top:268px;width:784px;height:176px}
-h1{position:absolute;left:120px;top:440px;margin:0;font-family:Unbounded,sans-serif;font-size:160px;line-height:1.08;font-weight:700;letter-spacing:-.035em;color:var(--hud-accent);background:var(--hud-bg)}.vertical h1{top:300px;font-size:88px}
-.zone{position:absolute;pointer-events:none}.panel{background:var(--hud-surface);border:1px solid var(--hud-border)}.zone[data-zone="music"],.zone[data-zone="donors"]{background:var(--hud-bg)}
-.corner{display:block;position:absolute;width:20px;height:20px;border-color:var(--hud-accent);border-style:solid;border-width:0;pointer-events:none}.tl{left:0;top:0;border-left-width:2px;border-top-width:2px}.tr{right:0;top:0;border-right-width:2px;border-top-width:2px}.bl{left:0;bottom:0;border-left-width:2px;border-bottom-width:2px}.br{right:0;bottom:0;border-right-width:2px;border-bottom-width:2px}
+.title-field{position:absolute;left:88px;top:400px;width:1432px;height:264px;background:var(--hud-accent);border-radius:32px}.vertical .title-field{top:268px;width:784px;height:176px}
+h1{position:absolute;left:120px;top:440px;margin:0;font-family:Unbounded,sans-serif;font-size:160px;line-height:1.08;font-weight:600;letter-spacing:-.035em;color:var(--hud-bg);background:transparent}.vertical h1{top:300px;font-size:88px}
+.zone{position:absolute;pointer-events:none}.panel{background:var(--hud-surface);border:1px solid var(--hud-border);border-radius:20px}.zone[data-zone="music"],.zone[data-zone="donors"]{background:var(--hud-bg)}
+
 .qr{position:absolute;display:block;object-fit:contain;image-rendering:pixelated;background:#eee}.social{background:var(--hud-bg);border-top:1px solid var(--hud-border)}
 .canvas.overlay:not(.vertical) .zone[data-zone="music"],.canvas.overlay:not(.vertical) .zone[data-zone="donors"]{background:transparent}
 .canvas.overlay,.canvas.gameplay,.canvas.camera-tile{background:transparent}.lower-background{position:absolute;left:0;top:608px;width:1080px;height:1312px;overflow:hidden;background:var(--hud-bg)}
-.camera-frame{position:absolute;pointer-events:none}.camera-frame .corner{width:20px;height:20px}.camera-tile>.corner{width:20px;height:20px}
+.camera-frame{position:absolute;pointer-events:none;border:2px solid var(--hud-accent);border-radius:20px}.camera-tile{border:2px solid var(--hud-accent);border-radius:12px}.vertical .camera-frame{border:0;border-radius:0}
 `;
 
 async function validateQr() {
@@ -58,13 +58,13 @@ function document(name, canvas, vertical, body, mode = '') {
 }
 function status(name, copy, vertical) {
   const map = vertical ? layout['vertical-status'] : layout.horizontal;
-  const body = `<div class="grid" aria-hidden="true"></div><div class="identity"><img src="../logo/logo.png" alt="">maseaaao</div><div class="header-rule" aria-hidden="true"></div><div class="title-field" aria-hidden="true">${corners}</div><h1>${copy}</h1>${zone('chat', map.chat, true)}${zone('music', map.music)}${zone('donors', map.donors)}${zone('alerts', map.alerts)}${vertical ? zone('social', map.social) : ''}${qrMarkup(map.qr)}`;
+  const body = `<div class="grid" aria-hidden="true"></div><div class="identity"><img src="../logo/logo.png" alt="">maseaaao</div><div class="header-rule" aria-hidden="true"></div><div class="title-field" aria-hidden="true"></div><h1>${copy}</h1>${zone('chat', map.chat, true)}${zone('music', map.music)}${zone('donors', map.donors)}${zone('alerts', map.alerts)}${vertical ? zone('social', map.social) : ''}${qrMarkup(map.qr)}`;
   return {name, canvas: map.canvas, html: document(name, map.canvas, vertical, body)};
 }
 function camera(name, vertical) {
   const map = vertical ? layout['vertical-camera'] : layout.horizontal;
   const cameraBox = vertical ? map.camera : [32, 32, 2496, 1376];
-  const body = `${vertical ? '<div class="lower-background" aria-hidden="true"><div class="grid"></div></div>' : ''}<div class="camera-frame" data-zone="camera" style="${at(cameraBox)}">${corners}</div>${zone('chat', map.chat, vertical)}${zone('music', map.music)}${zone('donors', map.donors)}${zone('alerts', map.alerts)}${vertical ? zone('social', map.social) : qrMarkup(map.qr)}`;
+  const body = `${vertical ? '<div class="lower-background" aria-hidden="true"><div class="grid"></div></div>' : ''}<div class="camera-frame" data-zone="camera" style="${at(cameraBox)}"></div>${zone('chat', map.chat, vertical)}${zone('music', map.music)}${zone('donors', map.donors)}${zone('alerts', map.alerts)}${vertical ? zone('social', map.social) : qrMarkup(map.qr)}`;
   return {name, canvas: map.canvas, html: document(name, map.canvas, vertical, body, 'overlay')};
 }
 const definitions = [];
@@ -77,12 +77,12 @@ for (const name of ['00-blank', 'background']) {
   definitions.push({name, canvas:layout.horizontal.canvas, html:document(name, layout.horizontal.canvas, false, body)});
 }
 definitions.push({name:'00-blank-vertical', canvas:[1080,1920], html:document('00-blank-vertical', [1080,1920], true, '', 'gameplay')});
-definitions.push({name:'cam-frame', canvas:[600,341], html:document('cam-frame', [600,341], false, corners, 'camera-tile')});
+definitions.push({name:'cam-frame', canvas:[600,341], html:document('cam-frame', [600,341], false, '', 'camera-tile')});
 const receipts = reserve(definitions.flatMap(({name}) => [path.join(scenes, `${name}.html`), path.join(rendered, `${name}.webp`), path.join(rendered, 'review', `${name}.png`)]).concat(path.join(rendered, 'cyber-scenes-build-report.json'), path.join(scenes, 'obs-scene.css'), path.join(scenes, 'layout.json')));
 await fs.mkdir(path.join(rendered, 'review'), {recursive:true});
 await fs.writeFile(path.join(scenes, 'obs-scene.css'), css, 'utf8');
-await fs.writeFile(path.join(scenes, 'layout.json'), JSON.stringify({version:2, design:'Кибер-Монолит HUD', source:'../../assets/cyber-monolith/obs-layout.json', files:definitions.map(({name,canvas}) => ({name,file:`${name}.html`,rendered:`rendered/${name}.webp`,width:canvas[0],height:canvas[1]})), ...layout, notes:['Horizontal CAMERA chat/music/donors slots are fully transparent; only active widgets own their content backdrops.', 'chatFit boundsAlignment=9 is BOTTOMLEFT content alignment; item alignment=5 remains TOPLEFT. OBS integer alignment can leave less than one pixel at the bottom.', 'Transparent camera HUD belongs above the camera and below live widgets.', 'The vertical gameplay blank is intentionally fully transparent; never use it as the camera lower-panel backdrop.', 'Vertical-camera music and donors share one mapped slot; visibility is controlled by real OBS sources.']}, null, 2), 'utf8');
-const browser = await chromium.launch({executablePath: process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless:true});
+await fs.writeFile(path.join(scenes, 'layout.json'), JSON.stringify({version:2, design:'Синий / светлый', source:'../../assets/cyber-monolith/obs-layout.json', files:definitions.map(({name,canvas}) => ({name,file:`${name}.html`,rendered:`rendered/${name}.webp`,width:canvas[0],height:canvas[1]})), ...layout, notes:['Horizontal CAMERA chat/music/donors slots are fully transparent; only active widgets own their content backdrops.', 'chatFit boundsAlignment=9 is BOTTOMLEFT content alignment; item alignment=5 remains TOPLEFT. OBS integer alignment can leave less than one pixel at the bottom.', 'Transparent camera HUD belongs above the camera and below live widgets.', 'The vertical gameplay blank is intentionally fully transparent; never use it as the camera lower-panel backdrop.', 'Vertical-camera music and donors share one mapped slot; visibility is controlled by real OBS sources.']}, null, 2), 'utf8');
+const browser = await launchBrowser();
 const results = [];
 try {
   for (const definition of definitions) {
@@ -110,4 +110,4 @@ try {
     } finally { await page.close(); }
   }
 } finally { await browser.close(); }
-await fs.writeFile(path.join(rendered, 'cyber-scenes-build-report.json'), JSON.stringify({design:'Кибер-Монолит HUD', offline:true, qrSource:'dist/assets/maseaaao.tv.png', outputs:results, backupReceipts:receipts}, null, 2), 'utf8');
+await fs.writeFile(path.join(rendered, 'cyber-scenes-build-report.json'), JSON.stringify({design:'Синий / светлый', offline:true, qrSource:'dist/assets/maseaaao.tv.png', outputs:results, backupReceipts:receipts}, null, 2), 'utf8');

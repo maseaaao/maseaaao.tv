@@ -1,12 +1,16 @@
-# maseaaao — Кибер-Монолит HUD / OBS
+# maseaaao — OBS
 
 ## Направление
-Сцены переведены на visual design «Кибер-Монолит HUD»: тёмные панели #0A0D12 на фоне #050608, бордер #273246, единственный акцент #C182F3, тонкая сетка 2%, угловые визиры 20 px и короткая функциональная типографика.
+Светлый фон #f4f3ec, синий акцент #1616d9, тёмный текст #20201e.
+Unbounded 600 используется для акцентов, Arial — для обычного текста.
+Все живые области и прозрачность камеры сохраняются.
 
 - Разрешения: горизонталь **2560×1440**, вертикаль **1080×1920**.
-- Сборка только сцен: `CYBER_BACKUP_SCRIPT='D:/GoogleDrives/maxxborer-drive/Проекты/maseaaao/OBS/Streamer.bot/backup/cyber-fixes-20261012-004631/reserve.py' node scripts/build-cyber-scenes.mjs` (bash). Не запускать общий npm build, banners или Twitch.
-- Тесты: `node --test tests/cyber-scenes.test.mjs tests/cyber-scene-corrections.test.mjs`.
-- Все старые/новые/generated targets резервируются **до записи** через `reserve.py` в `cyber-fixes-20261012-004631`. Сборщик напрямую вызывает reserve(path) этого checkpoint. Оригинальный `cyber-monolith-20261011-2117` неизменяемый; default legacy backup не использовать для корректирующей сборки.
+- Шрифт: `python3 scripts/build-web-fonts.py` (нужен fonttools[woff]).
+- Сцены: `npm run render:scenes`.
+- Остальные ресурсы: `npm run render:cyber-site`.
+- `CHROME_BIN` или `CHROME_PATH` задаёт путь к Chrome/Chromium; иначе используется браузер Playwright.
+- `CYBER_BACKUP_SCRIPT` при необходимости включает внешнее резервирование перед экспортом. Без него исходники и результаты сохраняются в Git.
 
 ## Зарезервированные области под живые источники
 Координаты строго соответствуют `OBS/maseaaao.tv/assets/cyber-monolith/obs-layout.json`:
@@ -17,7 +21,7 @@
   - Доноры: 120, 1200, 1100×165
   - Оповещения / alerts: 120, 824, 1100×366.67 — размер зарезервированной зоны; фактический `boundsHeight` в OBS: 366.5
   - QR: 2180, 1160, 250×250 (встроен оригинальный `maseaaao.tv.png`)
-  - Заголовок: слева x=120, y=440 (Unbounded, #C182F3, слова: «начало», «пауза», «конец»)
+  - Заголовок: слева x=120, y=440 (Unbounded, #f4f3ec, слова: «начало», «пауза», «конец»)
 
 - Вертикальные статусы:
   - Заголовок: слева x=120, y=300

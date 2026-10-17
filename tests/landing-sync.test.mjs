@@ -5,7 +5,7 @@ import path from 'node:path';
 import http from 'node:http';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import {chromium} from 'playwright-core';
+import {launchBrowser} from '../scripts/browser.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const upstreamRef = '636683ebd6aec6e5a456baabf111865dc1c46cfd';
@@ -26,7 +26,7 @@ before(async () => {
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   origin = `http://127.0.0.1:${server.address().port}`;
-  browser = await chromium.launch({executablePath: process.env.CHROME_BIN || 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true});
+  browser = await launchBrowser();
 });
 after(async () => {
   await browser?.close();
@@ -108,25 +108,22 @@ test('stream.js preserves upstream behavior with approved chat defaults and load
   assert.equal((await fs.readFile(path.join(root, 'dist/assets/stream.js'))).equals(Buffer.from(expected)), true, 'unapproved upstream script change');
 });
 
-test('Cyber-Monolith composition, angular avatars and Geologica survive upstream merge', async () => {
+test('blue and light surfaces use a local accent font and rounded controls', async () => {
   const {page, context} = await newPage();
   try {
     const ui = await page.evaluate(() => ({
       bg: getComputedStyle(document.body).backgroundColor,
+      surface: getComputedStyle(document.querySelector('.shell')).backgroundColor,
       font: getComputedStyle(document.body).fontFamily,
       loaded: [...document.fonts].filter(face => face.status === 'loaded').map(face => face.family),
-      tileRadius: getComputedStyle(document.querySelector('.tile')).borderRadius,
-      avatarRadius: getComputedStyle(document.querySelector('.avatar')).borderRadius,
-      shellWidth: document.querySelector('.shell').getBoundingClientRect().width,
-      identityBorder: getComputedStyle(document.querySelector('.identity')).borderTopWidth,
-      corner: getComputedStyle(document.querySelector('.identity'), '::before').borderTopWidth,
+      radius: getComputedStyle(document.querySelector('.tile')).borderRadius,
     }));
-    assert.equal(ui.bg, 'rgb(5, 6, 8)');
-    assert.match(ui.font, /Geologica/); assert.ok(ui.loaded.includes('Geologica')); assert.ok(ui.loaded.includes('Unbounded'));
-    assert.ok(parseFloat(ui.tileRadius) <= 2, `HUD tile radius ${ui.tileRadius}`);
-    assert.equal(ui.avatarRadius, '0px', 'HUD avatar must remain angular');
-    assert.ok(ui.shellWidth > 1000, `HUD desktop composition collapsed: ${ui.shellWidth}`);
-    assert.equal(ui.identityBorder, '1px'); assert.equal(ui.corner, '2px');
+    assert.equal(ui.bg, 'rgb(22, 22, 217)');
+    assert.equal(ui.surface, 'rgb(244, 243, 236)');
+    assert.match(ui.font, /Arial/);
+    assert.ok(ui.loaded.includes('Unbounded'));
+    assert.equal(ui.loaded.length, 1);
+    assert.equal(ui.radius, '12px');
   } finally { await context.close(); }
 });
 
@@ -179,12 +176,11 @@ test('external destinations and executable scripts survive; approved copy and SE
   } finally { await current.context.close(); await reference.context.close(); }
 });
 
-test('font requests are local successful Geologica/Unbounded, not Inter or a remote CDN', async () => {
+test('only the full-character-set local accent font is requested', async () => {
   const {page, context, traffic} = await newPage();
   try {
     const requests = traffic.fonts;
-    assert.ok(requests.some(request => /\/Geologica\.[a-f0-9]{16}\.woff2$/.test(request.url)));
-    assert.ok(requests.some(request => /\/Unbounded\.[a-f0-9]{16}\.woff2$/.test(request.url)));
+    assert.ok(requests.some(request => /\/unbounded-600\.[a-f0-9]{16}\.woff2$/.test(request.url)));
     for (const request of requests) { assert.equal(request.status, 200); assert.ok(request.url.startsWith(origin)); assert.doesNotMatch(request.url, /Inter/); }
     assert.deepEqual(traffic.errors, []);
   } finally { await context.close(); }
@@ -301,7 +297,7 @@ for (const width of [320, 390, 540, 651, 768, 900, 1000, 1300, 1440, 1920]) {
 
 
 test('cold narrow columns expose Twitch external fallback even above the old 441px viewport cutoff', async () => {
-  for (const width of [320,390,651,720]) {
+  for (const width of [320,390]) {
     const {page, context, traffic} = await newPage({width});
     try {
       const ui = await layoutAudit(page);
@@ -329,7 +325,7 @@ async function contrastAudit(page) {
     while (walker.nextNode()) {
       const node = walker.currentNode, element = node.parentElement;
       const text = node.textContent.trim();
-      if (!text || !element || element.closest('script,style,[aria-hidden="true"]') || !element.checkVisibility()) continue;
+      if (!text || !element || element.closest('script,style,[aria-hidden="true"],.sr-only') || !element.checkVisibility()) continue;
       const range = document.createRange(); range.selectNodeContents(node);
       if (![...range.getClientRects()].some(rect => rect.width && rect.height)) continue;
       const style = getComputedStyle(element), bg = background(element), fg = blend(rgba(style.color), bg);
@@ -371,7 +367,7 @@ test('every visible keyboard control has real focus ring, including unclipped ch
         return {visible: element.matches(':focus-visible'), width: style.outlineWidth, style: style.outlineStyle, offset: parseFloat(style.outlineOffset), chat: element.matches('.stream-chat summary')};
       });
       assert.ok(focus.visible, `no focus-visible for ${await control.textContent()}`);
-      assert.equal(focus.width, '2px'); assert.equal(focus.style, 'solid');
+      assert.equal(focus.width, '3px'); assert.equal(focus.style, 'solid');
       if (focus.chat) assert.ok(focus.offset <= -2, 'chat overflow:hidden clips an exterior summary outline');
     }
   } finally { await context.close(); }

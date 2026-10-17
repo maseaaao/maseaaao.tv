@@ -3,16 +3,16 @@
 ## Project
 
 This repository contains the Russian-language maseaaao.tv streaming link hub and
-brand assets for OBS, Twitch, and YouTube. Preserve the existing dark visual
-identity, approved logo, and local Inter / Unbounded fonts.
+brand assets for OBS, Twitch, and YouTube. Use the blue (#1616d9), warm light (#f4f3ec), and dark text (#20201e) identity.
+Keep the approved avatar until the owner chooses a replacement. Use local
+Unbounded 600 for accents and system Arial for body text.
 
 ## Structure
 
 - `dist/` is the **hand-authored, deployable website**, despite its name. Edit
   `dist/index.html` and `dist/assets/site.css` directly for landing-page changes.
-- `dist/assets/brand.css` contains shared brand tokens and local font declarations.
-  Prefer landing-specific changes in `site.css` when other brand surfaces should
-  stay unchanged.
+- `dist/assets/brand.css` contains shared tokens and the complete local accent font.
+  Keep page layout in `site.css`. Source graphics import the same brand stylesheet.
 - `src/` contains source templates and assets for logos, banners, scenes,
   Twitch description panels, and wallpapers. `rendered/` directories contain
   generated output; change the source first when updating those assets.
@@ -37,8 +37,8 @@ identity, approved logo, and local Inter / Unbounded fonts.
 
 ## Verification
 
-There is currently no landing build, lint, or test script. Do not invent one or
-run asset generators as a substitute for checking the landing page.
+The landing is hand-authored and has no build step. Run the existing Node tests
+and inspect rendered pages. Asset generators are not a substitute for page QA.
 
 For HTML/CSS edits:
 
@@ -53,8 +53,10 @@ For generated assets, run only the relevant command from `package.json`:
 `render:twitch-description`, `brand:assets`, or `brand:subscribe`. Browser-based
 renderers use a Chrome/Chromium executable; `scripts/render-scenes.mjs` supports
 `CHROME_BIN`. Inspect the generated output and diff before committing it.
-`npm run full` and `optimize:images` can rewrite multiple assets; use them only
-when the requested scope requires that work.
+`npm run full` exports scenes and all brand graphics. Use it only when the
+requested scope requires that work. Set `CHROME_BIN` for an installed browser.
+`brand:assets` exports favicon, OG, and subscription graphics; `render:wallpapers`
+exports wallpapers. Avatar and QR replacement require a separate owner choice.
 
 ## Delivery
 

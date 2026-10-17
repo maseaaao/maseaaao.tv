@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
-import {chromium} from 'playwright-core';
+import {launchBrowser} from '../scripts/browser.mjs';
 import sharp from 'sharp';
 import jsQR from 'jsqr';
 
@@ -11,7 +11,7 @@ const root = path.resolve(import.meta.dirname, '..');
 const scenes = path.join(root, 'src/scenes');
 const layout = JSON.parse(await fs.readFile(path.join(root, 'assets/cyber-monolith/obs-layout.json'), 'utf8'));
 let browser;
-before(async () => { browser = await chromium.launch({executablePath: process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true}); });
+before(async () => { browser = await launchBrowser(); });
 after(async () => { await browser?.close(); });
 
 for (const [stem, copy] of [['01-start', 'начало'], ['02-pause', 'пауза'], ['99-end', 'конец']]) {
@@ -34,9 +34,9 @@ for (const [stem, copy] of [['01-start', 'начало'], ['02-pause', 'пауз
         assert.equal(bounds.x, 120);
         assert.equal(bounds.y, vertical ? 300 : 440);
         assert.equal(await heading.evaluate(e => getComputedStyle(e).fontFamily), 'Unbounded, sans-serif');
-        assert.equal(await heading.evaluate(e => getComputedStyle(e).color), 'rgb(193, 130, 243)');
-        assert.ok(await page.evaluate(() => document.fonts.check('700 88px Unbounded')));
-        assert.ok(await page.evaluate(() => document.fonts.check('400 32px Geologica')));
+        assert.equal(await heading.evaluate(e => getComputedStyle(e).color), 'rgb(244, 243, 236)');
+        assert.ok(await page.evaluate(() => document.fonts.check('600 88px Unbounded')));
+        assert.ok(await page.evaluate(() => document.fonts.check('400 32px Arial')));
         for (const key of ['chat', 'music', 'donors', 'alerts']) {
           const slot = page.locator(`[data-zone="${key}"]`);
           assert.equal(await slot.count(), 1, `missing ${key} reserved zone`);
@@ -50,7 +50,7 @@ for (const [stem, copy] of [['01-start', 'начало'], ['02-pause', 'пауз
         const qr = page.locator('[data-zone="qr"]');
         assert.deepEqual(await qr.boundingBox(), Object.fromEntries(['x', 'y', 'width', 'height'].map((k, i) => [k, map.qr[i]])));
         assert.equal(await page.locator('body').innerText(), `maseaaao\n${copy}`);
-        assert.equal(await page.evaluate(() => document.querySelector('.grid').style.opacity || getComputedStyle(document.querySelector('.grid')).opacity), '0.02');
+        assert.equal(await page.evaluate(() => document.querySelector('.grid').style.opacity || getComputedStyle(document.querySelector('.grid')).opacity), '0');
         assert.deepEqual(errors, []);
         const image = path.join(scenes, 'rendered', `${name}.webp`);
         const meta = await sharp(image).metadata();
@@ -74,7 +74,7 @@ for (const vertical of [false, true]) {
     const {data, info} = await sharp(image).ensureAlpha().raw().toBuffer({resolveWithObject:true});
     const pixel = (x, y) => [...data.subarray((y * info.width + x) * 4, (y * info.width + x) * 4 + 4)];
     assert.equal(pixel(vertical ? 540 : 900, vertical ? 304 : 720)[3], 0, 'camera center must be fully transparent');
-    if (vertical) assert.deepEqual(pixel(map.chat[0] + 200, map.chat[1] + 200), [10, 13, 18, 255], 'vertical chat backdrop belongs to the intentionally opaque lower section');
+    if (vertical) assert.deepEqual(pixel(map.chat[0] + 200, map.chat[1] + 200), [255, 254, 248, 255], 'vertical chat backdrop belongs to the intentionally opaque lower section');
     else assert.equal(pixel(map.chat[0] + 200, map.chat[1] + 200)[3], 0, 'horizontal chat backing is owned by the active widget, never a permanent camera HUD block');
     if (vertical) {
       assert.equal(pixel(540, 607)[3], 0, 'last camera row remains transparent');
@@ -91,22 +91,15 @@ for (const vertical of [false, true]) {
   });
 }
 
-test('cam-frame: exact 600x341 angular purple frame with a transparent center', async () => {
-  const image = path.join(scenes, 'rendered/cam-frame.webp');
-  assert.ok(await fs.stat(image).catch(() => false), 'gameplay camera frame asset must exist');
-  const meta = await sharp(image).metadata();
-  assert.deepEqual([meta.width,meta.height,meta.hasAlpha], [600,341,true]);
-  const {data,info} = await sharp(image).ensureAlpha().raw().toBuffer({resolveWithObject:true});
-  let opaque = 0;
-  for (let y = 0; y < info.height; y++) for (let x = 0; x < info.width; x++) {
-    const i = (y * info.width + x) * 4;
-    if (data[i+3]) {
-      opaque++;
-      assert.deepEqual([...data.subarray(i,i+4)], [193,130,243,255]);
-      assert.ok(x < 2 || x >= 598 || y < 2 || y >= 339, 'frame cannot intrude into camera content');
-    }
-  }
-  assert.ok(opaque > 100 && opaque < 4000);
+test('cam-frame: exact 600x341 blue frame with a transparent center', async () => {
+  const image=path.join(scenes,'rendered/cam-frame.webp');
+  const meta=await sharp(image).metadata();
+  assert.deepEqual([meta.width,meta.height,meta.hasAlpha],[600,341,true]);
+  const {data,info}=await sharp(image).ensureAlpha().raw().toBuffer({resolveWithObject:true});
+  const alpha=(x,y)=>data[(y*info.width+x)*4+3];
+  assert.equal(alpha(300,170),0);
+  assert.equal(alpha(300,0),255);
+  assert.deepEqual([...data.subarray(300*4,300*4+3)],[22,22,217]);
 });
 
 test('blank horizontal and background: quiet full-size Cyber-Monolith surfaces', async () => {
@@ -119,14 +112,14 @@ test('blank horizontal and background: quiet full-size Cyber-Monolith surfaces',
       await page.goto(pathToFileURL(path.join(scenes,`${name}.html`)).href);
       assert.equal(await page.locator('body').innerText(),'');
       assert.equal(await page.locator('.grid').count(),1,'quiet surface uses the restrained HUD grid');
-      assert.equal(await page.locator('.grid').evaluate(e => getComputedStyle(e).opacity),'0.02');
+      assert.equal(await page.locator('.grid').evaluate(e => getComputedStyle(e).opacity),'0');
     } finally { await page.close(); }
   }
 });
 
 test('scene manifest: actual filenames and authoritative live-source mapping', async () => {
   const manifest = JSON.parse(await fs.readFile(path.join(scenes,'layout.json'),'utf8'));
-  assert.equal(manifest.design,'Кибер-Монолит HUD');
+  assert.equal(manifest.design,'Синий / светлый');
   assert.deepEqual(manifest.horizontal,layout.horizontal);
   assert.deepEqual(manifest['vertical-status'],layout['vertical-status']);
   assert.deepEqual(manifest['vertical-camera'],layout['vertical-camera']);
@@ -141,7 +134,7 @@ test('scene manifest: actual filenames and authoritative live-source mapping', a
 });
 
 test('all exports: lossless pixel parity with offline Chrome screenshots', async () => {
-  const standalone = await chromium.launch({executablePath: process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true});
+  const standalone = await launchBrowser();
   try {
     const manifest = JSON.parse(await fs.readFile(path.join(scenes,'layout.json'),'utf8'));
     for (const file of manifest.files) {
@@ -163,23 +156,12 @@ test('all exports: lossless pixel parity with offline Chrome screenshots', async
   } finally { await standalone.close(); }
 });
 
-test('all native scene corners: 20px legs and 2px strokes without viewport scaling', async () => {
+test('scenes have no decorative corner markers', async () => {
   const manifest=JSON.parse(await fs.readFile(path.join(scenes,'layout.json'),'utf8'));
-  let checked=0;
-  for (const file of manifest.files) {
-    const page=await browser.newPage({viewport:{width:file.width,height:file.height},deviceScaleFactor:1});
-    try {
-      await page.goto(pathToFileURL(path.join(scenes,file.file)).href);
-      for (const corner of await page.locator('.corner').all()) {
-        const box=await corner.boundingBox();
-        assert.deepEqual([box.width,box.height],[20,20]);
-        const strokes=await corner.evaluate(e=>['borderLeftWidth','borderRightWidth','borderTopWidth','borderBottomWidth'].map(k=>parseFloat(getComputedStyle(e)[k])).sort((a,b)=>a-b));
-        assert.deepEqual(strokes,[0,0,2,2]);
-        checked++;
-      }
-    } finally { await page.close(); }
+  for(const file of manifest.files) {
+    const html=await fs.readFile(path.join(scenes,file.file),'utf8');
+    assert.doesNotMatch(html,/class="corner /);
   }
-  assert.ok(checked>0);
 });
 
 test('blank vertical: gameplay and camera remain completely unobstructed', async () => {

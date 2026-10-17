@@ -2,18 +2,19 @@
   "name": "maseaaao-tv",
   "private": true,
   "scripts": {
-    "render:youtube-banner": "node scripts/cyber-site-render.mjs",
-    "render:twitch-banner": "node scripts/cyber-site-render.mjs",
+    "render:youtube-banner": "node scripts/cyber-site-render.mjs banners",
+    "render:twitch-banner": "node scripts/cyber-site-render.mjs banners",
     "render:logo": "node scripts/refresh-logo-qr.mjs",
     "render:scenes": "node scripts/build-cyber-scenes.mjs",
-    "render:twitch-description": "node scripts/cyber-site-render.mjs",
-    "brand:assets": "node scripts/generate-brand-assets.mjs",
-    "brand:subscribe": "node scripts/render-subscribe-card.mjs",
+    "render:twitch-description": "node scripts/cyber-site-render.mjs panels",
+    "brand:assets": "node scripts/cyber-site-render.mjs brand",
+    "brand:subscribe": "node scripts/cyber-site-render.mjs brand",
     "optimize:images": "node scripts/optimize-images.mjs",
     "full": "npm run build:cyber && npm run render:cyber-site",
     "build:noir": "node scripts/build-cyber-scenes.mjs",
     "build:cyber": "node scripts/build-cyber-scenes.mjs",
-    "render:cyber-site": "node scripts/cyber-site-render.mjs"
+    "render:cyber-site": "node scripts/cyber-site-render.mjs",
+    "render:wallpapers": "node scripts/cyber-site-render.mjs wallpapers"
   },
   "devDependencies": {
     "jsqr": "^1.4.0",
