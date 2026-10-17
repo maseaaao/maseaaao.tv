@@ -12,11 +12,12 @@
     "brand:assets": "node scripts/cyber-site-render.mjs brand",
     "brand:subscribe": "node scripts/cyber-site-render.mjs brand",
     "optimize:images": "node scripts/optimize-images.mjs",
-    "full": "npm run build:cyber && npm run render:cyber-site",
+    "full": "npm run render:logo && npm run build:fonts && npm run build:cyber && npm run render:cyber-site",
     "build:noir": "node scripts/build-cyber-scenes.mjs",
     "build:cyber": "node scripts/build-cyber-scenes.mjs",
     "render:cyber-site": "node scripts/cyber-site-render.mjs",
-    "render:wallpapers": "node scripts/cyber-site-render.mjs wallpapers"
+    "render:wallpapers": "node scripts/cyber-site-render.mjs wallpapers",
+    "build:fonts": "python3 scripts/build-web-fonts.py"
   },
   "devDependencies": {
     "jsqr": "^1.4.0",

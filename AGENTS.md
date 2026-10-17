@@ -53,8 +53,9 @@ For generated assets, run only the relevant command from `package.json`:
 `render:twitch-description`, `brand:assets`, or `brand:subscribe`. Before browser-based tests or asset rendering, run `npm run browser:install` after
 `npm ci`. Existing system Chrome/Chromium can be used via `CHROME_BIN` or
 `CHROME_PATH` instead. Inspect the generated output and diff before committing it.
-`npm run full` exports scenes and all brand graphics. Use it only when the
-requested scope requires that work. Set `CHROME_BIN` for an installed browser.
+`npm run full` regenerates the logo/QR, full-coverage web font, OBS scenes and
+other brand exports in dependency order. It needs Python `fonttools[woff]` and
+an installed Chromium; use it only when all those outputs should be refreshed. Set `CHROME_BIN` for an installed browser.
 `brand:assets` exports favicon, OG, and subscription graphics; `render:wallpapers`
 exports wallpapers. Avatar and QR replacement require a separate owner choice.
 
