@@ -50,9 +50,9 @@ For HTML/CSS edits:
 
 For generated assets, run only the relevant command from `package.json`:
 `render:youtube-banner`, `render:twitch-banner`, `render:logo`, `render:scenes`,
-`render:twitch-description`, `brand:assets`, or `brand:subscribe`. Browser-based
-renderers use a Chrome/Chromium executable; `scripts/render-scenes.mjs` supports
-`CHROME_BIN`. Inspect the generated output and diff before committing it.
+`render:twitch-description`, `brand:assets`, or `brand:subscribe`. Before browser-based tests or asset rendering, run `npm run browser:install` after
+`npm ci`. Existing system Chrome/Chromium can be used via `CHROME_BIN` or
+`CHROME_PATH` instead. Inspect the generated output and diff before committing it.
 `npm run full` exports scenes and all brand graphics. Use it only when the
 requested scope requires that work. Set `CHROME_BIN` for an installed browser.
 `brand:assets` exports favicon, OG, and subscription graphics; `render:wallpapers`

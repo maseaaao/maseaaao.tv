@@ -9,7 +9,7 @@ Unbounded 600 используется для акцентов, Arial — для
 - Шрифт: `python3 scripts/build-web-fonts.py` (нужен fonttools[woff]).
 - Сцены: `npm run render:scenes`.
 - Остальные ресурсы: `npm run render:cyber-site`.
-- `CHROME_BIN` или `CHROME_PATH` задаёт путь к Chrome/Chromium; иначе используется браузер Playwright.
+- После `npm ci` выполните `npm run browser:install`, чтобы установить Chromium версии Playwright. Вместо этого можно задать `CHROME_BIN` или `CHROME_PATH` для установленного Chrome/Chromium.
 - `CYBER_BACKUP_SCRIPT` при необходимости включает внешнее резервирование перед экспортом. Без него исходники и результаты сохраняются в Git.
 
 ## Зарезервированные области под живые источники

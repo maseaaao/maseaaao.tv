@@ -2,6 +2,7 @@
   "name": "maseaaao-tv",
   "private": true,
   "scripts": {
+    "browser:install": "playwright-core install chromium",
     "test": "node scripts/cyber-site-test.mjs",
     "render:youtube-banner": "node scripts/cyber-site-render.mjs banners",
     "render:twitch-banner": "node scripts/cyber-site-render.mjs banners",

@@ -10,8 +10,8 @@ Captured from the current source with Chromium 153 at 1440 px (desktop) and
 Twitch SDK and iframe networking are isolated. These are interface previews,
 not evidence of an actual live broadcast or a working external media connection.
 
-Run all site/OBS checks with `npm test`. Set `CHROME_BIN` or `CHROME_PATH` to an
-installed Chromium executable, or install the browser expected by Playwright.
+Run all site/OBS checks with `npm test`. Run `npm run browser:install` after `npm ci`, or set `CHROME_BIN` or
+`CHROME_PATH` to an existing Chromium executable.
 The suite includes Checker actions/TV layout, docs/check responsive and enlarged
 text checks, banner/panel clipping, landing states/keyboard/contrast and OBS
 transparency/geometry/QR/pixel parity.
