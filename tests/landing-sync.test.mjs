@@ -452,6 +452,9 @@ if (process.env.LANDING_AUDIT_OUT) {
       await focus.page.keyboard.press('Tab');
       await focus.page.locator('[data-stream-chat] summary').focus();
       await focus.page.screenshot({path:path.join(directory,'focus-chat-desktop.png'),fullPage:true});
+      await focus.page.keyboard.press('Enter');
+      await focus.page.locator('[data-stream-chat] summary').blur();
+      await focus.page.screenshot({path:path.join(directory,'offline-desktop-chat-closed.png'),fullPage:true});
     } finally { await focus.context.close(); }
     await fs.writeFile(path.join(directory,'browser-evidence.json'),JSON.stringify(evidence,null,2));
     assert.deepEqual(evidence.errors, []);

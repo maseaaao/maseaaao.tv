@@ -117,7 +117,7 @@ test('donation and its hover state remain readable in the shared palette', async
   } finally { await context.close(); }
 });
 
-test('wide layout places media next to links and narrow layout follows document order', async () => {
+test('links precede media at every width and do not move when the stream goes offline', async () => {
   for (const width of [320,390,540,768,900,1024,1440,1920]) {
     const {page,context}=await newPage();
     try {
@@ -126,14 +126,13 @@ test('wide layout places media next to links and narrow layout follows document 
       const boxes=await page.evaluate(()=>Object.fromEntries(['identity','stream-layout','actions','collab'].map(name=>{const r=document.querySelector('.'+name).getBoundingClientRect();return [name,{x:r.x,y:r.y,right:r.right,bottom:r.bottom}]})));
       const {identity,'stream-layout':media,actions,collab}=boxes;
       assert.ok(actions.y>=identity.bottom);
-      if (width>1000) {
-        assert.ok(actions.x>=media.right);
-        assert.equal(actions.y,media.y);
-      } else {
-        assert.ok(media.y>=actions.bottom);
-      }
+      assert.ok(media.y>=actions.bottom);
       assert.ok(collab.y>=Math.max(media.bottom,actions.bottom));
       assert.equal(await page.locator('[data-chat-frame]').count(),1);
+      const actionBox = await page.locator('.actions').boundingBox();
+      await emit(page,'offline');
+      assert.deepEqual(await page.locator('.actions').boundingBox(), actionBox, 'a status change must not shift the primary links');
+      assert.ok((await page.locator('.stream-layout').boundingBox()).y >= actionBox.y + actionBox.height);
     } finally { await context.close(); }
   }
 });
@@ -151,6 +150,36 @@ test('arrows stay still during hover and focus; reduced motion disables transiti
       assert.equal(await tile.locator('.tile__arrow').evaluate(e=>getComputedStyle(e).transform),'none');
       if(reducedMotion==='reduce') assert.equal(await tile.evaluate(e=>getComputedStyle(e).transitionDuration),'0s');
     } finally { await context.close(); }
+  }
+});
+
+test('enlarged landing text stays readable without horizontal overflow in every stream state', async () => {
+  for (const state of ['online','offline','error']) {
+    for (const width of [320,390,540,1440]) {
+      const {page,context}=await newPage({sdkState:state==='error'?'error':'mock'});
+      try {
+        if(state==='error') await page.waitForFunction(()=>document.querySelector('[data-stream-layout]').dataset.state==='error');
+        else await emit(page,'ready',state);
+        await page.setViewportSize({width,height:1000});
+        await page.evaluate(()=>{
+          const elements=[...document.querySelectorAll('body,body *')];
+          const sizes=elements.map(e=>parseFloat(getComputedStyle(e).fontSize));
+          elements.forEach((e,i)=>{e.style.fontSize=sizes[i]*2+'px';});
+        });
+        assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),`${state}/${width}/200% text`);
+        if(state==='online') {
+          const separated=await page.evaluate(()=>{
+            const badge=document.querySelector('.live-badge').getBoundingClientRect();
+            const copy=document.querySelector('.identity__copy').getBoundingClientRect();
+            return badge.right<=copy.left || badge.bottom<=copy.top || badge.top>=copy.bottom;
+          });
+          assert.equal(separated,true,`${width}px: enlarged LIVE must not overlap the identity text`);
+        }
+        for (const selector of ['.tile--twitch','.tile--donationalerts','.collab__link']) {
+          assert.equal(await page.locator(selector).first().isVisible(),true);
+        }
+      } finally { await context.close(); }
+    }
   }
 });
 

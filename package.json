@@ -2,6 +2,7 @@
   "name": "maseaaao-tv",
   "private": true,
   "scripts": {
+    "test": "node scripts/cyber-site-test.mjs",
     "render:youtube-banner": "node scripts/cyber-site-render.mjs banners",
     "render:twitch-banner": "node scripts/cyber-site-render.mjs banners",
     "render:logo": "node scripts/refresh-logo-qr.mjs",
