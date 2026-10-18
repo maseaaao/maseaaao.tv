@@ -82,7 +82,10 @@ const exported = {
   minimumVersion: MINIMUM_COMPATIBLE_VERSION,
 };
 
-const importCode = Buffer.concat([Buffer.from("SBAE", "ascii"), gzipSync(Buffer.from(JSON.stringify(exported), "utf8"))]).toString("base64");
+const compressed = gzipSync(Buffer.from(JSON.stringify(exported), "utf8"));
+// gzip's OS marker otherwise differs between Windows and Linux checkouts.
+compressed[9] = 255;
+const importCode = Buffer.concat([Buffer.from("SBAE", "ascii"), compressed]).toString("base64");
 const importPath = resolve(project, "streamerbot-import.txt");
 writeFileSync(importPath, `${importCode}\n`, "utf8");
 console.log(`Generated native import string (${importCode.length} characters).`);
