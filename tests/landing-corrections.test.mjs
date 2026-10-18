@@ -321,3 +321,17 @@ test('secondary links retain two compact columns at intermediate widths', async 
     } finally { await context.close(); }
   }
 });
+
+test('narrow desktop reserves at least 300px for chat beside a Twitch-sized player', async () => {
+  for (const width of [768, 800, 850, 900]) {
+    const {page, context} = await newPage({width});
+    try {
+      await emit(page, 'ready', 'online');
+      const player = await page.locator('#twitch-player iframe').boundingBox();
+      const chat = await page.locator('[data-chat-frame]').boundingBox();
+      assert.ok(player.width >= 400 && player.height >= 300, `${width}: Twitch player minimum`);
+      assert.ok(chat.width >= 298, `${width}: chat width ${chat.width}`);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    } finally { await context.close(); }
+  }
+});
