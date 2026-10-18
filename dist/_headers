@@ -29,3 +29,8 @@
 
 /og-image.jpg
   Cache-Control: public, max-age=0, must-revalidate
+
+/assets/theme.css
+  Cache-Control: public, max-age=0, must-revalidate
+/assets/theme.js
+  Cache-Control: public, max-age=0, must-revalidate

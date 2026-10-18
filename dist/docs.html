@@ -2,6 +2,7 @@
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
+    <meta name="color-scheme" content="light dark" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="index,follow" />
     <title>Документация — maseaaao.tv</title>
@@ -13,11 +14,21 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
 
+    <script src="assets/theme.js"></script>
     <link rel="stylesheet" href="assets/brand.css" />
     <link rel="stylesheet" href="assets/site.css" />
+    <link rel="stylesheet" href="assets/theme.css" />
   </head>
   <body class="docs">
     <main>
+      <label class="theme-control" data-theme-control hidden>
+            <span>Тема</span>
+            <select data-theme-select aria-label="Цветовая тема">
+              <option value="auto">Авто</option>
+              <option value="light">Светлая</option>
+              <option value="dark">Тёмная</option>
+            </select>
+          </label>
       <h1>maseaaao.tv — документация</h1>
       <p class="subtitle">
         Человекочитаемая документация ресурсов сайта для людей и агентов.

@@ -56,8 +56,19 @@
     const url = new URL(source);
     url.searchParams.delete("parent");
     url.searchParams.append("parent", window.location.hostname);
+    if (getComputedStyle(document.documentElement).getPropertyValue("--theme").trim() === "dark") url.searchParams.set("darkpopout", "");
     chatFrame.src = url.href;
   }
+
+  document.addEventListener("themechange", () => {
+    if (!chatFrame.hasAttribute("src")) return;
+    const url = new URL(chatFrame.src);
+    const dark = getComputedStyle(document.documentElement).getPropertyValue("--theme").trim() === "dark";
+    if (dark === url.searchParams.has("darkpopout")) return;
+    if (dark) url.searchParams.set("darkpopout", "");
+    else url.searchParams.delete("darkpopout");
+    chatFrame.src = url.href;
+  });
 
   function updateChat() {
     chat.open = chatPreference ?? desktop.matches;

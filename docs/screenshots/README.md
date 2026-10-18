@@ -25,3 +25,12 @@ CHROME_BIN=/path/to/chromium LANDING_AUDIT_OUT=/new/evidence-directory node --te
 The desktop preview comes from `offline-desktop-chat-closed.png`; the mobile
 preview comes from `cold-mobile-390.png`. The capture also writes measurements
 and isolated network conditions to `browser-evidence.json`.
+
+
+## Theme comparisons
+
+The `*-light-*.png` and `*-dark-*.png` images show the same UI with automatic
+light/dark system preferences in Chromium 153. Site previews: 390/1440px with
+isolated offline Twitch and manually collapsed chat. Dock: 390/1200px in demo
+mode; `settings-light.png` and `settings-dark.png` show the settings dialog.
+See `../themes.md` for palette, measured contrast and behavior.

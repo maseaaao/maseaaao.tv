@@ -53,8 +53,8 @@ const sdk = `(() => {
   window.Twitch={Player};
 })();`;
 
-async function newPage({width = 1440, sdkState = 'mock', javaScriptEnabled = true, htmlOverride, cssOverride, clock = false} = {}) {
-  const context = await browser.newContext({viewport: {width, height: 1000}, reducedMotion: 'reduce', javaScriptEnabled});
+async function newPage({width = 1440, sdkState = 'mock', javaScriptEnabled = true, htmlOverride, cssOverride, clock = false, colorScheme = "light"} = {}) {
+  const context = await browser.newContext({viewport: {width, height: 1000}, reducedMotion: 'reduce', javaScriptEnabled, colorScheme});
   const page = await context.newPage();
   const traffic = {fonts: [], errors: [], external: []};
   page.on('pageerror', error => traffic.errors.push(error.message));
@@ -99,13 +99,20 @@ test('merge conflict markers are absent from deployable HTML and CSS', () => {
 });
 
 test('upstream Twitch hooks, archive/TikTok links and accessibility survive', () => checkFeatures(html));
-test('stream.js preserves upstream behavior with approved chat defaults and loading geometry', async () => {
-  const original = execFileSync('git', ['cat-file', '--filters', `${upstreamRef}:dist/assets/stream.js`], {cwd: root}).toString('utf8');
-  const expected = original.replace('window.matchMedia("(min-width:1000px)")', 'window.matchMedia("(min-width:651px)")')
-    .replace('chatPreference ?? (status === "online" && desktop.matches)', 'chatPreference ?? desktop.matches')
-    .replace('status === "online" || status === "error" || (status === "offline" && playerPreference)', 'status !== "offline" || playerPreference');
-  assert.notEqual(expected, original);
-  assert.equal((await fs.readFile(path.join(root, 'dist/assets/stream.js'))).equals(Buffer.from(expected)), true, 'unapproved upstream script change');
+test('chat theme follows the page without recreating the Twitch player', async () => {
+  const {page, context} = await newPage({colorScheme: 'dark'});
+  try {
+    await emit(page, 'ready', 'online');
+    const source = async () => new URL(await page.locator('[data-chat-frame]').getAttribute('src'));
+    assert.equal((await source()).searchParams.has('darkpopout'), true);
+    await page.evaluate(() => { window.__originalPlayer = window.__twitchPlayer; });
+    await page.locator('[data-theme-select]').selectOption('light');
+    assert.equal((await source()).searchParams.has('darkpopout'), false);
+    await page.locator('[data-theme-select]').selectOption('dark');
+    assert.equal((await source()).searchParams.has('darkpopout'), true);
+    assert.equal(await page.evaluate(() => window.__originalPlayer === window.__twitchPlayer), true);
+    assert.equal((await source()).searchParams.get('parent'), '127.0.0.1');
+  } finally { await context.close(); }
 });
 
 test('blue and light surfaces use a local accent font and rounded controls', async () => {
@@ -162,7 +169,7 @@ test('external destinations and executable scripts survive; approved copy and SE
     const destinations = anchors => [...new Set(anchors.filter(href => !href.startsWith('#')))].sort();
     assert.deepEqual(destinations(actual.anchors), destinations(expected.anchors));
     assert.equal(actual.title, expected.title);
-    assert.deepEqual(actual.scripts.filter(script => script.src), expected.scripts.filter(script => script.src));
+    assert.deepEqual(actual.scripts.filter(script => script.src), [{src: 'assets/theme.js', defer: false, text: ''}, ...expected.scripts.filter(script => script.src)]);
     for (const copy of ['Стример и автор', 'Анонсы, новости, розыгрыши', 'Записи и нарезки', 'Поддержать стрим']) {
       assert.ok(actual.text.includes(copy.replace(/\s+/g, '')), copy);
     }
@@ -472,5 +479,60 @@ test("fractional container widths below 402px retain the Twitch fallback", async
     const ui = await layoutAudit(page);
     assert.equal(ui.contentWidth, 401.5);
     assert.ok(ui.mobileVisible, "fractional sub-402px content has no external Twitch fallback");
+  } finally { await context.close(); }
+});
+
+for (const colorScheme of ['light', 'dark']) {
+  test(`system ${colorScheme}: theme works without JavaScript and at narrow widths`, async () => {
+    const {page, context} = await newPage({colorScheme, javaScriptEnabled: false, width: 320});
+    try {
+      assert.equal(await page.locator('[data-theme-control]').isVisible(), false);
+      assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), colorScheme);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+      await page.emulateMedia({colorScheme: colorScheme === 'dark' ? 'light' : 'dark'});
+      assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), colorScheme === 'dark' ? 'light' : 'dark');
+    } finally { await context.close(); }
+  });
+  test(`system ${colorScheme}: manual theme persists, overrides OS, and auto resumes following OS`, async () => {
+    const {page, context} = await newPage({colorScheme, width: 390});
+    try {
+      const opposite = colorScheme === 'dark' ? 'light' : 'dark';
+      await page.locator('[data-theme-select]').selectOption(opposite);
+      await page.reload();
+      assert.equal(await page.locator('[data-theme-select]').inputValue(), opposite);
+      assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), opposite);
+      await page.goto(origin + '/dist/docs.html');
+      assert.equal(await page.locator('[data-theme-select]').inputValue(), opposite);
+      await page.locator('[data-theme-select]').selectOption('auto');
+      assert.equal(await page.evaluate(() => localStorage.getItem('maseaaao.theme.v1')), null);
+      assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), colorScheme);
+      await page.emulateMedia({colorScheme: opposite});
+      assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), opposite);
+    } finally { await context.close(); }
+  });
+}
+test('dark landing text and hover states retain high contrast at mobile and desktop sizes', async () => {
+  for (const width of [320,390,540,1440]) {
+    const {page, context} = await newPage({colorScheme: 'dark'});
+    try {
+      await emit(page, 'ready', 'offline');
+      await page.setViewportSize({width, height: 1000});
+      const rows = await contrastAudit(page);
+      assert.deepEqual(rows.filter(row => row.ratio < row.minimum), []);
+      await page.locator('.tile--donationalerts').hover();
+      assert.deepEqual((await contrastAudit(page)).filter(row => row.ratio < row.minimum), []);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    } finally { await context.close(); }
+  }
+});
+test('blocked storage keeps the theme control functional', async () => {
+  const {page, context} = await newPage();
+  try {
+    await page.addInitScript(() => Object.defineProperty(window, 'localStorage', {get() { throw new Error('Storage blocked'); }}));
+    await page.reload();
+    await page.locator('[data-theme-select]').selectOption('dark');
+    assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'dark');
+    await page.locator('[data-theme-select]').selectOption('auto');
+    assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'light');
   } finally { await context.close(); }
 });

@@ -2,20 +2,31 @@
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
+    <meta name="color-scheme" content="light dark" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex,follow" />
     <title>Stream Checker</title>
     <meta name="theme-color" content="#f4f3ec" />
     <link rel="icon" href="favicon.ico" />
 
+    <script src="assets/theme.js"></script>
     <link rel="stylesheet" href="assets/brand.css" />
     <link rel="stylesheet" href="assets/site.css" />
+    <link rel="stylesheet" href="assets/theme.css" />
   </head>
 
   <body class="checker">
     <header>
       <h1>Stream Checker</h1>
 
+      <label class="theme-control" data-theme-control hidden>
+            <span>Тема</span>
+            <select data-theme-select aria-label="Цветовая тема">
+              <option value="auto">Авто</option>
+              <option value="light">Светлая</option>
+              <option value="dark">Тёмная</option>
+            </select>
+          </label>
       <div class="global-actions">
         <button type="button" data-action="add-all">Добавить все</button>
         <button type="button" data-action="remove-all" data-kind="remove"
