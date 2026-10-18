@@ -24,7 +24,7 @@
     "brand:assets": "node tooling/artwork/cyber-site-render.mjs brand",
     "brand:subscribe": "node tooling/artwork/cyber-site-render.mjs brand",
     "optimize:images": "node tooling/artwork/optimize-images.mjs",
-    "full": "npm run render:logo && npm run build:fonts && npm run build:cyber && npm run render:cyber-site",
+    "full": "npm run render:logo && npm run build:fonts && npm run build:website && npm run build:cyber && npm run render:cyber-site && npm run build:website",
     "build:noir": "node tooling/artwork/build-cyber-scenes.mjs",
     "build:cyber": "node tooling/artwork/build-cyber-scenes.mjs",
     "render:cyber-site": "node tooling/artwork/cyber-site-render.mjs",

@@ -31,7 +31,7 @@ jobs:
       - run: npm run build:stream-info
       - run: npm run build:tuna
       - name: Verify committed website publication
-        run: git diff --exit-code -- dist apps/website/public/assets/brand.css apps/website/public/assets/fonts
+        run: git diff --exit-code -- dist apps/website/public/assets/brand.css apps/website/public/assets/fonts apps/brand-color-lab/index.html apps/obs-widgets/output-stats/index.html apps/stream-info/dist apps/stream-info/change-info-streamer-bot.html apps/stream-info/streamerbot-import.txt
       - uses: actions/upload-artifact@v4
         with:
           name: standalone-tools

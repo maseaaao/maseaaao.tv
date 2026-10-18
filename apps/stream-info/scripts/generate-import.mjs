@@ -9,7 +9,7 @@ const packageMetadata = JSON.parse(readFileSync(resolve(project, "package.json")
 const sources = [
   "action.cs", "state-cache-policy.cs",
   "category-search-policy.cs", "category-search-service.cs", "category-search-transport.cs",
-].map(name => readFileSync(resolve(project, "streamerbot", name), "utf8"));
+].map(name => readFileSync(resolve(project, "streamerbot", name), "utf8").replace(/\r\n?/g, "\n"));
 const usings = [...new Set(sources.flatMap(source => source.match(/^using [^;]+;/gm) ?? []))];
 const bodies = sources.map(source => source.split(String.fromCharCode(10)).filter(line => !line.startsWith("using ")).join(String.fromCharCode(10)).trim());
 const actionSource = `${usings.join("\n")}\n\n${bodies.join("\n\n")}\n`;
