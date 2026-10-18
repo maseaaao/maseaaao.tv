@@ -4,7 +4,7 @@ import { brandIcon, uiIcon } from "./icons";
 import { rankCategories } from "./category-search";
 import STREAMERBOT_IMPORT from "../streamerbot-import.txt?raw";
 import { DEFAULT_TWITCH_TEMPLATE, isTemplateValid, titleFromTemplate } from "./templates";
-import { locale, localeTag, t } from "./i18n";
+import { t } from "./messages";
 import type {
   ActionResponse,
   ActionSummary,
@@ -189,7 +189,7 @@ const appElement = document.querySelector<HTMLDivElement>("#app");
 if (!appElement) throw new Error(t("containerNotFound"));
 const app: HTMLDivElement = appElement;
 
-document.documentElement.lang = locale;
+document.documentElement.lang = "ru";
 document.title = "Stream Info";
 
 let client: StreamerbotClient | null = null;
@@ -367,7 +367,7 @@ function renderMain(): string {
   const stream = state.stream;
   if (!stream) return `<main class="empty-state"><div class="loader"></div><p>${t("loading")}</p></main>`;
   if (!state.allForm) initializeEditor();
-  const stamp = state.lastUpdated ? state.lastUpdated.toLocaleTimeString(localeTag[locale], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—";
+  const stamp = state.lastUpdated ? state.lastUpdated.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—";
   return `<main class="content"><div class="subtitle-top">${subtitlePanel()}</div><div class="cards">${settings.twitchEnabled ? renderTwitchCard(stream.twitch) : ""}</div>${savePanel()}<div class="presets-below">${presetPanel()}</div><div class="updated-at"><span>${t("updated")} ${escapeHtml(stamp)}</span><span>v${APP_VERSION}</span></div></main>`;
 }
 
@@ -955,7 +955,7 @@ function validateTwitch(title: string, tags: string[]): string[] {
   if (title.length > 140) errors.push(t("twitchTitleTooLong"));
   if (tags.length > 10) errors.push(t("twitchTagsTooMany"));
   if (tags.some((tag) => !tag.trim() || tag.length > 25 || /\s/.test(tag))) errors.push(t("twitchTagsInvalid"));
-  if (new Set(tags.map((tag) => tag.toLocaleLowerCase(localeTag[locale]))).size !== tags.length) errors.push(t("twitchTagsDuplicate"));
+  if (new Set(tags.map((tag) => tag.toLocaleLowerCase("ru-RU"))).size !== tags.length) errors.push(t("twitchTagsDuplicate"));
   return errors;
 }
 
@@ -1053,7 +1053,7 @@ function addTag(scope: string): void {
   state.allDirty = true; state.allSaveResult = null;
   const value = holder.draft.trim();
   if (!value) return;
-  if (!holder.tags.some((tag) => tag.localeCompare(value, locale, { sensitivity: "accent" }) === 0)) holder.tags.push(value);
+  if (!holder.tags.some((tag) => tag.localeCompare(value, "ru", { sensitivity: "accent" }) === 0)) holder.tags.push(value);
   holder.setDraft("");
   render();
 }

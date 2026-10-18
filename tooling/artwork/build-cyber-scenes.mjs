@@ -1,7 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
-import {spawnSync} from 'node:child_process';
 import {launchBrowser} from './browser.mjs';
 import sharp from 'sharp';
 import jsQR from 'jsqr';
@@ -9,21 +8,8 @@ import jsQR from 'jsqr';
 const root = path.resolve(import.meta.dirname, '../..');
 const scenes = path.join(root, 'artwork/scenes');
 const rendered = path.join(scenes, 'rendered');
-const backupScript = process.env.CYBER_BACKUP_SCRIPT;
-const layout = JSON.parse(await fs.readFile(path.join(root, 'artwork/assets/cyber-monolith/obs-layout.json'), 'utf8'));
+const layout = JSON.parse(await fs.readFile(path.join(root, 'artwork/scenes/layout.json'), 'utf8'));
 
-// Optional external backup integration. Without it, tracked sources and exports
-// can be restored from Git on every supported development environment.
-function reserve(files) {
-  if (!backupScript) return [];
-  // Corrective checkpoints expose reserve(path), not the legacy reserve CLI.
-  const args = path.basename(backupScript) === 'reserve.py'
-    ? ['-c', 'import json,runpy,sys; reserve=runpy.run_path(sys.argv[1])["reserve"]; [print(json.dumps(reserve(p),ensure_ascii=True)) for p in sys.argv[2:]]', backupScript, ...files]
-    : [backupScript, 'reserve', ...files];
-  const result = spawnSync(process.env.PYTHON || 'python', args, {encoding: 'utf8', windowsHide: true});
-  if (result.status !== 0) throw new Error(`Backup reservation failed: ${result.stderr || result.error}`);
-  return result.stdout.trim().split(/\r?\n/).filter(Boolean).map(line => JSON.parse(line));
-}
 const at = box => `left:${box[0]}px;top:${box[1]}px;width:${box[2]}px;height:${box[3]}px`;
 const zone = (name, box, panel = false) => `<div class="zone${panel ? ' panel' : ''}" data-zone="${name}" aria-hidden="true" style="${at(box)}"></div>`;
 const css = `
@@ -34,7 +20,7 @@ body{font-family:var(--hud-body);color:var(--hud-text)}.canvas{position:relative
 .identity img{width:64px;height:64px;object-fit:contain}.vertical .identity{top:156px;font-size:28px;gap:24px;height:48px}.vertical .identity img{width:48px;height:48px}
 .header-rule{position:absolute;left:120px;top:220px;width:1400px;height:1px;background:var(--hud-border)}.vertical .header-rule{top:244px;width:720px}
 .title-field{position:absolute;left:88px;top:400px;width:1432px;height:264px;background:var(--hud-accent);border-radius:32px}.vertical .title-field{top:268px;width:784px;height:176px}
-h1{position:absolute;left:120px;top:440px;margin:0;font-family:Unbounded,sans-serif;font-size:160px;line-height:1.08;font-weight:600;letter-spacing:-.035em;color:var(--hud-bg);background:transparent}.vertical h1{top:300px;font-size:88px}
+h1{position:absolute;left:120px;top:440px;margin:0;font-family:Unbounded,Arial,sans-serif;font-size:160px;line-height:1.08;font-weight:600;letter-spacing:-.035em;color:var(--hud-bg);background:transparent}.vertical h1{top:300px;font-size:88px}
 .zone{position:absolute;pointer-events:none}.panel{background:var(--hud-surface);border:1px solid var(--hud-border);border-radius:20px}.zone[data-zone="music"],.zone[data-zone="donors"]{background:var(--hud-bg)}
 
 .qr{position:absolute;display:block;object-fit:contain;image-rendering:pixelated;background:#eee}.social{background:var(--hud-bg);border-top:1px solid var(--hud-border)}
@@ -54,7 +40,7 @@ async function validateQr() {
 const suppliedQr = await validateQr();
 const qrMarkup = box => `<img class="qr" data-zone="qr" style="${at(box)}" src="data:image/png;base64,${suppliedQr.toString('base64')}" alt="QR: maseaaao.tv">`;
 function document(name, canvas, vertical, body, mode = '') {
-  return `<!doctype html>\n<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>maseaaao — ${name}</title><link rel="stylesheet" href="../../artwork/assets/cyber-monolith/tokens.css"><link rel="stylesheet" href="obs-scene.css"></head><body><main class="canvas${vertical ? ' vertical' : ''}${mode ? ` ${mode}` : ''}" style="--width:${canvas[0]}px;--height:${canvas[1]}px">${body}</main></body></html>\n`;
+  return `<!doctype html>\n<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>maseaaao — ${name}</title><link rel="stylesheet" href="../../packages/design/brand.css"><link rel="stylesheet" href="obs-scene.css"></head><body><main class="canvas${vertical ? ' vertical' : ''}${mode ? ` ${mode}` : ''}" style="--width:${canvas[0]}px;--height:${canvas[1]}px">${body}</main></body></html>\n`;
 }
 function status(name, copy, vertical) {
   const map = vertical ? layout['vertical-status'] : layout.horizontal;
@@ -78,12 +64,9 @@ for (const name of ['00-blank', 'background']) {
 }
 definitions.push({name:'00-blank-vertical', canvas:[1080,1920], html:document('00-blank-vertical', [1080,1920], true, '', 'gameplay')});
 definitions.push({name:'cam-frame', canvas:[600,341], html:document('cam-frame', [600,341], false, '', 'camera-tile')});
-const receipts = reserve(definitions.flatMap(({name}) => [path.join(scenes, `${name}.html`), path.join(rendered, `${name}.webp`), path.join(rendered, 'review', `${name}.png`)]).concat(path.join(rendered, 'cyber-scenes-build-report.json'), path.join(scenes, 'obs-scene.css'), path.join(scenes, 'layout.json')));
-await fs.mkdir(path.join(rendered, 'review'), {recursive:true});
+await fs.mkdir(rendered, {recursive:true});
 await fs.writeFile(path.join(scenes, 'obs-scene.css'), css, 'utf8');
-await fs.writeFile(path.join(scenes, 'layout.json'), JSON.stringify({version:2, design:'Синий / светлый', source:'../../artwork/assets/cyber-monolith/obs-layout.json', files:definitions.map(({name,canvas}) => ({name,file:`${name}.html`,rendered:`rendered/${name}.webp`,width:canvas[0],height:canvas[1]})), ...layout, notes:['Horizontal CAMERA chat/music/donors slots are fully transparent; only active widgets own their content backdrops.', 'chatFit boundsAlignment=9 is BOTTOMLEFT content alignment; item alignment=5 remains TOPLEFT. OBS integer alignment can leave less than one pixel at the bottom.', 'Transparent camera HUD belongs above the camera and below live widgets.', 'The vertical gameplay blank is intentionally fully transparent; never use it as the camera lower-panel backdrop.', 'Vertical-camera music and donors share one mapped slot; visibility is controlled by real OBS sources.']}, null, 2), 'utf8');
 const browser = await launchBrowser();
-const results = [];
 try {
   for (const definition of definitions) {
     const {name, canvas, html} = definition;
@@ -100,14 +83,11 @@ try {
       await page.locator('img').evaluateAll(images => Promise.all(images.map(image => image.decode())));
       if (errors.length) throw new Error(errors.join('\n'));
       const png = await page.screenshot({omitBackground:true, animations:'disabled'});
-      await fs.writeFile(path.join(rendered, 'review', `${name}.png`), png);
       const webp = await sharp(png).webp({lossless:true, effort:6}).toBuffer();
       await fs.writeFile(path.join(rendered, `${name}.webp`), webp);
       const meta = await sharp(webp).metadata();
       if (meta.width !== canvas[0] || meta.height !== canvas[1]) throw new Error(`Wrong dimensions: ${name}`);
-      results.push({name, width:meta.width, height:meta.height, bytes:webp.length, screenshot:`review/${name}.png`, errors});
       console.log(`rendered ${name}.webp ${meta.width}x${meta.height} ${webp.length} bytes`);
     } finally { await page.close(); }
   }
 } finally { await browser.close(); }
-await fs.writeFile(path.join(rendered, 'cyber-scenes-build-report.json'), JSON.stringify({design:'Синий / светлый', offline:true, qrSource:'apps/website/public/assets/maseaaao.tv.png', outputs:results, backupReceipts:receipts}, null, 2), 'utf8');

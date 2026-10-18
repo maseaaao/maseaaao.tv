@@ -1,4 +1,4 @@
-@import url("../../apps/website/public/assets/brand.css");
+@import url("../../packages/design/brand.css");
 :root { --banner-width: 2560px; --banner-height: 1440px; --banner-scale: 1; --safe-width: 1400px; --safe-height: 320px; }
 .twitch-banner { --banner-width: 1200px; --banner-height: 480px; --safe-width: 1000px; --safe-height: 280px; }
 * { box-sizing: border-box; }

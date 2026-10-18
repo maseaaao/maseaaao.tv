@@ -1,5 +1,4 @@
-@import url("../../apps/website/public/assets/cyber-monolith/tokens.css");
-@import url("../../apps/website/public/assets/brand.css");
+@import url("../../packages/design/brand.css");
 
 :root {
   color-scheme: light;

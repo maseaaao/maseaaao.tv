@@ -15,7 +15,7 @@ function files(dir) {
     return entry.isDirectory() ? files(resolve(dir,entry.name)) : [resolve(dir,entry.name)];
   });
 }
-for (const app of ['apps/website/public','apps/stream-info/src','apps/brand-color-lab','apps/obs-widgets']) {
+for (const app of ['apps/website/public','apps/stream-info/src','apps/obs-widgets']) {
   for (const file of files(resolve(root,app)).filter(file => /\.(html|css|ts|js)$/.test(file))) {
     const text = readFileSync(file,'utf8');
     assert(!/prefers-color-scheme:\s*dark|data-theme-value=|color-scheme:\s*dark/.test(text), `Unexpected theme switching: ${file}`);
@@ -31,8 +31,22 @@ for (const file of files(resolve(root,'artwork')).filter(file => /\.(html|css)$/
   const text=readFileSync(file,'utf8');
   for (const match of text.matchAll(/(?:src|href)=["']([^"'#?]+)["']|url\(["']?([^\s"')]+)["']?\)/g)) {
     const url=match[1]||match[2];
+    if(url.startsWith('#')) continue;
     if (/^(?:https?:|data:|#|\/)/.test(url)) continue;
     assert(existsSync(resolve(dirname(file),url)), `Missing local artwork dependency: ${file} -> ${url}`);
   }
 }
 console.log('Repository structure, light appearance, static publication parity and artwork dependencies verified.');
+
+// Both browser applications and exported widgets use only the two agreed families.
+for (const directory of ['apps','artwork','packages/design']) {
+  for (const file of files(resolve(root,directory)).filter(file=>/\.(html|css)$/.test(file))) {
+    const text=readFileSync(file,'utf8');
+    for (const match of text.matchAll(/font-family\s*:\s*([^;}]+)/g)) {
+      if(match[1].includes('var(')) continue;
+      for(const family of match[1].replace(/!important/g,'').split(',').map(s=>s.trim().replace(/["']/g,'')))
+        assert(['Arial','Unbounded','sans-serif','inherit'].includes(family),`Unexpected font ${family}: ${file}`);
+    }
+  }
+}
+assert.deepEqual(readdirSync(resolve(root,'packages/design/fonts')).sort(),['Unbounded.ttf','unbounded-600.woff2'].sort());

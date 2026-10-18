@@ -1,5 +1,5 @@
 # Ресурсы OBS
 
-Светлые исходники чата Streamlabs, CSS DonationAlerts, соцполосы, бейджа, звуков и компактной статистики вывода. `output-stats/index.html` использует собственную CSP и авторизацию OBS; секреты в HTML не включать. Общие токены служебного интерфейса встраиваются из packages/design командой build:website.
+Русские интерфейсы соцполосы и статистики, оформление чата Streamlabs, CSS DonationAlerts, звуки. Используются только Unbounded и системный Arial. Общие токены и шрифт подготавливаются командой build:website; CSS и HTML автономны.
 
-`npm run sync:local -- --product widgets` показывает назначения старых путей; `--apply` копирует с резервированием. Код не меняет настройки источников OBS. HTML/CSS Streamlabs и DonationAlerts может быть установлен через интерфейс внешнего сервиса; копирование локального файла не подтверждает обновление такого источника.
+`npm run sync:local -- --product widgets` показывает назначения, `--apply` обновляет локальные ресурсы с резервными копиями. Публикация CSS в Streamlabs/DonationAlerts выполняется через интерфейс сервиса. Единственный исходник CSS донатеров — donors/donationalerts-stream-stats.css.

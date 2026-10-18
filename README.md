@@ -1,68 +1,40 @@
 # maseaaao.tv
 
-Сайт, оформление и собственные инструменты стрима. Один репозиторий, отдельные приложения и независимые версии. Светлое оформление: синий `#1616d9`, тёплый светлый `#f4f3ec`, текст `#20201e`.
+Сайт, оформление OBS и собственные инструменты стрима. Один репозиторий, отдельные версии приложений. Интерфейсы на русском, светлое оформление. Unbounded — встроенный акцентный шрифт, Arial — системный основной.
 
-| Каталог | Содержимое |
+| Каталог | Назначение |
 | --- | --- |
-| `apps/website/public` | Редактируемый статический сайт |
-| `apps/stream-info` | Twitch-док, C# API, импорт, локализации и тесты |
-| `apps/tuna-widget` | Музыкальный виджет Tuna, автономный HTML |
-| `apps/obs-widgets` | Чат, DonationAlerts CSS, соцсети, статистика, бейдж, звуки |
-| `apps/brand-color-lab` | Самостоятельный редактор палитр |
-| `packages/design` | Общая светлая палитра, шрифты и лицензии |
-| `integrations/streamerbot` | DonationAlerts, Яндекс Музыка, OBS Health, игровые пресеты |
-| `integrations/companion` | System Microphone, VoiceStream и общие помощники |
-| `artwork` | Шаблоны и экспорты сцен, логотипов, баннеров, панелей, обоев |
-| `tooling` | Генераторы, подготовка публикации, локальное обновление |
-| `dist` | Готовая публикация для существующего Cloudflare-подключения |
+| apps/website/public | Исходники сайта; dist — готовая публикация Cloudflare |
+| apps/stream-info | Русский автономный док Twitch, C# API и импорт Streamer.bot |
+| apps/tuna-widget | Автономный музыкальный виджет Tuna |
+| apps/obs-widgets | Соцполоса, статистика OBS, чат, CSS DonationAlerts и звуки |
+| packages/design | Общая палитра, Unbounded и лицензия |
+| artwork | Логотип, баннеры, сцены, панели и два варианта обоев 4K |
+| integrations | Исходники модулей Companion и интеграций Streamer.bot |
+| tooling | Сборка, генераторы, проверка и установка ресурсов |
 
-## Установка
+## Разработка
 
-Node.js **22.20+ в ветке 22**, npm, .NET SDK 8, Python 3. Для пересборки шрифтов — `fonttools[woff]`. Единственный lockfile находится в корне.
+Нужны Node.js 22.20+ в ветке 22, npm, Python 3 и .NET SDK 8. Для пересборки Unbounded нужен `fonttools[woff]`. Один lockfile — в корне.
 
 ```powershell
 npm ci
 npm run browser:install
 npm run build:website
-npm run check
-npm run check:stream-info
-npm test
 npm run build:stream-info
 npm run build:tuna
-npm run test:brand-color-lab
+npm run check
+npm test
 ```
 
-Для установленного браузера задать `CHROME_BIN`; редактор палитр использует `BROWSER_EXECUTABLE_PATH`. `npm run build` готовит только сайт, без .NET и Windows. Генераторы оформления запускаются явно: `render:scenes`, `render:twitch-banner`, `render:wallpapers`. `full` перестраивает весь комплект и требует браузер и fonttools.
+Для установленного браузера можно задать `CHROME_BIN`. Временные тестовые каталоги создаются в системной временной папке и удаляются после тестов.
 
-Сборка модулей Companion на Windows:
+Генераторы запускаются явно: `render:logo`, `render:scenes`, `render:banners`, `render:twitch-description`, `render:wallpapers`, `render:favicon`. `full` перестраивает весь комплект. Обои: `desktop-4k.png` 3840×2160 и `portrait-4k.png` 2160×3840.
 
-```powershell
-npm run prepare:companion-libs
-npm run build --workspace integrations/companion/system-microphone
-npm run build --workspace integrations/companion/voice-control
-npm run package --workspace integrations/companion/system-microphone
-npm run package --workspace integrations/companion/voice-control
-```
+## Установка и публикация
 
-Сборка не устанавливает модули и не управляет приложениями.
+OBS читает изображения непосредственно из `artwork`; корневых совместимых `src/assets` нет. HTML для рабочих приложений обновляются через `sync:local` с предварительным просмотром и резервированием. Код C# и модули Companion устанавливаются отдельно с сохранением ID и настроек.
 
-## Рабочая установка
+Cloudflare использует корневой `wrangler.jsonc`, команду `npm run build:website` и каталог `dist`. Готовый dist хранится в Git и проверяется CI; его собирают из исходников, а не редактируют вручную.
 
-Приватные данные, базы, настройки, логи и резервные копии остаются вне Git. Пути OBS сохранены. Корневые `src` и `assets` могут существовать как игнорируемые копии для текущих источников OBS; редактировать нужно `artwork` и `packages/design`.
-
-```powershell
-# Только показать различия:
-npm run sync:local -- --product stream-info
-# Применить с резервной копией заменяемых файлов:
-npm run sync:local -- --product stream-info --apply
-```
-
-Другие группы: `tuna`, `widgets`, `artwork`, `brand-color-lab`. [Обновление установленной копии](docs/local-installation.md).
-
-## Публикация
-
-Cloudflare продолжает использовать корневой `wrangler.jsonc` и `dist`. Готовый `dist` хранится в Git и проверяется на совпадение с подготовленным сайтом; вручную его не редактировать. Публичные маршруты сохранены. Если в Cloudflare задана отдельная команда сборки, использовать `npm run build:website` из корня.
-
-Stream Info и Tuna имеют собственные версии, CHANGELOG и теги `stream-info-vX.Y.Z`, `tuna-widget-vX.Y.Z`. Workflow создаёт черновик выпуска и проверяет скачанные файлы; существующие артефакты не перезаписываются. Миграция сама не создаёт тегов.
-
-[Архитектура](docs/architecture.md) · [Выпуски](docs/releasing.md) · [Перенос](docs/migration-20261019.md) · [План завершения миграции](docs/migration-plan.md)
+[Архитектура](docs/architecture.md) · [Установка](docs/local-installation.md) · [Выпуски](docs/releasing.md)

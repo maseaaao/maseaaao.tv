@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
+import {tmpdir} from 'node:os';
 import {resolve} from 'node:path';
 import {readFileSync,statSync} from 'node:fs';
 

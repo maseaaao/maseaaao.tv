@@ -6,7 +6,7 @@ body{font-family:var(--hud-body);color:var(--hud-text)}.canvas{position:relative
 .identity img{width:64px;height:64px;object-fit:contain}.vertical .identity{top:156px;font-size:28px;gap:24px;height:48px}.vertical .identity img{width:48px;height:48px}
 .header-rule{position:absolute;left:120px;top:220px;width:1400px;height:1px;background:var(--hud-border)}.vertical .header-rule{top:244px;width:720px}
 .title-field{position:absolute;left:88px;top:400px;width:1432px;height:264px;background:var(--hud-accent);border-radius:32px}.vertical .title-field{top:268px;width:784px;height:176px}
-h1{position:absolute;left:120px;top:440px;margin:0;font-family:Unbounded,sans-serif;font-size:160px;line-height:1.08;font-weight:600;letter-spacing:-.035em;color:var(--hud-bg);background:transparent}.vertical h1{top:300px;font-size:88px}
+h1{position:absolute;left:120px;top:440px;margin:0;font-family:Unbounded,Arial,sans-serif;font-size:160px;line-height:1.08;font-weight:600;letter-spacing:-.035em;color:var(--hud-bg);background:transparent}.vertical h1{top:300px;font-size:88px}
 .zone{position:absolute;pointer-events:none}.panel{background:var(--hud-surface);border:1px solid var(--hud-border);border-radius:20px}.zone[data-zone="music"],.zone[data-zone="donors"]{background:var(--hud-bg)}
 
 .qr{position:absolute;display:block;object-fit:contain;image-rendering:pixelated;background:#eee}.social{background:var(--hud-bg);border-top:1px solid var(--hud-border)}

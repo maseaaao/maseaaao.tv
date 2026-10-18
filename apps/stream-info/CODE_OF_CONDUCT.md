@@ -1,7 +1,6 @@
-# Code of conduct
+# Кодекс поведения
 
-[Русская версия](CODE_OF_CONDUCT.ru.md)
 
-Be respectful, specific, and constructive. Harassment, discriminatory language, doxxing, threats, and sharing another person’s stream or account data without consent are not welcome.
+Общайтесь уважительно, конкретно и конструктивно. В проекте недопустимы травля, дискриминационные высказывания, доксинг, угрозы и публикация данных чужого стрима или аккаунта без согласия.
 
-Report conduct concerns privately to the repository owner. Maintainers may remove comments or contributions that violate these expectations.
+О проблемах с поведением сообщайте владельцу репозитория приватно. Мейнтейнеры могут удалить комментарии или вклад, нарушающие эти правила.

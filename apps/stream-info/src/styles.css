@@ -150,7 +150,7 @@ mark { padding: 1px 2px; border-radius: 3px; }
 .template-dirty { margin: 16px 0 0; color: var(--warning); overflow-wrap: anywhere; }
 .template-dirty:empty { display: none; }
 .template-actions { justify-content: flex-end; margin-top: 16px; }
-.syntax-editor { position: relative; display: block; min-width: 0; min-height: 88px; overflow: hidden; border: 1px solid var(--control-line); border-radius: 8px; background: var(--surface-raised); font: 14px/1.5 Consolas, monospace; }
+.syntax-editor { position: relative; display: block; min-width: 0; min-height: 88px; overflow: hidden; border: 1px solid var(--control-line); border-radius: 8px; background: var(--surface-raised); font: 14px/1.5 Arial, sans-serif; }
 .syntax-editor:focus-within { outline: 3px solid var(--accent); outline-offset: 3px; }
 .syntax-editor pre, .syntax-editor textarea { width: 100%; min-height: 88px; margin: 0; padding: 12px; border: 0; border-radius: 0; font: inherit; letter-spacing: 0; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; }
 .syntax-editor pre { color: var(--text); pointer-events: none; }
@@ -174,7 +174,7 @@ mark { padding: 1px 2px; border-radius: 3px; }
 .setup-card ol { padding-left: 22px; color: var(--muted); line-height: 1.7; }
 .setup-icon { color: var(--accent); }
 .setup-actions { flex-wrap: wrap; gap: 8px; }
-.import-code { min-height: 140px; margin-top: 16px; resize: vertical; font: 12px/1.5 Consolas, monospace; word-break: break-all; }
+.import-code { min-height: 140px; margin-top: 16px; resize: vertical; font: 12px/1.5 Arial, sans-serif; word-break: break-all; }
 .modal-backdrop { position: fixed; z-index: 10; inset: 0; display: grid; place-items: center; padding: 24px; background: var(--backdrop); }
 .modal { display: flex; flex-direction: column; width: min(920px, 100%); max-height: calc(100dvh - 48px); border: 1px solid var(--line); border-radius: 18px; background: var(--surface); }
 .modal-header, .modal-footer { flex: none; justify-content: space-between; gap: 16px; padding: 20px 24px; }

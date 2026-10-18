@@ -11,7 +11,7 @@ const logo=await fs.readFile(path.join(logoDir,'logo.png'));
 const url='https://maseaaao.tv';
 await fs.mkdir(path.join(logoDir,'rendered'),{recursive:true});
 // Preserve the approved original, including its colour and background.
-await fs.writeFile(path.join(assets,'avatar-master.png'),logo);
+for (const size of [64,96,128,192,288]) await sharp(logo).resize(size,size).webp({quality:88,effort:6}).toFile(path.join(assets,`avatar-${size}.webp`));
 for(const name of ['maseaaao']) {
  const image=await sharp(logo).resize(1920,540,{fit:'contain',background:{r:17,g:17,b:19,alpha:0}}).webp({lossless:true}).toBuffer();
  await fs.writeFile(path.join(logoDir,'rendered',name+'.webp'),image);
@@ -36,6 +36,5 @@ for(const size of [result.width,400,300,240,200]) {
  if(decoded!==url)throw Error(`QR decode failed at ${size}px`);
  checks.push(size);
 }
-await fs.writeFile(path.join(assets,'maseaaao.tv.jpeg'),jpeg);
 await fs.writeFile(path.join(assets,'maseaaao.tv.png'),result.buffer);
-console.log(`Approved logo installed; existing logo canvas retained at 1920x540. QR -> ${url}; decoded JPEG at ${checks.join(', ')} px. Run build:cyber to refresh scene exports.`);
+console.log(`Approved logo installed; existing logo canvas retained at 1920x540. QR -> ${url}; decoded JPEG at ${checks.join(', ')} px. Run render:scenes to refresh scene exports.`);

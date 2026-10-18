@@ -12,43 +12,49 @@ const mix=(a,b,t)=>{const c=(x,y)=>Math.round(x+(y-x)*t);return (c((a>>16)&255,(
 export default class VoiceStream extends InstanceBase {
  async init(config) {
   this.audio={};this.pending=new Map();this.counter=0;
-   this.setVariableDefinitions({discord_state:{name:'Discord output mute'},steam_state:{name:'Steam output mute'},stream_label:{name:'Stream button label'},stream_active:{name:'OBS streaming'},stream_available:{name:'OBS connected'},discord_mic_label:{name:'Discord microphone button label'},discord_team_label:{name:'Discord teammates button label'}});
+   this.setVariableDefinitions({discord_state:{name:'Звук Discord выключен'},steam_state:{name:'Звук Steam выключен'},stream_label:{name:'Подпись кнопки эфира'},stream_active:{name:'Эфир OBS'},stream_available:{name:'Соединение OBS'},discord_mic_label:{name:'Подпись кнопки микрофона Discord'},discord_team_label:{name:'Подпись кнопки собеседников Discord'}});
   this.guard=new StreamGuard({read:async()=>{const s=await this.request('GetStreamStatus');return s.outputActive;},dispatch:async(name)=>{
-   const r=await fetch(new URL('/DoAction',this.config.streamerbotUrl||'http://127.0.0.1:7474'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:this.config[name==='STATE | START'?'startActionId':'stopActionId']?{id:this.config[name==='STATE | START'?'startActionId':'stopActionId']}:{name}}),signal:AbortSignal.timeout(5000)});
+   const r=await fetch(new URL('/DoAction',this.config.streamerbotUrl||'http://127.0.0.1:7474'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:{id:this.config[name==='STATE | START'?'startActionId':'stopActionId']}}),signal:AbortSignal.timeout(5000)});
    if(!r.ok)throw new Error('Streamer.bot action failed');
   },update:()=>this.publish()});
    this.setActionDefinitions({
-    discord_toggle:{name:'Toggle Discord output audio',options:[],callback:()=>this.toggle('discord')},
-    steam_toggle:{name:'Toggle Steam output audio',options:[],callback:()=>this.toggle('steam')},
-    discord_mic:{name:'Send Discord microphone hotkey',options:[],callback:()=>this.mic(this.config.discordMicKey)},
-    steam_mic:{name:'Send Steam microphone mute key',options:[],callback:()=>this.mic(this.config.steamMicKey)},
-    discord_deafen:{name:'Send Discord teammates mute hotkey',options:[],callback:()=>this.mic(this.config.discordDeafenKey)},
-     stream_down:{name:'Begin protected stream hold',options:[],callback:()=>this.guard.down()},
-     stream_up:{name:'Cancel / release protected stream hold',options:[],callback:()=>this.guard.up()},
-     heal:{name:'Restart module sockets and helper (heal)',options:[],callback:()=>{this.restart();this.log('info','Manual heal: sockets and helper restarted');}}
+    discord_toggle:{name:'Переключить звук Discord',options:[],callback:()=>this.toggle('discord')},
+    steam_toggle:{name:'Переключить звук Steam',options:[],callback:()=>this.toggle('steam')},
+    discord_mic:{name:'Клавиша микрофона Discord',options:[],callback:()=>this.mic(this.config.discordMicKey)},
+    steam_mic:{name:'Клавиша микрофона Steam',options:[],callback:()=>this.mic(this.config.steamMicKey)},
+    discord_deafen:{name:'Клавиша звука собеседников Discord',options:[],callback:()=>this.mic(this.config.discordDeafenKey)},
+     stream_down:{name:'Начать удержание кнопки эфира',options:[],callback:()=>this.guard.down()},
+     stream_up:{name:'Отпустить кнопку эфира',options:[],callback:()=>this.guard.up()},
+     heal:{name:'Переподключить модуль и аудиопомощник',options:[],callback:()=>{this.restart();this.log('info','Manual heal: sockets and helper restarted');}}
     });
     const feedbacks={};
     for(const key of keys){
      feedbacks[key+'_muted']={type:'boolean',name:key+' output muted',options:[],defaultStyle:{bgcolor:11739175},callback:()=>!!this.audio[key]?.muted};
      feedbacks[key+'_unavailable']={type:'boolean',name:key+' no audio session',options:[],defaultStyle:{bgcolor:4473924},callback:()=>!this.audio[key]?.available};
     }
-   feedbacks.stream_bg={type:'advanced',name:'Stream button background',options:[],callback:()=>({bgcolor:this.streamStyle().bg})};
-   feedbacks.discord_mic_bg={type:'advanced',name:'Discord microphone background',options:[],callback:()=>({bgcolor:(this.discord&&this.discord.connected&&(this.discord.mute===true||this.discord.deaf===true))?YELLOW:PURPLE})};
-   feedbacks.discord_team_bg={type:'advanced',name:'Discord teammates background',options:[],callback:()=>({bgcolor:(this.discord&&this.discord.connected&&this.discord.deaf===true)?YELLOW:PURPLE})};
+   feedbacks.stream_bg={type:'advanced',name:'Фон кнопки эфира',options:[],callback:()=>({bgcolor:this.streamStyle().bg})};
+   feedbacks.discord_mic_bg={type:'advanced',name:'Фон кнопки микрофона Discord',options:[],callback:()=>({bgcolor:(this.discord&&this.discord.connected&&(this.discord.mute===true||this.discord.deaf===true))?YELLOW:PURPLE})};
+   feedbacks.discord_team_bg={type:'advanced',name:'Фон кнопки собеседников Discord',options:[],callback:()=>({bgcolor:(this.discord&&this.discord.connected&&this.discord.deaf===true)?YELLOW:PURPLE})};
    this.setFeedbackDefinitions(feedbacks);
    const presets={};
    for(const key of keys) presets[key]={type:'simple',name:key+' output',style:{text:`${key==='discord'?'Discord':'Steam'}\n$(local-voice-stream:${key}_state)`,size:18,color:16777215,bgcolor:1793104},steps:[{down:[{actionId:key+'_toggle',options:{}}],up:[]}],feedbacks:[{feedbackId:key+'_muted',options:{},style:{bgcolor:11739175}},{feedbackId:key+'_unavailable',options:{},style:{bgcolor:4473924}}]};
-   presets.stream={type:'simple',name:'Stream: hold 3s start / 2s stop',style:{text:'$(local-voice-stream:stream_label)',size:20,color:16777215,bgcolor:BLUE},steps:[{down:[{actionId:'stream_down',options:{}}],up:[{actionId:'stream_up',options:{}}]}],feedbacks:[{feedbackId:'stream_bg',options:{}}]};
-   presets.discord_mic={type:'simple',name:'Discord microphone hotkey',style:{text:'$(local-voice-stream:discord_mic_label)',size:14,color:16777215,bgcolor:PURPLE},steps:[{down:[{actionId:'discord_mic',options:{}}],up:[]}],feedbacks:[{feedbackId:'discord_mic_bg',options:{}}]};
-   presets.discord_deafen={type:'simple',name:'Discord teammates mute hotkey',style:{text:'$(local-voice-stream:discord_team_label)',size:14,color:16777215,bgcolor:PURPLE},steps:[{down:[{actionId:'discord_deafen',options:{}}],up:[]}],feedbacks:[{feedbackId:'discord_team_bg',options:{}}]};
+   presets.stream={type:'simple',name:'Эфир: удерживать 3 с для старта / 2 с для остановки',style:{text:'$(local-voice-stream:stream_label)',size:20,color:16777215,bgcolor:BLUE},steps:[{down:[{actionId:'stream_down',options:{}}],up:[{actionId:'stream_up',options:{}}]}],feedbacks:[{feedbackId:'stream_bg',options:{}}]};
+   presets.discord_mic={type:'simple',name:'Микрофон Discord',style:{text:'$(local-voice-stream:discord_mic_label)',size:14,color:16777215,bgcolor:PURPLE},steps:[{down:[{actionId:'discord_mic',options:{}}],up:[]}],feedbacks:[{feedbackId:'discord_mic_bg',options:{}}]};
+   presets.discord_deafen={type:'simple',name:'Звук собеседников Discord',style:{text:'$(local-voice-stream:discord_team_label)',size:14,color:16777215,bgcolor:PURPLE},steps:[{down:[{actionId:'discord_deafen',options:{}}],up:[]}],feedbacks:[{feedbackId:'discord_team_bg',options:{}}]};
     presets.steam_mic={type:'simple',name:'Steam microphone hotkey',style:{text:'Steam\n🎙️',size:18,color:16777215,bgcolor:1793104},steps:[{down:[{actionId:'steam_mic',options:{}}],up:[]}],feedbacks:[]};
-   presets.heal={type:'simple',name:'Heal: restart module',style:{text:'HEAL\n🩹',size:18,color:16777215,bgcolor:1793104},steps:[{down:[{actionId:'heal',options:{}}],up:[]}],feedbacks:[]};
-  this.setPresetDefinitions([{id:'voice',name:'Voice and stream controls',definitions:Object.keys(presets)}],presets);
+   presets.heal={type:'simple',name:'Переподключить модуль',style:{text:'HEAL\n🩹',size:18,color:16777215,bgcolor:1793104},steps:[{down:[{actionId:'heal',options:{}}],up:[]}],feedbacks:[]};
+  this.setPresetDefinitions([{id:'voice',name:'Звук и эфир',definitions:Object.keys(presets)}],presets);
   await this.configUpdated(config);
  }
- getConfigFields(){const keyChoices=[];for(let i=1;i<=24;i++)keyChoices.push({id:'F'+i,label:'F'+i});keyChoices.push({id:'End',label:'End'},{id:'Home',label:'Home'},{id:'PgUp',label:'PgUp'},{id:'PgDn',label:'PgDn'},{id:'Ins',label:'Insert'},{id:'Del',label:'Delete'},{id:'ScrollLock',label:'Scroll Lock'},{id:'Pause',label:'Pause'});return [{type:'textinput',id:'streamerbotUrl',label:'Streamer.bot HTTP URL',width:12,default:'http://127.0.0.1:7474'},{type:'textinput',id:'startActionId',label:'Start Action ID (empty = legacy name)',width:6,default:''},{type:'textinput',id:'stopActionId',label:'Stop Action ID (empty = legacy name)',width:6,default:''},{type:'textinput',id:'libraryDirectory',label:'Streamer.bot directory',width:12,default:''},{type:'textinput',id:'obsHost',label:'OBS host',width:8,default:'127.0.0.1'},{type:'number',id:'obsPort',label:'OBS port',width:4,default:4455,min:1,max:65535},{type:'textinput',id:'obsPassword',label:'OBS WebSocket password',width:12,isVisible:()=>true,default:'',useAsPassword:true},{type:'dropdown',id:'discordMicKey',label:'Discord microphone hotkey key',width:4,default:'F13',choices:keyChoices},{type:'dropdown',id:'discordDeafenKey',label:'Discord teammates mute hotkey key',width:4,default:'F14',choices:keyChoices},{type:'textinput',id:'discordClientId',label:'Discord local RPC client id',width:6,default:'1161350695322591324'},{type:'dropdown',id:'steamMicKey',label:'Steam microphone mute key',width:4,default:'End',choices:keyChoices}];}
+ getConfigFields(){const keyChoices=[];for(let i=1;i<=24;i++)keyChoices.push({id:'F'+i,label:'F'+i});keyChoices.push({id:'End',label:'End'},{id:'Home',label:'Home'},{id:'PgUp',label:'PgUp'},{id:'PgDn',label:'PgDn'},{id:'Ins',label:'Insert'},{id:'Del',label:'Delete'},{id:'ScrollLock',label:'Scroll Lock'},{id:'Pause',label:'Pause'});return [{type:'textinput',id:'streamerbotUrl',label:'HTTP-адрес Streamer.bot',width:12,default:'http://127.0.0.1:7474'},{type:'textinput',id:'startActionId',label:'ID Action запуска эфира',width:6,default:''},{type:'textinput',id:'stopActionId',label:'ID Action остановки эфира',width:6,default:''},{type:'textinput',id:'obsHost',label:'Адрес OBS',width:8,default:'127.0.0.1'},{type:'number',id:'obsPort',label:'Порт OBS',width:4,default:4455,min:1,max:65535},{type:'textinput',id:'obsPassword',label:'Пароль WebSocket OBS',width:12,isVisible:()=>true,default:'',useAsPassword:true},{type:'dropdown',id:'discordMicKey',label:'Клавиша микрофона Discord',width:4,default:'F13',choices:keyChoices},{type:'dropdown',id:'discordDeafenKey',label:'Клавиша звука собеседников Discord',width:4,default:'F14',choices:keyChoices},{type:'textinput',id:'discordClientId',label:'ID локального RPC Discord',width:6,default:'1161350695322591324'},{type:'dropdown',id:'steamMicKey',label:'Микрофон Steam',width:4,default:'End',choices:keyChoices}];}
   async configUpdated(config){this.config=config;this.restart();}
-  restart(){this.stop();this.stopped=false;this.discordRejected=false;this.startAudio();this.connectObs();this.startDiscord();this.monitor=setInterval(()=>{
+  restart(){this.stop();
+   const idPattern=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+   const {startActionId,stopActionId}=this.config||{};
+   if(typeof startActionId!=='string'||typeof stopActionId!=='string'||!idPattern.test(startActionId)||!idPattern.test(stopActionId)||startActionId===stopActionId){
+    this.updateStatus(InstanceStatus.BadConfig,'Укажите разные корректные ID Actions запуска и остановки');return;
+   }
+   this.stopped=false;this.discordRejected=false;this.startAudio();this.connectObs();this.startDiscord();this.monitor=setInterval(()=>{
    if(Date.now()-this.audioSeen>12000){this.audio={};this.publish();}
    this.pollObs();
   },5000);}
@@ -89,7 +95,7 @@ export default class VoiceStream extends InstanceBase {
   else if(!g.held&&this.holdTick){clearInterval(this.holdTick);this.holdTick=null;}
   const audioReady=!!this.helper?.child&&this.audioHealthy&&Date.now()-this.audioSeen<12000;
   this.updateStatus(audioReady&&g.online?InstanceStatus.Ok:InstanceStatus.Connecting,
-   !g.online?'OBS connection unavailable':!audioReady?'Audio helper unavailable':'Audio / OBS status');
+   !g.online?'Нет соединения с OBS':!audioReady?'Аудиопомощник недоступен':'Звук / состояние OBS');
  }
  startDiscord(){
   const clientId=String(this.config.discordClientId||'1161350695322591324');

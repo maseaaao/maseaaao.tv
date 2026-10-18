@@ -1,9 +1,8 @@
-# Security policy
+# Политика безопасности
 
-[Русская версия](SECURITY.ru.md)
 
-Please report suspected vulnerabilities privately to the repository owner rather than opening a public issue. Include a minimal reproduction, affected version or commit, impact, and any suggested mitigation.
+О предполагаемых уязвимостях сообщайте владельцу репозитория приватно, а не через публичный Issue. Приложите минимальное воспроизведение, затронутую версию или коммит, влияние и, если возможно, вариант исправления.
 
-Do not share Twitch OAuth tokens, Streamer.bot WebSocket passwords, channel IDs tied to a private account, or full Import exports containing credentials. The project is designed so that browser HTML never receives Twitch OAuth credentials.
+Не присылайте Twitch OAuth-токены, пароль WebSocket Streamer.bot, ID приватного канала или полный Import-экспорт с учётными данными. HTML-интерфейс спроектирован так, чтобы не получать Twitch OAuth-данные.
 
-Supported security fixes target the latest `main` branch and the current generated `change-info-streamer-bot.html`.
+Исправления безопасности поддерживаются для актуальной ветки `main` и текущего сгенерированного `change-info-streamer-bot.html`.

@@ -1,29 +1,35 @@
 # Локальная установка
 
-Редактировать исходники в maseaaao.tv. Приложения, базы Companion, настройки OBS, Actions и аккаунты сохраняют прежнее расположение.
+Исходники редактируются в maseaaao.tv. Настройки приложений, аккаунты и рабочие базы сохраняют своё расположение.
 
 ## Браузерные ресурсы
 
-1. Собрать нужный продукт: `npm run build:stream-info`, `npm run build:tuna` или генератор оформления.
-2. Показать изменения: `npm run sync:local -- --product stream-info`. Другие группы: `tuna`, `widgets`, `artwork`, `brand-color-lab`.
-3. Проверить назначения. По умолчанию ожидается соседняя папка Streamer.bot; для другого расположения передать `--obs-root` с полным путём папки OBS.
-4. Выполнить ту же команду с `--apply`. Заменяемые файлы сохраняются в `Streamer.bot/backup/monorepo-sync-*`; лишние файлы у получателя не удаляются.
-5. Перезагрузить док или браузерный источник и проверить изображение, размеры и зависимости в OBS.
+Собрать сайт/виджеты: `npm run build:website`, Stream Info: `npm run build:stream-info`, Tuna: `npm run build:tuna`.
 
-Stream Info обновляет HTML в `Streamer.bot/custom/stream-info/dist` и файл импорта. При изменении C# отдельно импортировать `streamerbot-import.txt` в Streamer.bot и проверить Execute Code; копирование импорта Action не обновляет. Имена четырёх HTML сохранены.
+Проверить план: `npm run sync:local -- --product stream-info`. Группы: `stream-info`, `tuna`, `widgets`. По умолчанию ожидается соседняя папка Streamer.bot; другую папку OBS указать через `--obs-root`.
 
-Tuna обновляет `OBS/obs-tuna-widget.html`. Шрифты встроены, локальный сервер и параметры URL сохранены, порт по умолчанию 1608. Настоящий трек проверить вручную.
+Повторить команду с `--apply`: заменяемые файлы сохраняются в Streamer.bot/backup/monorepo-sync-*. Перезагрузить док и браузерные источники. Stream Info сохраняет имя `change-info-streamer-bot.ru.html`; языковых вариантов и дублирующего корневого HTML нет.
 
-Группа `artwork` поддерживает старые пути `maseaaao.tv/src` и `maseaaao.tv/assets` игнорируемыми локальными копиями. Не удалять их с рабочего компьютера до миграции путей OBS. На новой машине восстановить через `sync:local -- --product artwork --apply`.
+Изображения OBS выбирать непосредственно в artwork/scenes/rendered и artwork/logo/rendered. Корневые src/assets и отдельные копии оформления больше не используются. При переносе репозитория обновить пути источников через OBS, сохранив их ID, размеры и расположение.
 
-При копировании HTML/CSS ссылки пересчитываются для целевых путей. Общий дизайн и лицензии входят в `assets/design`, старые шрифты — в `assets/fonts` и `assets/cyber-monolith`. Все локальные зависимости проверяются до записи; старые файлы не нужны для восстановления комплекта в пустую папку. Группа `widgets` также восстанавливает прозрачную заглушку `social-strip/transparent.png`, используемую существующим источником камеры OBS.
+CSS чата и DonationAlerts размещается через интерфейс соответствующего сервиса; обновление локального файла не заменяет опубликованный CSS. Файлы автономны, шрифт и лицензия встроены.
 
-## Companion и Actions
+## Companion
 
-Собрать и упаковать модули командами README; импортировать нужный `.tgz` через менеджер модулей Companion. До установки сохранить штатный экспорт. Проверить фактический каталог данных, Junction, версию БД и загруженную версию модуля. Не заменять базу и не пересоздавать соединения.
+```powershell
+npm run prepare:companion-libs
+npm run build --workspace integrations/companion/system-microphone
+npm run build --workspace integrations/companion/voice-control
+npm run package --workspace integrations/companion/system-microphone
+npm run package --workspace integrations/companion/voice-control
+```
 
-C# DonationAlerts, OBS Health и игровых пресетов переносится в существующие Execute Code отдельно. Для Яндекс Музыки учитывать путь control.ps1, записанный в Action; сохранять раздельные play/pause. Автоматического импорта всех Actions нет.
+Перед установкой сохранить штатный экспорт. Импортировать tgz через менеджер модулей, проверить загруженную версию. SystemMicrophone требует явно выбранный тип входа/выхода; VoiceStream — ID Actions запуска и остановки. Не пересоздавать соединения, кнопки, базу и Junction.
 
-Диагностика: задать `STREAMERBOT_ROOT` полным путём к установленному Streamer.bot и запустить `node tooling/local/check-stream-stack.mjs`. Адреса читаются из текущих настроек; Actions не выполняются. Отчёт сохранять вне публичных исходников. Это отдельная живая диагностика, не обычный тест.
+Фактический каталог данных определять по работающему приложению и штатному экспорту, а не по старым инструкциям. Проверка 19.10.2026: Companion 5.1 использует `%APPDATA%\companion`, это обычная папка, активная БД — `v5.1/db.sqlite`; соседний `Streamer.bot/custom/companion/data` содержит историческую копию. Не синхронизировать эти базы и не создавать Junction автоматически. Подробный барьер установки и откат: [Companion](../integrations/companion/README.md).
 
-Краткий порядок будущего обновления и завершения перехода со старого репозитория — [план миграции](migration-plan.md).
+## Streamer.bot
+
+Изменение C# требует отдельного импорта в существующий Action с сохранением ID и проверки Execute Code. HTML не устанавливает C#. DonationAlerts использует приватную глобальную daClientSecret; секреты не включать в Git/HTML. Для Яндекс Музыки проверить путь control.ps1, сохраняя раздельные play/pause.
+
+Диагностика чтения: задать STREAMERBOT_ROOT и запустить `node tooling/local/check-stream-stack.mjs`. Проверка не запускает Actions. Рабочие настройки не редактировать на диске при работающем владельце. Откат ресурсов — из backup, конфигурации и модулей — штатным восстановлением совместимого экспорта.

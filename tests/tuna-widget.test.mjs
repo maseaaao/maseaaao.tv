@@ -6,7 +6,8 @@ import {launchBrowser} from '../tooling/artwork/browser.mjs';
 test('standalone Tuna renders a track and pause using only mocked local API responses', async () => {
   const html=readFileSync(new URL('../apps/tuna-widget/dist/obs-tuna-widget.html',import.meta.url),'utf8');
   assert(!html.includes('maseaaao.tv/assets/'));
-  assert(html.includes('data:font/ttf;base64,'));
+  assert(html.includes('data:font/woff2;base64,'));
+  assert(!html.includes("Geologica"));
   const browser=await launchBrowser();
   const page=await browser.newPage({viewport:{width:1000,height:134},colorScheme:'dark'});
   let playing=true;
@@ -23,7 +24,7 @@ test('standalone Tuna renders a track and pause using only mocked local API resp
     assert.equal(await page.locator('#title').textContent(),'Тестовый трек');
     assert((await page.locator('#subtitle').textContent()).includes('Тестовый исполнитель'));
     await page.evaluate(()=>document.fonts.ready);
-    assert(await page.evaluate(()=>document.fonts.check('400 20px Geologica')));
+    assert(await page.evaluate(()=>document.fonts.check('600 20px Unbounded')));
     playing=false;
     await page.waitForFunction(()=>document.querySelector('#player').dataset.play==='0');
     assert.deepEqual(errors,[]);

@@ -38,8 +38,8 @@ async function render(source, target, width, height, format = "png", scale = 1) 
 
 try {
   if (requested === "all" || requested === "banners") {
-    await render("artwork/banners/twitch-schedule.html", "artwork/banners/rendered/twitch-schedule.jpeg", 1200, 480, "jpeg");
-    await render("artwork/banners/youtube-schedule.html", "artwork/banners/rendered/youtube-schedule.jpeg", 2560, 1440, "jpeg");
+    await render("artwork/banners/twitch.html", "artwork/banners/rendered/twitch.jpeg", 1200, 480, "jpeg");
+    await render("artwork/banners/youtube.html", "artwork/banners/rendered/youtube.jpeg", 2560, 1440, "jpeg");
   }
   if (requested === "all" || requested === "panels") {
     for (const name of (await fs.readdir(path.join(root, "artwork/twitch-description"))).filter(name => name.endsWith(".html"))) {
@@ -87,10 +87,8 @@ try {
     await fs.unlink(path.join(root, "apps/website/public/icon-master.png"));
   }
   if (requested === "all" || requested === "wallpapers") {
-    for (const name of (await fs.readdir(path.join(root, "artwork/wallpapers"))).filter(name => name.endsWith(".html"))) {
-      const phone = name.startsWith("phone");
-      await render("artwork/wallpapers/" + name, "artwork/wallpapers/rendered/" + name.replace(".html", ".png"), phone ? 1440 : 3840, phone ? 2560 : 2160);
-    }
+    await render("artwork/wallpapers/desktop-4k.html", "artwork/wallpapers/rendered/desktop-4k.png", 3840, 2160);
+    await render("artwork/wallpapers/portrait-4k.html", "artwork/wallpapers/rendered/portrait-4k.png", 2160, 3840);
   }
 } finally {
   await browser.close();

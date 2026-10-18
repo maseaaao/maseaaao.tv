@@ -29,4 +29,4 @@ The work adds no framework, dependency, timer or user-agent detection.
 
 ## Verification
 
-The browser suite checks online/offline/SDK error states, viewports from 320px through 1920px, contrast, overflow, keyboard controls, enlarged text, media sizing, stable iframe nodes and fixed-light rendering under both system color preferences. Twitch responses are mocked; this does not test a real broadcast or chat. Fresh migration results are recorded in migration-20261019.md.
+Проверки браузера покрывают активный эфир, отсутствие эфира и ошибку SDK, ширины 320–1920 px, контраст, переполнение, клавиатуру, увеличенный текст, размеры медиаблоков, сохранение iframe и светлое оформление при обеих системных темах. Ответы Twitch подставные: настоящий эфир и чат не запускаются. Порядок обновления рабочих приложений — [локальная установка](local-installation.md). Исторические отчёты миграции сохранены в Git.

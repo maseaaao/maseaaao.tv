@@ -1,4 +1,4 @@
-@import url("../../apps/website/public/assets/brand.css");
+@import url("../../packages/design/brand.css");
 * { box-sizing: border-box; }
 html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
 body { background: var(--accent); color: var(--text); font: 400 28px/1.5 var(--font-body); }

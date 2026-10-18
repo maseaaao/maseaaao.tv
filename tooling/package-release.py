@@ -15,7 +15,7 @@ product, version = match.groups()
 app = root / "apps" / product
 if json.loads((app / "package.json").read_text(encoding="utf-8"))["version"] != version:
     raise SystemExit("Tag must match the selected product's version")
-names = ([f"change-info-streamer-bot.{locale}.html" for locale in ["ru", "en", "es", "zh"]]
+names = (["change-info-streamer-bot.ru.html"]
          if product == "stream-info" else ["obs-tuna-widget.html"])
 notes = (app / "CHANGELOG.md").read_text(encoding="utf-8")
 section = re.search(r"^## " + re.escape(version) + r"\s*\n(.*?)(?=^## |\Z)", notes, re.M | re.S)
@@ -24,10 +24,10 @@ if not section:
 if "--validate" in sys.argv:
     print(f"Validated {tag}")
     raise SystemExit()
-output = root / ".local" / "release"
+output = root / "build" / "release"
 archive_name = f"{product}-{version}.zip"
 if "--verify-download" in sys.argv:
-    downloaded = root / ".local" / "downloaded"
+    downloaded = root / "build" / "downloaded"
     for name in names + [archive_name]:
         if (downloaded / name).read_bytes() != (output / name).read_bytes():
             raise SystemExit(f"Downloaded artifact differs: {name}")
@@ -46,6 +46,8 @@ with zipfile.ZipFile(output / archive_name, "w", zipfile.ZIP_DEFLATED) as archiv
         archive.write(output / name, name)
     for license_file in (app / "licenses").glob("*"):
         archive.write(license_file, "licenses/" + license_file.name)
+    if "licenses/Unbounded-OFL.txt" not in archive.namelist():
+        archive.write(root / "packages/design/licenses/Unbounded-OFL.txt", "licenses/Unbounded-OFL.txt")
     for name in ["LICENSE", "THIRD_PARTY_NOTICES.md"]:
         if (app / name).exists():
             archive.write(app / name, name)

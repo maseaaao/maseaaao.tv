@@ -1,5 +1,9 @@
-Controls one explicitly selected Windows capture endpoint through Windows Core Audio.
-Uses the existing NAudio.Core.dll and NAudio.Wasapi.dll in the configured Streamer.bot folder.
-The helper is started and stopped by this connection. No network listener or startup task is used.
-State and input volume are read every 250 ms, including changes made outside Companion.
-Unplugged devices and helper failures show unavailable; the connection never selects another device silently.
+# Системное аудиоустройство Windows
+
+Обязательно явно выберите тип устройства: `capture` — микрофон/вход, `render` — динамики/наушники/выход. Неопределённый тип блокирует соединение; автоматической миграции в микрофон нет.
+
+Сохранённый Windows endpoint ID выбирает конкретное устройство; пустой ID означает текущее системное устройство выбранного типа. Закреплённое недоступное устройство не подменяется другим.
+
+Помощник использует NAudio и Newtonsoft.Json из установленного пакета модуля. Путь к Streamer.bot и внешние библиотеки не нужны. Соединение само запускает и останавливает только свой помощник, без сетевого сервера и задания автозапуска.
+
+Состояние и громкость читаются каждые 250 мс, включая внешние изменения. При отключении устройства или сбое помощника отображается недоступность. ID действий mute/unmute/toggle сохранены.

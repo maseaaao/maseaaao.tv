@@ -2,7 +2,7 @@
 if (-not $env:STREAMERBOT_ROOT) { throw 'Set STREAMERBOT_ROOT to the installed Streamer.bot directory' }
 $root=[IO.Path]::GetFullPath($env:STREAMERBOT_ROOT)
 $sourceRoot=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
-$output=Join-Path $sourceRoot '.local/streamerbot-compile'
+$output=Join-Path ([IO.Path]::GetTempPath()) 'maseaaao-streamerbot-compile'
 New-Item -ItemType Directory -Force -Path $output|Out-Null
 $sdk=Get-ChildItem 'C:\Program Files\dotnet\sdk' -Directory|Sort-Object Name -Descending|Select-Object -First 1
 $compiler=Join-Path $sdk.FullName 'Roslyn\bincore\csc.dll'

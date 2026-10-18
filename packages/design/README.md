@@ -1,3 +1,5 @@
 # Общий дизайн
 
-brand.css: светлая палитра, семантические токены и Unbounded 600. fonts: исходные и готовые шрифты. licenses: оригинальные лицензии. Менять здесь, затем выполнить build:website и build:stream-info; Tuna — build:tuna. Автономные утилиты получают токены через tooling/prepare-inline-design.mjs. Продуктовые размеры и поведение не выносятся в этот пакет.
+brand.css — палитра и типографика всех браузерных интерфейсов. fonts/Unbounded.ttf — исходник, fonts/unbounded-600.woff2 — веб-шрифт с полным набором символов для акцентов. Arial берётся из системы и не распространяется. Лицензия Unbounded — licenses/Unbounded-OFL.txt.
+
+Для регенерации WOFF2: `npm run build:fonts` (Python и fonttools[woff]). Автономные продукты встраивают шрифт и лицензию; сайт публикует WOFF2 локально.

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.0
+
+Только русский интерфейс; единые шрифты Unbounded и системный Arial. Удалены старые ресурсы и совместимые копии.
+
 ## 1.3.3
 
 - Move development to maseaaao/maseaaao.tv with independent Stream Info releases.

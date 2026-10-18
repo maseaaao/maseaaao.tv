@@ -1,5 +1,3 @@
-# Third-party fonts
+# Лицензии
 
-The widget embeds Inter, Unbounded and Geologica fonts from the original local resources.
-They are licensed under the SIL Open Font License 1.1. License texts are included
-in this product's `licenses/` directory and must accompany redistributed bundles.
+Встроен Unbounded (OFL-1.1); текст лицензии включён в HTML и каталог licenses. Arial используется как системный шрифт и не распространяется с проектом.

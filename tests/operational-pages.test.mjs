@@ -107,8 +107,8 @@ for (const file of ['check.html','docs.html']) {
 test('all banners and Twitch panels load local fonts without clipping supplied headings', async () => {
   const panels = (await fs.readdir(path.join(root, 'artwork/twitch-description'))).filter(f => f.endsWith('.html'));
   for (const item of [
-    {file:'artwork/banners/twitch-schedule.html', width:1200, height:480},
-    {file:'artwork/banners/youtube-schedule.html', width:2560, height:1440},
+    {file:'artwork/banners/twitch.html', width:1200, height:480},
+    {file:'artwork/banners/youtube.html', width:2560, height:1440},
     ...panels.map(file => ({file:'artwork/twitch-description/' + file, width:320, height:64})),
   ]) {
     const page = await open(item.file, item.width);

@@ -24,8 +24,11 @@ function writable(directory) {
 for (const assets of [resolve(source, 'assets')]) {
   mkdirSync(assets, {recursive: true});
   copyFileSync(resolve(root, 'packages/design/brand.css'), resolve(assets, 'brand.css'));
-  copyTree(resolve(root, 'packages/design/fonts'), resolve(assets, 'fonts'));
-  copyTree(resolve(root, 'packages/design/licenses'), resolve(assets, 'fonts/licenses'));
+  const fonts=resolve(assets,'fonts');
+  if(existsSync(fonts)) { writable(fonts); rmSync(fonts,{recursive:true,force:true}); }
+  mkdirSync(fonts,{recursive:true});
+  copyFileSync(resolve(root,'packages/design/fonts/unbounded-600.woff2'),resolve(fonts,'unbounded-600.woff2'));
+  copyFileSync(resolve(root,'packages/design/licenses/Unbounded-OFL.txt'),resolve(fonts,'Unbounded-OFL.txt'));
 }
 if(existsSync(dist)) writable(dist);
 rmSync(dist, {recursive: true, force: true});

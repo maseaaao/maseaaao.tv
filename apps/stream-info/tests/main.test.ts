@@ -44,8 +44,14 @@ function commands(): string[] {
 describe("Stream Info HTML actions", () => {
   const open = vi.fn(() => null);
   const writeText = vi.fn(async () => undefined);
+  let timeoutSpy: ReturnType<typeof vi.spyOn<typeof window, "setTimeout">>;
+  let intervalSpy: ReturnType<typeof vi.spyOn<typeof window, "setInterval">>;
 
   beforeEach(() => {
+    // resetModules does not dispose callbacks belonging to the previous app.
+    // Track real timers as well as the fake timers used by individual tests.
+    timeoutSpy = vi.spyOn(window, "setTimeout");
+    intervalSpy = vi.spyOn(window, "setInterval");
     vi.resetModules();
     mockStreamerbot.reset();
     localStorage.clear();
@@ -60,7 +66,15 @@ describe("Stream Info HTML actions", () => {
   });
 
   afterEach(() => {
+    vi.clearAllTimers();
     vi.useRealTimers();
+    for (const result of timeoutSpy.mock.results) {
+      if (result.type === "return") window.clearTimeout(result.value);
+    }
+    for (const result of intervalSpy.mock.results) {
+      if (result.type === "return") window.clearInterval(result.value);
+    }
+    vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
 
@@ -567,13 +581,9 @@ describe("Stream Info HTML actions", () => {
     expect(document.querySelector<HTMLInputElement>('[data-input="inline-title"][data-kind="twitch"]')?.value).toBe("Inline Twitch title");
   });
 
-  it.each([
-    ["ru", "Сохранить подключение", "Есть несохранённые изменения шаблонов"],
-    ["en", "Save connection", "Unsaved template changes"],
-    ["es", "Guardar conexión", "Cambios de plantillas sin guardar"],
-    ["zh", "保存连接", "模板更改尚未保存"],
-  ])("identifies connection saving and unsaved templates in %s", async (language, label, dirty) => {
-    vi.stubGlobal("__STREAM_INFO_LOCALE__", language);
+  it("identifies connection saving and unsaved templates in Russian", async () => {
+    const label = "Сохранить подключение";
+    const dirty = "Есть несохранённые изменения шаблонов";
     await boot();
     click("open-settings");
     expect(action("save-settings").textContent).toBe(label);

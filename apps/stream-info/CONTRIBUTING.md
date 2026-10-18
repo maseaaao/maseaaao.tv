@@ -1,13 +1,12 @@
-# Contributing
+# Участие в проекте
 
-[Русская версия](CONTRIBUTING.ru.md)
 
-Thank you for improving Stream Info.
+Спасибо за вклад в Stream Info.
 
-1. Open an issue before starting a substantial feature or behavior change.
-2. Keep each change focused. When it affects the distributable UI, run the build and commit the refreshed generated `dist/` files.
-3. Run `npm test` and `npm run build` before opening a pull request.
-4. Do not include credentials, export files containing private tokens, screenshots with personal data, or a production Streamer.bot configuration.
-5. Describe the user-visible change and the checks you ran in the pull request.
+1. Перед крупной функцией или изменением поведения сначала создайте Issue.
+2. Делайте изменения сфокусированными. Если оно влияет на готовый интерфейс, запустите сборку и включите обновлённые файлы из `dist/` в коммит.
+3. Перед pull request выполните `npm run test:stream-info` и `npm run build:stream-info`.
+4. Не добавляйте токены, экспорт с приватными данными, скриншоты с личной информацией или конфигурацию рабочего Streamer.bot.
+5. В pull request опишите видимый пользователю результат и выполненные проверки.
 
-Translations should preserve product names, `STREAM INFO`, Action names, variable names, and the `%subtitle%` token exactly.
+В переводах не изменяйте названия продуктов, `STREAM INFO`, имена Action, имена переменных и токен `%subtitle%`.

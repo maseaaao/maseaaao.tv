@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import VoiceStream from './index.js';
 import {createServer} from 'node:http';
+import SystemMicrophone from '../system-microphone/index.js';
 
 function moduleStub() {
   const events = [];
@@ -16,6 +17,41 @@ function moduleStub() {
 }
 
 let checks = 0;
+{
+  const instance=Object.create(SystemMicrophone.prototype);
+  const events=[];
+  Object.assign(instance, {stop:()=>events.push('stop'),start:()=>events.push('start'),
+    offline:()=>events.push('offline'),updateStatus:()=>events.push('bad-config')});
+  await instance.configUpdated({deviceId:'fixture-pinned-device'});
+  assert.deepEqual(events,['stop','offline','bad-config'], 'missing device type must fail closed without crashing the module');
+  for(const dataFlow of ['capture','render']){
+    events.length=0;
+    const config={deviceId:'fixture-pinned-device',dataFlow};
+    await instance.configUpdated(config);
+    assert.deepEqual(events,['stop','start']);
+    assert.deepEqual(instance.config,config,'explicit endpoint and input/output type must be preserved');
+  }
+  checks++;
+}
+{
+  // No real helper, OBS socket or Action: exercise invalid reconfiguration in isolation.
+  const instance = Object.create(VoiceStream.prototype);
+  const events = [];
+  Object.assign(instance, {
+    config: {startActionId:'11111111-1111-4111-8111-111111111111',stopActionId:'22222222-2222-4222-8222-222222222222'},
+    stop:()=>events.push('stop'), startAudio:()=>events.push('audio'),
+    connectObs:()=>events.push('obs'), startDiscord:()=>events.push('discord'),
+    updateStatus:(status)=>events.push(status),
+  });
+  await instance.configUpdated({startActionId:' ',stopActionId:'not-an-id'});
+  assert.ok(events.includes('stop'), 'invalid reconfiguration must stop the previous runtime');
+  assert.ok(!events.includes('audio'), 'invalid IDs must not start the helper');
+  events.length=0;
+  instance.restart(); // the Heal action must not bypass validation
+  assert.ok(!events.includes('audio'), 'Heal must not restart invalid configuration');
+  clearInterval(instance.monitor);
+  checks++;
+}
 {
   const {instance, events, newSocket} = moduleStub();
   let reject;
@@ -105,4 +141,29 @@ let checks = 0;
     await new Promise(resolve=>server.close(resolve));
   }
 }
-console.log(`PASS: ${checks} OBS reconnect regression checks; only a local test server used, no app commands sent.`);
+{
+  const instance=Object.create(VoiceStream.prototype);
+  const calls=[];
+  for(const method of ['setVariableDefinitions','setActionDefinitions','setFeedbackDefinitions','setPresetDefinitions','updateStatus','setVariableValues','checkFeedbacks'])instance[method]=()=>{};
+  Object.assign(instance,{startAudio:()=>{},connectObs:()=>{},startDiscord:()=>{}});
+  const config={startActionId:'11111111-1111-4111-8111-111111111111',stopActionId:'22222222-2222-4222-8222-222222222222',streamerbotUrl:'http://fixture.invalid:7474'};
+  const originalFetch=globalThis.fetch;
+  try{
+    globalThis.fetch=async(url,options)=>{calls.push({url:String(url),body:JSON.parse(options.body)});return {ok:true};};
+    await instance.init(config);
+    await instance.guard.dispatch('STATE | START');
+    await instance.guard.dispatch('STATE | STOP');
+    assert.deepEqual(calls.map(c=>c.body),[{action:{id:config.startActionId}},{action:{id:config.stopActionId}}], 'dispatch must use IDs only, never legacy Action names');
+    assert.ok(calls.every(c=>c.url==='http://fixture.invalid:7474/DoAction'));
+    for(const invalid of [{}, {...config,startActionId:' '},{...config,startActionId:config.stopActionId}]){
+      await instance.configUpdated(invalid);
+      assert.equal(instance.stopped,true);
+      assert.equal(instance.guard.online,false);
+    }
+    await instance.configUpdated(config);
+    assert.equal(instance.stopped,false,'corrected configuration must recover without recreating the connection');
+    assert.deepEqual(instance.config,config);
+    checks++;
+  }finally{instance.stop();globalThis.fetch=originalFetch;}
+}
+console.log(`PASS: ${checks} configuration / OBS reconnect regression checks; mocked fetch and local test server only, no app commands sent.`);

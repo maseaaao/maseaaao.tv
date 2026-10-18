@@ -48,6 +48,6 @@ jobs:
             echo "Release already exists; refusing to overwrite artifacts."
             exit 1
           fi
-          gh release create "$RELEASE_TAG" .local/release/*.html .local/release/*.zip --draft --title "$RELEASE_TAG" --notes-file .local/release/notes.md
-          gh release download "$RELEASE_TAG" --dir .local/downloaded
+          gh release create "$RELEASE_TAG" build/release/*.html build/release/*.zip --draft --title "$RELEASE_TAG" --notes-file build/release/notes.md
+          gh release download "$RELEASE_TAG" --dir build/downloaded
           python tooling/package-release.py --verify-download "$RELEASE_TAG"

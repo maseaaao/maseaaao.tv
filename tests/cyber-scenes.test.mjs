@@ -9,7 +9,7 @@ import jsQR from 'jsqr';
 
 const root = path.resolve(import.meta.dirname, '..');
 const scenes = path.join(root, 'artwork/scenes');
-const layout = JSON.parse(await fs.readFile(path.join(root, 'artwork/assets/cyber-monolith/obs-layout.json'), 'utf8'));
+const layout = JSON.parse(await fs.readFile(path.join(root, 'artwork/scenes/layout.json'), 'utf8'));
 let browser;
 before(async () => { browser = await launchBrowser(); });
 after(async () => { await browser?.close(); });
@@ -33,7 +33,7 @@ for (const [stem, copy] of [['01-start', 'начало'], ['02-pause', 'пауз
         const bounds = await heading.boundingBox();
         assert.equal(bounds.x, 120);
         assert.equal(bounds.y, vertical ? 300 : 440);
-        assert.equal(await heading.evaluate(e => getComputedStyle(e).fontFamily), 'Unbounded, sans-serif');
+        assert.equal(await heading.evaluate(e => getComputedStyle(e).fontFamily), 'Unbounded, Arial, sans-serif');
         assert.equal(await heading.evaluate(e => getComputedStyle(e).color), 'rgb(244, 243, 236)');
         assert.ok(await page.evaluate(() => document.fonts.check('600 88px Unbounded')));
         assert.ok(await page.evaluate(() => document.fonts.check('400 32px Arial')));
