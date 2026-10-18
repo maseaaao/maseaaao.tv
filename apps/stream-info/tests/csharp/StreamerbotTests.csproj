@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="CategoryBackendTests.cs" />
+    <None Include="../fixtures/category-search.json" Link="category-search.json" CopyToOutputDirectory="PreserveNewest" />
+    <Compile Include="../../streamerbot/category-search-transport.cs" Link="CategorySearchTransport.cs" />
+    <Compile Include="../../streamerbot/category-search-service.cs" Link="CategorySearchService.cs" />
+    <Compile Include="../../streamerbot/category-search-policy.cs" Link="CategorySearchPolicy.cs" />
+    <Compile Include="../../streamerbot/state-cache-policy.cs" Link="StateCachePolicy.cs" />
+  </ItemGroup>
+</Project>

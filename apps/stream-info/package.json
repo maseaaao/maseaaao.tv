@@ -1,0 +1,27 @@
+{
+  "name": "change-info-streamer-bot",
+  "version": "1.3.2",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "generate-import": "node scripts/generate-import.mjs && node scripts/verify-import.mjs",
+    "check": "tsc --noEmit",
+    "test": "vitest run && dotnet run --project tests/csharp/StreamerbotTests.csproj --configuration Release",
+    "build": "npm run generate-import && npm run check && node scripts/build-locales.mjs && node scripts/verify-locales.mjs",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@streamerbot/client": "2.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.30",
+    "jsdom": "^26.1.0",
+    "lucide-static": "^1.28.0",
+    "simple-icons": "^16.27.1",
+    "typescript": "5.8.3",
+    "vite": "6.4.3",
+    "vite-plugin-singlefile": "2.2.0",
+    "vitest": "^5.0.0"
+  }
+}
