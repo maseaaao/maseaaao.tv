@@ -121,7 +121,13 @@ a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex="-1"]:fo
 #platform-links, #contacts { scroll-margin-top: 24px; }
 /* Keep media below the links; reserve Twitch's minimum width beside chat. */
 @media (min-width: 768px) {
-  .stream-layout { grid-template-columns: minmax(402px, 1.7fr) minmax(0, 1fr); }
+  .stream-layout { grid-template-columns: minmax(402px, 1.7fr) minmax(0, 1fr); align-items: stretch; }
+  .stream-content { align-self: start; }
+  .stream-chat[open] { display: flex; flex-direction: column; min-height: 0; }
+  .stream-chat summary { min-height: 60px; flex: none; }
+  .stream-chat::details-content { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+  .stream-chat iframe { height: 0; min-height: 0; flex: 1; }
+  .stream-chat .stream-fallback { flex: none; }
   .stream-layout[data-state="offline"] .stream-archives { display: inline-flex; }
 }
 @media (max-width: 1000px) { .page { padding: 24px 16px; } .shell { gap: 28px; padding: 32px; } .actions { grid-template-columns: minmax(0, 1fr); } .collab { grid-template-columns: 1fr; gap: 8px; } .identity { padding-bottom: 24px; } .tiles--primary { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tile--wide { grid-column: 1 / -1; } .tiles--primary .tile { padding: 16px; gap: 12px; } }

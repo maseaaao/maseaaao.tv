@@ -289,3 +289,21 @@ if(process.env.LANDING_DETAIL_OUT){
     const report=path.join(directory,'geometry-motion-evidence.json');reserve(report);await fs.writeFile(report,JSON.stringify({chromeVersion:browser.version(),externalNetwork:'Twitch SDK and frames mocked; not a real broadcast',rows},null,2));
   });
 }
+
+test('desktop media columns share their bottom edge and chat fills available height', async () => {
+  for (const width of [768, 900, 1024, 1440, 1920]) {
+    const {page, context} = await newPage({width});
+    try {
+      await emit(page, 'ready', 'online');
+      const video = await page.locator('.stream-content').boundingBox();
+      const chat = await page.locator('.stream-chat').boundingBox();
+      const frame = await page.locator('[data-chat-frame]').boundingBox();
+      assert.ok(Math.abs(video.y + video.height - chat.y - chat.height) < 2, `${width}: media bottoms must align`);
+      assert.ok(frame.height > 150, `${width}: chat retains usable vertical space`);
+      await page.locator('.stream-chat summary').click();
+      assert.equal(await page.locator('[data-chat-frame]').isVisible(), false);
+      await page.locator('.stream-chat summary').click();
+      assert.equal(await page.locator('[data-chat-frame]').isVisible(), true);
+    } finally { await context.close(); }
+  }
+});
