@@ -14,3 +14,23 @@
 # Only content-addressed font files live in this directory.
 /assets/cyber-monolith/fonts/*
   Cache-Control: public, max-age=31536000, immutable
+
+# Versioned full-character-set accent font.
+/assets/fonts/unbounded-600.*.woff2
+  Cache-Control: public, max-age=31536000, immutable
+
+# Revalidate mutable resources after each deployment.
+/assets/brand.css
+  Cache-Control: public, max-age=0, must-revalidate
+/assets/site.css
+  Cache-Control: public, max-age=0, must-revalidate
+/assets/stream.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+/og-image.jpg
+  Cache-Control: public, max-age=0, must-revalidate
+
+/assets/theme.css
+  Cache-Control: public, max-age=0, must-revalidate
+/assets/theme.js
+  Cache-Control: public, max-age=0, must-revalidate

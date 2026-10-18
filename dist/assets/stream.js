@@ -35,7 +35,7 @@
   fallbackUrl.searchParams.append("parent", window.location.hostname);
   originalFrame.remove();
 
-  const desktop = window.matchMedia("(min-width:651px)");
+  const desktop = window.matchMedia("(min-width:768px)");
   let status = "loading";
   let chatPreference = null;
   let playerPreference = false;
@@ -56,8 +56,19 @@
     const url = new URL(source);
     url.searchParams.delete("parent");
     url.searchParams.append("parent", window.location.hostname);
+    if (getComputedStyle(document.documentElement).getPropertyValue("--theme").trim() === "dark") url.searchParams.set("darkpopout", "");
     chatFrame.src = url.href;
   }
+
+  document.addEventListener("themechange", () => {
+    if (!chatFrame.hasAttribute("src")) return;
+    const url = new URL(chatFrame.src);
+    const dark = getComputedStyle(document.documentElement).getPropertyValue("--theme").trim() === "dark";
+    if (dark === url.searchParams.has("darkpopout")) return;
+    if (dark) url.searchParams.set("darkpopout", "");
+    else url.searchParams.delete("darkpopout");
+    chatFrame.src = url.href;
+  });
 
   function updateChat() {
     chat.open = chatPreference ?? desktop.matches;
@@ -72,7 +83,7 @@
   playerSummary.addEventListener("click", () => {
     playerPreference = !playerDetails.open;
   });
-  desktop.addEventListener("change", updateChat);
+  desktop.addEventListener("change", render);
 
   function attemptPlayback() {
     if (!ready || failed || status !== "online" || !canEmbed() || playbackRequested) return;
@@ -96,13 +107,14 @@
     const wide = canEmbed();
     layout.dataset.state = status;
     badge.hidden = status !== "online";
-    offline.hidden = status !== "offline";
-    statusText.hidden = status === "offline" || (status === "loading" && !wide);
+    offline.hidden = status !== "offline" || desktop.matches;
+    statusText.hidden = (status === "offline" && !desktop.matches) || (status === "loading" && !wide);
     statusText.textContent = status === "online"
       ? (blocked ? "Эфир идёт. Нажми ▶ в плеере, чтобы начать просмотр." : "Сейчас в эфире")
-      : (status === "error" ? "Не удалось определить статус эфира. Можно открыть плеер или перейти на Twitch." : "Проверяем эфир…");
-    playerSummary.hidden = status !== "offline";
-    playerDetails.open = wide && (status !== "offline" || playerPreference);
+      : status === "offline" ? "Сейчас не в эфире"
+      : (status === "error" ? "Не удалось определить статус эфира. Плеер доступен ниже." : "Проверяем эфир…");
+    playerSummary.hidden = desktop.matches || status !== "offline";
+    playerDetails.open = wide && (desktop.matches || status !== "offline" || playerPreference);
     fallback.hidden = status !== "error";
     updateChat();
     attemptPlayback();

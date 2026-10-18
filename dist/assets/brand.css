@@ -1,3 +1,36 @@
-/* Cyber-Monolith: local shared fonts and semantic site aliases. */
-:root{color-scheme:dark;--ink:var(--hud-bg);--surface:var(--hud-surface);--surface-solid:var(--hud-surface);--line:var(--hud-border);--line-strong:var(--hud-border);--text:var(--hud-text);--dim:var(--hud-muted);--accent:var(--hud-accent);--font-display:var(--hud-display);--font-body:var(--hud-body)}
-*{box-sizing:border-box}html{font-synthesis:none}[hidden]{display:none!important}
+@font-face {
+  font-family: Unbounded;
+  src: url("./fonts/unbounded-600.729593e0b438dbe3.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+:root {
+  color-scheme: light;
+  --ink: #1616d9;
+  --surface: #f4f3ec;
+  --surface-solid: #f4f3ec;
+  --text: #20201e;
+  --dim: #60605a;
+  --line: #d2d1c9;
+  --line-strong: #83837b;
+  --accent: #1616d9;
+  --accent-soft: #e8e8fc;
+  --font-display: "Unbounded", Arial, sans-serif;
+  --font-body: Arial, sans-serif;
+  --hud-bg: var(--surface);
+  --hud-surface: #fffef8;
+  --hud-raised: #eeede4;
+  --hud-border: var(--line);
+  --hud-text: var(--text);
+  --hud-muted: var(--dim);
+  --hud-accent: var(--accent);
+  --hud-success: #176548;
+  --hud-warning: #815005;
+  --hud-danger: #a42a36;
+  --hud-display: var(--font-display);
+  --hud-body: var(--font-body);
+  --hud-mono: Consolas, monospace;
+  --hud-radius: 12px;
+}
+[hidden] { display: none !important; }

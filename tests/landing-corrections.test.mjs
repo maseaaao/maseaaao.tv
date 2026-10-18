@@ -5,7 +5,7 @@ import path from 'node:path';
 import http from 'node:http';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import {chromium} from 'playwright-core';
+import {launchBrowser} from '../scripts/browser.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const upstreamRef = '636683ebd6aec6e5a456baabf111865dc1c46cfd';
@@ -26,7 +26,7 @@ before(async () => {
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   origin = `http://127.0.0.1:${server.address().port}`;
-  browser = await chromium.launch({executablePath: process.env.CHROME_BIN || 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true});
+  browser = await launchBrowser();
 });
 after(async () => {
   await browser?.close();
@@ -107,65 +107,92 @@ test('one watch CTA remains in loading, online, offline and error; redundant fal
   }
 });
 
-test('donation keeps a dark surface, readable title and orange brand accents', async()=>{
+test('donation and its hover state remain readable in the shared palette', async () => {
   const {page,context}=await newPage();
   try {
     const tile=page.locator('.tile--donationalerts');
-    for(const hover of [false,true]) {
-      if(hover) { await tile.hover(); await page.waitForTimeout(200); }
-      const ui=await tile.evaluate(e=>({bg:getComputedStyle(e).backgroundColor,colors:[...e.querySelectorAll('.tile__title,.tile__meta,.tile__arrow,.brandicon')].map(c=>getComputedStyle(c).color),fill:getComputedStyle(e.querySelector('svg')).fill}));
-      assert.equal(ui.bg,hover?'rgb(16, 23, 34)':'rgb(10, 13, 18)');
-      assert.deepEqual(ui.colors,['rgb(244, 85, 0)','rgb(240, 244, 252)','rgb(244, 85, 0)']);
-      assert.equal(ui.fill,'rgb(244, 85, 0)');
-    }
-  }finally{await context.close();}
+    assert.equal(await tile.evaluate(e=>getComputedStyle(e).color),'rgb(32, 32, 30)');
+    await tile.hover();
+    assert.equal(await tile.evaluate(e=>getComputedStyle(e).color),'rgb(22, 22, 217)');
+  } finally { await context.close(); }
 });
 
-test('desktop chat sits directly under identity on the left; mobile retains identity/player/chat/actions order',async()=>{
-  for(const width of [320,390,540,768,900,1024,1300,1440,1920]){
+test('media stays below links; nonmobile player and chat stay side by side through status changes', async () => {
+  for (const width of [320,390,540,651,767,768,900,1000,1001,1024,1280,1440,1920]) {
     const {page,context}=await newPage();
-    try{
-      await emit(page,'ready','online');await page.setViewportSize({width,height:1000});
-      const boxes=await page.evaluate(()=>Object.fromEntries(['identity','stream-content','stream-chat','actions'].map(name=>{const r=document.querySelector('.'+name).getBoundingClientRect();return [name,{x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom}]})));
-      const {identity,'stream-content':player,'stream-chat':chat,actions}=boxes;
-      if(width>650){
-        assert.equal(chat.x,identity.x,`${width}: chat not in left column`);
-        assert.equal(chat.width,identity.width,`${width}: left column widths differ`);
-        assert.ok(chat.y>=identity.bottom&&chat.y-identity.bottom<=32,`${width}: chat not immediately below identity`);
-        assert.ok(player.x>=identity.x+identity.width,`${width}: player not right`);
-        assert.equal(actions.x,player.x);
-      }else{
-        assert.ok(player.y>=identity.bottom);assert.ok(chat.y>=player.bottom);assert.ok(actions.y>=chat.bottom);
+    try {
+      await emit(page,'ready','online');
+      await page.setViewportSize({width,height:1000});
+      await page.waitForFunction(expected=>document.querySelector('[data-stream-chat]').open===expected,width>=768);
+      const boxes=await page.evaluate(()=>Object.fromEntries(['identity','stream-layout','stream-content','stream-chat','actions','collab'].map(name=>{const r=document.querySelector('.'+name).getBoundingClientRect();return [name,{x:r.x,y:r.y,right:r.right,bottom:r.bottom}]})));
+      const {identity,'stream-layout':media,'stream-content':video,'stream-chat':chat,actions,collab}=boxes;
+      assert.ok(actions.y >= identity.bottom);
+      assert.ok(media.y >= actions.bottom);
+      if (width >= 768) {
+        assert.ok(video.right <= chat.x, `${width}: chat must be beside the player`);
+        assert.equal(video.y, chat.y, `${width}: media columns must align at the top`);
+      } else {
+        assert.ok(chat.y >= video.bottom, `${width}: mobile chat must be below the player`);
+      }
+      assert.ok(collab.y >= Math.max(media.bottom,actions.bottom));
+      const actionBox = await page.locator('.actions').boundingBox();
+      const frameBox = await page.locator('#twitch-player iframe').boundingBox();
+      await emit(page,'offline');
+      assert.deepEqual(await page.locator('.actions').boundingBox(), actionBox, 'a status change must not shift links');
+      if (width >= 768) {
+        assert.equal(await page.locator('[data-stream-player]').evaluate(e=>e.open), true);
+        assert.equal(await page.locator('[data-stream-chat]').evaluate(e=>e.open), true);
+        assert.deepEqual(await page.locator('#twitch-player iframe').boundingBox(), frameBox, 'offline must retain player position and dimensions');
+        assert.equal(await page.locator('.stream-archives').isVisible(), true);
       }
       assert.equal(await page.locator('[data-chat-frame]').count(),1);
-    }finally{await context.close();}
+    } finally { await context.close(); }
   }
 });
 
-test('coordinated assembly and tactile focus/hover motion are finite; reduced motion is immediately visible',async()=>{
-  for(const reducedMotion of ['no-preference','reduce']){
+test('arrows stay still during hover and focus; reduced motion disables transitions', async () => {
+  for (const reducedMotion of ['no-preference','reduce']) {
     const {page,context}=await newPage({reducedMotion});
-    try{
-      const motion=await page.evaluate(()=>['.identity','.stream-content','.stream-chat','.actions','.collab'].map(s=>{const e=document.querySelector(s),c=getComputedStyle(e);return {name:c.animationName,delay:parseFloat(c.animationDelay),iterations:c.animationIterationCount,opacity:c.opacity,visible:e.checkVisibility()}}));
-      assert.ok(motion.every(m=>m.visible&&m.opacity==='1'),'content must never wait hidden for motion');
-      if(reducedMotion==='reduce')assert.ok(motion.every(m=>m.name==='none'));
-      else{
-        assert.ok([motion[0],motion[3]].every(m=>m.name==='hub-arrive'&&m.iterations==='1'));
-        assert.ok([motion[1],motion[2],motion[4]].every(m=>m.name==='none'));
-        assert.ok(motion[3].delay>motion[0].delay,'actions must follow identity in assembly');
-        await page.waitForTimeout(900);
-        await page.locator('.tile--twitch').hover();await page.waitForTimeout(260);
-        const moved=await page.locator('.tile--twitch .tile__arrow').evaluate(e=>new DOMMatrix(getComputedStyle(e).transform).m41);
-        assert.ok(moved>0,'arrow must answer hover');
-        await page.mouse.move(0,0);await page.keyboard.press('Tab');await page.locator('.tile--donationalerts').focus();await page.waitForTimeout(260);
-        const focus=await page.locator('.tile--donationalerts').evaluate(e=>({ring:getComputedStyle(e).outlineWidth,arrow:new DOMMatrix(getComputedStyle(e.querySelector('.tile__arrow')).transform).m41}));
-        assert.equal(focus.ring,'2px');assert.equal(focus.arrow,0,'keyboard focus keeps the arrow still');
-        await page.mouse.move(0,0);await page.locator('.tile--twitch').hover();await page.mouse.down();await page.waitForTimeout(240);
-        assert.ok(await page.locator('.tile--twitch').evaluate(e=>new DOMMatrix(getComputedStyle(e).transform).a===1),'press must preserve control size');
-        // Release away from the link to avoid opening an external destination.
-        await page.mouse.move(0,0);await page.mouse.up();
-      }
-    }finally{await context.close();}
+    try {
+      const tile=page.locator('.tile--twitch');
+      await tile.hover();
+      assert.equal(await tile.locator('.tile__arrow').evaluate(e=>getComputedStyle(e).transform),'none');
+      await page.keyboard.press('Tab');
+      await tile.focus();
+      assert.equal(await tile.evaluate(e=>getComputedStyle(e).outlineWidth),'3px');
+      assert.equal(await tile.locator('.tile__arrow').evaluate(e=>getComputedStyle(e).transform),'none');
+      if(reducedMotion==='reduce') assert.equal(await tile.evaluate(e=>getComputedStyle(e).transitionDuration),'0s');
+    } finally { await context.close(); }
+  }
+});
+
+test('enlarged landing text stays readable without horizontal overflow in every stream state', async () => {
+  for (const state of ['online','offline','error']) {
+    for (const width of [320,390,540,1440]) {
+      const {page,context}=await newPage({sdkState:state==='error'?'error':'mock'});
+      try {
+        if(state==='error') await page.waitForFunction(()=>document.querySelector('[data-stream-layout]').dataset.state==='error');
+        else await emit(page,'ready',state);
+        await page.setViewportSize({width,height:1000});
+        await page.evaluate(()=>{
+          const elements=[...document.querySelectorAll('body,body *')];
+          const sizes=elements.map(e=>parseFloat(getComputedStyle(e).fontSize));
+          elements.forEach((e,i)=>{e.style.fontSize=sizes[i]*2+'px';});
+        });
+        assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),`${state}/${width}/200% text`);
+        if(state==='online') {
+          const separated=await page.evaluate(()=>{
+            const badge=document.querySelector('.live-badge').getBoundingClientRect();
+            const copy=document.querySelector('.identity__copy').getBoundingClientRect();
+            return badge.right<=copy.left || badge.bottom<=copy.top || badge.top>=copy.bottom;
+          });
+          assert.equal(separated,true,`${width}px: enlarged LIVE must not overlap the identity text`);
+        }
+        for (const selector of ['.tile--twitch','.tile--donationalerts','.collab__link']) {
+          assert.equal(await page.locator(selector).first().isVisible(),true);
+        }
+      } finally { await context.close(); }
+    }
   }
 });
 
@@ -191,20 +218,20 @@ test('chat defaults open on nonmobile in every stream state and cold narrow desk
     try{
       if(state==='error')await page.waitForFunction(()=>document.querySelector('[data-stream-layout]').dataset.state==='error');
       else if(state!=='loading')await emit(page,'ready',state);
-      for(const width of [320,390,540,650,651,768,900,1000,1440]){
+      for(const width of [320,390,540,651,767,768,900,1000,1440]){
         await page.setViewportSize({width,height:1000});
-        await page.waitForFunction(expected=>document.querySelector('[data-stream-chat]').open===expected,width>650);
-        assert.equal(await page.locator('[data-stream-chat]').evaluate(e=>e.open),width>650,`${state}/${width}`);
+        await page.waitForFunction(expected=>document.querySelector('[data-stream-chat]').open===expected,width>=768);
+        assert.equal(await page.locator('[data-stream-chat]').evaluate(e=>e.open),width>=768,`${state}/${width}`);
       }
       assert.deepEqual(traffic.errors,[]);
     }finally{await context.close();}
   }
-  for(const width of [320,650,651,768,900,1440]){
+  for(const width of [320,651,767,768,900,1440]){
     const {page,context,traffic}=await newPage({width});
     try{
-      assert.equal(await page.locator('[data-stream-chat]').evaluate(e=>e.open),width>650,`cold/${width}`);
+      assert.equal(await page.locator('[data-stream-chat]').evaluate(e=>e.open),width>=768,`cold/${width}`);
       const src=await page.locator('[data-chat-frame]').getAttribute('src');
-      if(width>650){assert.ok(src);assert.equal(new URL(src).searchParams.get('parent'),'127.0.0.1');}
+      if(width>=768){assert.ok(src);assert.equal(new URL(src).searchParams.get('parent'),'127.0.0.1');}
       else assert.equal(src,null,'a cold mobile page must not load a collapsed chat iframe');
       assert.deepEqual(traffic.errors,[]);
     }finally{await context.close();}
@@ -263,3 +290,59 @@ if(process.env.LANDING_DETAIL_OUT){
   });
 }
 
+test('desktop media columns share their bottom edge and chat fills available height', async () => {
+  for (const width of [768, 900, 1024, 1440, 1920]) for (const state of ['loading', 'online', 'offline', 'error']) {
+    const {page, context} = await newPage({width, sdkState: state === 'error' ? 'error' : 'mock'});
+    try {
+      if (state === 'error') await page.waitForFunction(() => document.querySelector('[data-stream-layout]').dataset.state === 'error');
+      else if (state !== 'loading') await emit(page, 'ready', state);
+      const video = await page.locator('.twitch-player').boundingBox();
+      const chat = await page.locator('.stream-chat').boundingBox();
+      const frame = await page.locator('[data-chat-frame]').boundingBox();
+      assert.ok(Math.abs(video.y + video.height - chat.y - chat.height) < 2, `${width}: media bottoms must align`);
+      assert.ok(frame.height > 150, `${width}: chat retains usable vertical space`);
+      await page.locator('.stream-chat summary').click();
+      assert.equal(await page.locator('[data-chat-frame]').isVisible(), false);
+      await page.locator('.stream-chat summary').click();
+      assert.equal(await page.locator('[data-chat-frame]').isVisible(), true);
+    } finally { await context.close(); }
+  }
+});
+
+test('secondary links retain two compact columns at intermediate widths', async () => {
+  for (const width of [541, 768, 900, 1000]) {
+    const {page, context} = await newPage({width});
+    try {
+      const tiles = await page.locator('.tiles--secondary .tile').evaluateAll(es => es.map(e => {
+        const r = e.getBoundingClientRect(); return {x: r.x, y: r.y, width: r.width};
+      }));
+      assert.equal(tiles[0].y, tiles[1].y, `${width}: first two links share a row`);
+      assert.ok(tiles[1].x > tiles[0].x + tiles[0].width, `${width}: separate columns`);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    } finally { await context.close(); }
+  }
+});
+
+test('narrow desktop reserves at least 300px for chat beside a Twitch-sized player', async () => {
+  for (const width of [768, 800, 850, 900]) {
+    const {page, context} = await newPage({width});
+    try {
+      await emit(page, 'ready', 'online');
+      const player = await page.locator('#twitch-player iframe').boundingBox();
+      const chat = await page.locator('[data-chat-frame]').boundingBox();
+      assert.ok(player.width >= 400 && player.height >= 300, `${width}: Twitch player minimum`);
+      assert.ok(chat.width >= 298, `${width}: chat width ${chat.width}`);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    } finally { await context.close(); }
+  }
+});
+
+test('primary cards share an intentional equal-height rhythm', async () => {
+  for (const width of [320, 390, 540, 768, 1024, 1440]) {
+    const {page, context} = await newPage({width});
+    try {
+      const heights = await page.locator('.tiles--primary .tile').evaluateAll(es => es.map(e => e.getBoundingClientRect().height));
+      assert.ok(Math.max(...heights) - Math.min(...heights) < 1, `${width}: primary heights ${heights}`);
+    } finally { await context.close(); }
+  }
+});

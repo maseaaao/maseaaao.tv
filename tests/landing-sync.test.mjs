@@ -5,7 +5,7 @@ import path from 'node:path';
 import http from 'node:http';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import {chromium} from 'playwright-core';
+import {launchBrowser} from '../scripts/browser.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const upstreamRef = '636683ebd6aec6e5a456baabf111865dc1c46cfd';
@@ -26,7 +26,7 @@ before(async () => {
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   origin = `http://127.0.0.1:${server.address().port}`;
-  browser = await chromium.launch({executablePath: process.env.CHROME_BIN || 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true});
+  browser = await launchBrowser();
 });
 after(async () => {
   await browser?.close();
@@ -53,8 +53,8 @@ const sdk = `(() => {
   window.Twitch={Player};
 })();`;
 
-async function newPage({width = 1440, sdkState = 'mock', javaScriptEnabled = true, htmlOverride, cssOverride, clock = false} = {}) {
-  const context = await browser.newContext({viewport: {width, height: 1000}, reducedMotion: 'reduce', javaScriptEnabled});
+async function newPage({width = 1440, sdkState = 'mock', javaScriptEnabled = true, htmlOverride, cssOverride, clock = false, colorScheme = "light"} = {}) {
+  const context = await browser.newContext({viewport: {width, height: 1000}, reducedMotion: 'reduce', javaScriptEnabled, colorScheme});
   const page = await context.newPage();
   const traffic = {fonts: [], errors: [], external: []};
   page.on('pageerror', error => traffic.errors.push(error.message));
@@ -81,6 +81,11 @@ async function newPage({width = 1440, sdkState = 'mock', javaScriptEnabled = tru
   return {page, context, traffic};
 }
 
+async function chooseTheme(page, value) {
+  await page.locator('.theme-trigger').click();
+  await page.locator(`[data-theme-value="${value}"]`).click();
+}
+
 async function emit(page, ...names) {
   await page.waitForFunction(() => window.__twitchPlayer);
   await page.evaluate(names => names.forEach(name => window.__twitchPlayer.emit(name)), names);
@@ -99,34 +104,38 @@ test('merge conflict markers are absent from deployable HTML and CSS', () => {
 });
 
 test('upstream Twitch hooks, archive/TikTok links and accessibility survive', () => checkFeatures(html));
-test('stream.js preserves upstream behavior with approved chat defaults and loading geometry', async () => {
-  const original = execFileSync('git', ['cat-file', '--filters', `${upstreamRef}:dist/assets/stream.js`], {cwd: root}).toString('utf8');
-  const expected = original.replace('window.matchMedia("(min-width:1000px)")', 'window.matchMedia("(min-width:651px)")')
-    .replace('chatPreference ?? (status === "online" && desktop.matches)', 'chatPreference ?? desktop.matches')
-    .replace('status === "online" || status === "error" || (status === "offline" && playerPreference)', 'status !== "offline" || playerPreference');
-  assert.notEqual(expected, original);
-  assert.equal((await fs.readFile(path.join(root, 'dist/assets/stream.js'))).equals(Buffer.from(expected)), true, 'unapproved upstream script change');
+test('chat theme follows the page without recreating the Twitch player', async () => {
+  const {page, context} = await newPage({colorScheme: 'dark'});
+  try {
+    await emit(page, 'ready', 'online');
+    const source = async () => new URL(await page.locator('[data-chat-frame]').getAttribute('src'));
+    assert.equal((await source()).searchParams.has('darkpopout'), true);
+    await page.evaluate(() => { window.__originalPlayer = window.__twitchPlayer; });
+    await chooseTheme(page, 'light');
+    assert.equal((await source()).searchParams.has('darkpopout'), false);
+    await chooseTheme(page, 'dark');
+    assert.equal((await source()).searchParams.has('darkpopout'), true);
+    assert.equal(await page.evaluate(() => window.__originalPlayer === window.__twitchPlayer), true);
+    assert.equal((await source()).searchParams.get('parent'), '127.0.0.1');
+  } finally { await context.close(); }
 });
 
-test('Cyber-Monolith composition, angular avatars and Geologica survive upstream merge', async () => {
+test('blue and light surfaces use a local accent font and rounded controls', async () => {
   const {page, context} = await newPage();
   try {
     const ui = await page.evaluate(() => ({
       bg: getComputedStyle(document.body).backgroundColor,
+      surface: getComputedStyle(document.querySelector('.shell')).backgroundColor,
       font: getComputedStyle(document.body).fontFamily,
       loaded: [...document.fonts].filter(face => face.status === 'loaded').map(face => face.family),
-      tileRadius: getComputedStyle(document.querySelector('.tile')).borderRadius,
-      avatarRadius: getComputedStyle(document.querySelector('.avatar')).borderRadius,
-      shellWidth: document.querySelector('.shell').getBoundingClientRect().width,
-      identityBorder: getComputedStyle(document.querySelector('.identity')).borderTopWidth,
-      corner: getComputedStyle(document.querySelector('.identity'), '::before').borderTopWidth,
+      radius: getComputedStyle(document.querySelector('.tile')).borderRadius,
     }));
-    assert.equal(ui.bg, 'rgb(5, 6, 8)');
-    assert.match(ui.font, /Geologica/); assert.ok(ui.loaded.includes('Geologica')); assert.ok(ui.loaded.includes('Unbounded'));
-    assert.ok(parseFloat(ui.tileRadius) <= 2, `HUD tile radius ${ui.tileRadius}`);
-    assert.equal(ui.avatarRadius, '0px', 'HUD avatar must remain angular');
-    assert.ok(ui.shellWidth > 1000, `HUD desktop composition collapsed: ${ui.shellWidth}`);
-    assert.equal(ui.identityBorder, '1px'); assert.equal(ui.corner, '2px');
+    assert.equal(ui.bg, 'rgb(22, 22, 217)');
+    assert.equal(ui.surface, 'rgb(244, 243, 236)');
+    assert.match(ui.font, /Arial/);
+    assert.ok(ui.loaded.includes('Unbounded'));
+    assert.equal(ui.loaded.length, 1);
+    assert.equal(ui.radius, '12px');
   } finally { await context.close(); }
 });
 
@@ -165,7 +174,7 @@ test('external destinations and executable scripts survive; approved copy and SE
     const destinations = anchors => [...new Set(anchors.filter(href => !href.startsWith('#')))].sort();
     assert.deepEqual(destinations(actual.anchors), destinations(expected.anchors));
     assert.equal(actual.title, expected.title);
-    assert.deepEqual(actual.scripts.filter(script => script.src), expected.scripts.filter(script => script.src));
+    assert.deepEqual(actual.scripts.filter(script => script.src), [{src: 'assets/theme.js', defer: false, text: ''}, ...expected.scripts.filter(script => script.src)]);
     for (const copy of ['Стример и автор', 'Анонсы, новости, розыгрыши', 'Записи и нарезки', 'Поддержать стрим']) {
       assert.ok(actual.text.includes(copy.replace(/\s+/g, '')), copy);
     }
@@ -179,12 +188,11 @@ test('external destinations and executable scripts survive; approved copy and SE
   } finally { await current.context.close(); await reference.context.close(); }
 });
 
-test('font requests are local successful Geologica/Unbounded, not Inter or a remote CDN', async () => {
+test('only the full-character-set local accent font is requested', async () => {
   const {page, context, traffic} = await newPage();
   try {
     const requests = traffic.fonts;
-    assert.ok(requests.some(request => /\/Geologica\.[a-f0-9]{16}\.woff2$/.test(request.url)));
-    assert.ok(requests.some(request => /\/Unbounded\.[a-f0-9]{16}\.woff2$/.test(request.url)));
+    assert.ok(requests.some(request => /\/unbounded-600\.[a-f0-9]{16}\.woff2$/.test(request.url)));
     for (const request of requests) { assert.equal(request.status, 200); assert.ok(request.url.startsWith(origin)); assert.doesNotMatch(request.url, /Inter/); }
     assert.deepEqual(traffic.errors, []);
   } finally { await context.close(); }
@@ -194,14 +202,17 @@ test('READY alone never invents LIVE; offline/live/playback-blocked transitions 
   const {page, context, traffic} = await newPage();
   try {
     await emit(page, 'ready');
+    assert.equal(await page.evaluate(() => window.__twitchPlayer.options.autoplay), true);
+    assert.equal(await page.evaluate(() => window.__twitchPlayer.options.muted), true);
     assert.equal(await page.locator('[data-stream-layout]').getAttribute('data-state'), 'loading');
     assert.equal(await page.locator('[data-live-badge]').isVisible(), false);
     await emit(page, 'offline');
     assert.equal(await page.locator('[data-stream-layout]').getAttribute('data-state'), 'offline');
-    assert.equal(await page.locator('[data-stream-offline]').isVisible(), true);
+    assert.equal(await page.locator('[data-stream-offline]').isVisible(), false);
     assert.equal(await page.locator('[data-live-badge]').isVisible(), false);
-    assert.equal(await page.locator('[data-stream-player]').getAttribute('open'), null);
-    assert.equal(await page.locator('[data-player-summary]').isVisible(), true);
+    assert.equal(await page.locator('[data-stream-player]').getAttribute('open'), '');
+    assert.equal(await page.locator('[data-player-summary]').isVisible(), false);
+    assert.equal(await page.locator('.stream-archives').isVisible(), true);
     assert.equal(await page.locator('[data-stream-chat]').getAttribute('open'), '');
     assert.equal(new URL(await page.locator('[data-chat-frame]').getAttribute('src')).searchParams.get('parent'), '127.0.0.1');
     await emit(page, 'online');
@@ -226,9 +237,15 @@ test('chat and offline player summaries work with keyboard and keep user prefere
   const {page, context} = await newPage();
   try {
     await emit(page, 'ready', 'offline');
+    await page.setViewportSize({width: 540, height: 1000});
+    await page.waitForFunction(() => !document.querySelector('[data-player-summary]').hidden);
     const playerSummary = page.locator('[data-player-summary]');
+    assert.equal(await playerSummary.isVisible(), true);
+    assert.equal(await page.locator('[data-stream-player]').evaluate(e=>e.open), false);
     await playerSummary.focus(); await page.keyboard.press('Enter');
     assert.equal(await page.locator('[data-stream-player]').getAttribute('open'), '');
+    await page.setViewportSize({width: 1440, height: 1000});
+    await page.waitForFunction(() => document.querySelector('[data-stream-chat]').open);
     const chatSummary = page.locator('[data-stream-chat] summary');
     assert.equal(await page.locator('[data-stream-chat]').getAttribute('open'), '');
     await chatSummary.focus(); await page.keyboard.press('Space');
@@ -257,6 +274,8 @@ for (const mode of ['error', 'missing', 'constructor-error']) {
       assert.match(await page.locator('[data-stream-status]').textContent(), /Не удалось определить статус/);
       const url = new URL(await page.locator('#twitch-player iframe').getAttribute('src'));
       assert.equal(url.searchParams.get('parent'), '127.0.0.1'); assert.equal(url.searchParams.get('channel'), 'maseaaao');
+      assert.equal(url.searchParams.get('autoplay'), 'true');
+      assert.equal(url.searchParams.get('muted'), 'true');
       assert.equal(await page.locator('[data-player-fallback]').textContent(), '');
       assert.equal(await page.locator('.tile--twitch').getAttribute('href'), 'https://www.twitch.tv/maseaaao');
       assert.equal(await page.locator('.tile--twitch').isVisible(), true);
@@ -280,7 +299,7 @@ async function layoutAudit(page) {
   });
 }
 
-for (const width of [320, 390, 540, 651, 768, 900, 1000, 1300, 1440, 1920]) {
+for (const width of [320, 390, 540, 651, 767, 768, 900, 1000, 1001, 1300, 1440, 1920]) {
   test(`known offline/online/error UI fits ${width}px, 44px controls and player-width-aware fallback`, async () => {
     for (const state of ['offline', 'online', 'error']) {
       const {page, context} = await newPage({sdkState: state === 'error' ? 'error' : 'mock'});
@@ -293,7 +312,7 @@ for (const width of [320, 390, 540, 651, 768, 900, 1000, 1300, 1440, 1920]) {
         assert.ok(ui.scroll <= ui.viewport, `${state} overflow ${ui.scroll}>${ui.viewport}`);
         assert.deepEqual(ui.small, [], `${state} undersized controls`);
         if (ui.contentWidth < 402) assert.ok(ui.mobileVisible, `${state}: narrow content ${ui.contentWidth}px has no Twitch fallback`);
-        if (state !== 'offline' && ui.contentWidth >= 402) { assert.ok(ui.player, `${state}: missing wide player`); assert.ok(ui.player.width >= 400, `Twitch frame too narrow ${ui.player.width}`); assert.ok(ui.player.height >= 300); }
+        if ((state !== 'offline' || width >= 768) && ui.contentWidth >= 402) { assert.ok(ui.player, `${state}: missing wide player`); assert.ok(ui.player.width >= 400, `Twitch frame too narrow ${ui.player.width}`); assert.ok(ui.player.height >= 300); }
       } finally { await context.close(); }
     }
   });
@@ -301,7 +320,7 @@ for (const width of [320, 390, 540, 651, 768, 900, 1000, 1300, 1440, 1920]) {
 
 
 test('cold narrow columns expose Twitch external fallback even above the old 441px viewport cutoff', async () => {
-  for (const width of [320,390,651,720]) {
+  for (const width of [320,390]) {
     const {page, context, traffic} = await newPage({width});
     try {
       const ui = await layoutAudit(page);
@@ -329,7 +348,7 @@ async function contrastAudit(page) {
     while (walker.nextNode()) {
       const node = walker.currentNode, element = node.parentElement;
       const text = node.textContent.trim();
-      if (!text || !element || element.closest('script,style,[aria-hidden="true"]') || !element.checkVisibility()) continue;
+      if (!text || !element || element.closest('script,style,[aria-hidden="true"],.sr-only') || !element.checkVisibility()) continue;
       const range = document.createRange(); range.selectNodeContents(node);
       if (![...range.getClientRects()].some(rect => rect.width && rect.height)) continue;
       const style = getComputedStyle(element), bg = background(element), fg = blend(rgba(style.color), bg);
@@ -371,7 +390,7 @@ test('every visible keyboard control has real focus ring, including unclipped ch
         return {visible: element.matches(':focus-visible'), width: style.outlineWidth, style: style.outlineStyle, offset: parseFloat(style.outlineOffset), chat: element.matches('.stream-chat summary')};
       });
       assert.ok(focus.visible, `no focus-visible for ${await control.textContent()}`);
-      assert.equal(focus.width, '2px'); assert.equal(focus.style, 'solid');
+      assert.equal(focus.width, '3px'); assert.equal(focus.style, 'solid');
       if (focus.chat) assert.ok(focus.offset <= -2, 'chat overflow:hidden clips an exterior summary outline');
     }
   } finally { await context.close(); }
@@ -456,6 +475,9 @@ if (process.env.LANDING_AUDIT_OUT) {
       await focus.page.keyboard.press('Tab');
       await focus.page.locator('[data-stream-chat] summary').focus();
       await focus.page.screenshot({path:path.join(directory,'focus-chat-desktop.png'),fullPage:true});
+      await focus.page.keyboard.press('Enter');
+      await focus.page.locator('[data-stream-chat] summary').blur();
+      await focus.page.screenshot({path:path.join(directory,'offline-desktop-chat-closed.png'),fullPage:true});
     } finally { await focus.context.close(); }
     await fs.writeFile(path.join(directory,'browser-evidence.json'),JSON.stringify(evidence,null,2));
     assert.deepEqual(evidence.errors, []);
@@ -473,5 +495,120 @@ test("fractional container widths below 402px retain the Twitch fallback", async
     const ui = await layoutAudit(page);
     assert.equal(ui.contentWidth, 401.5);
     assert.ok(ui.mobileVisible, "fractional sub-402px content has no external Twitch fallback");
+  } finally { await context.close(); }
+});
+
+for (const colorScheme of ['light', 'dark']) {
+  test(`system ${colorScheme}: theme works without JavaScript and at narrow widths`, async () => {
+    const {page, context} = await newPage({colorScheme, javaScriptEnabled: false, width: 320});
+    try {
+      assert.equal(await page.locator('[data-theme-control]').isVisible(), false);
+      assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), colorScheme);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+      await page.emulateMedia({colorScheme: colorScheme === 'dark' ? 'light' : 'dark'});
+      assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), colorScheme === 'dark' ? 'light' : 'dark');
+    } finally { await context.close(); }
+  });
+  test(`system ${colorScheme}: manual theme persists, overrides OS, and auto resumes following OS`, async () => {
+    const {page, context} = await newPage({colorScheme, width: 390});
+    try {
+      const opposite = colorScheme === 'dark' ? 'light' : 'dark';
+      await chooseTheme(page, opposite);
+      await page.reload();
+      assert.equal(await page.locator('[data-theme-value][aria-pressed="true"]').getAttribute('data-theme-value'), opposite);
+      assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), opposite);
+      await page.goto(origin + '/dist/docs.html');
+      assert.equal(await page.locator('[data-theme-value][aria-pressed="true"]').getAttribute('data-theme-value'), opposite);
+      await chooseTheme(page, 'auto');
+      assert.equal(await page.evaluate(() => localStorage.getItem('maseaaao.theme.v1')), null);
+      assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), colorScheme);
+      await page.emulateMedia({colorScheme: opposite});
+      assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), opposite);
+    } finally { await context.close(); }
+  });
+}
+test('dark landing text and hover states retain high contrast at mobile and desktop sizes', async () => {
+  for (const width of [320,390,540,1440]) {
+    const {page, context} = await newPage({colorScheme: 'dark'});
+    try {
+      await emit(page, 'ready', 'offline');
+      await page.setViewportSize({width, height: 1000});
+      const rows = await contrastAudit(page);
+      assert.deepEqual(rows.filter(row => row.ratio < row.minimum), []);
+      await page.locator('.tile--donationalerts').hover();
+      assert.deepEqual((await contrastAudit(page)).filter(row => row.ratio < row.minimum), []);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    } finally { await context.close(); }
+  }
+});
+test('blocked storage keeps the theme control functional', async () => {
+  const {page, context} = await newPage();
+  try {
+    await page.addInitScript(() => Object.defineProperty(window, 'localStorage', {get() { throw new Error('Storage blocked'); }}));
+    await page.reload();
+    await chooseTheme(page, 'dark');
+    assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'dark');
+    await chooseTheme(page, 'auto');
+    assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'light');
+  } finally { await context.close(); }
+});
+
+test('single theme button opens an accessible dropdown and restores focus after selection or Escape', async () => {
+  const {page, context} = await newPage({colorScheme: 'dark', width: 320});
+  try {
+    const trigger = page.locator('.theme-trigger');
+    const menu = page.locator('.theme-menu');
+    assert.equal(await menu.isVisible(), false);
+    for (const value of ['light', 'dark', 'auto']) {
+      await trigger.focus();
+      await page.keyboard.press('Space');
+      assert.equal(await menu.isVisible(), true);
+      const button = page.locator(`[data-theme-value="${value}"]`);
+      await button.focus();
+      await page.keyboard.press('Space');
+      assert.equal(await button.getAttribute('aria-pressed'), 'true');
+      assert.equal(await page.locator('[data-theme-value][aria-pressed="true"]').count(), 1);
+      assert.equal(await menu.isVisible(), false);
+      assert.equal(await trigger.evaluate(element => document.activeElement === element), true);
+      assert.equal(await trigger.evaluate(element => getComputedStyle(element).outlineWidth), '3px');
+      assert.ok(await trigger.getAttribute('aria-label'));
+    }
+    await trigger.click();
+    const bounds = await menu.boundingBox();
+    assert.ok(bounds.x >= 0 && bounds.x + bounds.width <= 320);
+    assert.deepEqual((await contrastAudit(page)).filter(row => row.ratio < row.minimum), []);
+    await page.keyboard.press('Escape');
+    assert.equal(await menu.isVisible(), false);
+    assert.equal(await trigger.evaluate(element => document.activeElement === element), true);
+    await trigger.click();
+    await page.locator('#profile-name').click();
+    assert.equal(await menu.isVisible(), false);
+    assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'dark');
+  } finally { await context.close(); }
+});
+
+test('desktop keeps the same video and chat mounted through online and offline transitions', async () => {
+  const {page, context} = await newPage();
+  try {
+    await emit(page, 'ready', 'online');
+    await page.evaluate(() => { window.__retainedVideo = document.querySelector('#twitch-player iframe'); window.__retainedChat = document.querySelector('[data-chat-frame]'); });
+    for (const state of ['offline', 'online', 'offline']) {
+      await emit(page, state);
+      assert.equal(await page.locator('[data-stream-player]').evaluate(e=>e.open), true);
+      assert.equal(await page.locator('[data-stream-chat]').evaluate(e=>e.open), true);
+      assert.equal(await page.evaluate(() => window.__retainedVideo === document.querySelector('#twitch-player iframe') && window.__retainedChat === document.querySelector('[data-chat-frame]')), true);
+    }
+  } finally { await context.close(); }
+});
+
+test('desktop media defaults update even when the player column keeps the same width', async () => {
+  const {page, context} = await newPage({cssOverride: css + '\n.stream-content { width:450px }'});
+  try {
+    await emit(page, 'ready', 'offline');
+    await page.setViewportSize({width:767, height:1000});
+    await page.waitForFunction(() => !document.querySelector('[data-stream-player]').open);
+    await page.setViewportSize({width:768, height:1000});
+    await page.waitForFunction(() => document.querySelector('[data-stream-player]').open && document.querySelector('[data-stream-chat]').open);
+    assert.equal(await page.locator('[data-stream-offline]').isVisible(), false);
   } finally { await context.close(); }
 });

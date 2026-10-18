@@ -1,11 +1,1 @@
-@font-face{font-family:Unbounded;src:url('./fonts/Unbounded.e5382d3550933388.woff2') format('woff2');font-weight:200 900;font-display:swap}
-@font-face{font-family:Geologica;src:url('./fonts/Geologica.c210244b05383afb.woff2') format('woff2');font-weight:100 900;font-display:swap}
-:root{--hud-bg:#050608;--hud-surface:#0A0D12;--hud-raised:#101722;--hud-border:#273246;--hud-text:#F0F4FC;--hud-muted:#96A1B3;--hud-accent:#C182F3;--hud-data:#00E5FF;--hud-success:#68D5A0;--hud-warning:#E7BE6A;--hud-danger:#FF7585;--hud-display:'Unbounded',sans-serif;--hud-body:'Geologica',sans-serif;--hud-mono:Consolas,monospace;--hud-radius:2px;--hud-gap:16px;--hud-control-height:44px;--hud-transition:140ms ease}
-.hud-panel{background:var(--hud-surface);border:1px solid var(--hud-border);border-radius:var(--hud-radius)}
-.hud-button{font-family:var(--hud-body);background:var(--hud-raised);color:var(--hud-text);border:1px solid var(--hud-border);border-radius:2px;min-height:44px;padding:10px 16px;cursor:pointer;transition:border-color var(--hud-transition),background var(--hud-transition)}
-.hud-button:hover{border-color:var(--hud-accent)}
-.hud-button--primary{background:var(--hud-accent);color:var(--hud-bg);border-color:var(--hud-accent)}
-.hud-button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--hud-accent);outline-offset:3px}
-.hud-button:disabled{opacity:.45;cursor:not-allowed}
-[hidden]{display:none!important}
-@media(prefers-reduced-motion:reduce){.hud-button{transition:none}}
+@import url("../brand.css");
