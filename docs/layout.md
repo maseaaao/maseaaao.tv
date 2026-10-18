@@ -29,14 +29,4 @@ The work adds no framework, dependency, timer or user-agent detection.
 
 ## Verification
 
-Chromium 153: both themes, online/offline/SDK error, 14 viewport widths from
-320px through 1920px, including both sides of 767/768px and 1000/1001px.
-Checked visible text contrast, horizontal overflow, default media visibility,
-Twitch minimum dimensions and the theme dropdown bounds (84 combinations).
-The suite also checks media below links, side-by-side nonmobile media, mobile
-stacking, autoplay/muted options, mute-before-play order, stable link/video
-positions, retained iframe nodes, keyboard controls, manual chat choices, 200%
-text and viewport defaults when the player column itself does not resize.
-
-Twitch SDK and iframe requests were isolated with test responses. The previews
-show that isolated content, not an actual broadcast or real chat session.
+The browser suite checks online/offline/SDK error states, viewports from 320px through 1920px, contrast, overflow, keyboard controls, enlarged text, media sizing, stable iframe nodes and fixed-light rendering under both system color preferences. Twitch responses are mocked; this does not test a real broadcast or chat. Fresh migration results are recorded in migration-20261019.md.

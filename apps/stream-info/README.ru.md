@@ -1,3 +1,5 @@
+> Development now lives in `maseaaao/maseaaao.tv`, under `apps/stream-info`. Start with the repository README and `docs/local-installation.md`. Historical release links and setup notes below are retained for reference.
+
 # Stream Info для Streamer.bot
 
 [English version](README.md)

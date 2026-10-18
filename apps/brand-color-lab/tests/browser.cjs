@@ -10,6 +10,7 @@ const assert = require("assert"),
   });
   const context = await b.newContext({
       viewport: { width: 1440, height: 900 },
+      colorScheme: "dark",
     }),
     page = await context.newPage(),
     errors = [];
@@ -20,6 +21,8 @@ const assert = require("assert"),
   await page.waitForFunction(
     () => !document.getElementById("generate").disabled,
   );
+  assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), "light");
+  assert.equal(await page.evaluate(() => getComputedStyle(document.body).backgroundColor), "rgb(244, 243, 236)");
   const id = await page.evaluate(() => current.id);
   await page.locator("#favorites-toggle").click();
   assert(await page.locator("#list-empty").isVisible());

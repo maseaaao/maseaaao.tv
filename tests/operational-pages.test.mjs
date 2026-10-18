@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import http from 'node:http';
-import {launchBrowser} from '../scripts/browser.mjs';
+import {launchBrowser} from '../tooling/artwork/browser.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 let browser, server, origin;
@@ -36,7 +36,7 @@ async function open(file, width = 1440) {
 }
 
 test('checker adds each player once, removes players, and keeps the correct embed destinations', async () => {
-  const page = await open('dist/check.html');
+  const page = await open('apps/website/public/check.html');
   try {
     await page.locator('[data-action="add-all"]').click();
     assert.equal(await page.locator('iframe').count(), 2);
@@ -58,7 +58,7 @@ test('checker adds each player once, removes players, and keeps the correct embe
 
 test('TV mode uses two full-width rows for two players on every viewport', async () => {
   for (const width of [320,390,540,768,1440]) {
-    const page = await open('dist/check.html?tv=1', width);
+    const page = await open('apps/website/public/check.html?tv=1', width);
     try {
       assert.equal(await page.locator('iframe').count(), 2);
       assert.equal(new URL(await page.locator('[data-platform="youtube"] iframe').getAttribute('src')).searchParams.get('mute'), '0');
@@ -76,7 +76,7 @@ test('TV mode uses two full-width rows for two players on every viewport', async
 for (const file of ['check.html','docs.html']) {
   test(`${file} keeps readable local typography, focus and controls at narrow widths and enlarged text`, async () => {
     for (const width of [320,390,540,768,1440]) {
-      const page = await open('dist/' + file, width);
+      const page = await open('apps/website/public/' + file, width);
       try {
         for (const enlarged of [false,true]) {
           if (enlarged) await page.evaluate(() => {
@@ -105,11 +105,11 @@ for (const file of ['check.html','docs.html']) {
 }
 
 test('all banners and Twitch panels load local fonts without clipping supplied headings', async () => {
-  const panels = (await fs.readdir(path.join(root, 'src/twitch-description'))).filter(f => f.endsWith('.html'));
+  const panels = (await fs.readdir(path.join(root, 'artwork/twitch-description'))).filter(f => f.endsWith('.html'));
   for (const item of [
-    {file:'src/banners/twitch-schedule.html', width:1200, height:480},
-    {file:'src/banners/youtube-schedule.html', width:2560, height:1440},
-    ...panels.map(file => ({file:'src/twitch-description/' + file, width:320, height:64})),
+    {file:'artwork/banners/twitch-schedule.html', width:1200, height:480},
+    {file:'artwork/banners/youtube-schedule.html', width:2560, height:1440},
+    ...panels.map(file => ({file:'artwork/twitch-description/' + file, width:320, height:64})),
   ]) {
     const page = await open(item.file, item.width);
     try {

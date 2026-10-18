@@ -142,3 +142,5 @@ a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex="-1"]:fo
 @container twitch-content (width < 402px) { .stream-player { display: none; } .stream-mobile { display: block; } .stream-content > .stream-fallback { display: none; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; } .tile:active { transform: none; } }
 @media (forced-colors: active) { .tile, .collab__link, .stream-chat { border: 1px solid ButtonText; } a:focus-visible, summary:focus-visible { outline-color: Highlight; } }
+
+.docs .tool-link { display: inline-flex; align-items: center; min-width: 44px; min-height: 44px; max-width: 100%; overflow-wrap: anywhere; }

@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {UpgradeScripts} from './index.js';
+const upgrade=UpgradeScripts[0];
+const legacy={deviceId:'pinned-id',libraryDirectory:'library-path',unknown:{keep:true}};
+assert.deepEqual(upgrade(null,{config:legacy}).updatedConfig,{...legacy,dataFlow:'capture'});
+assert.equal(legacy.dataFlow,undefined);
+assert.equal(upgrade(null,{config:{...legacy,dataFlow:'render'}}).updatedConfig,null);
+assert.equal(upgrade(null,{config:{...legacy,dataFlow:'capture'}}).updatedConfig,null);
+assert.equal(upgrade(null,{}).updatedConfig,null);
+console.log('PASS: legacy input migration preserves pinned device, unknown fields and explicit output; no helper started.');

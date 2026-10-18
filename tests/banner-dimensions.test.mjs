@@ -9,7 +9,7 @@ for (const [name, width, height] of [
   ["youtube-schedule.jpeg", 2560, 1440],
 ]) {
   test(`${name} uses the upload-ready image dimensions`, async () => {
-    const bytes = await readFile(new URL(`src/banners/rendered/${name}`, root));
+    const bytes = await readFile(new URL(`artwork/banners/rendered/${name}`, root));
     const image = await sharp(bytes).metadata();
     assert.equal(image.width, width);
     assert.equal(image.height, height);

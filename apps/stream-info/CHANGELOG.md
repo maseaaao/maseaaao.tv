@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.3
+
+- Move development to maseaaao/maseaaao.tv with independent Stream Info releases.
+- Keep the light appearance only, sharing offline design assets with the website.
+- Resolve Vite from the workspace installation; preserve Twitch API and native import.
+
 [Русская версия](#история-изменений)
 
 ## Unreleased

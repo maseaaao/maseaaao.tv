@@ -1,9 +1,20 @@
-node_modules
+node_modules/
 .DS_Store
-
-# Local visual verification artifacts
-src/scenes/rendered/review/
-src/scenes/rendered/cyber-scenes-build-report.json
-
-src/scenes-dark/rendered/review/
-src/scenes-dark/rendered/build-report.json
+.local/
+.dotnet-local/
+**/bin/
+**/obj/
+**/__pycache__/
+**/.playwright-cli/
+artwork/scenes/rendered/review/
+artwork/scenes/rendered/*-report.json
+integrations/companion/shared/lib/
+integrations/companion/*/main.js
+integrations/companion/*/*.exe
+integrations/companion/*/*.dll
+integrations/companion/*/*.tgz
+integrations/companion/*/install.json
+integrations/companion/*/request.json
+# Generated compatibility copies for existing OBS file URLs (never edit).
+/src/
+/assets/

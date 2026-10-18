@@ -1,0 +1,17 @@
+{
+  "date": "2026-10-19",
+  "imports": [
+    {
+      "product": "website",
+      "commit": "bd1b69ed47a600a85ebf16636378b604e690e0ea"
+    },
+    {
+      "product": "stream-info",
+      "commit": "95c071d38fc2698e58ce7c231990964f6ed34247"
+    },
+    {
+      "product": "brand-color-lab",
+      "commit": "853666b0abd835cb5dc5362df5d27120fb54b4fa"
+    }
+  ]
+}

@@ -5,13 +5,13 @@ import path from 'node:path';
 import http from 'node:http';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import {launchBrowser} from '../scripts/browser.mjs';
+import {launchBrowser} from '../tooling/artwork/browser.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const upstreamRef = '636683ebd6aec6e5a456baabf111865dc1c46cfd';
-const upstream = file => execFileSync('git', ['show', `${upstreamRef}:${file}`], {cwd: root});
-const html = await fs.readFile(path.join(root, 'dist/index.html'), 'utf8');
-const css = await fs.readFile(path.join(root, 'dist/assets/site.css'), 'utf8');
+const upstream = file => execFileSync('git', ['show', `${upstreamRef}:${file.replace("apps/website/public/", "dist/")}`], {cwd: root});
+const html = await fs.readFile(path.join(root, 'apps/website/public/index.html'), 'utf8');
+const css = await fs.readFile(path.join(root, 'apps/website/public/assets/site.css'), 'utf8');
 let browser, server, origin;
 
 before(async () => {
@@ -63,8 +63,8 @@ async function newPage({width = 1440, sdkState = 'mock', javaScriptEnabled = tru
   });
   await page.route('**/*', async route => {
     const url = route.request().url();
-    if (url === origin + '/dist/index.html' && htmlOverride) return route.fulfill({contentType: 'text/html; charset=utf-8', body: htmlOverride});
-    if (url === origin + '/dist/assets/site.css' && cssOverride) return route.fulfill({contentType: 'text/css', body: cssOverride});
+    if (url === origin + '/apps/website/public/index.html' && htmlOverride) return route.fulfill({contentType: 'text/html; charset=utf-8', body: htmlOverride});
+    if (url === origin + '/apps/website/public/assets/site.css' && cssOverride) return route.fulfill({contentType: 'text/css', body: cssOverride});
     if (url.startsWith(origin + '/')) return route.continue();
     traffic.external.push(url);
     if (url === 'https://player.twitch.tv/js/embed/v1.js') {
@@ -76,7 +76,7 @@ async function newPage({width = 1440, sdkState = 'mock', javaScriptEnabled = tru
     return route.fulfill({contentType: 'text/html; charset=utf-8', body: '<!doctype html><html lang="ru"><meta charset="utf-8"><title>Изолированный Twitch</title><body style="margin:0;background:#050608;color:#96a1b3;font:14px sans-serif">Изолированный Twitch: сеть подменена для аудита</body></html>'});
   });
   if (clock) await page.clock.install();
-  await page.goto(origin + '/dist/index.html');
+  await page.goto(origin + '/apps/website/public/index.html');
   if (javaScriptEnabled) await page.evaluate(() => document.fonts.ready);
   return {page, context, traffic};
 }
@@ -104,19 +104,15 @@ test('merge conflict markers are absent from deployable HTML and CSS', () => {
 });
 
 test('upstream Twitch hooks, archive/TikTok links and accessibility survive', () => checkFeatures(html));
-test('chat theme follows the page without recreating the Twitch player', async () => {
+test('chat stays light under a dark system preference', async () => {
   const {page, context} = await newPage({colorScheme: 'dark'});
   try {
     await emit(page, 'ready', 'online');
-    const source = async () => new URL(await page.locator('[data-chat-frame]').getAttribute('src'));
-    assert.equal((await source()).searchParams.has('darkpopout'), true);
-    await page.evaluate(() => { window.__originalPlayer = window.__twitchPlayer; });
-    await chooseTheme(page, 'light');
-    assert.equal((await source()).searchParams.has('darkpopout'), false);
-    await chooseTheme(page, 'dark');
-    assert.equal((await source()).searchParams.has('darkpopout'), true);
-    assert.equal(await page.evaluate(() => window.__originalPlayer === window.__twitchPlayer), true);
-    assert.equal((await source()).searchParams.get('parent'), '127.0.0.1');
+    const source = new URL(await page.locator('[data-chat-frame]').getAttribute('src'));
+    assert.equal(source.searchParams.has('darkpopout'), false);
+    assert.equal(source.searchParams.get('parent'), '127.0.0.1');
+    assert.equal(await page.locator('.theme-control').count(), 0);
+    assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'light');
   } finally { await context.close(); }
 });
 
@@ -167,14 +163,14 @@ function snapshotDOM() {
 
 test('external destinations and executable scripts survive; approved copy and SEO are present', async () => {
   const current = await newPage({javaScriptEnabled: false});
-  const reference = await newPage({javaScriptEnabled: false, htmlOverride: upstream('dist/index.html').toString('utf8')});
+  const reference = await newPage({javaScriptEnabled: false, htmlOverride: upstream('apps/website/public/index.html').toString('utf8')});
   try {
     const actual = await current.page.evaluate(snapshotDOM);
     const expected = await reference.page.evaluate(snapshotDOM);
     const destinations = anchors => [...new Set(anchors.filter(href => !href.startsWith('#')))].sort();
     assert.deepEqual(destinations(actual.anchors), destinations(expected.anchors));
     assert.equal(actual.title, expected.title);
-    assert.deepEqual(actual.scripts.filter(script => script.src), [{src: 'assets/theme.js', defer: false, text: ''}, ...expected.scripts.filter(script => script.src)]);
+    assert.deepEqual(actual.scripts.filter(script => script.src), expected.scripts.filter(script => script.src));
     for (const copy of ['Стример и автор', 'Анонсы, новости, розыгрыши', 'Записи и нарезки', 'Поддержать стрим']) {
       assert.ok(actual.text.includes(copy.replace(/\s+/g, '')), copy);
     }
@@ -498,94 +494,24 @@ test("fractional container widths below 402px retain the Twitch fallback", async
   } finally { await context.close(); }
 });
 
-for (const colorScheme of ['light', 'dark']) {
-  test(`system ${colorScheme}: theme works without JavaScript and at narrow widths`, async () => {
-    const {page, context} = await newPage({colorScheme, javaScriptEnabled: false, width: 320});
-    try {
-      assert.equal(await page.locator('[data-theme-control]').isVisible(), false);
-      assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), colorScheme);
-      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
-      await page.emulateMedia({colorScheme: colorScheme === 'dark' ? 'light' : 'dark'});
-      assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), colorScheme === 'dark' ? 'light' : 'dark');
-    } finally { await context.close(); }
-  });
-  test(`system ${colorScheme}: manual theme persists, overrides OS, and auto resumes following OS`, async () => {
-    const {page, context} = await newPage({colorScheme, width: 390});
-    try {
-      const opposite = colorScheme === 'dark' ? 'light' : 'dark';
-      await chooseTheme(page, opposite);
-      await page.reload();
-      assert.equal(await page.locator('[data-theme-value][aria-pressed="true"]').getAttribute('data-theme-value'), opposite);
-      assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), opposite);
-      await page.goto(origin + '/dist/docs.html');
-      assert.equal(await page.locator('[data-theme-value][aria-pressed="true"]').getAttribute('data-theme-value'), opposite);
-      await chooseTheme(page, 'auto');
-      assert.equal(await page.evaluate(() => localStorage.getItem('maseaaao.theme.v1')), null);
-      assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), colorScheme);
-      await page.emulateMedia({colorScheme: opposite});
-      assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), opposite);
-    } finally { await context.close(); }
-  });
-}
-test('dark landing text and hover states retain high contrast at mobile and desktop sizes', async () => {
-  for (const width of [320,390,540,1440]) {
-    const {page, context} = await newPage({colorScheme: 'dark'});
-    try {
-      await emit(page, 'ready', 'offline');
-      await page.setViewportSize({width, height: 1000});
-      const rows = await contrastAudit(page);
-      assert.deepEqual(rows.filter(row => row.ratio < row.minimum), []);
-      await page.locator('.tile--donationalerts').hover();
-      assert.deepEqual((await contrastAudit(page)).filter(row => row.ratio < row.minimum), []);
-      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
-    } finally { await context.close(); }
+for (const colorScheme of ['light','dark']) {
+  for (const javaScriptEnabled of [false,true]) {
+    test(`fixed light appearance: system=${colorScheme}, JS=${javaScriptEnabled}`, async () => {
+      const {page,context}=await newPage({colorScheme,javaScriptEnabled,width:320});
+      try {
+        if(javaScriptEnabled) {
+          await page.evaluate(() => localStorage.setItem('maseaaao.theme.v1','dark'));
+          await page.reload();
+        }
+        assert.equal(await page.locator('[data-theme-control]').count(),0);
+        assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme),'light');
+        assert.equal(await page.evaluate(() => document.documentElement.scrollWidth<=innerWidth),true);
+        await page.emulateMedia({colorScheme:colorScheme==='dark'?'light':'dark'});
+        assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme),'light');
+      } finally {await context.close();}
+    });
   }
-});
-test('blocked storage keeps the theme control functional', async () => {
-  const {page, context} = await newPage();
-  try {
-    await page.addInitScript(() => Object.defineProperty(window, 'localStorage', {get() { throw new Error('Storage blocked'); }}));
-    await page.reload();
-    await chooseTheme(page, 'dark');
-    assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'dark');
-    await chooseTheme(page, 'auto');
-    assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'light');
-  } finally { await context.close(); }
-});
-
-test('single theme button opens an accessible dropdown and restores focus after selection or Escape', async () => {
-  const {page, context} = await newPage({colorScheme: 'dark', width: 320});
-  try {
-    const trigger = page.locator('.theme-trigger');
-    const menu = page.locator('.theme-menu');
-    assert.equal(await menu.isVisible(), false);
-    for (const value of ['light', 'dark', 'auto']) {
-      await trigger.focus();
-      await page.keyboard.press('Space');
-      assert.equal(await menu.isVisible(), true);
-      const button = page.locator(`[data-theme-value="${value}"]`);
-      await button.focus();
-      await page.keyboard.press('Space');
-      assert.equal(await button.getAttribute('aria-pressed'), 'true');
-      assert.equal(await page.locator('[data-theme-value][aria-pressed="true"]').count(), 1);
-      assert.equal(await menu.isVisible(), false);
-      assert.equal(await trigger.evaluate(element => document.activeElement === element), true);
-      assert.equal(await trigger.evaluate(element => getComputedStyle(element).outlineWidth), '3px');
-      assert.ok(await trigger.getAttribute('aria-label'));
-    }
-    await trigger.click();
-    const bounds = await menu.boundingBox();
-    assert.ok(bounds.x >= 0 && bounds.x + bounds.width <= 320);
-    assert.deepEqual((await contrastAudit(page)).filter(row => row.ratio < row.minimum), []);
-    await page.keyboard.press('Escape');
-    assert.equal(await menu.isVisible(), false);
-    assert.equal(await trigger.evaluate(element => document.activeElement === element), true);
-    await trigger.click();
-    await page.locator('#profile-name').click();
-    assert.equal(await menu.isVisible(), false);
-    assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'dark');
-  } finally { await context.close(); }
-});
+}
 
 test('desktop keeps the same video and chat mounted through online and offline transitions', async () => {
   const {page, context} = await newPage();

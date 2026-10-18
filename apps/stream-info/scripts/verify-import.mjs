@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 
 const project = resolve(import.meta.dirname, "..");
 const packageMetadata = JSON.parse(readFileSync(resolve(project, "package.json"), "utf8"));
-const lockMetadata = JSON.parse(readFileSync(resolve(project, "package-lock.json"), "utf8"));
+const lockMetadata = JSON.parse(readFileSync(resolve(project, "../../package-lock.json"), "utf8"));
 const encoded = readFileSync(resolve(project, "streamerbot-import.txt"), "utf8").trim();
 const bytes = Buffer.from(encoded, "base64");
 
@@ -23,8 +23,8 @@ if (payload.meta?.version !== packageMetadata.version) {
   throw new Error("Streamer.bot import version must match package.json.");
 }
 
-if (lockMetadata.version !== packageMetadata.version || lockMetadata.packages?.[""]?.version !== packageMetadata.version) {
-  throw new Error("package-lock.json version must match package.json.");
+if (lockMetadata.packages?.["apps/stream-info"]?.version !== packageMetadata.version) {
+  throw new Error("Workspace lock entry must match Stream Info's package.json version.");
 }
 
 if (requiredVersion >= payload.exportedFrom) {

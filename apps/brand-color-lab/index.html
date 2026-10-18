@@ -110,6 +110,37 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext x=%2250%22 y=%22.9em%22 text-anchor=%22middle%22 font-size=%2290%22%3E%F0%9F%8E%A8%3C/text%3E%3C/svg%3E"
     />
     <style>
+/* shared-design:start */
+:root {
+  color-scheme: light;
+  --ink: #1616d9;
+  --surface: #f4f3ec;
+  --surface-solid: #f4f3ec;
+  --text: #20201e;
+  --dim: #60605a;
+  --line: #d2d1c9;
+  --line-strong: #83837b;
+  --accent: #1616d9;
+  --accent-soft: #e8e8fc;
+  --font-display: "Unbounded", Arial, sans-serif;
+  --font-body: Arial, sans-serif;
+  --hud-bg: var(--surface);
+  --hud-surface: #fffef8;
+  --hud-raised: #eeede4;
+  --hud-border: var(--line);
+  --hud-text: var(--text);
+  --hud-muted: var(--dim);
+  --hud-accent: var(--accent);
+  --hud-success: #176548;
+  --hud-warning: #815005;
+  --hud-danger: #a42a36;
+  --hud-display: var(--font-display);
+  --hud-body: var(--font-body);
+  --hud-mono: Consolas, monospace;
+  --hud-radius: 12px;
+}
+/* shared-design:end */
+
       :root {
         font-family: Arial, sans-serif;
         color: #24202d;
@@ -680,21 +711,21 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 
       /* Cyber-Monolith: Configure / Compare. Selected colors live in previews. */
       :root {
-        color-scheme: dark;
+        color-scheme: light;
         font-family: Geologica, "Segoe UI", sans-serif;
-        color: #f0f4fc;
-        background: #050608;
-        --hud-surface: #0a0d12;
-        --hud-line: #273246;
-        --hud-muted: #96a1b3;
-        --hud-accent: #c182f3;
+        color: var(--text);
+        background: var(--surface);
+        --hud-surface: var(--hud-surface);
+        --hud-line: var(--line-strong);
+        --hud-muted: var(--dim);
+        --hud-accent: var(--accent);
       }
       [hidden] {
         display: none !important;
       }
       body {
-        background: #050608;
-        color: #f0f4fc;
+        background: var(--surface);
+        color: var(--text);
         font-size: 14px;
         line-height: 1.5;
       }
@@ -704,13 +735,13 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         padding: 10px 16px;
         border: 1px solid var(--hud-line);
         border-radius: 2px;
-        color: #f0f4fc;
-        background: #101722;
+        color: var(--text);
+        background: var(--hud-raised);
         font-size: 14px;
         font-weight: 500;
       }
       button:hover {
-        background: #1c2330;
+        background: var(--accent-soft);
         border-color: var(--hud-accent);
       }
       button:focus-visible,
@@ -722,17 +753,17 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       .primary {
         background: var(--hud-accent);
         border-color: var(--hud-accent);
-        color: #050608;
+        color: var(--surface);
         font-weight: 600;
       }
       .primary:hover {
-        background: #d3a3f7;
+        background: var(--action-hover);
       }
       header {
         width: min(1120px, 100%);
         margin: auto;
         padding: 24px 16px;
-        color: #f0f4fc;
+        color: var(--text);
         align-items: flex-start;
         flex-wrap: wrap;
         border-bottom: 1px solid var(--hud-line);
@@ -760,7 +791,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         padding: 10px 16px;
       }
       .key {
-        color: #050608;
+        color: var(--surface);
         font:
           12px Consolas,
           monospace;
@@ -826,7 +857,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         font:
           600 14px/1.5 Unbounded,
           sans-serif;
-        color: #f0f4fc;
+        color: var(--text);
         text-transform: none;
         letter-spacing: -0.025em;
       }
@@ -877,8 +908,8 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         padding: 2px 6px;
         font-size: 12px;
         border-radius: 2px;
-        color: #050608;
-        background: #f0f4fc;
+        color: var(--surface);
+        background: var(--text);
       }
       .copy {
         font-size: 14px;
@@ -914,8 +945,8 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         border-color: var(--hud-accent);
       }
       .history-meta {
-        color: #f0f4fc;
-        background: #101722;
+        color: var(--text);
+        background: var(--hud-raised);
         font-size: 12px;
       }
       .list-tabs {
@@ -923,15 +954,15 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       }
       .list-tabs button[aria-pressed="true"],
       .favorite-button[aria-pressed="true"] {
-        color: #050608;
+        color: var(--surface);
         background: var(--hud-accent);
         border-color: var(--hud-accent);
       }
       .toast {
         bottom: 16px;
         padding: 12px 16px;
-        color: #f0f4fc;
-        background: #101722;
+        color: var(--text);
+        background: var(--hud-raised);
         border: 1px solid var(--hud-accent);
         border-radius: 2px;
         font-size: 14px;
@@ -939,12 +970,12 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       .copy-dialog {
         border: 1px solid var(--hud-line);
         border-radius: 2px;
-        color: #f0f4fc;
+        color: var(--text);
         background: var(--hud-surface);
         box-shadow: none;
       }
       .copy-dialog::backdrop {
-        background: #050608e6;
+        background: #20201e99;
       }
       .copy-dialog h2 {
         font:
@@ -952,8 +983,8 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           sans-serif;
       }
       .copy-dialog textarea {
-        color: #f0f4fc;
-        background: #050608;
+        color: var(--text);
+        background: var(--surface);
         border: 1px solid var(--hud-line);
       }
       @media (max-width: 700px) {
@@ -1025,7 +1056,10 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           animation: none !important;
         }
       }
-    </style>
+
+.primary, .key, .list-tabs button[aria-pressed="true"], .favorite-button[aria-pressed="true"] { color: var(--surface); }
+:root { --action-hover: #1010b6; }
+</style>
     <style>
       @media (max-width: 600px) {
         .color {

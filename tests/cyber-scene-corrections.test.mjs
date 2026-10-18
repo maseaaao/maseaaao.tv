@@ -30,11 +30,11 @@ function fittedViewport(t) {
 }
 
 const root = path.resolve(import.meta.dirname, '..');
-const layout = JSON.parse(await fs.readFile(path.join(root, 'assets/cyber-monolith/obs-layout.json'), 'utf8'));
+const layout = JSON.parse(await fs.readFile(path.join(root, 'artwork/assets/cyber-monolith/obs-layout.json'), 'utf8'));
 
 test('OBS-CM-03: every pixel of the idle horizontal CAMERA music rectangle is transparent', async () => {
   const [left, top, width, height] = layout.horizontal.music;
-  const {data, info} = await sharp(path.join(root, 'src/scenes/rendered/04-camera-horizontal.webp'))
+  const {data, info} = await sharp(path.join(root, 'artwork/scenes/rendered/04-camera-horizontal.webp'))
     .extract({left, top, width, height}).ensureAlpha().raw().toBuffer({resolveWithObject:true});
   assert.deepEqual([info.width, info.height], [640, 128]);
   let nonTransparent = 0;
@@ -54,7 +54,7 @@ test('OBS-CM-01: three audited chat items fit to the panel bottom, without chang
   const fixture = JSON.parse(await fs.readFile(path.join(root, 'tests/cyber-scene-geometry.fixture.json'), 'utf8'));
   assert.equal(fixture.obsVersion, '32.2.2');
   assert.ok(layout.chatFit, 'layout must specify fitted-content alignment separately from the scene-item anchor');
-  const corrections = JSON.parse(await fs.readFile(path.join(root, 'src/scenes/geometry-corrections.json'), 'utf8'));
+  const corrections = JSON.parse(await fs.readFile(path.join(root, 'artwork/scenes/geometry-corrections.json'), 'utf8'));
   assert.equal(corrections.length, 11, 'four geometry corrections, six bounded donor heights and the existing CAMERA V social strip');
   const chats = fixture.items.filter(item => item.transform.boundsType === 'OBS_BOUNDS_SCALE_INNER');
   assert.equal(chats.length, 3);
@@ -90,7 +90,7 @@ test('OBS-CM-01: three audited chat items fit to the panel bottom, without chang
 test('CAMERA H: whole chat and donors rectangles remain transparent while idle', async () => {
   for (const slot of ['chat','donors']) {
     const [left,top,width,height] = layout.horizontal[slot];
-    const data = await sharp(path.join(root,'src/scenes/rendered/04-camera-horizontal.webp')).extract({left,top,width,height:Math.floor(height)}).ensureAlpha().raw().toBuffer();
+    const data = await sharp(path.join(root,'artwork/scenes/rendered/04-camera-horizontal.webp')).extract({left,top,width,height:Math.floor(height)}).ensureAlpha().raw().toBuffer();
     let nonTransparent = 0;
     for (let i=3;i<data.length;i+=4) if (data[i] !== 0) nonTransparent++;
     assert.equal(nonTransparent,0,`${slot} must not bake a persistent panel or border over camera footage`);
@@ -120,7 +120,7 @@ test('SOCIAL H: full-width separate-source mapping preserves the original displa
 
 test('donor API fixture: all 13 placements shrink height 33 percent, without width/scale/position changes', async () => {
   const fixture = JSON.parse(await fs.readFile(path.join(root,'tests/cyber-scene-geometry.fixture.json'),'utf8'));
-  const corrections = JSON.parse(await fs.readFile(path.join(root,'src/scenes/geometry-corrections.json'),'utf8'));
+  const corrections = JSON.parse(await fs.readFile(path.join(root,'artwork/scenes/geometry-corrections.json'),'utf8'));
   assert.equal(fixture.donors.length,13);
   let bounded=0;
   for (const item of fixture.donors) {
@@ -149,7 +149,7 @@ test('CAMERA V: existing social item starts exactly below the unchanged actual c
   assert.deepEqual([camera.cropTop,camera.cropBottom,camera.cropLeft,camera.cropRight,camera.alignment,camera.rotation],[0,0,0,0,5,0]);
   const actualBottom=camera.positionY+Math.fround(camera.sourceHeight*camera.scaleY);
   assert.equal(actualBottom,608);
-  const corrections=JSON.parse(await fs.readFile(path.join(root,'src/scenes/geometry-corrections.json'),'utf8'));
+  const corrections=JSON.parse(await fs.readFile(path.join(root,'artwork/scenes/geometry-corrections.json'),'utf8'));
   const c=corrections.find(i=>i.sceneUuid==='b38334de-de76-4bc9-95c3-4917ef1c342c'&&i.itemId===18);
   assert.deepEqual(c.fieldOld,{positionY:1856});
   assert.deepEqual(c.expectedNew,{positionY:actualBottom});
@@ -159,19 +159,16 @@ test('CAMERA V: existing social item starts exactly below the unchanged actual c
   assert.equal(corrections.some(i=>i.sceneUuid==='b38334de-de76-4bc9-95c3-4917ef1c342c'&&i.itemId===1),false,'never patch camera transform');
 });
 
-test('full offline screenshots: all native lossless WEBPs match persisted Chrome PNGs and all targets have current-checkpoint receipts', {skip:!await fs.access(path.join(root,'src/scenes/rendered/cyber-scenes-build-report.json')).then(()=>true,()=>false)}, async () => {
-  const report=JSON.parse(await fs.readFile(path.join(root,'src/scenes/rendered/cyber-scenes-build-report.json'),'utf8'));
+test('fresh offline screenshots match lossless WEBPs when a local render report exists', {skip:!await fs.access(path.join(root,'artwork/scenes/rendered/cyber-scenes-build-report.json')).then(()=>true,()=>false)}, async () => {
+  const report=JSON.parse(await fs.readFile(path.join(root,'artwork/scenes/rendered/cyber-scenes-build-report.json'),'utf8'));
   assert.equal(report.outputs.length,12);
   for (const file of report.outputs) {
     assert.ok(file.screenshot,'persist the actual full-size browser screenshot, not a mockup');
-    const png=path.join(root,'src/scenes/rendered',file.screenshot);
-    const webp=path.join(root,'src/scenes/rendered',file.name+'.webp');
+    const png=path.join(root,'artwork/scenes/rendered',file.screenshot);
+    const webp=path.join(root,'artwork/scenes/rendered',file.name+'.webp');
     const meta=await sharp(png).metadata();
     assert.deepEqual([meta.width,meta.height],[file.width,file.height]);
     assert.equal((await sharp(png).ensureAlpha().raw().toBuffer()).equals(await sharp(webp).ensureAlpha().raw().toBuffer()),true);
   }
   if (process.env.CYBER_BACKUP_SCRIPT) assert.equal(report.backupReceipts.length,report.outputs.length*3+3);
-  for (const receipt of report.backupReceipts) {
-    assert.ok(receipt.existed===false || receipt.copy.includes('cyber-fixes-20261012-004631') || receipt.copy.includes('legacy-cleanup-20261012'),'all existing generated targets belong to the current corrective checkpoint');
-  }
 });

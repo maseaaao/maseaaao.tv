@@ -1,0 +1,7 @@
+{
+  "name": "@maseaaao/website",
+  "private": true,
+  "scripts": {
+    "build": "node ../../tooling/build-website.mjs"
+  }
+}

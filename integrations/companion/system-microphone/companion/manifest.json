@@ -1,0 +1,36 @@
+{
+  "id": "local-system-microphone",
+  "name": "local-system-microphone",
+  "type": "connection",
+  "shortname": "sysmic",
+  "description": "Windows system audio device mute and volume feedback (microphone or speakers)",
+  "version": "1.2.1",
+  "license": "MIT",
+  "maintainers": [
+    {
+      "name": "Local configuration"
+    }
+  ],
+  "legacyIds": [],
+  "runtime": {
+    "type": "node22",
+    "api": "nodejs-ipc",
+    "apiVersion": "2.0.4",
+    "entrypoint": "../main.js",
+    "permissions": {
+      "child-process": true
+    }
+  },
+  "manufacturer": "Local",
+  "products": [
+    "Windows System Microphone"
+  ],
+  "keywords": [
+    "Microphone",
+    "Windows",
+    "Mute"
+  ],
+  "isPrerelease": false,
+  "repository": "",
+  "bugs": ""
+}

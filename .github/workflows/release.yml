@@ -1,0 +1,50 @@
+name: Release independent tool
+on:
+  push:
+    tags: ['stream-info-v*', 'tuna-widget-v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing product tag, e.g. stream-info-v1.3.3'
+        required: true
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: npm ci
+      - name: Validate product and tag before building
+        run: python tooling/package-release.py --validate "$RELEASE_TAG"
+      - name: Test and build the selected product
+        shell: bash
+        run: |
+          case "$RELEASE_TAG" in
+            stream-info-v*) npm run test:stream-info && npm run build:stream-info ;;
+            tuna-widget-v*) npm run build:tuna && node --test tests/tuna-widget.test.mjs ;;
+            *) exit 1 ;;
+          esac
+      - run: python tooling/package-release.py "$RELEASE_TAG"
+      - name: Create immutable draft for download verification
+        shell: bash
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Release already exists; refusing to overwrite artifacts."
+            exit 1
+          fi
+          gh release create "$RELEASE_TAG" .local/release/*.html .local/release/*.zip --draft --title "$RELEASE_TAG" --notes-file .local/release/notes.md
+          gh release download "$RELEASE_TAG" --dir .local/downloaded
+          python tooling/package-release.py --verify-download "$RELEASE_TAG"

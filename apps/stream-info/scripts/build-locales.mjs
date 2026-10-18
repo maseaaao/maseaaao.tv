@@ -1,11 +1,12 @@
 import { copyFileSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const project = resolve(import.meta.dirname, "..");
 const dist = resolve(project, "dist");
 const locales = ["ru", "en", "es", "zh"];
-const viteCli = resolve(project, "node_modules", "vite", "bin", "vite.js");
+const viteCli = resolve(dirname(fileURLToPath(import.meta.resolve("vite/package.json"))), "bin/vite.js");
 
 rmSync(dist, { recursive: true, force: true });
 mkdirSync(dist, { recursive: true });

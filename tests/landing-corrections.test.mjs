@@ -5,13 +5,13 @@ import path from 'node:path';
 import http from 'node:http';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import {launchBrowser} from '../scripts/browser.mjs';
+import {launchBrowser} from '../tooling/artwork/browser.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const upstreamRef = '636683ebd6aec6e5a456baabf111865dc1c46cfd';
-const upstream = file => execFileSync('git', ['show', `${upstreamRef}:${file}`], {cwd: root});
-const html = await fs.readFile(path.join(root, 'dist/index.html'), 'utf8');
-const css = await fs.readFile(path.join(root, 'dist/assets/site.css'), 'utf8');
+const upstream = file => execFileSync('git', ['show', `${upstreamRef}:${file.replace("apps/website/public/", "dist/")}`], {cwd: root});
+const html = await fs.readFile(path.join(root, 'apps/website/public/index.html'), 'utf8');
+const css = await fs.readFile(path.join(root, 'apps/website/public/assets/site.css'), 'utf8');
 let browser, server, origin;
 
 before(async () => {
@@ -63,8 +63,8 @@ async function newPage({width = 1440, sdkState = 'mock', javaScriptEnabled = tru
   });
   await page.route('**/*', async route => {
     const url = route.request().url();
-    if (url === origin + '/dist/index.html' && htmlOverride) return route.fulfill({contentType: 'text/html; charset=utf-8', body: htmlOverride});
-    if (url === origin + '/dist/assets/site.css' && cssOverride) return route.fulfill({contentType: 'text/css', body: cssOverride});
+    if (url === origin + '/apps/website/public/index.html' && htmlOverride) return route.fulfill({contentType: 'text/html; charset=utf-8', body: htmlOverride});
+    if (url === origin + '/apps/website/public/assets/site.css' && cssOverride) return route.fulfill({contentType: 'text/css', body: cssOverride});
     if (url.startsWith(origin + '/')) return route.continue();
     traffic.external.push(url);
     if (url === 'https://player.twitch.tv/js/embed/v1.js') {
@@ -76,7 +76,7 @@ async function newPage({width = 1440, sdkState = 'mock', javaScriptEnabled = tru
     return route.fulfill({contentType: 'text/html; charset=utf-8', body: '<!doctype html><html lang="ru"><meta charset="utf-8"><title>Изолированный Twitch</title><body style="margin:0;background:#050608;color:#96a1b3;font:14px sans-serif">Изолированный Twitch: сеть подменена для аудита</body></html>'});
   });
   if (clock) await page.clock.install();
-  await page.goto(origin + '/dist/index.html');
+  await page.goto(origin + '/apps/website/public/index.html');
   if (javaScriptEnabled) await page.evaluate(() => document.fonts.ready);
   return {page, context, traffic};
 }

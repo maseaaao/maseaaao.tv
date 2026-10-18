@@ -1,3 +1,5 @@
+> Development now lives in `maseaaao/maseaaao.tv`, under `apps/brand-color-lab`. Start with the repository README and `docs/local-installation.md`. Historical release links and setup notes below are retained for reference.
+
 # Get Brand Colors 🎨
 
 A small, offline color playground for finding a brand accent. Explore pink, raspberry, red and purple palettes, compare wordmarks and round avatars, and keep the combinations you like.

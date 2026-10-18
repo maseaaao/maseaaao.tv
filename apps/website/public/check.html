@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="color-scheme" content="light" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex,follow" />
+    <title>Stream Checker</title>
+    <meta name="theme-color" content="#f4f3ec" />
+    <link rel="icon" href="favicon.ico?v=rounded-1" />
+    <link rel="stylesheet" href="assets/brand.css" />
+    <link rel="stylesheet" href="assets/site.css" />
+    <link rel="stylesheet" href="assets/theme.css" />
+  </head>
+
+  <body class="checker">
+    <header>
+      <h1>Stream Checker</h1>
+      <div class="global-actions">
+        <button type="button" data-action="add-all">Добавить все</button>
+        <button type="button" data-action="remove-all" data-kind="remove"
+          >Удалить все</button
+        >
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="card" data-platform="youtube">
+        <div class="card-header">
+          <div>
+            <div class="title">YouTube</div>
+            <div class="status" data-status>iframe не создан</div>
+          </div>
+
+          <div class="actions">
+            <button type="button" data-action="add">Добавить</button>
+            <button type="button" data-action="remove" data-kind="remove"
+              >Удалить</button
+            >
+            <a
+              class="button"
+              href="https://www.youtube.com/channel/UCyJNPWpOcPfMo5csKa27yGg/live"
+              target="_blank"
+              rel="noreferrer"
+              >Открыть</a
+            >
+          </div>
+        </div>
+
+        <div class="slot" data-slot>
+          <div class="placeholder">YouTube-плеер не загружен</div>
+        </div>
+      </section>
+
+      <section class="card" data-platform="twitch">
+        <div class="card-header">
+          <div>
+            <div class="title">Twitch</div>
+            <div class="status" data-status>iframe не создан</div>
+          </div>
+
+          <div class="actions">
+            <button type="button" data-action="add">Добавить</button>
+            <button type="button" data-action="remove" data-kind="remove"
+              >Удалить</button
+            >
+            <a
+              class="button"
+              href="https://www.twitch.tv/maseaaao"
+              target="_blank"
+              rel="noreferrer"
+              >Открыть</a
+            >
+          </div>
+        </div>
+
+        <div class="slot" data-slot>
+          <div class="placeholder">Twitch-плеер не загружен</div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const SEARCH_PARAMS = new URLSearchParams(window.location.search);
+      const IS_TV_MODE = SEARCH_PARAMS.get("tv") === "1";
+
+      if (IS_TV_MODE) {
+        document.body.classList.add("is-tv-mode");
+      }
+
+      const STREAMS = {
+        youtube: {
+          title: "YouTube live",
+          get src() {
+            const params = new URLSearchParams({
+              channel: "UCyJNPWpOcPfMo5csKa27yGg",
+              autoplay: "1",
+              mute: IS_TV_MODE ? "0" : "1",
+            });
+
+            return `https://www.youtube.com/embed/live_stream?${params.toString()}`;
+          },
+          allow: "autoplay; encrypted-media; picture-in-picture; fullscreen",
+        },
+
+        twitch: {
+          title: "Twitch live",
+          get src() {
+            const parent = window.location.hostname;
+
+            if (!parent) {
+              throw new Error("Twitch iframe requires a real hostname.");
+            }
+
+            const params = new URLSearchParams({
+              channel: "maseaaao",
+              parent,
+              autoplay: "true",
+              muted: "true",
+            });
+
+            return `https://player.twitch.tv/?${params.toString()}`;
+          },
+          allow: "autoplay; fullscreen",
+        },
+      };
+
+      function getElements(platform) {
+        const card = document.querySelector(`[data-platform="${platform}"]`);
+
+        return {
+          card,
+          slot: card.querySelector("[data-slot]"),
+          status: card.querySelector("[data-status]"),
+        };
+      }
+
+      function setPlaceholder(slot, platform) {
+        const label = {
+          youtube: "YouTube-плеер не загружен",
+          twitch: "Twitch-плеер не загружен",
+        }[platform];
+
+        slot.replaceChildren(
+          Object.assign(document.createElement("div"), {
+            className: "placeholder",
+            textContent: label,
+          }),
+        );
+      }
+
+      function setError(slot, status, message) {
+        slot.replaceChildren(
+          Object.assign(document.createElement("div"), {
+            className: "placeholder",
+            textContent: message,
+          }),
+        );
+
+        status.textContent = "ошибка";
+      }
+
+      function addPlayer(platform) {
+        const config = STREAMS[platform];
+        const { slot, status } = getElements(platform);
+
+        if (slot.querySelector("iframe")) {
+          status.textContent = "iframe уже создан";
+          return;
+        }
+
+        try {
+          const iframe = document.createElement("iframe");
+
+          iframe.title = config.title;
+          iframe.src = config.src;
+          iframe.allow = config.allow;
+          iframe.allowFullscreen = true;
+          iframe.referrerPolicy = "strict-origin-when-cross-origin";
+
+          slot.replaceChildren(iframe);
+          status.textContent = "iframe создан";
+        } catch (error) {
+          setError(
+            slot,
+            status,
+            error instanceof Error
+              ? error.message
+              : "Не удалось создать iframe",
+          );
+        }
+      }
+
+      function removePlayer(platform) {
+        const { slot, status } = getElements(platform);
+
+        slot.replaceChildren();
+        setPlaceholder(slot, platform);
+        status.textContent = "iframe не создан";
+      }
+
+      document.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-action]");
+
+        if (!button) {
+          return;
+        }
+
+        const action = button.dataset.action;
+        const card = button.closest("[data-platform]");
+        const platforms = Object.keys(STREAMS);
+
+        if (action === "add-all") {
+          platforms.forEach(addPlayer);
+          return;
+        }
+
+        if (action === "remove-all") {
+          platforms.forEach(removePlayer);
+          return;
+        }
+
+        if (!card) {
+          return;
+        }
+
+        const platform = card.dataset.platform;
+
+        if (action === "add") {
+          addPlayer(platform);
+        }
+
+        if (action === "remove") {
+          removePlayer(platform);
+        }
+      });
+
+      if (IS_TV_MODE) {
+        Object.keys(STREAMS).forEach(addPlayer);
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,36 @@
+{
+  "id": "local-voice-stream",
+  "name": "local-voice-stream",
+  "type": "connection",
+  "shortname": "voice",
+  "description": "Discord and Steam output sessions and OBS-authoritative protected stream button",
+  "version": "1.0.22",
+  "license": "MIT",
+  "maintainers": [
+    {
+      "name": "Local configuration"
+    }
+  ],
+  "legacyIds": [],
+  "runtime": {
+    "type": "node22",
+    "api": "nodejs-ipc",
+    "apiVersion": "2.0.4",
+    "entrypoint": "../main.js",
+    "permissions": {
+      "child-process": true
+    }
+  },
+  "manufacturer": "Local",
+  "products": [
+    "Voice and Stream"
+  ],
+  "keywords": [
+    "Microphone",
+    "Windows",
+    "Mute"
+  ],
+  "isPrerelease": false,
+  "repository": "",
+  "bugs": ""
+}

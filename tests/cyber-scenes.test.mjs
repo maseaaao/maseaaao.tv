@@ -3,13 +3,13 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
-import {launchBrowser} from '../scripts/browser.mjs';
+import {launchBrowser} from '../tooling/artwork/browser.mjs';
 import sharp from 'sharp';
 import jsQR from 'jsqr';
 
 const root = path.resolve(import.meta.dirname, '..');
-const scenes = path.join(root, 'src/scenes');
-const layout = JSON.parse(await fs.readFile(path.join(root, 'assets/cyber-monolith/obs-layout.json'), 'utf8'));
+const scenes = path.join(root, 'artwork/scenes');
+const layout = JSON.parse(await fs.readFile(path.join(root, 'artwork/assets/cyber-monolith/obs-layout.json'), 'utf8'));
 let browser;
 before(async () => { browser = await launchBrowser(); });
 after(async () => { await browser?.close(); });

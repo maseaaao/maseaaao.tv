@@ -1,0 +1,58 @@
+name: Verify monorepo
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: npm ci
+      - run: npm run browser:install
+      - run: npm run build:website
+      - run: npm run check
+      - run: npm run check:stream-info
+      - run: npm test
+      - run: npm run test:brand-color-lab
+      - run: npm run build:stream-info
+      - run: npm run build:tuna
+      - name: Verify committed website publication
+        run: git diff --exit-code -- dist apps/website/public/assets/brand.css apps/website/public/assets/fonts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: standalone-tools
+          path: |
+            apps/stream-info/dist/*.html
+            apps/tuna-widget/dist/*.html
+  companion-build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run prepare:companion-libs
+      - run: npm run build --workspace integrations/companion/system-microphone
+      - run: npm run build --workspace integrations/companion/voice-control
+      - run: npm run package --workspace integrations/companion/system-microphone
+      - run: npm run package --workspace integrations/companion/voice-control
+      - uses: actions/upload-artifact@v4
+        with:
+          name: companion-modules
+          path: integrations/companion/*/*.tgz

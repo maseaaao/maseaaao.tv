@@ -1,0 +1,7 @@
+{
+  "name": "@maseaaao/design",
+  "private": true,
+  "exports": {
+    "./brand.css": "./brand.css"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "companion-module-local-voice-control",
+  "version": "1.0.22",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "dependencies": {
+    "@companion-module/base": "2.0.4"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "package": "python package.py"
+  }
+}

@@ -933,54 +933,11 @@ describe("Stream Info HTML actions", () => {
     expect(status?.children[1]?.textContent).toBe(`v${packageJson.version}`);
     expect(status?.children).toHaveLength(2);
   });
-  it("changes and remembers appearance without replacing edited fields or making API calls", async () => {
+  it("does not expose a theme selector or apply another tab's old preference", async () => {
     await boot();
-    setValue('[data-input="main-subtitle"]', 'Unsaved theme check');
-    const input = document.querySelector('[data-input="main-subtitle"]');
-    if (!(input instanceof HTMLInputElement)) throw new Error('Subtitle field missing');
-    const before = commands();
-    const button = document.querySelector('[data-theme-value="dark"]');
-    if (!(button instanceof HTMLButtonElement)) throw new Error('Theme control missing');
-    button.click();
-    expect(document.documentElement.dataset.theme).toBe('dark');
-    expect(localStorage.getItem('stream-info.theme.v1')).toBe('dark');
-    expect(document.querySelector('[data-input="main-subtitle"]')).toBe(input);
-    expect(input.value).toBe('Unsaved theme check');
-    expect(commands()).toEqual(before);
-    document.querySelector<HTMLElement>(".theme-trigger")?.focus();
-    click('refresh-state');
-    await flush();
-    expect(document.activeElement).toBe(document.querySelector('.theme-trigger'));
-    click('open-settings');
-    click('close-modal');
-    expect(document.querySelector('[data-theme-value="dark"]')?.getAttribute('aria-pressed')).toBe('true');
-    const restored = document.querySelector('[data-theme-value="auto"]');
-    if (!(restored instanceof HTMLButtonElement)) throw new Error('Theme control missing');
-    restored.click();
-    expect(document.documentElement.dataset.theme).toBeUndefined();
-    expect(localStorage.getItem('stream-info.theme.v1')).toBeNull();
-  });
-
-  it("retains an open theme menu through background refresh and closes it on Escape or outside click", async () => {
-    await boot();
-    const control = document.querySelector('.theme-control');
-    if (!(control instanceof HTMLDetailsElement)) throw new Error('Theme control missing');
-    control.open = true;
-    document.querySelector<HTMLElement>('[data-theme-value="light"]')?.focus();
-    const before = commands().filter(command => command === 'getState').length;
-    document.dispatchEvent(new Event('visibilitychange'));
-    await flush();
-    expect(commands().filter(command => command === 'getState').length).toBeGreaterThan(before);
-    expect(document.querySelector<HTMLDetailsElement>('.theme-control')?.open).toBe(true);
-    expect(document.activeElement).toBe(document.querySelector('[data-theme-value="light"]'));
-    document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true}));
-    expect(document.querySelector<HTMLDetailsElement>('.theme-control')?.open).toBe(false);
-    expect(document.activeElement).toBe(document.querySelector('.theme-trigger'));
-    const restored = document.querySelector('.theme-control');
-    if (!(restored instanceof HTMLDetailsElement)) throw new Error('Theme control missing');
-    restored.open = true;
-    document.body.click();
-    expect(restored.open).toBe(false);
+    expect(document.querySelector(".theme-control")).toBeNull();
+    window.dispatchEvent(new StorageEvent("storage", {key: "stream-info.theme.v1", newValue: "dark"}));
+    expect(document.documentElement.dataset.theme).not.toBe("dark");
   });
 
 });

@@ -1,0 +1,302 @@
+[
+  {
+    "source": "Streamer.bot/custom/companion/system-microphone/build.mjs",
+    "destination": "integrations/companion/system-microphone/build.mjs",
+    "sha256": "4f9ed3326a463cd5d1baaef94ccc64c571f922b7e9b7fbe19e2f5240815901b9"
+  },
+  {
+    "source": "Streamer.bot/custom/companion/system-microphone/index.js",
+    "destination": "integrations/companion/system-microphone/index.js",
+    "sha256": "7b13c82d3f96b005adf680a089ff8e53263e9e16a5ad6dcf581fa5e2f491f487"
+  },
+  {
+    "source": "Streamer.bot/custom/companion/system-microphone/package-module.py",
+    "destination": "integrations/companion/system-microphone/package-module.py",
+    "sha256": "1afef0560be756df9e68a17b593df02ef4d29803ec6ce2fd3e0a0cca85ce98a8"
+  },
+  {
+    "source": "Streamer.bot/custom/companion/system-microphone/package.json",
+    "destination": "integrations/companion/system-microphone/package.json",
+    "sha256": "10bc7b53b75f819a59e33da1c29a05fc69554cf5423a7bcdb8e224e82f573ff2"
+  },
+  {
+    "source": "Streamer.bot/custom/companion/system-microphone/SystemAudioHelper.cs",
+    "destination": "integrations/companion/system-microphone/SystemAudioHelper.cs",
+    "sha256": "b465b364a4194f84cb5ed877007e99ec77e8a14e2b0a0723a6f38ca4642a626a"
+  },
+  {
+    "source": "Streamer.bot/custom/companion/system-microphone/test-upgrade.mjs",
+    "destination": "integrations/companion/system-microphone/test-upgrade.mjs",
+    "sha256": "1595624cb013192495b48f9f634dea69558d1d29b95b90993c90b6b3c0371c28"
+  },
+  {
+    "source": "Streamer.bot/custom/companion/system-microphone/companion/HELP.md",
+    "destination": "integrations/companion/system-microphone/companion/HELP.md",
+    "sha256": "ccdf98bb92e61abc94315ef694043fe45b2b61e4024f3bbdd3d79414693b3d92"
+  },
+  {
+    "source": "Streamer.bot/custom/companion/system-microphone/companion/manifest.json",
+    "destination": "integrations/companion/system-microphone/companion/manifest.json",
+    "sha256": "73d31d348842d7d03bfdff56c544c6d62e59ad01f2d49aeebea7c01f889b2ffb"
+  },
+  {
+    "source": "Streamer.bot/custom/companion/voice-control/AudioHelper.cs",
+    "destination": "integrations/companion/voice-control/AudioHelper.cs",
+    "sha256": "4e2712a65d4bfd86864dafa634f9e4ead05f26f4b4c7ddc43b6d5bc2104e71fd"
+  },
+  {
+    "source": "Streamer.bot/custom/companion/voice-control/build.mjs",
+    "destination": "integrations/companion/voice-control/build.mjs",
+    "sha256": "a9683b2e448a000929ea66f9c959fe18b7521689d70c2629c4f6e77076ba6ba0"
+  },
+  {
+    "source": "Streamer.bot/custom/companion/voice-control/guard.mjs",
+    "destination": "integrations/companion/voice-control/guard.mjs",
+    "sha256": "f2598b4c3e44ab7067dfdf25a3430ac18b99749e62703046975b5082ac3af98b"
+  },
+  {
+    "source": "Streamer.bot/custom/companion/voice-control/index.js",
+    "destination": "integrations/companion/voice-control/index.js",
+    "sha256": "2672f26aea6322a8b89ac1a1b24ef12a344ffb2a75ceacca62b05e2aae3daa48"
+  },
+  {
+    "source": "Streamer.bot/custom/companion/voice-control/measure-perf.ps1",
+    "destination": "integrations/companion/voice-control/measure-perf.ps1",
+    "sha256": "33d1645e6d243b99db1f79481e184e2a72efa89cbca779f9796e5ead9b0eea25"
+  },
+  {
+    "source": "Streamer.bot/custom/companion/voice-control/package.json",
+    "destination": "integrations/companion/voice-control/package.json",
+    "sha256": "b502543a0be592f393ead96c17ac9be042ea1fd6688ba0583e1e6242e74441ab"
+  },
+  {
+    "source": "Streamer.bot/custom/companion/voice-control/package.py",
+    "destination": "integrations/companion/voice-control/package.py",
+    "sha256": "4e8dff86b15ee53968b494610572bace13fa73567974fed36a42bfcdfa6ae1e2"
+  },
+  {
+    "source": "Streamer.bot/custom/companion/voice-control/test-guard.mjs",
+    "destination": "integrations/companion/voice-control/test-guard.mjs",
+    "sha256": "a4d684991e97b582b45b1032c2b1e6048afe33c74dae46dd5c9103bc48234fb6"
+  },
+  {
+    "source": "Streamer.bot/custom/companion/voice-control/test-runtime.mjs",
+    "destination": "integrations/companion/voice-control/test-runtime.mjs",
+    "sha256": "71a77cf1e832350673fca4dec87cc2502006c85544caedee6f2cf41621fdc2b0"
+  },
+  {
+    "source": "Streamer.bot/custom/companion/voice-control/companion/HELP.md",
+    "destination": "integrations/companion/voice-control/companion/HELP.md",
+    "sha256": "9d14abac90e2602f673dc1bdae4f3bbb74c2d5d9a95c0f4c9a9304a871614cd5"
+  },
+  {
+    "source": "Streamer.bot/custom/companion/voice-control/companion/manifest.json",
+    "destination": "integrations/companion/voice-control/companion/manifest.json",
+    "sha256": "a07a820f687884b6886050e1c5084ce37b55089ebf2aeb6aeb843dc1bdb12d75"
+  },
+  {
+    "source": "Streamer.bot/custom/companion/shared/build-helper.ps1",
+    "destination": "integrations/companion/shared/build-helper.ps1",
+    "sha256": "780ac46e0acbc6af7f37d07d78a582a2b09726c8daa607a4b59f47a9eef0a2dc"
+  },
+  {
+    "source": "Streamer.bot/custom/companion/shared/helper-process.mjs",
+    "destination": "integrations/companion/shared/helper-process.mjs",
+    "sha256": "55c1770b22e6b20a76f8331ae3881d7e3f5a3ff41dda98874c323a4831c5f6c6"
+  },
+  {
+    "source": "Streamer.bot/custom/companion/shared/test-helper-process.mjs",
+    "destination": "integrations/companion/shared/test-helper-process.mjs",
+    "sha256": "fd6ef7ea0bedf5d6af5fb222eeb64251a93018a918c99dbd3c3c62dd012a786b"
+  },
+  {
+    "source": "Streamer.bot/custom/donationalerts/DonationAlertsAuthorization.cs",
+    "destination": "integrations/streamerbot/donationalerts/DonationAlertsAuthorization.cs",
+    "sha256": "4ad424059aee1c01c3eaf270007d2a437e3c7c77b57883200058897aef97c84b"
+  },
+  {
+    "source": "Streamer.bot/custom/donationalerts/DonationAlertsIntegration.cs",
+    "destination": "integrations/streamerbot/donationalerts/DonationAlertsIntegration.cs",
+    "sha256": "e334293c7dee58466aa5924537dfc5f00c206d21ec5965586bf9b9524621e689"
+  },
+  {
+    "source": "Streamer.bot/custom/donationalerts/DonationAlertsWatcher.cs",
+    "destination": "integrations/streamerbot/donationalerts/DonationAlertsWatcher.cs",
+    "sha256": "8da17164e32e89ec09cf0e889d92e66e6e4c98fe126f360417962b630f0526c3"
+  },
+  {
+    "source": "Streamer.bot/custom/donationalerts/DonationChat.cs",
+    "destination": "integrations/streamerbot/donationalerts/DonationChat.cs",
+    "sha256": "c1e6f62cb020dd29097010b94b0d9ad399b66ff867895b02b905ea1567609285"
+  },
+  {
+    "source": "Streamer.bot/custom/donationalerts/README.md",
+    "destination": "integrations/streamerbot/donationalerts/README.md",
+    "sha256": "c0929d7dc63f651688e692fc8c17e171daae3f918de22a1152fe5bece6f1bbe1"
+  },
+  {
+    "source": "Streamer.bot/custom/donationalerts/TestMessages.cs",
+    "destination": "integrations/streamerbot/donationalerts/TestMessages.cs",
+    "sha256": "694c90323237ff6b1f38d73a4d582c4d22a426d26d76e4cd25cc3941c2c7d4ea"
+  },
+  {
+    "source": "Streamer.bot/custom/donationalerts/TestSocketService.cs",
+    "destination": "integrations/streamerbot/donationalerts/TestSocketService.cs",
+    "sha256": "a67d1e72c034c1b736d46f6fd5a565ab86b70664fdebb4ce4927d93821952d46"
+  },
+  {
+    "source": "Streamer.bot/custom/donationalerts/WebSocketMessages.cs",
+    "destination": "integrations/streamerbot/donationalerts/WebSocketMessages.cs",
+    "sha256": "24cc1465e2631b2ad3be35d53505a7d7ea0513d5683dda35afe53483cb1c13b9"
+  },
+  {
+    "source": "Streamer.bot/custom/yandex-music/Action.cs",
+    "destination": "integrations/streamerbot/yandex-music/Action.cs",
+    "sha256": "c0b988f6f7295556cde2337f02d6bf94c16bafefa5881d29e54a0a17f627a375"
+  },
+  {
+    "source": "Streamer.bot/custom/yandex-music/control.ps1",
+    "destination": "integrations/streamerbot/yandex-music/control.ps1",
+    "sha256": "f4dc841a331a9622e3b3d2170829ff10d0157644c03682525025d30bf6386c9a"
+  },
+  {
+    "source": "Streamer.bot/custom/yandex-music/README.md",
+    "destination": "integrations/streamerbot/yandex-music/README.md",
+    "sha256": "6c788ec808ccd52eeeb6513a4821baf740ab859958fd3eb5e3d3c20fb027c227"
+  },
+  {
+    "source": "Streamer.bot/custom/obs-health/Check.cs",
+    "destination": "integrations/streamerbot/obs-health/Check.cs",
+    "sha256": "cc817d3c9106ccf99032f091c0a74ea006a983fc491df6bb7029a4bc4393c380"
+  },
+  {
+    "source": "Streamer.bot/custom/obs-health/CompanionEndpoint.cs",
+    "destination": "integrations/streamerbot/obs-health/CompanionEndpoint.cs",
+    "sha256": "68f67d8445fc3e8c840584c8fe323e3b8a91bca32a548f0b0343e1580dd34405"
+  },
+  {
+    "source": "Streamer.bot/custom/obs-health/SoundToggle.cs",
+    "destination": "integrations/streamerbot/obs-health/SoundToggle.cs",
+    "sha256": "41439c287a54729dfdc906ab9c71c77ea9a14c75f62dd8913b69c86b2eeebe68"
+  },
+  {
+    "source": "Streamer.bot/custom/obs-health/TestHealth.cs",
+    "destination": "integrations/streamerbot/obs-health/TestHealth.cs",
+    "sha256": "1045dc2502e62fc138d9fda0b023e86fcbbefbcc3627a0d7e9a8265e463cad4a"
+  },
+  {
+    "source": "Streamer.bot/custom/the-finals/logo.png",
+    "destination": "integrations/streamerbot/game-presets/the-finals/logo.png",
+    "sha256": "4144cfb66909c6073ea116189d8aca4e4c1964c636938ef323bcf0a7f98fdc70"
+  },
+  {
+    "source": "Streamer.bot/custom/the-finals/preset.cs",
+    "destination": "integrations/streamerbot/game-presets/the-finals/preset.cs",
+    "sha256": "57c206b88f8b1c771561b99f8e43fe1d96c4f4e12aa577681eb58e9f2a5f708a"
+  },
+  {
+    "source": "Streamer.bot/custom/bloodrayne/1049959238.cs",
+    "destination": "integrations/streamerbot/game-presets/bloodrayne/1049959238.cs",
+    "sha256": "4e1f1d30872576a5c7bfcd0f00f8ac50d6fecba7f29c6c3adc4a43589e6db105"
+  },
+  {
+    "source": "Streamer.bot/custom/bloodrayne/919194340.cs",
+    "destination": "integrations/streamerbot/game-presets/bloodrayne/919194340.cs",
+    "sha256": "88ee8de0a73e8b081897948d1d72f37b2439afc4b8d47b065fa57c17ea118930"
+  },
+  {
+    "source": "Streamer.bot/custom/bloodrayne/button-image-bloodrayne1.png",
+    "destination": "integrations/streamerbot/game-presets/bloodrayne/button-image-bloodrayne1.png",
+    "sha256": "7254baa7eee82051bb4687165413e70871497c8f3b098be3f208494d557acfbc"
+  },
+  {
+    "source": "Streamer.bot/custom/bloodrayne/button-image-bloodrayne2.png",
+    "destination": "integrations/streamerbot/game-presets/bloodrayne/button-image-bloodrayne2.png",
+    "sha256": "41d81502673e424c4105e9648fa694376a9a503368fe3112c143c6948b1ce399"
+  },
+  {
+    "source": "Streamer.bot/custom/battle-engine-aquila/logo.png",
+    "destination": "integrations/streamerbot/game-presets/battle-engine-aquila/logo.png",
+    "sha256": "2f6d55c55520d5fba94acd1ddf849553f6983062247c1fbc5009091a32dad586"
+  },
+  {
+    "source": "Streamer.bot/custom/battle-engine-aquila/preset.cs",
+    "destination": "integrations/streamerbot/game-presets/battle-engine-aquila/preset.cs",
+    "sha256": "caecd0ff9508923a0db35a79c367262ff7ac182942433320e5bd486ba6086e65"
+  },
+  {
+    "source": "Streamer.bot/custom/battle-engine-aquila/README.md",
+    "destination": "integrations/streamerbot/game-presets/battle-engine-aquila/README.md",
+    "sha256": "79f340ae92beb83fd5ef762efc3854b2d81236a6bc666acbdb501970f16ed437"
+  },
+  {
+    "source": "streamlabs-chat/chat-box.css",
+    "destination": "apps/obs-widgets/streamlabs-chat/chat-box.css",
+    "sha256": "0963ed17b1e10d346ed5facdc15ac7e6b71e4b313eeccdd7729f6599b83a5d9d"
+  },
+  {
+    "source": "streamlabs-chat/chat-box.html",
+    "destination": "apps/obs-widgets/streamlabs-chat/chat-box.html",
+    "sha256": "13f910700e9ed64c9283344f3d9b8b68febcac22010952156690cf7c4f81b4de"
+  },
+  {
+    "source": "streamlabs-chat/chat-box.js",
+    "destination": "apps/obs-widgets/streamlabs-chat/chat-box.js",
+    "sha256": "b440cf0bc7ca12668849c5eb3a837bcf4098ba25d3cf8fefdf7c09f0d7b09197"
+  },
+  {
+    "source": "streamlabs-chat/donationalerts-alerts.css",
+    "destination": "apps/obs-widgets/streamlabs-chat/donationalerts-alerts.css",
+    "sha256": "934265df1765f780e387b798b67b2c6c2b82f6ca875e38092eaaf6ee8f6d22cf"
+  },
+  {
+    "source": "streamlabs-chat/donationalerts-stream-stats.css",
+    "destination": "apps/obs-widgets/streamlabs-chat/donationalerts-stream-stats.css",
+    "sha256": "49d5b5715a67800ae2c1f95f15f6fb55b1f546bacde9f8eec4ccad7179a3acf0"
+  },
+  {
+    "source": "Streamer.bot/custom/assets/social-strip/index.html",
+    "destination": "apps/obs-widgets/social-strip/index.html",
+    "sha256": "0bacc6a90a4f62603ea88613fccbd489c3db142ee3075f64f1deda51858caaad"
+  },
+  {
+    "source": "Streamer.bot/custom/assets/social-strip/unbounded-600.woff2",
+    "destination": "apps/obs-widgets/social-strip/unbounded-600.woff2",
+    "sha256": "729593e0b438dbe3bd3e617ad85f2c98aa68fd3b250e4c9afc0e71f94db6eceb"
+  },
+  {
+    "source": "Streamer.bot/custom/assets/donors/donationalerts-stream-stats.css",
+    "destination": "apps/obs-widgets/donors/donationalerts-stream-stats.css",
+    "sha256": "49d5b5715a67800ae2c1f95f15f6fb55b1f546bacde9f8eec4ccad7179a3acf0"
+  },
+  {
+    "source": "Streamer.bot/custom/assets/twitch-badge/twitch-badge.png",
+    "destination": "apps/obs-widgets/twitch-badge/twitch-badge.png",
+    "sha256": "4da72b5f125f5769dce5f2aaef885f968df9a6e6898bcd385bd360a70dd0bb9b"
+  },
+  {
+    "source": "Streamer.bot/custom/assets/twitch-badge/twitch-badge.svg",
+    "destination": "apps/obs-widgets/twitch-badge/twitch-badge.svg",
+    "sha256": "68485ee5f3e3c2a871809a3b2373839390fc433a39971dc4aa4ad39432dac59d"
+  },
+  {
+    "source": "Streamer.bot/custom/assets/sounds/health-warning.mp3",
+    "destination": "apps/obs-widgets/sounds/health-warning.mp3",
+    "sha256": "7189ef6c33d21b4f9be89d1ca208816241327cbe2772d573334f238a9d2b26c5"
+  },
+  {
+    "source": "Streamer.bot/custom/assets/sounds/notif.mp3",
+    "destination": "apps/obs-widgets/sounds/notif.mp3",
+    "sha256": "60cec357c3ae2df2edb95b77dd473c5df020e952b60bb901ee25f4c2a3ec7945"
+  },
+  {
+    "source": "easy-output-stats.compact.html",
+    "destination": "apps/obs-widgets/output-stats/index.html",
+    "sha256": "4d897a77e8821f77dadb29ab2696ce2dbce43b438da1bfe05a1c2354c128f758"
+  },
+  {
+    "source": "obs-tuna-widget.html",
+    "destination": "apps/tuna-widget/src/index.html",
+    "sha256": "5cbc2f92125e07fee388a3482d4ff69f0be671f24bd2388e9a1bc4c8bf60baef"
+  }
+]

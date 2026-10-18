@@ -1,0 +1,36 @@
+# Agent discovery (RFC 8288 / RFC 9727) — Link headers on the homepage
+/
+  Link: </.well-known/api-catalog>; rel="api-catalog"
+  Link: </manifest.webmanifest>; rel="describedby"
+
+/index.html
+  Link: </.well-known/api-catalog>; rel="api-catalog"
+  Link: </manifest.webmanifest>; rel="describedby"
+
+# RFC 9727 section 4.2: the catalog MUST be served as application/linkset+json
+/.well-known/api-catalog
+  Content-Type: application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"
+
+# Only content-addressed font files live in this directory.
+/assets/cyber-monolith/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Versioned full-character-set accent font.
+/assets/fonts/unbounded-600.*.woff2
+  Cache-Control: public, max-age=31536000, immutable
+
+# Revalidate mutable resources after each deployment.
+/assets/brand.css
+  Cache-Control: public, max-age=0, must-revalidate
+/assets/site.css
+  Cache-Control: public, max-age=0, must-revalidate
+/assets/stream.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+/og-image.jpg
+  Cache-Control: public, max-age=0, must-revalidate
+
+/assets/theme.css
+  Cache-Control: public, max-age=0, must-revalidate
+/assets/theme.js
+  Cache-Control: public, max-age=0, must-revalidate

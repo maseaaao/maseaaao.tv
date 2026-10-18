@@ -1,0 +1,165 @@
+@import url("../../apps/website/public/assets/cyber-monolith/tokens.css");
+@import url("../../apps/website/public/assets/brand.css");
+
+:root {
+  color-scheme: light;
+  --panel-width: 320px;
+  --panel-height: 64px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-body);
+  color: var(--text);
+  background: var(--surface);
+}
+
+.twitch-panel {
+  position: relative;
+  width: var(--panel-width);
+  height: var(--panel-height);
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  isolation: isolate;
+}
+
+.twitch-panel__mark,
+.twitch-panel__title { position: relative; z-index: 1; }
+
+.twitch-panel__mark {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  position: relative;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  color: var(--accent);
+  font-size: 0;
+  line-height: 0;
+}
+
+.twitch-panel__mark::before,
+.twitch-panel__mark::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.twitch-panel__mark--about::before {
+  width: 18px;
+  height: 18px;
+  background: currentColor;
+  clip-path: polygon(50% 0, 64% 36%, 100% 50%, 64% 64%, 50% 100%, 36% 64%, 0 50%, 36% 36%);
+}
+
+.twitch-panel__mark--rules::before {
+  width: 16px;
+  height: 18px;
+  border: 2px solid currentColor;
+  border-radius: 0;
+}
+
+.twitch-panel__mark--rules::after {
+  width: 8px;
+  height: 2px;
+  border-radius: 0;
+  background: currentColor;
+  box-shadow: 0 5px 0 currentColor;
+}
+
+.twitch-panel__mark--donate::before {
+  width: 18px;
+  height: 17px;
+  background: currentColor;
+  clip-path: polygon(50% 100%, 7% 53%, 0 30%, 10% 8%, 29% 0, 50% 18%, 71% 0, 90% 8%, 100% 30%, 93% 53%);
+}
+
+.twitch-panel__mark--devices::before {
+  width: 18px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-radius: 0;
+  transform: translate(-50%, calc(-50% - 3px));
+}
+
+.twitch-panel__mark--devices::after {
+  width: 12px;
+  height: 2px;
+  border-radius: 0;
+  background: currentColor;
+  transform: translate(-50%, calc(-50% + 8px));
+}
+
+.twitch-panel__mark--specs::before {
+  width: 3px;
+  height: 12px;
+  border-radius: 0;
+  background: currentColor;
+  box-shadow: 6px -4px 0 currentColor, 12px 3px 0 currentColor;
+  transform: translate(-9px, -50%);
+}
+
+.twitch-panel__mark--settings::before {
+  width: 18px;
+  height: 2px;
+  border-radius: 0;
+  background: currentColor;
+  box-shadow: 0 -6px 0 currentColor, 0 6px 0 currentColor;
+}
+
+.twitch-panel__mark--settings::after {
+  width: 18px;
+  height: 18px;
+  border: 2px solid currentColor;
+  clip-path: polygon(0 0, 40% 0, 40% 100%, 0 100%, 0 0, 60% 0, 100% 0, 100% 100%, 60% 100%, 60% 0);
+}
+
+.twitch-panel__copy {
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  gap: 5px;
+}
+
+.twitch-panel__title {
+  margin: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.twitch-panel__line { display: none; }
+
+.twitch-panel__mark { color: var(--surface); background: var(--accent); border-radius: 10px; }
+.twitch-panel__title { font-weight: 600; font-size: 15px; line-height: 1.3; }
