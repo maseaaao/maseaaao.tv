@@ -117,30 +117,29 @@ test('donation and its hover state remain readable in the shared palette', async
   } finally { await context.close(); }
 });
 
-test('wide desktops put profile and media beside the links; status changes preserve both columns', async () => {
-  for (const width of [320,390,540,768,900,1024,1100,1101,1280,1440,1920]) {
+test('media stays below links; nonmobile player and chat stay side by side through status changes', async () => {
+  for (const width of [320,390,540,651,767,768,900,1000,1001,1024,1280,1440,1920]) {
     const {page,context}=await newPage();
     try {
       await emit(page,'ready','online');
       await page.setViewportSize({width,height:1000});
-      const boxes=await page.evaluate(()=>Object.fromEntries(['identity','stream-layout','actions','collab'].map(name=>{const r=document.querySelector('.'+name).getBoundingClientRect();return [name,{x:r.x,y:r.y,right:r.right,bottom:r.bottom}]})));
-      const {identity,'stream-layout':media,actions,collab}=boxes;
-      if (width >= 1101) {
-        assert.ok(identity.right <= actions.x, `${width}: profile must be left of links`);
-        assert.ok(media.right <= actions.x, `${width}: media must be left of links`);
-        assert.equal(identity.x, media.x);
-        assert.equal(identity.y, actions.y);
-        assert.ok(media.y >= identity.bottom);
+      await page.waitForFunction(expected=>document.querySelector('[data-stream-chat]').open===expected,width>=768);
+      const boxes=await page.evaluate(()=>Object.fromEntries(['identity','stream-layout','stream-content','stream-chat','actions','collab'].map(name=>{const r=document.querySelector('.'+name).getBoundingClientRect();return [name,{x:r.x,y:r.y,right:r.right,bottom:r.bottom}]})));
+      const {identity,'stream-layout':media,'stream-content':video,'stream-chat':chat,actions,collab}=boxes;
+      assert.ok(actions.y >= identity.bottom);
+      assert.ok(media.y >= actions.bottom);
+      if (width >= 768) {
+        assert.ok(video.right <= chat.x, `${width}: chat must be beside the player`);
+        assert.equal(video.y, chat.y, `${width}: media columns must align at the top`);
       } else {
-        assert.ok(actions.y >= identity.bottom);
-        assert.ok(media.y >= actions.bottom);
+        assert.ok(chat.y >= video.bottom, `${width}: mobile chat must be below the player`);
       }
       assert.ok(collab.y >= Math.max(media.bottom,actions.bottom));
       const actionBox = await page.locator('.actions').boundingBox();
       const frameBox = await page.locator('#twitch-player iframe').boundingBox();
       await emit(page,'offline');
       assert.deepEqual(await page.locator('.actions').boundingBox(), actionBox, 'a status change must not shift links');
-      if (width > 650) {
+      if (width >= 768) {
         assert.equal(await page.locator('[data-stream-player]').evaluate(e=>e.open), true);
         assert.equal(await page.locator('[data-stream-chat]').evaluate(e=>e.open), true);
         assert.deepEqual(await page.locator('#twitch-player iframe').boundingBox(), frameBox, 'offline must retain player position and dimensions');
@@ -219,20 +218,20 @@ test('chat defaults open on nonmobile in every stream state and cold narrow desk
     try{
       if(state==='error')await page.waitForFunction(()=>document.querySelector('[data-stream-layout]').dataset.state==='error');
       else if(state!=='loading')await emit(page,'ready',state);
-      for(const width of [320,390,540,650,651,768,900,1000,1440]){
+      for(const width of [320,390,540,651,767,768,900,1000,1440]){
         await page.setViewportSize({width,height:1000});
-        await page.waitForFunction(expected=>document.querySelector('[data-stream-chat]').open===expected,width>650);
-        assert.equal(await page.locator('[data-stream-chat]').evaluate(e=>e.open),width>650,`${state}/${width}`);
+        await page.waitForFunction(expected=>document.querySelector('[data-stream-chat]').open===expected,width>=768);
+        assert.equal(await page.locator('[data-stream-chat]').evaluate(e=>e.open),width>=768,`${state}/${width}`);
       }
       assert.deepEqual(traffic.errors,[]);
     }finally{await context.close();}
   }
-  for(const width of [320,650,651,768,900,1440]){
+  for(const width of [320,651,767,768,900,1440]){
     const {page,context,traffic}=await newPage({width});
     try{
-      assert.equal(await page.locator('[data-stream-chat]').evaluate(e=>e.open),width>650,`cold/${width}`);
+      assert.equal(await page.locator('[data-stream-chat]').evaluate(e=>e.open),width>=768,`cold/${width}`);
       const src=await page.locator('[data-chat-frame]').getAttribute('src');
-      if(width>650){assert.ok(src);assert.equal(new URL(src).searchParams.get('parent'),'127.0.0.1');}
+      if(width>=768){assert.ok(src);assert.equal(new URL(src).searchParams.get('parent'),'127.0.0.1');}
       else assert.equal(src,null,'a cold mobile page must not load a collapsed chat iframe');
       assert.deepEqual(traffic.errors,[]);
     }finally{await context.close();}

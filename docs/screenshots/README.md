@@ -1,12 +1,15 @@
 # Interface previews
 
 Current previews use Chromium 153 with local fonts and the approved blue avatar.
-The wide desktop layout places profile/player/chat on the left and links on the
-right. Desktop player and chat remain visible even when the channel is offline.
+Profile and links come first. From 768px, the player and chat sit side by side
+below the links and remain visible even when the channel is offline. Both the
+SDK and fallback player request autoplay with sound muted.
 
 - `landing-desktop.png`, `landing-light-1440.png`, `landing-dark-1440.png`: offline
   desktop with the player and chat open by default.
 - `landing-online-{light,dark}-1440.png`: online desktop with the same geometry.
+- `landing-{light,dark}-{768,1024}.png`: side-by-side player/chat at tablet and
+  compact desktop widths, with media below the links.
 - `landing-mobile.png`, `landing-light-390.png`, `landing-dark-390.png`: compact
   layout; below Twitch's minimum player width, the external action remains.
 - `theme-menu-{light,dark}-{width}.png`: expanded theme menu at 1440px and 320px.

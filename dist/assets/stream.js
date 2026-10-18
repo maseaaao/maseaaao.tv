@@ -35,7 +35,7 @@
   fallbackUrl.searchParams.append("parent", window.location.hostname);
   originalFrame.remove();
 
-  const desktop = window.matchMedia("(min-width:651px)");
+  const desktop = window.matchMedia("(min-width:768px)");
   let status = "loading";
   let chatPreference = null;
   let playerPreference = false;

@@ -202,6 +202,8 @@ test('READY alone never invents LIVE; offline/live/playback-blocked transitions 
   const {page, context, traffic} = await newPage();
   try {
     await emit(page, 'ready');
+    assert.equal(await page.evaluate(() => window.__twitchPlayer.options.autoplay), true);
+    assert.equal(await page.evaluate(() => window.__twitchPlayer.options.muted), true);
     assert.equal(await page.locator('[data-stream-layout]').getAttribute('data-state'), 'loading');
     assert.equal(await page.locator('[data-live-badge]').isVisible(), false);
     await emit(page, 'offline');
@@ -272,6 +274,8 @@ for (const mode of ['error', 'missing', 'constructor-error']) {
       assert.match(await page.locator('[data-stream-status]').textContent(), /Не удалось определить статус/);
       const url = new URL(await page.locator('#twitch-player iframe').getAttribute('src'));
       assert.equal(url.searchParams.get('parent'), '127.0.0.1'); assert.equal(url.searchParams.get('channel'), 'maseaaao');
+      assert.equal(url.searchParams.get('autoplay'), 'true');
+      assert.equal(url.searchParams.get('muted'), 'true');
       assert.equal(await page.locator('[data-player-fallback]').textContent(), '');
       assert.equal(await page.locator('.tile--twitch').getAttribute('href'), 'https://www.twitch.tv/maseaaao');
       assert.equal(await page.locator('.tile--twitch').isVisible(), true);
@@ -295,7 +299,7 @@ async function layoutAudit(page) {
   });
 }
 
-for (const width of [320, 390, 540, 651, 768, 900, 1000, 1300, 1440, 1920]) {
+for (const width of [320, 390, 540, 651, 767, 768, 900, 1000, 1001, 1300, 1440, 1920]) {
   test(`known offline/online/error UI fits ${width}px, 44px controls and player-width-aware fallback`, async () => {
     for (const state of ['offline', 'online', 'error']) {
       const {page, context} = await newPage({sdkState: state === 'error' ? 'error' : 'mock'});
@@ -308,7 +312,7 @@ for (const width of [320, 390, 540, 651, 768, 900, 1000, 1300, 1440, 1920]) {
         assert.ok(ui.scroll <= ui.viewport, `${state} overflow ${ui.scroll}>${ui.viewport}`);
         assert.deepEqual(ui.small, [], `${state} undersized controls`);
         if (ui.contentWidth < 402) assert.ok(ui.mobileVisible, `${state}: narrow content ${ui.contentWidth}px has no Twitch fallback`);
-        if ((state !== 'offline' || width > 650) && ui.contentWidth >= 402) { assert.ok(ui.player, `${state}: missing wide player`); assert.ok(ui.player.width >= 400, `Twitch frame too narrow ${ui.player.width}`); assert.ok(ui.player.height >= 300); }
+        if ((state !== 'offline' || width >= 768) && ui.contentWidth >= 402) { assert.ok(ui.player, `${state}: missing wide player`); assert.ok(ui.player.width >= 400, `Twitch frame too narrow ${ui.player.width}`); assert.ok(ui.player.height >= 300); }
       } finally { await context.close(); }
     }
   });
@@ -601,9 +605,9 @@ test('desktop media defaults update even when the player column keeps the same w
   const {page, context} = await newPage({cssOverride: css + '\n.stream-content { width:450px }'});
   try {
     await emit(page, 'ready', 'offline');
-    await page.setViewportSize({width:650, height:1000});
+    await page.setViewportSize({width:767, height:1000});
     await page.waitForFunction(() => !document.querySelector('[data-stream-player]').open);
-    await page.setViewportSize({width:651, height:1000});
+    await page.setViewportSize({width:768, height:1000});
     await page.waitForFunction(() => document.querySelector('[data-stream-player]').open && document.querySelector('[data-stream-chat]').open);
     assert.equal(await page.locator('[data-stream-offline]').isVisible(), false);
   } finally { await context.close(); }
