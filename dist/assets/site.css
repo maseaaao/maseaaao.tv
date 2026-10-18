@@ -51,6 +51,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex="-1"]:fo
 .section { min-width: 0; display: grid; gap: 12px; }
 .section-label, .collab__label { margin: 0; color: var(--dim); font: 14px/1.5 var(--font-body); }
 .tiles { display: grid; gap: 10px; }
+.tiles--primary { grid-auto-rows: 1fr; }
 .tile { min-width: 0; min-height: 76px; display: grid; grid-template-columns: 24px minmax(0, 1fr) 20px; align-items: center; gap: 16px; padding: 18px 20px; border: 1px solid var(--line); border-radius: 12px; color: var(--text); background: transparent; text-decoration: none; transition: color 160ms, background-color 160ms, border-color 160ms, transform 120ms; }
 .tile__icon { display: grid; place-items: center; }
 .brandicon { width: 22px; height: 22px; display: block; fill: currentColor; }

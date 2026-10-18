@@ -335,3 +335,13 @@ test('narrow desktop reserves at least 300px for chat beside a Twitch-sized play
     } finally { await context.close(); }
   }
 });
+
+test('primary cards share an intentional equal-height rhythm', async () => {
+  for (const width of [320, 390, 540, 768, 1024, 1440]) {
+    const {page, context} = await newPage({width});
+    try {
+      const heights = await page.locator('.tiles--primary .tile').evaluateAll(es => es.map(e => e.getBoundingClientRect().height));
+      assert.ok(Math.max(...heights) - Math.min(...heights) < 1, `${width}: primary heights ${heights}`);
+    } finally { await context.close(); }
+  }
+});
