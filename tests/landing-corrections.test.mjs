@@ -307,3 +307,17 @@ test('desktop media columns share their bottom edge and chat fills available hei
     } finally { await context.close(); }
   }
 });
+
+test('secondary links retain two compact columns at intermediate widths', async () => {
+  for (const width of [541, 768, 900, 1000]) {
+    const {page, context} = await newPage({width});
+    try {
+      const tiles = await page.locator('.tiles--secondary .tile').evaluateAll(es => es.map(e => {
+        const r = e.getBoundingClientRect(); return {x: r.x, y: r.y, width: r.width};
+      }));
+      assert.equal(tiles[0].y, tiles[1].y, `${width}: first two links share a row`);
+      assert.ok(tiles[1].x > tiles[0].x + tiles[0].width, `${width}: separate columns`);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    } finally { await context.close(); }
+  }
+});
