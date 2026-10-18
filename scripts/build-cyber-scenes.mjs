@@ -74,7 +74,7 @@ for (const [stem, copy] of [['01-start', 'начало'], ['02-pause', 'пауз
 definitions.push(camera('04-camera-horizontal', false), camera('04-camera-vertical', true));
 for (const name of ['00-blank', 'background']) {
   const body = '<div class="grid" aria-hidden="true"></div>';
-  definitions.push({name, canvas:layout.horizontal.canvas, html:document(name, layout.horizontal.canvas, false, body)});
+  definitions.push({name, canvas:layout.horizontal.canvas, html:document(name, layout.horizontal.canvas, false, body).replace('--width:', '--hud-bg:#1616d9;--width:')});
 }
 definitions.push({name:'00-blank-vertical', canvas:[1080,1920], html:document('00-blank-vertical', [1080,1920], true, '', 'gameplay')});
 definitions.push({name:'cam-frame', canvas:[600,341], html:document('cam-frame', [600,341], false, '', 'camera-tile')});

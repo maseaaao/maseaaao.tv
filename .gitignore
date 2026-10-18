@@ -4,3 +4,6 @@ node_modules
 # Local visual verification artifacts
 src/scenes/rendered/review/
 src/scenes/rendered/cyber-scenes-build-report.json
+
+src/scenes-dark/rendered/review/
+src/scenes-dark/rendered/build-report.json

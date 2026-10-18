@@ -1,0 +1,3 @@
+@import url('../../dist/assets/brand.css');
+/* Dark counterpart of the project's warm-light / blue identity. */
+:root{color-scheme:dark;--surface:#20201e;--surface-solid:#20201e;--text:#f4f3ec;--dim:#b9b9b0;--line:#53534e;--line-strong:#8d8d84;--accent:#1616d9;--hud-bg:var(--surface);--hud-surface:#292927;--hud-raised:#333330;--hud-border:var(--line);--hud-text:var(--text);--hud-muted:var(--dim);--hud-accent:var(--accent)}

@@ -8,6 +8,8 @@
     "render:twitch-banner": "node scripts/cyber-site-render.mjs banners",
     "render:logo": "node scripts/refresh-logo-qr.mjs",
     "render:scenes": "node scripts/build-cyber-scenes.mjs",
+    "render:scenes:dark": "node scripts/build-dark-scenes.mjs",
+    "build:tuna:dark": "node scripts/build-tuna-widget.mjs",
     "render:twitch-description": "node scripts/cyber-site-render.mjs panels",
     "render:favicon": "node scripts/cyber-site-render.mjs favicon",
     "brand:assets": "node scripts/cyber-site-render.mjs brand",

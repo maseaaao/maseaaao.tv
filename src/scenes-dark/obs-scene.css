@@ -1,0 +1,20 @@
+
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent}
+body{font-family:var(--hud-body);color:var(--hud-text)}.canvas{position:relative;overflow:hidden;width:var(--width);height:var(--height);background:var(--hud-bg)}
+.grid{display:none;opacity:0}
+.identity{position:absolute;left:120px;top:112px;display:flex;align-items:center;gap:24px;font-family:var(--hud-display);font-size:32px;font-weight:600;letter-spacing:-.035em;height:64px;background:var(--hud-bg)}
+.identity img{width:64px;height:64px;object-fit:contain}.vertical .identity{top:156px;font-size:28px;gap:24px;height:48px}.vertical .identity img{width:48px;height:48px}
+.header-rule{position:absolute;left:120px;top:220px;width:1400px;height:1px;background:var(--hud-border)}.vertical .header-rule{top:244px;width:720px}
+.title-field{position:absolute;left:88px;top:400px;width:1432px;height:264px;background:var(--hud-accent);border-radius:32px}.vertical .title-field{top:268px;width:784px;height:176px}
+h1{position:absolute;left:120px;top:440px;margin:0;font-family:Unbounded,sans-serif;font-size:160px;line-height:1.08;font-weight:600;letter-spacing:-.035em;color:var(--hud-bg);background:transparent}.vertical h1{top:300px;font-size:88px}
+.zone{position:absolute;pointer-events:none}.panel{background:var(--hud-surface);border:1px solid var(--hud-border);border-radius:20px}.zone[data-zone="music"],.zone[data-zone="donors"]{background:var(--hud-bg)}
+
+.qr{position:absolute;display:block;object-fit:contain;image-rendering:pixelated;background:#eee}.social{background:var(--hud-bg);border-top:1px solid var(--hud-border)}
+.canvas.overlay:not(.vertical) .zone[data-zone="music"],.canvas.overlay:not(.vertical) .zone[data-zone="donors"]{background:transparent}
+.canvas.overlay,.canvas.gameplay,.canvas.camera-tile{background:transparent}.lower-background{position:absolute;left:0;top:608px;width:1080px;height:1312px;overflow:hidden;background:var(--hud-bg)}
+.camera-frame{position:absolute;pointer-events:none;border:2px solid var(--hud-accent);border-radius:20px}.camera-tile{border:2px solid var(--hud-accent);border-radius:12px}.vertical .camera-frame{border:0;border-radius:0}
+
+/* Separate dark variant; geometry and transparent live regions are retained. */
+.title-field{background:var(--accent);border:0;border-radius:24px}
+h1{color:var(--hud-text)}.header-rule{background:var(--hud-border)}
+.camera-frame{border-color:var(--hud-text)}.panel{background:var(--hud-surface)}
