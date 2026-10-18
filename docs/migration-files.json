@@ -298,5 +298,10 @@
     "source": "obs-tuna-widget.html",
     "destination": "apps/tuna-widget/src/index.html",
     "sha256": "5cbc2f92125e07fee388a3482d4ff69f0be671f24bd2388e9a1bc4c8bf60baef"
+  },
+  {
+    "source": "Streamer.bot/custom/assets/social-strip/transparent.png",
+    "destination": "apps/obs-widgets/social-strip/transparent.png",
+    "sha256": "c2153f77e11087fcb078ae38527fa83bef29791e3700e30cc87fec4405a66d0f"
   }
 ]

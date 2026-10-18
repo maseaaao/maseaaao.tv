@@ -29,6 +29,9 @@ jobs:
       - run: npm ci
       - name: Validate product and tag before building
         run: python tooling/package-release.py --validate "$RELEASE_TAG"
+      - name: Install Chromium for Tuna verification
+        if: startsWith(env.RELEASE_TAG, 'tuna-widget-v')
+        run: npm run browser:install -- --with-deps
       - name: Test and build the selected product
         shell: bash
         run: |

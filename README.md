@@ -65,4 +65,4 @@ Cloudflare продолжает использовать корневой `wrang
 
 Stream Info и Tuna имеют собственные версии, CHANGELOG и теги `stream-info-vX.Y.Z`, `tuna-widget-vX.Y.Z`. Workflow создаёт черновик выпуска и проверяет скачанные файлы; существующие артефакты не перезаписываются. Миграция сама не создаёт тегов.
 
-[Архитектура](docs/architecture.md) · [Выпуски](docs/releasing.md) · [Перенос](docs/migration-20261019.md)
+[Архитектура](docs/architecture.md) · [Выпуски](docs/releasing.md) · [Перенос](docs/migration-20261019.md) · [План завершения миграции](docs/migration-plan.md)
