@@ -50,11 +50,17 @@ try {
     await render("src/brand/og.html", "dist/og-image.jpg", 1200, 630, "jpeg");
     await render("src/brand/subscribe.html", "dist/assets/subscribe-512.png", 512, 512);
     await render("src/brand/background.html", "dist/assets/subscribe-background-ai.png", 512, 512);
+  }
+  if (["all", "brand", "favicon"].includes(requested)) {
     await render("src/brand/icon.html", "dist/icon-master.png", 512, 512);
     const master = await fs.readFile(path.join(root, "dist/icon-master.png"));
+    const favicon = await sharp(master).composite([{
+      input: await fs.readFile(path.join(root, "src/brand/favicon-mask.svg")),
+      blend: "dest-in",
+    }]).png().toBuffer();
     const icons = [];
     for (const size of [16, 32, 48]) {
-      const data = await sharp(master).resize(size).png().toBuffer();
+      const data = await sharp(favicon).resize(size).png().toBuffer();
       icons.push({size, data});
       await fs.writeFile(path.join(root, "dist/favicon-" + size + "x" + size + ".png"), data);
     }
@@ -73,8 +79,10 @@ try {
       offset += data.length;
     });
     await fs.writeFile(path.join(root, "dist/favicon.ico"), Buffer.concat([ico, ...icons.map(icon => icon.data)]));
-    for (const [name, size] of [["apple-touch-icon.png", 180], ["apple-touch-icon-1024x1024.png", 1024], ["android-chrome-512x512.png", 512]]) {
-      await sharp(master).resize(size).png().toFile(path.join(root, "dist", name));
+    if (requested !== "favicon") {
+      for (const [name, size] of [["apple-touch-icon.png", 180], ["apple-touch-icon-1024x1024.png", 1024], ["android-chrome-512x512.png", 512]]) {
+        await sharp(master).resize(size).png().toFile(path.join(root, "dist", name));
+      }
     }
     await fs.unlink(path.join(root, "dist/icon-master.png"));
   }
