@@ -206,10 +206,11 @@ test('READY alone never invents LIVE; offline/live/playback-blocked transitions 
     assert.equal(await page.locator('[data-live-badge]').isVisible(), false);
     await emit(page, 'offline');
     assert.equal(await page.locator('[data-stream-layout]').getAttribute('data-state'), 'offline');
-    assert.equal(await page.locator('[data-stream-offline]').isVisible(), true);
+    assert.equal(await page.locator('[data-stream-offline]').isVisible(), false);
     assert.equal(await page.locator('[data-live-badge]').isVisible(), false);
-    assert.equal(await page.locator('[data-stream-player]').getAttribute('open'), null);
-    assert.equal(await page.locator('[data-player-summary]').isVisible(), true);
+    assert.equal(await page.locator('[data-stream-player]').getAttribute('open'), '');
+    assert.equal(await page.locator('[data-player-summary]').isVisible(), false);
+    assert.equal(await page.locator('.stream-archives').isVisible(), true);
     assert.equal(await page.locator('[data-stream-chat]').getAttribute('open'), '');
     assert.equal(new URL(await page.locator('[data-chat-frame]').getAttribute('src')).searchParams.get('parent'), '127.0.0.1');
     await emit(page, 'online');
@@ -234,9 +235,15 @@ test('chat and offline player summaries work with keyboard and keep user prefere
   const {page, context} = await newPage();
   try {
     await emit(page, 'ready', 'offline');
+    await page.setViewportSize({width: 540, height: 1000});
+    await page.waitForFunction(() => !document.querySelector('[data-player-summary]').hidden);
     const playerSummary = page.locator('[data-player-summary]');
+    assert.equal(await playerSummary.isVisible(), true);
+    assert.equal(await page.locator('[data-stream-player]').evaluate(e=>e.open), false);
     await playerSummary.focus(); await page.keyboard.press('Enter');
     assert.equal(await page.locator('[data-stream-player]').getAttribute('open'), '');
+    await page.setViewportSize({width: 1440, height: 1000});
+    await page.waitForFunction(() => document.querySelector('[data-stream-chat]').open);
     const chatSummary = page.locator('[data-stream-chat] summary');
     assert.equal(await page.locator('[data-stream-chat]').getAttribute('open'), '');
     await chatSummary.focus(); await page.keyboard.press('Space');
@@ -301,7 +308,7 @@ for (const width of [320, 390, 540, 651, 768, 900, 1000, 1300, 1440, 1920]) {
         assert.ok(ui.scroll <= ui.viewport, `${state} overflow ${ui.scroll}>${ui.viewport}`);
         assert.deepEqual(ui.small, [], `${state} undersized controls`);
         if (ui.contentWidth < 402) assert.ok(ui.mobileVisible, `${state}: narrow content ${ui.contentWidth}px has no Twitch fallback`);
-        if (state !== 'offline' && ui.contentWidth >= 402) { assert.ok(ui.player, `${state}: missing wide player`); assert.ok(ui.player.width >= 400, `Twitch frame too narrow ${ui.player.width}`); assert.ok(ui.player.height >= 300); }
+        if ((state !== 'offline' || width > 650) && ui.contentWidth >= 402) { assert.ok(ui.player, `${state}: missing wide player`); assert.ok(ui.player.width >= 400, `Twitch frame too narrow ${ui.player.width}`); assert.ok(ui.player.height >= 300); }
       } finally { await context.close(); }
     }
   });
@@ -573,5 +580,31 @@ test('single theme button opens an accessible dropdown and restores focus after 
     await page.locator('#profile-name').click();
     assert.equal(await menu.isVisible(), false);
     assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'dark');
+  } finally { await context.close(); }
+});
+
+test('desktop keeps the same video and chat mounted through online and offline transitions', async () => {
+  const {page, context} = await newPage();
+  try {
+    await emit(page, 'ready', 'online');
+    await page.evaluate(() => { window.__retainedVideo = document.querySelector('#twitch-player iframe'); window.__retainedChat = document.querySelector('[data-chat-frame]'); });
+    for (const state of ['offline', 'online', 'offline']) {
+      await emit(page, state);
+      assert.equal(await page.locator('[data-stream-player]').evaluate(e=>e.open), true);
+      assert.equal(await page.locator('[data-stream-chat]').evaluate(e=>e.open), true);
+      assert.equal(await page.evaluate(() => window.__retainedVideo === document.querySelector('#twitch-player iframe') && window.__retainedChat === document.querySelector('[data-chat-frame]')), true);
+    }
+  } finally { await context.close(); }
+});
+
+test('desktop media defaults update even when the player column keeps the same width', async () => {
+  const {page, context} = await newPage({cssOverride: css + '\n.stream-content { width:450px }'});
+  try {
+    await emit(page, 'ready', 'offline');
+    await page.setViewportSize({width:650, height:1000});
+    await page.waitForFunction(() => !document.querySelector('[data-stream-player]').open);
+    await page.setViewportSize({width:651, height:1000});
+    await page.waitForFunction(() => document.querySelector('[data-stream-player]').open && document.querySelector('[data-stream-chat]').open);
+    assert.equal(await page.locator('[data-stream-offline]').isVisible(), false);
   } finally { await context.close(); }
 });

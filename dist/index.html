@@ -61,7 +61,7 @@
     <link rel="stylesheet" href="assets/brand.css" />
     <link rel="stylesheet" href="assets/site.css" />
     <link rel="stylesheet" href="assets/theme.css" />
-    <noscript><style>.stream-status{display:none}</style></noscript>
+    <noscript><style>.stream-status-bar{display:none}</style></noscript>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -257,7 +257,10 @@
         <section class="stream-layout" aria-labelledby="stream-title" data-stream-layout>
           <div class="stream-content">
             <h2 id="stream-title" class="sr-only">Трансляция Twitch</h2>
-            <p class="stream-status" role="status" aria-live="polite" data-stream-status>Проверяем эфир…</p>
+            <div class="stream-status-bar">
+              <p class="stream-status" role="status" aria-live="polite" data-stream-status>Проверяем эфир…</p>
+              <a class="stream-archives" href="https://www.twitch.tv/maseaaao/videos" target="_blank" aria-describedby="new-window-note" rel="noopener noreferrer">Записи Twitch ↗</a>
+            </div>
             <div class="stream-offline" data-stream-offline hidden>
               <p class="stream-offline__title">Сейчас не в эфире</p>
               <div class="stream-offline__links">

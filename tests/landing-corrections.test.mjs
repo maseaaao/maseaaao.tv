@@ -117,22 +117,36 @@ test('donation and its hover state remain readable in the shared palette', async
   } finally { await context.close(); }
 });
 
-test('links precede media at every width and do not move when the stream goes offline', async () => {
-  for (const width of [320,390,540,768,900,1024,1440,1920]) {
+test('wide desktops put profile and media beside the links; status changes preserve both columns', async () => {
+  for (const width of [320,390,540,768,900,1024,1100,1101,1280,1440,1920]) {
     const {page,context}=await newPage();
     try {
       await emit(page,'ready','online');
       await page.setViewportSize({width,height:1000});
       const boxes=await page.evaluate(()=>Object.fromEntries(['identity','stream-layout','actions','collab'].map(name=>{const r=document.querySelector('.'+name).getBoundingClientRect();return [name,{x:r.x,y:r.y,right:r.right,bottom:r.bottom}]})));
       const {identity,'stream-layout':media,actions,collab}=boxes;
-      assert.ok(actions.y>=identity.bottom);
-      assert.ok(media.y>=actions.bottom);
-      assert.ok(collab.y>=Math.max(media.bottom,actions.bottom));
-      assert.equal(await page.locator('[data-chat-frame]').count(),1);
+      if (width >= 1101) {
+        assert.ok(identity.right <= actions.x, `${width}: profile must be left of links`);
+        assert.ok(media.right <= actions.x, `${width}: media must be left of links`);
+        assert.equal(identity.x, media.x);
+        assert.equal(identity.y, actions.y);
+        assert.ok(media.y >= identity.bottom);
+      } else {
+        assert.ok(actions.y >= identity.bottom);
+        assert.ok(media.y >= actions.bottom);
+      }
+      assert.ok(collab.y >= Math.max(media.bottom,actions.bottom));
       const actionBox = await page.locator('.actions').boundingBox();
+      const frameBox = await page.locator('#twitch-player iframe').boundingBox();
       await emit(page,'offline');
-      assert.deepEqual(await page.locator('.actions').boundingBox(), actionBox, 'a status change must not shift the primary links');
-      assert.ok((await page.locator('.stream-layout').boundingBox()).y >= actionBox.y + actionBox.height);
+      assert.deepEqual(await page.locator('.actions').boundingBox(), actionBox, 'a status change must not shift links');
+      if (width > 650) {
+        assert.equal(await page.locator('[data-stream-player]').evaluate(e=>e.open), true);
+        assert.equal(await page.locator('[data-stream-chat]').evaluate(e=>e.open), true);
+        assert.deepEqual(await page.locator('#twitch-player iframe').boundingBox(), frameBox, 'offline must retain player position and dimensions');
+        assert.equal(await page.locator('.stream-archives').isVisible(), true);
+      }
+      assert.equal(await page.locator('[data-chat-frame]').count(),1);
     } finally { await context.close(); }
   }
 });

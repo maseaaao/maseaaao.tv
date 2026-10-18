@@ -5,7 +5,7 @@ h1, h2, h3 { font-family: var(--font-display); font-weight: 600; }
 a, button, summary { touch-action: manipulation; }
 a { color: var(--accent); text-underline-offset: .2em; }
 a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex="-1"]:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
-.page { min-height: 100svh; padding: 56px 32px; display: grid; place-items: center; }
+.page { min-height: 100svh; padding: 56px 32px; display: grid; place-items: start center; }
 .shell { width: min(1240px, 100%); min-width: 0; padding: clamp(24px, 4.5vw, 64px); border-radius: 24px; background: var(--surface); display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "identity" "actions" "stream" "collab"; gap: 32px 40px; align-items: start; }
 .identity { grid-area: identity; padding-bottom: 32px; border-bottom: 1px solid var(--line); }
 .identity__top { display: flex; align-items: center; gap: 24px; }
@@ -22,6 +22,9 @@ a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex="-1"]:fo
 .live-badge__dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 .stream-layout, .stream-content { display: grid; min-width: 0; gap: 16px; }
 .stream-content { container-type: inline-size; container-name: twitch-content; }
+.stream-status-bar { display: flex; min-height: 44px; align-items: center; justify-content: space-between; gap: 8px 20px; }
+.stream-status-bar:has(.stream-status[hidden]) { display: none; }
+.stream-archives { display: none; flex: none; min-height: 44px; align-items: center; font-size: 14px; }
 .stream-status { margin: 0; color: var(--dim); font-size: 14px; }
 .stream-player { min-width: 0; }
 .twitch-player { width: 100%; aspect-ratio: 16 / 9; min-height: 300px; border-radius: 12px; border: 1px solid var(--line); background: #20201e; overflow: hidden; }
@@ -44,7 +47,6 @@ a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex="-1"]:fo
 .stream-chat .stream-fallback { padding: 8px 16px 16px; }
 .stream-fallback a { display: inline-flex; align-items: center; min-height: 44px; }
 .stream-layout { grid-area: stream; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; }
-.stream-layout:is([data-state="offline"], [data-state="error"]) { grid-template-columns: minmax(0, 1fr); }
 .actions { grid-area: actions; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); min-width: 0; gap: 28px 40px; align-items: start; }
 .section { min-width: 0; display: grid; gap: 12px; }
 .section-label, .collab__label { margin: 0; color: var(--dim); font: 14px/1.5 var(--font-body); }
@@ -117,6 +119,12 @@ a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex="-1"]:fo
 .skip-links a { position: fixed; top: 12px; left: 12px; z-index: 10; transform: translateY(-200%); padding: 12px 16px; border: 2px solid var(--accent); border-radius: 8px; background: var(--surface); }
 .skip-links a:focus { transform: none; }
 #platform-links, #contacts { scroll-margin-top: 24px; }
+/* Stable desktop columns: profile and media on the left, actions on the right. */
+@media (min-width: 1101px) {
+  .shell { grid-template-columns: minmax(0, 1fr) 300px; grid-template-areas: "identity actions" "stream actions" "collab collab"; }
+  .actions, .stream-layout { grid-template-columns: minmax(0, 1fr); }
+}
+@media (min-width: 651px) { .stream-layout[data-state="offline"] .stream-archives { display: inline-flex; } }
 @media (max-width: 1000px) { .page { padding: 24px 16px; } .shell { gap: 28px; padding: 32px; } .actions, .stream-layout { grid-template-columns: minmax(0, 1fr); } .collab { grid-template-columns: 1fr; gap: 8px; } .identity { padding-bottom: 24px; } .tiles--primary { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tile--wide { grid-column: 1 / -1; } .tiles--primary .tile { padding: 16px; gap: 12px; } }
 @media (max-width: 540px) { .page { padding: 12px; } .shell { padding: 24px 20px; border-radius: 18px; gap: 24px; } .identity__top { gap: 16px; } .avatar-frame { width: 56px; height: 56px; border-radius: 12px; } .identity h1 { font-size: clamp(23px, 6.6vw, 34px); letter-spacing: -.06em; } .identity__description { margin-top: 8px; font-size: 15px; } .tiles--primary { grid-template-columns: 1fr; } .tile--wide { grid-column: auto; } .tile { min-height: 72px; padding: 16px; } .tile__title { font-size: 13px; } .collab__links { grid-template-columns: 1fr; gap: 0; } .checker { padding: 20px 12px; } .checker .card-header { padding: 16px; } .docs { padding: 28px 20px; } }
 @container twitch-content (width < 402px) { .stream-player { display: none; } .stream-mobile { display: block; } .stream-content > .stream-fallback { display: none; } }
