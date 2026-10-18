@@ -130,11 +130,14 @@
               <p class="identity__description">Стример и автор</p>
             </div>
           </div>
-          <div class="theme-control" data-theme-control role="group" aria-label="Цветовая тема" hidden>
-            <button type="button" class="theme-choice" data-theme-value="auto" aria-label="Системная тема" title="Системная тема" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>
-            <button type="button" class="theme-choice" data-theme-value="light" aria-label="Светлая тема" title="Светлая тема" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></button>
-            <button type="button" class="theme-choice" data-theme-value="dark" aria-label="Тёмная тема" title="Тёмная тема" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.9 13a9 9 0 0 1-9.9-9.9A9 9 0 1 0 20.9 13Z"/></svg></button>
-          </div>
+          <details class="theme-control" data-theme-control hidden>
+            <summary class="theme-trigger" aria-label="Цветовая тема: системная" title="Изменить тему"><svg data-theme-icon="auto" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg><svg data-theme-icon="light" hidden viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg><svg data-theme-icon="dark" hidden viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.9 13a9 9 0 0 1-9.9-9.9A9 9 0 1 0 20.9 13Z"/></svg></summary>
+            <div class="theme-menu" role="group" aria-label="Цветовая тема">
+              <button type="button" class="theme-choice" data-theme-value="auto" aria-label="Системная тема" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span>Системная тема</span><svg class="theme-check" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m5 12 4 4 10-10"/></svg></button>
+              <button type="button" class="theme-choice" data-theme-value="light" aria-label="Светлая тема" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg><span>Светлая тема</span><svg class="theme-check" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m5 12 4 4 10-10"/></svg></button>
+              <button type="button" class="theme-choice" data-theme-value="dark" aria-label="Тёмная тема" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.9 13a9 9 0 0 1-9.9-9.9A9 9 0 1 0 20.9 13Z"/></svg><span>Тёмная тема</span><svg class="theme-check" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m5 12 4 4 10-10"/></svg></button>
+            </div>
+          </details>
         </header>
 
         <nav class="actions" id="platform-links" tabindex="-1" aria-label="Платформы и поддержка">

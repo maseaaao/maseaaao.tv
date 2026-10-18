@@ -81,6 +81,11 @@ async function newPage({width = 1440, sdkState = 'mock', javaScriptEnabled = tru
   return {page, context, traffic};
 }
 
+async function chooseTheme(page, value) {
+  await page.locator('.theme-trigger').click();
+  await page.locator(`[data-theme-value="${value}"]`).click();
+}
+
 async function emit(page, ...names) {
   await page.waitForFunction(() => window.__twitchPlayer);
   await page.evaluate(names => names.forEach(name => window.__twitchPlayer.emit(name)), names);
@@ -106,9 +111,9 @@ test('chat theme follows the page without recreating the Twitch player', async (
     const source = async () => new URL(await page.locator('[data-chat-frame]').getAttribute('src'));
     assert.equal((await source()).searchParams.has('darkpopout'), true);
     await page.evaluate(() => { window.__originalPlayer = window.__twitchPlayer; });
-    await page.locator(`[data-theme-value="${'light'}"]`).click();
+    await chooseTheme(page, 'light');
     assert.equal((await source()).searchParams.has('darkpopout'), false);
-    await page.locator(`[data-theme-value="${'dark'}"]`).click();
+    await chooseTheme(page, 'dark');
     assert.equal((await source()).searchParams.has('darkpopout'), true);
     assert.equal(await page.evaluate(() => window.__originalPlayer === window.__twitchPlayer), true);
     assert.equal((await source()).searchParams.get('parent'), '127.0.0.1');
@@ -497,13 +502,13 @@ for (const colorScheme of ['light', 'dark']) {
     const {page, context} = await newPage({colorScheme, width: 390});
     try {
       const opposite = colorScheme === 'dark' ? 'light' : 'dark';
-      await page.locator(`[data-theme-value="${opposite}"]`).click();
+      await chooseTheme(page, opposite);
       await page.reload();
       assert.equal(await page.locator('[data-theme-value][aria-pressed="true"]').getAttribute('data-theme-value'), opposite);
       assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), opposite);
       await page.goto(origin + '/dist/docs.html');
       assert.equal(await page.locator('[data-theme-value][aria-pressed="true"]').getAttribute('data-theme-value'), opposite);
-      await page.locator(`[data-theme-value="${'auto'}"]`).click();
+      await chooseTheme(page, 'auto');
       assert.equal(await page.evaluate(() => localStorage.getItem('maseaaao.theme.v1')), null);
       assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), colorScheme);
       await page.emulateMedia({colorScheme: opposite});
@@ -530,27 +535,43 @@ test('blocked storage keeps the theme control functional', async () => {
   try {
     await page.addInitScript(() => Object.defineProperty(window, 'localStorage', {get() { throw new Error('Storage blocked'); }}));
     await page.reload();
-    await page.locator(`[data-theme-value="${'dark'}"]`).click();
+    await chooseTheme(page, 'dark');
     assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'dark');
-    await page.locator(`[data-theme-value="${'auto'}"]`).click();
+    await chooseTheme(page, 'auto');
     assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'light');
   } finally { await context.close(); }
 });
 
-test('theme icons support keyboard activation, exclusive state and visible focus', async () => {
-  const {page, context} = await newPage({colorScheme: 'dark', width: 390});
+test('single theme button opens an accessible dropdown and restores focus after selection or Escape', async () => {
+  const {page, context} = await newPage({colorScheme: 'dark', width: 320});
   try {
+    const trigger = page.locator('.theme-trigger');
+    const menu = page.locator('.theme-menu');
+    assert.equal(await menu.isVisible(), false);
     for (const value of ['light', 'dark', 'auto']) {
+      await trigger.focus();
+      await page.keyboard.press('Space');
+      assert.equal(await menu.isVisible(), true);
       const button = page.locator(`[data-theme-value="${value}"]`);
       await button.focus();
       await page.keyboard.press('Space');
       assert.equal(await button.getAttribute('aria-pressed'), 'true');
       assert.equal(await page.locator('[data-theme-value][aria-pressed="true"]').count(), 1);
-      assert.equal(await button.evaluate(element => getComputedStyle(element).outlineWidth), '3px');
-      assert.ok(await button.getAttribute('aria-label'));
-      const box = await button.boundingBox();
-      assert.ok(box.width >= 44 && box.height >= 44);
+      assert.equal(await menu.isVisible(), false);
+      assert.equal(await trigger.evaluate(element => document.activeElement === element), true);
+      assert.equal(await trigger.evaluate(element => getComputedStyle(element).outlineWidth), '3px');
+      assert.ok(await trigger.getAttribute('aria-label'));
     }
+    await trigger.click();
+    const bounds = await menu.boundingBox();
+    assert.ok(bounds.x >= 0 && bounds.x + bounds.width <= 320);
+    assert.deepEqual((await contrastAudit(page)).filter(row => row.ratio < row.minimum), []);
+    await page.keyboard.press('Escape');
+    assert.equal(await menu.isVisible(), false);
+    assert.equal(await trigger.evaluate(element => document.activeElement === element), true);
+    await trigger.click();
+    await page.locator('#profile-name').click();
+    assert.equal(await menu.isVisible(), false);
     assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'dark');
   } finally { await context.close(); }
 });
