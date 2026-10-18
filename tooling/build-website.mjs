@@ -17,7 +17,7 @@ function writable(directory) {
   for (const entry of readdirSync(directory,{withFileTypes:true})) {
     const file=resolve(directory,entry.name);
     if(entry.isDirectory()) writable(file);
-    chmodSync(file,0o666);
+    chmodSync(file,entry.isDirectory() ? 0o777 : 0o666);
   }
   chmodSync(directory,0o777);
 }
