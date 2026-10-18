@@ -43,6 +43,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex="-1"]:fo
 .stream-offline__links { display: flex; margin: 0; }
 .stream-offline a { display: inline-flex; min-height: 44px; align-items: center; }
 .stream-mobile { display: none; }
+.stream-content > .stream-fallback:empty { display: none; }
 .stream-fallback { margin: 0; color: var(--dim); font-size: 14px; }
 .stream-chat .stream-fallback { padding: 8px 16px 16px; }
 .stream-fallback a { display: inline-flex; align-items: center; min-height: 44px; }

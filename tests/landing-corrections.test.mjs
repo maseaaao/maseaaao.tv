@@ -291,11 +291,12 @@ if(process.env.LANDING_DETAIL_OUT){
 }
 
 test('desktop media columns share their bottom edge and chat fills available height', async () => {
-  for (const width of [768, 900, 1024, 1440, 1920]) {
-    const {page, context} = await newPage({width});
+  for (const width of [768, 900, 1024, 1440, 1920]) for (const state of ['loading', 'online', 'offline', 'error']) {
+    const {page, context} = await newPage({width, sdkState: state === 'error' ? 'error' : 'mock'});
     try {
-      await emit(page, 'ready', 'online');
-      const video = await page.locator('.stream-content').boundingBox();
+      if (state === 'error') await page.waitForFunction(() => document.querySelector('[data-stream-layout]').dataset.state === 'error');
+      else if (state !== 'loading') await emit(page, 'ready', state);
+      const video = await page.locator('.twitch-player').boundingBox();
       const chat = await page.locator('.stream-chat').boundingBox();
       const frame = await page.locator('[data-chat-frame]').boundingBox();
       assert.ok(Math.abs(video.y + video.height - chat.y - chat.height) < 2, `${width}: media bottoms must align`);
