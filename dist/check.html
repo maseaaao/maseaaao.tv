@@ -19,14 +19,11 @@
     <header>
       <h1>Stream Checker</h1>
 
-      <label class="theme-control" data-theme-control hidden>
-            <span>Тема</span>
-            <select data-theme-select aria-label="Цветовая тема">
-              <option value="auto">Авто</option>
-              <option value="light">Светлая</option>
-              <option value="dark">Тёмная</option>
-            </select>
-          </label>
+      <div class="theme-control" data-theme-control role="group" aria-label="Цветовая тема" hidden>
+            <button type="button" class="theme-choice" data-theme-value="auto" aria-label="Системная тема" title="Системная тема" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></button>
+            <button type="button" class="theme-choice" data-theme-value="light" aria-label="Светлая тема" title="Светлая тема" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg></button>
+            <button type="button" class="theme-choice" data-theme-value="dark" aria-label="Тёмная тема" title="Тёмная тема" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.9 13a9 9 0 0 1-9.9-9.9A9 9 0 1 0 20.9 13Z"/></svg></button>
+          </div>
       <div class="global-actions">
         <button type="button" data-action="add-all">Добавить все</button>
         <button type="button" data-action="remove-all" data-kind="remove"

@@ -6,7 +6,7 @@
     const theme = normalize(value);
     if (theme === "auto") delete root.dataset.theme;
     else root.dataset.theme = theme;
-    document.querySelectorAll("[data-theme-select]").forEach(select => { select.value = theme; });
+    document.querySelectorAll("[data-theme-value]").forEach(button => { button.setAttribute("aria-pressed", String(button.dataset.themeValue === theme)); });
   }
   try { apply(localStorage.getItem(key)); } catch { /* CSS still follows the system. */ }
   document.addEventListener("DOMContentLoaded", () => {
@@ -17,9 +17,10 @@
     }
     document.querySelectorAll("[data-theme-control]").forEach(control => { control.hidden = false; });
     apply(root.dataset.theme);
-    document.addEventListener("change", event => {
-      if (!(event.target instanceof HTMLSelectElement) || !event.target.matches("[data-theme-select]")) return;
-      const theme = normalize(event.target.value);
+    document.addEventListener("click", event => {
+      const button = event.target instanceof Element ? event.target.closest("button[data-theme-value]") : null;
+      if (!(button instanceof HTMLButtonElement)) return;
+      const theme = normalize(button.dataset.themeValue);
       apply(theme);
       try {
         if (theme === "auto") localStorage.removeItem(key);

@@ -106,9 +106,9 @@ test('chat theme follows the page without recreating the Twitch player', async (
     const source = async () => new URL(await page.locator('[data-chat-frame]').getAttribute('src'));
     assert.equal((await source()).searchParams.has('darkpopout'), true);
     await page.evaluate(() => { window.__originalPlayer = window.__twitchPlayer; });
-    await page.locator('[data-theme-select]').selectOption('light');
+    await page.locator(`[data-theme-value="${'light'}"]`).click();
     assert.equal((await source()).searchParams.has('darkpopout'), false);
-    await page.locator('[data-theme-select]').selectOption('dark');
+    await page.locator(`[data-theme-value="${'dark'}"]`).click();
     assert.equal((await source()).searchParams.has('darkpopout'), true);
     assert.equal(await page.evaluate(() => window.__originalPlayer === window.__twitchPlayer), true);
     assert.equal((await source()).searchParams.get('parent'), '127.0.0.1');
@@ -497,13 +497,13 @@ for (const colorScheme of ['light', 'dark']) {
     const {page, context} = await newPage({colorScheme, width: 390});
     try {
       const opposite = colorScheme === 'dark' ? 'light' : 'dark';
-      await page.locator('[data-theme-select]').selectOption(opposite);
+      await page.locator(`[data-theme-value="${opposite}"]`).click();
       await page.reload();
-      assert.equal(await page.locator('[data-theme-select]').inputValue(), opposite);
+      assert.equal(await page.locator('[data-theme-value][aria-pressed="true"]').getAttribute('data-theme-value'), opposite);
       assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), opposite);
       await page.goto(origin + '/dist/docs.html');
-      assert.equal(await page.locator('[data-theme-select]').inputValue(), opposite);
-      await page.locator('[data-theme-select]').selectOption('auto');
+      assert.equal(await page.locator('[data-theme-value][aria-pressed="true"]').getAttribute('data-theme-value'), opposite);
+      await page.locator(`[data-theme-value="${'auto'}"]`).click();
       assert.equal(await page.evaluate(() => localStorage.getItem('maseaaao.theme.v1')), null);
       assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), colorScheme);
       await page.emulateMedia({colorScheme: opposite});
@@ -530,9 +530,27 @@ test('blocked storage keeps the theme control functional', async () => {
   try {
     await page.addInitScript(() => Object.defineProperty(window, 'localStorage', {get() { throw new Error('Storage blocked'); }}));
     await page.reload();
-    await page.locator('[data-theme-select]').selectOption('dark');
+    await page.locator(`[data-theme-value="${'dark'}"]`).click();
     assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'dark');
-    await page.locator('[data-theme-select]').selectOption('auto');
+    await page.locator(`[data-theme-value="${'auto'}"]`).click();
     assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'light');
+  } finally { await context.close(); }
+});
+
+test('theme icons support keyboard activation, exclusive state and visible focus', async () => {
+  const {page, context} = await newPage({colorScheme: 'dark', width: 390});
+  try {
+    for (const value of ['light', 'dark', 'auto']) {
+      const button = page.locator(`[data-theme-value="${value}"]`);
+      await button.focus();
+      await page.keyboard.press('Space');
+      assert.equal(await button.getAttribute('aria-pressed'), 'true');
+      assert.equal(await page.locator('[data-theme-value][aria-pressed="true"]').count(), 1);
+      assert.equal(await button.evaluate(element => getComputedStyle(element).outlineWidth), '3px');
+      assert.ok(await button.getAttribute('aria-label'));
+      const box = await button.boundingBox();
+      assert.ok(box.width >= 44 && box.height >= 44);
+    }
+    assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'dark');
   } finally { await context.close(); }
 });

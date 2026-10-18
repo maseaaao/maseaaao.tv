@@ -57,7 +57,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex="-1"]:fo
 .tile__title { font: 600 14px/1.5 var(--font-display); overflow-wrap: anywhere; }
 .tile__meta { color: var(--dim); font-size: 14px; overflow-wrap: anywhere; }
 .tile__arrow { font-size: 23px; line-height: 1; }
-.tile--twitch { min-height: 94px; background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.tile--twitch { min-height: 94px; background: var(--action); color: var(--on-accent); border-color: var(--action-border); }
 .tile--twitch .tile__title { font-size: 18px; }
 .tile--twitch .tile__meta { color: inherit; }
 .tile--donationalerts { border-color: var(--line-strong); }
@@ -73,7 +73,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex="-1"]:fo
 .collab__arrow { flex: none; font-size: 22px; }
 @media (hover: hover) {
   .tile:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
-  .tile--twitch:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: var(--on-accent); }
+  .tile--twitch:hover { background: var(--action-hover); border-color: var(--action-border); color: var(--on-accent); }
   .collab__link:hover { color: var(--accent); text-decoration: underline; }
 }
 .tile:active { transform: scale(.985); }
