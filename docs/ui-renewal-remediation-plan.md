@@ -33,12 +33,14 @@
 
 **Файлы:** `apps/website/src/components/HomePage.vue`, `apps/website/src/index.html`, `apps/website/src/assets/stream.js`, `apps/website/src/assets/site.css`, затронутые tests/stories/docs.
 
-- [ ] Удалить `stream-layout`, `stream-content`, оба iframe, `details`, статусы loading/offline/error, плейбек, lazy chat, fallback и относящуюся только к ним CSS-сетку.
-- [ ] Удалить Twitch Embed SDK, `ResizeObserver`, двойной iframe-init, script `stream.js` и asset entry, **если** они больше не нужны LIVE-индикатору. Не оставлять мёртвые стили/JS или пустое место на странице.
-- [ ] Сохранить единственный осмысленный главный CTA на Twitch, ссылки на записи и контакты; устранить дубли/неудачные подписи и обновить композицию без медиасекции. Сохранить корректную семантику и видимую клавиатурную навигацию.
-- [ ] Переписать Storybook/тесты лендинга: отсутствие embedded video/chat и запросов к `player.twitch.tv`/`twitch.tv/embed`/`js/embed/v1.js`; доступные ссылки; 320/390/540/768/900/1024/1440/1920 px, 200% zoom, reduced-motion/no-JS.
+- [x] Удалить `stream-layout`, `stream-content`, оба iframe, `details`, статусы loading/offline/error, плейбек, lazy chat, fallback и относящуюся только к ним CSS-сетку.
+- [x] Удалить Twitch Embed SDK, `ResizeObserver`, двойной iframe-init, script `stream.js` и asset entry, **если** они больше не нужны LIVE-индикатору. Не оставлять мёртвые стили/JS или пустое место на странице.
+- [x] Сохранить единственный осмысленный главный CTA на Twitch, ссылки на записи и контакты; устранить дубли/неудачные подписи и обновить композицию без медиасекции. Сохранить корректную семантику и видимую клавиатурную навигацию.
+- [x] Переписать Storybook/тесты лендинга: отсутствие embedded video/chat и запросов к `player.twitch.tv`/`twitch.tv/embed`/`js/embed/v1.js`; доступные ссылки; 320/390/540/768/900/1024/1440/1920 px, 200% zoom, reduced-motion/no-JS.
 - [ ] Проверить метаданные, структурированные данные и отсутствие влияния на `check.html`, `tools/*`, `docs.html`.
 - [ ] Получить и принять реальные Chrome screenshots нового главного экрана и состояний hover/focus/keyboard. Дизайн-проверку без просмотра скриншотов не считать выполненной.
+
+**Дополнительная проверка [ ]:** выполнить новые browser tests в Chrome/Chromium и визуально проверить screenshots. В этой среде они не запускались.
 
 **Готово, когда:** главная никогда не монтирует Twitch media/chat и не содержит пустой блок трансляции; `check.html` сохранён. **Коммит:** `refactor(website): remove Twitch embeds and simplify landing`.
 

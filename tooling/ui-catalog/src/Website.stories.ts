@@ -16,10 +16,10 @@ const meta: Meta<typeof HomePage> = {
 };
 export default meta;
 type Story = StoryObj<typeof HomePage>;
-// Product behavior is verified on the built HTML with routed Twitch/iframe fixtures.
+// Landing is static; the diagnostic checker still owns its explicit media tools.
 // Catalog entries show the actual compiled compositions without remote media.
 export const Home: Story = {
-  render: () => ({ render: () => h('div', [h('style', styles), h(HomePage, { preview: true })]) }),
+  render: () => ({ render: () => h('div', [h('style', styles), h(HomePage)]) }),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('heading', { name: 'maseaaao' })).toBeVisible();
@@ -28,7 +28,7 @@ export const Home: Story = {
       'https://www.twitch.tv/maseaaao',
     );
     await expect(canvas.getByRole('link', { name: /Сообщество ЛОББИ/ })).toBeVisible();
-    await expect(canvasElement.querySelector('iframe[src]')).toBeNull();
+    await expect(canvasElement.querySelector('iframe, [data-stream-layout]')).toBeNull();
   },
 };
 export const Checker: Story = {

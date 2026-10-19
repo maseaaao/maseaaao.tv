@@ -43,7 +43,7 @@ test('all six Vue pages ship readable static HTML and retain only product script
     assert(document.querySelector('main'), name);
     assert(!html.includes('<!--page-'), name);
     const scripts = [...document.querySelectorAll('script[src]')];
-    assert.equal(scripts.length, ['index.html', 'check.html'].includes(name) ? 1 : 0, name);
+    assert.equal(scripts.length, name === 'check.html' ? 1 : 0, name);
     for (const script of scripts) {
       const source = readFileSync(
         resolve(root, 'dist', script.getAttribute('src').slice(1)),
@@ -53,4 +53,15 @@ test('all six Vue pages ship readable static HTML and retain only product script
     }
     assert(Buffer.byteLength(html) < 25000, `${name}: static HTML budget`);
   }
+});
+
+
+test('homepage has one Twitch link, no Twitch SDK and no embedded player/chat', () => {
+  const root = resolve(import.meta.dirname, '..');
+  const html = readFileSync(resolve(root, 'dist/index.html'), 'utf8');
+  const { document } = new JSDOM(html).window;
+  assert.equal(document.querySelectorAll('iframe, video, details, [data-stream-layout], [data-live-badge]').length, 0);
+  assert.equal(document.querySelectorAll('script[src]').length, 0);
+  assert.equal(document.querySelectorAll('a[href="https://www.twitch.tv/maseaaao"]').length, 1);
+  assert.equal(document.querySelectorAll('a[href="https://www.twitch.tv/maseaaao/videos"]').length, 1);
 });

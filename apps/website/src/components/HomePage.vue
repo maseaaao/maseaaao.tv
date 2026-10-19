@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import LiveStatusBadge from '@maseaaao/ui/LiveStatusBadge.vue';
 import WebsiteLink from './WebsiteLink.vue';
-
-// The offline catalog renders layout without creating remote media frames.
-withDefaults(defineProps<{ preview?: boolean }>(), { preview: false });
 
 // Public files retain their stable URLs; these are not SFC build assets.
 const avatar = '/assets/avatar-96.webp';
@@ -41,15 +37,6 @@ const avatarSizes = [64, 96, 128, 192, 288]
                 "
               />
               <div class="avatar-fallback" hidden aria-hidden="true">m</div>
-            </div>
-            <div class="profile-meta">
-              <LiveStatusBadge
-                class="live-badge"
-                status="live"
-                label="LIVE"
-                data-live-badge
-                hidden
-              />
             </div>
           </div>
 
@@ -97,85 +84,6 @@ const avatarSizes = [64, 96, 128, 192, 288]
           />
         </div>
       </nav>
-      <section class="stream-layout" aria-labelledby="stream-title" data-stream-layout>
-        <div class="stream-content">
-          <h2 id="stream-title" class="sr-only">Трансляция Twitch</h2>
-          <div class="stream-status-bar">
-            <p class="stream-status" role="status" aria-live="polite" data-stream-status
-              >Проверяем эфир…</p
-            >
-            <a
-              class="stream-archives"
-              href="https://www.twitch.tv/maseaaao/videos"
-              target="_blank"
-              aria-describedby="new-window-note"
-              rel="noopener noreferrer"
-              >Записи Twitch ↗</a
-            >
-          </div>
-          <div class="stream-offline" data-stream-offline hidden>
-            <p class="stream-offline__title">Сейчас не в эфире</p>
-            <div class="stream-offline__links">
-              <a
-                href="https://www.twitch.tv/maseaaao/videos"
-                target="_blank"
-                aria-describedby="new-window-note"
-                rel="noopener noreferrer"
-                >Записи Twitch ↗</a
-              >
-            </div>
-          </div>
-          <div class="stream-mobile">
-            <p class="stream-fallback">Стрим и чат откроются на Twitch.</p>
-          </div>
-          <details class="stream-player" data-stream-player open>
-            <summary hidden data-player-summary>Открыть Twitch-плеер</summary>
-            <div
-              id="twitch-player"
-              class="twitch-player"
-              role="group"
-              aria-label="Twitch-плеер MASEAAAO"
-            >
-              <iframe
-                :src="
-                  preview
-                    ? undefined
-                    : 'https://player.twitch.tv/?channel=maseaaao&amp;parent=maseaaao.tv&amp;parent=www.maseaaao.tv&amp;parent=localhost&amp;autoplay=true&amp;muted=true'
-                "
-                title="Twitch-плеер MASEAAAO"
-                width="600"
-                height="338"
-                loading="lazy"
-                allow="autoplay; fullscreen"
-                allowfullscreen
-              >
-              </iframe>
-            </div>
-          </details>
-          <p class="stream-fallback" data-player-fallback hidden></p>
-        </div>
-        <details class="stream-chat" data-stream-chat>
-          <summary>Чат Twitch</summary>
-          <iframe
-            data-chat-frame
-            data-src="https://www.twitch.tv/embed/maseaaao/chat?parent=maseaaao.tv&amp;parent=www.maseaaao.tv&amp;parent=localhost"
-            title="Чат Twitch MASEAAAO"
-            width="320"
-            height="420"
-          >
-          </iframe>
-          <p class="stream-fallback"
-            ><a
-              href="https://www.twitch.tv/maseaaao"
-              target="_blank"
-              aria-describedby="new-window-note"
-              rel="noopener noreferrer"
-              >Открыть чат на Twitch ↗</a
-            ></p
-          >
-        </details>
-      </section>
-
       <footer id="contacts" class="collab" tabindex="-1" aria-labelledby="contacts-title">
         <h2 id="contacts-title" class="collab__label">Сотрудничество</h2>
         <div class="collab__links">
