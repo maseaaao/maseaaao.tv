@@ -14,13 +14,16 @@ before(async () => {
       const pathname = new URL(req.url, 'http://localhost').pathname;
       const pathnameFile = resolve(root, 'dist', '.' + decodeURIComponent(pathname));
       if (!pathnameFile.startsWith(resolve(root, 'dist') + sep)) throw Error('Invalid path');
-      res.setHeader('Content-Type', {
-        '.html': 'text/html; charset=utf-8',
-        '.css': 'text/css',
-        '.woff2': 'font/woff2',
-        '.webp': 'image/webp',
-        '.png': 'image/png',
-      }[extname(pathnameFile)] || 'application/octet-stream');
+      res.setHeader(
+        'Content-Type',
+        {
+          '.html': 'text/html; charset=utf-8',
+          '.css': 'text/css',
+          '.woff2': 'font/woff2',
+          '.webp': 'image/webp',
+          '.png': 'image/png',
+        }[extname(pathnameFile)] || 'application/octet-stream',
+      );
       res.end(readFileSync(pathnameFile));
     } catch {
       res.writeHead(404);
@@ -48,7 +51,12 @@ async function visit(width, javascript = true) {
     if (!request.url().startsWith(origin + '/')) external.push(request.url());
   });
   await page.route('**/*', (route) =>
-    route.request().url().startsWith(origin + '/') ? route.continue() : route.abort(),
+    route
+      .request()
+      .url()
+      .startsWith(origin + '/')
+      ? route.continue()
+      : route.abort(),
   );
   await page.goto(origin + '/index.html');
   return { context, page, external };

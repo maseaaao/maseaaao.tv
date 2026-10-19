@@ -336,9 +336,12 @@ async function loadCredentials() {
     return await decryptCredentials(JSON.parse(serialized));
   } catch (error) {
     // A transient IndexedDB failure must never permanently erase valid credentials.
-    throw new Error('Не удалось прочитать сохранённые данные. Запись сохранена; проверьте хранилище или удалите её вручную.', {
-      cause: error,
-    });
+    throw new Error(
+      'Не удалось прочитать сохранённые данные. Запись сохранена; проверьте хранилище или удалите её вручную.',
+      {
+        cause: error,
+      },
+    );
   }
 }
 
@@ -925,7 +928,9 @@ async function initialize() {
         elements.rememberCredentials.checked = false;
         setStatus(
           state.identified ? STATUS.connected : STATUS.disconnected,
-          state.identified ? 'Подключено · сохранённые данные удалены' : 'Сохранённые данные удалены',
+          state.identified
+            ? 'Подключено · сохранённые данные удалены'
+            : 'Сохранённые данные удалены',
         );
       },
       () => setStatus(STATUS.error, 'Не удалось удалить сохранённые данные'),

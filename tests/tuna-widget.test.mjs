@@ -199,14 +199,10 @@ test('Tuna exposes opt-in local debugging without changing the visual overlay', 
     });
     await page.route(/^http:\/\/localhost:1608\//, (route) => route.abort());
     await page.goto(
-      pathToFileURL(
-        resolve(import.meta.dirname, '../apps/tuna-widget/dist/obs-tuna-widget.html'),
-      ).href +
-        '?debug=1&poll=100&timeout=500&fail=1',
+      pathToFileURL(resolve(import.meta.dirname, '../apps/tuna-widget/dist/obs-tuna-widget.html'))
+        .href + '?debug=1&poll=100&timeout=500&fail=1',
     );
-    await page.waitForFunction(
-      () => document.querySelector('#player').dataset.play === '0',
-    );
+    await page.waitForFunction(() => document.querySelector('#player').dataset.play === '0');
     await page.waitForTimeout(650);
     assert(messages.some((line) => line.includes('[tuna-widget] poll failed')));
     assert.equal(await page.locator('#title').textContent(), '');

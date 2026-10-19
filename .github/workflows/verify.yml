@@ -25,23 +25,6 @@ jobs:
       - run: npm run browser:install
       - run: python3 -m pip install -r tooling/artwork/requirements-fonts.txt
       - run: npm run verify:ui-renewal
-      # Temporary audit tool: read the canonical output of Prettier on the CI runner.
-      - name: Export formatter corrections for review
-        if: failure()
-        run: |
-          npm run format
-          node <<'NODE'
-          const fs = require('node:fs');
-          const { execFileSync } = require('node:child_process');
-          const names = execFileSync('git', ['diff', '--name-only', '-z'], { encoding: 'utf8' })
-            .split('\0').filter(Boolean);
-          for (const path of names) {
-            if (!/\.(?:js|mjs|ts|vue|css|html|md|json|jsonc|yml)$/.test(path)) continue;
-            console.log('AUDIT_FORMATTED=' + JSON.stringify({
-              path, content: fs.readFileSync(path, 'utf8'),
-            }));
-          }
-          NODE
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -5,11 +5,7 @@
   const debug = query.get('debug') === '1';
   const trace = (event, error) => {
     if (debug)
-      console.debug(
-        '[tuna-widget]',
-        event,
-        error instanceof Error ? error.message : String(error),
-      );
+      console.debug('[tuna-widget]', event, error instanceof Error ? error.message : String(error));
   };
 
   const num = (name, fallback, min = -Infinity, max = Infinity) => {

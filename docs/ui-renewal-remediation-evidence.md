@@ -12,16 +12,16 @@
 
 ## Стабильные контракты после изменений
 
-| Контракт | Референс | Статус при статическом ревью |
-| --- | --- | --- |
-| Главная без embedded Twitch и чата | `apps/website/src/components/HomePage.vue`, `src/index.html` | Исходники обновлены; новый dist не собран |
-| Twitch и архивы доступны ссылками | `HomePage.vue` и `WebsiteLink.vue` | Ссылки сохранены в SFC |
-| Диагностический checker по-прежнему умеет iframe | `apps/website/src/assets/check.js` | Код не менялся |
-| Stream Info API v4, event и action | `apps/stream-info/src/composables/useStreamInfo.ts` + `streamerbot/action.cs` | Идентификаторы не менялись |
-| Ключи настроек Stream Info v1 | `useStreamInfo.ts` | Названия сохранены |
-| Ключ OBS Stats credentials v1 | `apps/obs-widgets/src/output-stats/main.js` | Идентификаторы сохранены, жизненный цикл изменён |
-| Имена standalone exports и OBS путей | `docs/local-installation.md`, `artwork/scenes/layout.json` | Не менялись |
-| Раздельная установка C#/Companion | `docs/remaining-work.md` | Рабочие конфигурации не тронуты |
+| Контракт                                         | Референс                                                                      | Статус при статическом ревью                     |
+| ------------------------------------------------ | ----------------------------------------------------------------------------- | ------------------------------------------------ |
+| Главная без embedded Twitch и чата               | `apps/website/src/components/HomePage.vue`, `src/index.html`                  | Исходники обновлены; новый dist не собран        |
+| Twitch и архивы доступны ссылками                | `HomePage.vue` и `WebsiteLink.vue`                                            | Ссылки сохранены в SFC                           |
+| Диагностический checker по-прежнему умеет iframe | `apps/website/src/assets/check.js`                                            | Код не менялся                                   |
+| Stream Info API v4, event и action               | `apps/stream-info/src/composables/useStreamInfo.ts` + `streamerbot/action.cs` | Идентификаторы не менялись                       |
+| Ключи настроек Stream Info v1                    | `useStreamInfo.ts`                                                            | Названия сохранены                               |
+| Ключ OBS Stats credentials v1                    | `apps/obs-widgets/src/output-stats/main.js`                                   | Идентификаторы сохранены, жизненный цикл изменён |
+| Имена standalone exports и OBS путей             | `docs/local-installation.md`, `artwork/scenes/layout.json`                    | Не менялись                                      |
+| Раздельная установка C#/Companion                | `docs/remaining-work.md`                                                      | Рабочие конфигурации не тронуты                  |
 
 ## Текущая техническая среда помощника
 

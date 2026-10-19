@@ -17,15 +17,17 @@ const targets = [
   'artwork/logo/rendered',
   'artwork/wallpapers/rendered',
 ];
-const git = (...args) =>
-  execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
-const paths = git('ls-files', '--', ...targets).split('\n').filter(Boolean).sort();
+const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
+const paths = git('ls-files', '--', ...targets)
+  .split('\n')
+  .filter(Boolean)
+  .sort();
 if (paths.length < 40)
-  throw Error(
-    'Expected committed publication and artwork artifacts; check checkout completeness.',
-  );
+  throw Error('Expected committed publication and artwork artifacts; check checkout completeness.');
 const lines = paths.map((file) => {
-  const hash = createHash('sha256').update(readFileSync(resolve(root, file))).digest('hex');
+  const hash = createHash('sha256')
+    .update(readFileSync(resolve(root, file)))
+    .digest('hex');
   return hash + '  ' + file;
 });
 const cache = resolve(root, '.build-cache/verify');

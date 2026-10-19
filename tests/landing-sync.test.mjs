@@ -17,7 +17,10 @@ test('homepage is static, has no third-party media and keeps main navigation', (
   assert.equal(index.includes('assets/stream.js'), false);
   const { document } = new JSDOM(html).window;
   assert.equal(document.querySelectorAll('a[href="https://www.twitch.tv/maseaaao"]').length, 1);
-  assert.equal(document.querySelectorAll('a[href="https://www.twitch.tv/maseaaao/videos"]').length, 1);
+  assert.equal(
+    document.querySelectorAll('a[href="https://www.twitch.tv/maseaaao/videos"]').length,
+    1,
+  );
 });
 test('checker intentionally keeps diagnostic player controls', () => {
   const source = readFileSync(resolve(root, 'apps/website/src/assets/check.js'), 'utf8');

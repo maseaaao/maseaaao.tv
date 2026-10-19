@@ -55,13 +55,19 @@ test('all six Vue pages ship readable static HTML and retain only product script
   }
 });
 
-
 test('homepage has one Twitch link, no Twitch SDK and no embedded player/chat', () => {
   const root = resolve(import.meta.dirname, '..');
   const html = readFileSync(resolve(root, 'dist/index.html'), 'utf8');
   const { document } = new JSDOM(html).window;
-  assert.equal(document.querySelectorAll('iframe, video, details, [data-stream-layout], [data-live-badge]').length, 0);
+  assert.equal(
+    document.querySelectorAll('iframe, video, details, [data-stream-layout], [data-live-badge]')
+      .length,
+    0,
+  );
   assert.equal(document.querySelectorAll('script[src]').length, 0);
   assert.equal(document.querySelectorAll('a[href="https://www.twitch.tv/maseaaao"]').length, 1);
-  assert.equal(document.querySelectorAll('a[href="https://www.twitch.tv/maseaaao/videos"]').length, 1);
+  assert.equal(
+    document.querySelectorAll('a[href="https://www.twitch.tv/maseaaao/videos"]').length,
+    1,
+  );
 });
