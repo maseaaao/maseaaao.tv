@@ -842,8 +842,11 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
     }
     state.allSaving = true;
     try {
-      if (form.subtitle.trim() !== settings.lastSubtitle && !(await persistSubtitle(form.subtitle)))
+      if (form.subtitle.trim() === settings.lastSubtitle) {
+        state.subtitleDirty = false;
+      } else if (!(await persistSubtitle(form.subtitle))) {
         return;
+      }
       if (!current()) return;
       const twitchPayload: TwitchUpdatePayload = {};
       const twitchTitle = inlineTitle('twitch', form);

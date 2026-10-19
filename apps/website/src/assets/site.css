@@ -67,6 +67,7 @@ button:focus-visible,
   flex: none;
 }
 .avatar-frame {
+  position: relative;
   width: 88px;
   height: 88px;
   border-radius: 50%;
@@ -80,7 +81,13 @@ button:focus-visible,
   height: 100%;
   object-fit: cover;
 }
+.avatar {
+  position: relative;
+  z-index: 1;
+}
 .avatar-fallback {
+  position: absolute;
+  inset: 0;
   display: grid;
   place-items: center;
   color: var(--color-surface);

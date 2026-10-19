@@ -31,12 +31,8 @@ const avatarSizes = [64, 96, 128, 192, 288]
                 decoding="async"
                 width="96"
                 height="96"
-                onerror="
-                  this.hidden = true;
-                  this.nextElementSibling.hidden = false;
-                "
               />
-              <div class="avatar-fallback" hidden aria-hidden="true">m</div>
+              <div class="avatar-fallback" aria-hidden="true">m</div>
             </div>
           </div>
 

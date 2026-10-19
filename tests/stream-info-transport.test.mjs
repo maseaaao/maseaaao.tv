@@ -347,3 +347,35 @@ test(
     }
   },
 );
+
+test(
+  'reverted subtitle edit does not send any templates write',
+  { timeout: 60000 },
+  async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'stream-info-revert-'));
+    const browser = await launchBrowser();
+    const commands = [];
+    try {
+      const file = join(directory, 'dock.html');
+      await cp(
+        new URL('../apps/stream-info/dist/change-info-streamer-bot.ru.html', import.meta.url),
+        file,
+      );
+      const context = await browser.newContext();
+      await mockTransport(context, commands);
+      const page = await context.newPage();
+      await page.goto(pathToFileURL(file).href);
+      const subtitle = page.getByLabel('Тема стрима', { exact: true });
+      await subtitle.waitFor();
+      await subtitle.fill('Временный черновик');
+      await subtitle.fill('Исходное название');
+      await page.getByRole('button', { name: 'Применить изменения', exact: true }).click();
+      await page.waitForFunction(() => document.body.textContent.includes('Изменения применены'));
+      assert.equal(commands.filter((row) => row.command === 'saveTemplates').length, 0);
+      await context.close();
+    } finally {
+      await browser.close();
+      await rm(directory, { recursive: true, force: true });
+    }
+  },
+);

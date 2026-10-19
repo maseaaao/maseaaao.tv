@@ -67,3 +67,14 @@ test('without JavaScript, visitors can still use Twitch and contact links', asyn
     await context.close();
   }
 });
+
+test('avatar remains accessible without inline JavaScript error handlers', async () => {
+  const { context, page } = await visit(390, false);
+  try {
+    assert.equal(await page.locator('.avatar[onerror]').count(), 0);
+    assert.equal(await page.locator('.avatar-fallback').isVisible(), true);
+    assert.equal(await page.locator('.avatar-fallback').getAttribute('aria-hidden'), 'true');
+  } finally {
+    await context.close();
+  }
+});

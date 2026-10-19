@@ -124,7 +124,7 @@
 
 - [x] Привести `packages/ui`/design docs, `LiveStatusBadge` comments и `docs/build-toolchain.md` в соответствие с реальными workspace exports и потребителями; не извлекать компонент до появления второго подтверждённого контракта.
 - [ ] Проверить `CategorySearch.vue` ARIA combobox/listbox с screen reader + keyboard/IME; убрать двойной Tab flow при подтверждённом неудобстве, сохраняя семантику опций.
-- [ ] Убрать ненужный inline `onerror` аватара при эквивалентном fallback и проверить строгий CSP/no-JS; аудит других HTML inline event handlers.
+- [x] Убрать ненужный inline `onerror` аватара при эквивалентном fallback и проверить строгий CSP/no-JS; аудит других HTML inline event handlers.
 - [x] Почистить устаревшие `_headers` пути (`assets/stream.js`, theme/site/brand), sitemap/lastmod и docs ссылки; проверить `wrangler` deploy paths и кеш immutable vs revalidate.
 - [x] Исправить `artwork/scenes/SETUP.md` (вес Unbounded и актуальный `.build-cache`), инструкции Python >=3.11, README продуктов, AGENTS; связать план с `docs/remaining-work.md` без переноса статуса оттуда в этот файл.
 - [ ] Проверить `npm audit` заново и triage dev advisory `braces` (7 high в предыдущем отчёте); без игнорирования предупреждений или форсирования небезопасных override.
