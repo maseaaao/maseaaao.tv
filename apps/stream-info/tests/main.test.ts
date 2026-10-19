@@ -225,6 +225,16 @@ describe('Stream Info Vue interactions', () => {
     await nextTick();
   }
 
+  it('does not replace a healthy socket when connection settings are unchanged', async () => {
+    await boot();
+    const before = mockStreamerbot.instances.length;
+    await click('Настройки');
+    await click('Сохранить подключение');
+    await flush();
+    expect(mockStreamerbot.instances).toHaveLength(before);
+    expect(roleText('status', 'Streamer.bot подключён')).not.toBeNull();
+  });
+
   it.each(['onConnect', 'onDisconnect', 'onError'] as const)(
     'ignores retired client %s without disturbing a new pending search',
     async (hook) => {
@@ -233,6 +243,7 @@ describe('Stream Info Vue interactions', () => {
       const old = required(mockStreamerbot.instances[0]);
       await setValue('Категория', 'Adventure');
       await click('Настройки');
+      await setValue('Порт', '8081');
       await click('Сохранить подключение');
       await vi.advanceTimersByTimeAsync(250);
       mockStreamerbot.deferSearch = true;
@@ -280,6 +291,7 @@ describe('Stream Info Vue interactions', () => {
       mockStreamerbot.state = structuredClone(mockStreamerbot.state);
       mockStreamerbot.state.twitch.accountName = 'Replacement account';
       await click('Настройки');
+      await setValue('Порт', '8081');
       await click('Сохранить подключение');
       if (timing === 'before') {
         finish();
@@ -316,6 +328,7 @@ describe('Stream Info Vue interactions', () => {
         }),
     );
     await click('Настройки');
+    await setValue('Порт', '8081');
     await click('Сохранить подключение');
     old.options.onDisconnect?.();
     old.options.onConnect?.();
@@ -1147,6 +1160,7 @@ describe('Stream Info Vue interactions', () => {
   async function retireOperation(lifecycle: 'reconnect' | 'dispose'): Promise<void> {
     if (lifecycle === 'reconnect') {
       if (!document.querySelector('[role="dialog"]')) await click('Настройки');
+      await setValue('Порт', '8081');
       await click('Сохранить подключение');
       await flush();
     } else {
