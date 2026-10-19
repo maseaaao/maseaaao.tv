@@ -40,7 +40,8 @@
     "test:checks": "npm run test:website && npm run test:stream-info && npm run test:companion && npm run test:local",
     "check:repository": "node tooling/check-repository.mjs",
     "build:ui-probe": "npm run build --workspace tooling/ui-portability",
-    "test:ui-probe": "npm run build:ui-probe && npm test --workspace tooling/ui-portability"
+    "test:ui-probe": "npm run build:ui-probe && npm test --workspace tooling/ui-portability",
+    "build:ui-reference": "node tooling/build-ui-reference.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
