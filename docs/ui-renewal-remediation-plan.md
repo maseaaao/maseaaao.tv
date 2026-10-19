@@ -21,6 +21,8 @@
 
 ## Этап 0. Воспроизводимая исходная точка и трассировка — QA gate
 
+- [x] Подготовить отдельный статический контрактный реестр в `docs/ui-renewal-remediation-evidence.md` и fixture `tests/ui-remediation-regressions.test.mjs` по существующим baseline; реальные чистые сборки/Windows остаются отдельно.
+
 - [ ] Зафиксировать HEAD, версии Node/npm/Python/.NET, Chromium, OBS/CEF, Streamer.bot/Companion; собрать список исходных и генерируемых файлов; проверить, что detached `ee7a967` не входит в `main`.
 - [ ] По истории/документированным baseline сравнить поведение **до/после** UI-перехода: контракт URLs, persisted keys, WebSocket/action IDs, поставляемые HTML, provider placeholders, scene transforms. Не принимать наличие старой особенности за регрессию.
 - [ ] Для каждого подтверждённого замечания добавить минимальный воспроизводимый fixture либо задокументировать, почему оно пока требует Windows/OBS/провайдера.
