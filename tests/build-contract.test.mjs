@@ -12,7 +12,7 @@ const license = readFileSync(
   'utf8',
 ).trim();
 for (const [name, weight] of [
-  ['apps/tuna-widget/dist/obs-tuna-widget.html', 600],
+  ['apps/tuna-widget/dist/obs-tuna-widget.html', 400],
   ['apps/stream-info/dist/change-info-streamer-bot.ru.html', 400],
   ['apps/obs-widgets/dist/output-stats/index.html', 600],
   ['apps/obs-widgets/dist/social-strip/index.html', 600],
