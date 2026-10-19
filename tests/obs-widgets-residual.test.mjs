@@ -42,12 +42,12 @@ test('chat and alert skins use canonical warm-light tokens without changing even
     /animation\s*:|opacity\s*:|display\s*:\s*(?:block|flex)/,
   );
 });
-test('scene CSS and its generator include the system Arial fallback', () => {
-  for (const file of ['artwork/scenes/obs-scene.css']) {
-    const css = read(file);
-    assert.match(css, /Unbounded,\s*Arial,\s*sans-serif/);
-    assert.doesNotMatch(css, /Unbounded,sans-serif/);
-  }
+test('scene CSS resolves the shared font tokens with explicit Arial fallbacks', () => {
+  const scene = read('artwork/scenes/obs-scene.css');
+  const tokens = read('packages/design/tokens.css');
+  assert.match(scene, /font-family:\s*var\(--font-body\)/);
+  assert.match(tokens, /--font-body:\s*Arial,\s*sans-serif/);
+  assert.match(tokens, /--font-display:\s*'Unbounded',\s*Arial,\s*sans-serif/);
 });
 
 test('real Chromium provider-shaped text stress fixtures load fonts and retain lifecycle styles', async () => {
@@ -323,7 +323,9 @@ test('output statistics labels and rendered statuses are Russian, without a real
     await page.waitForFunction(
       () => localStorage.getItem('easy-output-stats.credentials.v1') === null,
     );
-    assert.equal(await page.getByLabel('Запомнить', { exact: true }).isChecked(), false);
+    await page.waitForFunction(
+      () => !document.getElementById('remember-credentials').checked,
+    );
     await page.evaluate(async () => {
       await document.fonts.load('400 12px Unbounded', 'История English');
       await document.fonts.ready;
