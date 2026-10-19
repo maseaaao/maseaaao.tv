@@ -159,9 +159,13 @@ test('transient IndexedDB failure does not delete saved OBS credentials', async 
       };
     });
     await page.goto(
-      pathToFileURL(resolve(import.meta.dirname, '../apps/obs-widgets/dist/output-stats/index.html')).href,
+      pathToFileURL(
+        resolve(import.meta.dirname, '../apps/obs-widgets/dist/output-stats/index.html'),
+      ).href,
     );
-    await page.waitForFunction(() => document.querySelector('#status-text').textContent.includes('Запись сохранена'));
+    await page.waitForFunction(() =>
+      document.querySelector('#status-text').textContent.includes('Запись сохранена'),
+    );
     assert.equal(
       await page.evaluate(() => localStorage.getItem('easy-output-stats.credentials.v1') !== null),
       true,

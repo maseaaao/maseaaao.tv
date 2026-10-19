@@ -15,8 +15,11 @@ before(async () => {
       const pathnameFile = resolve(root, 'dist', '.' + decodeURIComponent(pathname));
       if (!pathnameFile.startsWith(resolve(root, 'dist') + sep)) throw Error('Invalid path');
       res.setHeader('Content-Type', {
-        '.html': 'text/html; charset=utf-8', '.css': 'text/css',
-        '.woff2': 'font/woff2', '.webp': 'image/webp', '.png': 'image/png',
+        '.html': 'text/html; charset=utf-8',
+        '.css': 'text/css',
+        '.woff2': 'font/woff2',
+        '.webp': 'image/webp',
+        '.png': 'image/png',
       }[extname(pathnameFile)] || 'application/octet-stream');
       res.end(readFileSync(pathnameFile));
     } catch {
@@ -34,13 +37,19 @@ after(async () => {
 });
 
 async function visit(width, javascript = true) {
-  const context = await browser.newContext({ viewport: { width, height: 900 }, javaScriptEnabled: javascript, reducedMotion: 'reduce' });
+  const context = await browser.newContext({
+    viewport: { width, height: 900 },
+    javaScriptEnabled: javascript,
+    reducedMotion: 'reduce',
+  });
   const page = await context.newPage();
   const external = [];
   page.on('request', (request) => {
     if (!request.url().startsWith(origin + '/')) external.push(request.url());
   });
-  await page.route('**/*', (route) => route.request().url().startsWith(origin + '/') ? route.continue() : route.abort());
+  await page.route('**/*', (route) =>
+    route.request().url().startsWith(origin + '/') ? route.continue() : route.abort(),
+  );
   await page.goto(origin + '/index.html');
   return { context, page, external };
 }
@@ -51,7 +60,11 @@ test('static homepage works at every required width without Twitch media or netw
     try {
       assert.equal(await page.locator('iframe, video, [data-stream-layout]').count(), 0);
       assert.equal(await page.locator('a[href="https://www.twitch.tv/maseaaao"]').count(), 1);
-      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, String(width));
+      assert.equal(
+        await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+        true,
+        String(width),
+      );
       assert.deepEqual(external, []);
     } finally {
       await context.close();

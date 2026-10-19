@@ -199,7 +199,9 @@ test('Tuna exposes opt-in local debugging without changing the visual overlay', 
     });
     await page.route(/^http:\/\/localhost:1608\//, (route) => route.abort());
     await page.goto(
-      pathToFileURL(resolve(import.meta.dirname, '../apps/tuna-widget/dist/obs-tuna-widget.html')).href +
+      pathToFileURL(
+        resolve(import.meta.dirname, '../apps/tuna-widget/dist/obs-tuna-widget.html'),
+      ).href +
         '?debug=1&poll=100&timeout=500&fail=1',
     );
     await page.waitForFunction(
