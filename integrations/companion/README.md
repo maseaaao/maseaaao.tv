@@ -19,8 +19,8 @@ python integrations/companion/shared/test-packages.py
 
 Артефакты:
 
-- `system-microphone/local-system-microphone-1.3.0.tgz`
-- `voice-control/local-voice-stream-1.1.0.tgz`
+- `system-microphone/local-system-microphone-1.3.1.tgz`
+- `voice-control/local-voice-stream-1.1.1.tgz`
 
 ## Обязательный барьер перед установкой
 

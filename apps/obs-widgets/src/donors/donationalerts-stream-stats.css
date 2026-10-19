@@ -1,0 +1,115 @@
+@import '@maseaaao/design/fonts.css';
+
+/* Blue / warm light · DonationAlerts stream stats / donors.
+   Provider owns rotation, opacity, layout and event duration. */
+:root {
+  --cm-surface: #f4f3ec;
+  --cm-raised: #fffef8;
+  --cm-line: #d2d1c9;
+  --cm-text: #20201e;
+  --cm-muted: #60605a;
+  --cm-accent: #1616d9;
+  --cm-corner-size: 20px;
+  --cm-corner-stroke: 2px;
+}
+html,
+body {
+  margin: 0;
+  background: transparent !important;
+}
+
+body {
+  font-family: Arial, sans-serif !important;
+}
+.widget-stream-stats {
+  box-sizing: border-box;
+  position: relative;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 12px;
+}
+.widget-stream-stats .fade-move {
+  transition-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.widget-stream-stats .stats-list {
+  width: fit-content !important;
+  max-width: 100%;
+}
+.widget-stream-stats .stats-list-item {
+  position: relative;
+  box-sizing: border-box;
+  width: fit-content;
+  max-width: 100%;
+  padding: 6px 12px;
+  background: #f4f3ec;
+  border: 1px solid var(--cm-line);
+  border-radius: 12px;
+}
+.widget-stream-stats .stats-list-item::before {
+  content: none;
+}
+.widget-stream-stats .stats-item-main-row,
+.widget-stream-stats > .stats-main-row {
+  font-family: Unbounded, Arial, sans-serif !important;
+  font-size: clamp(32px, 3.6vw, 36px) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  color: var(--cm-text) !important;
+  background: none;
+  -webkit-text-fill-color: currentcolor;
+  -webkit-text-stroke: 0 !important;
+  filter: none;
+  text-shadow: none;
+  overflow-wrap: anywhere;
+}
+.widget-stream-stats .stats-item-additional-row {
+  font-family: Arial, sans-serif !important;
+  font-size: clamp(24px, 2.6vw, 26px) !important;
+  font-weight: 400 !important;
+  line-height: 1.2;
+  margin-top: 4px;
+  color: var(--cm-muted) !important;
+  background: none;
+  -webkit-text-stroke: 0 !important;
+  filter: none;
+  text-shadow: none;
+  overflow-wrap: anywhere;
+}
+
+/* Compact donor viewport: at most two text lines, including a subtitle. */
+.widget-stream-stats .stats-item-main-row,
+.widget-stream-stats > .stats-main-row {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.widget-stream-stats .stats-list-item:has(.stats-item-additional-row) .stats-item-main-row {
+  -webkit-line-clamp: 1;
+}
+.widget-stream-stats .stats-item-additional-row {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* DonationAlerts Vue transition-group: fade out before the next name fades in.
+   Keep leaving cards outside normal flow; do not override the provider's move transform. */
+.widget-stream-stats .stats-list {
+  position: relative;
+  overflow: visible;
+}
+
+.widget-stream-stats .stats-list-item.fade-in-out-leave,
+.widget-stream-stats .stats-list-item.fade-in-out-leave-active,
+.widget-stream-stats .stats-list-item.fade-in-out-leave-to {
+  position: absolute;
+}
+.widget-stream-stats .stats-list-item.fade-in-out-leave-active {
+  transition: opacity 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.widget-stream-stats .stats-list-item.fade-in-out-enter-active {
+  transition: opacity 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) 0.35s;
+}

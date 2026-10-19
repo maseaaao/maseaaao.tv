@@ -1,7 +1,8 @@
-@import url("../../packages/design/brand.css");
+@import '../../packages/design/brand.css';
 
 :root {
   color-scheme: light;
+
   --panel-width: 320px;
   --panel-height: 64px;
 }
@@ -43,7 +44,10 @@ body {
 }
 
 .twitch-panel__mark,
-.twitch-panel__title { position: relative; z-index: 1; }
+.twitch-panel__title {
+  position: relative;
+  z-index: 1;
+}
 
 .twitch-panel__mark {
   width: 40px;
@@ -61,7 +65,7 @@ body {
 
 .twitch-panel__mark::before,
 .twitch-panel__mark::after {
-  content: "";
+  content: '';
   position: absolute;
   top: 50%;
   left: 50%;
@@ -71,14 +75,14 @@ body {
 .twitch-panel__mark--about::before {
   width: 18px;
   height: 18px;
-  background: currentColor;
+  background: currentcolor;
   clip-path: polygon(50% 0, 64% 36%, 100% 50%, 64% 64%, 50% 100%, 36% 64%, 0 50%, 36% 36%);
 }
 
 .twitch-panel__mark--rules::before {
   width: 16px;
   height: 18px;
-  border: 2px solid currentColor;
+  border: 2px solid currentcolor;
   border-radius: 0;
 }
 
@@ -86,21 +90,32 @@ body {
   width: 8px;
   height: 2px;
   border-radius: 0;
-  background: currentColor;
-  box-shadow: 0 5px 0 currentColor;
+  background: currentcolor;
+  box-shadow: 0 5px 0 currentcolor;
 }
 
 .twitch-panel__mark--donate::before {
   width: 18px;
   height: 17px;
-  background: currentColor;
-  clip-path: polygon(50% 100%, 7% 53%, 0 30%, 10% 8%, 29% 0, 50% 18%, 71% 0, 90% 8%, 100% 30%, 93% 53%);
+  background: currentcolor;
+  clip-path: polygon(
+    50% 100%,
+    7% 53%,
+    0 30%,
+    10% 8%,
+    29% 0,
+    50% 18%,
+    71% 0,
+    90% 8%,
+    100% 30%,
+    93% 53%
+  );
 }
 
 .twitch-panel__mark--devices::before {
   width: 18px;
   height: 12px;
-  border: 2px solid currentColor;
+  border: 2px solid currentcolor;
   border-radius: 0;
   transform: translate(-50%, calc(-50% - 3px));
 }
@@ -109,7 +124,7 @@ body {
   width: 12px;
   height: 2px;
   border-radius: 0;
-  background: currentColor;
+  background: currentcolor;
   transform: translate(-50%, calc(-50% + 8px));
 }
 
@@ -117,8 +132,10 @@ body {
   width: 3px;
   height: 12px;
   border-radius: 0;
-  background: currentColor;
-  box-shadow: 6px -4px 0 currentColor, 12px 3px 0 currentColor;
+  background: currentcolor;
+  box-shadow:
+    6px -4px 0 currentcolor,
+    12px 3px 0 currentcolor;
   transform: translate(-9px, -50%);
 }
 
@@ -126,14 +143,16 @@ body {
   width: 18px;
   height: 2px;
   border-radius: 0;
-  background: currentColor;
-  box-shadow: 0 -6px 0 currentColor, 0 6px 0 currentColor;
+  background: currentcolor;
+  box-shadow:
+    0 -6px 0 currentcolor,
+    0 6px 0 currentcolor;
 }
 
 .twitch-panel__mark--settings::after {
   width: 18px;
   height: 18px;
-  border: 2px solid currentColor;
+  border: 2px solid currentcolor;
   clip-path: polygon(0 0, 40% 0, 40% 100%, 0 100%, 0 0, 60% 0, 100% 0, 100% 100%, 60% 100%, 60% 0);
 }
 
@@ -158,7 +177,17 @@ body {
   text-overflow: ellipsis;
 }
 
-.twitch-panel__line { display: none; }
+.twitch-panel__line {
+  display: none;
+}
 
-.twitch-panel__mark { color: var(--surface); background: var(--accent); border-radius: 10px; }
-.twitch-panel__title { font-weight: 600; font-size: 15px; line-height: 1.3; }
+.twitch-panel__mark {
+  color: var(--surface);
+  background: var(--accent);
+  border-radius: 10px;
+}
+.twitch-panel__title {
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.3;
+}

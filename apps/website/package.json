@@ -3,5 +3,13 @@
   "private": true,
   "scripts": {
     "build": "node ../../tooling/build-website.mjs"
+  },
+  "type": "module",
+  "dependencies": {
+    "@maseaaao/design": "1.0.0",
+    "@maseaaao/ui": "1.0.0"
+  },
+  "devDependencies": {
+    "vite": "6.4.3"
   }
 }

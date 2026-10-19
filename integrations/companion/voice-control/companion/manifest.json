@@ -4,7 +4,7 @@
   "type": "connection",
   "shortname": "voice",
   "description": "Discord and Steam output sessions and OBS-authoritative protected stream button",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "license": "MIT",
   "maintainers": [
     {
@@ -22,14 +22,8 @@
     }
   },
   "manufacturer": "Local",
-  "products": [
-    "Voice and Stream"
-  ],
-  "keywords": [
-    "Microphone",
-    "Windows",
-    "Mute"
-  ],
+  "products": ["Voice and Stream"],
+  "keywords": ["Microphone", "Windows", "Mute"],
   "isPrerelease": false,
   "repository": "",
   "bugs": ""

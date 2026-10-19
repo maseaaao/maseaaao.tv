@@ -1,0 +1,29 @@
+:root {
+  color-scheme: light;
+
+  --ink: #1616d9;
+  --surface: #f4f3ec;
+  --surface-solid: #f4f3ec;
+  --text: #20201e;
+  --dim: #60605a;
+  --line: #d2d1c9;
+  --line-strong: #83837b;
+  --accent: #1616d9;
+  --accent-soft: #e8e8fc;
+  --font-display: 'Unbounded', Arial, sans-serif;
+  --font-body: Arial, sans-serif;
+  --hud-bg: var(--surface);
+  --hud-surface: #fffef8;
+  --hud-raised: #eeede4;
+  --hud-border: var(--line);
+  --hud-text: var(--text);
+  --hud-muted: var(--dim);
+  --hud-accent: var(--accent);
+  --hud-success: #176548;
+  --hud-warning: #815005;
+  --hud-danger: #a42a36;
+  --hud-display: var(--font-display);
+  --hud-body: var(--font-body);
+  --hud-mono: Arial, sans-serif;
+  --hud-radius: 12px;
+}

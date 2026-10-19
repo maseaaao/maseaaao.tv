@@ -1,23 +1,7 @@
-import { defineConfig } from "vite";
-import { viteSingleFile } from "vite-plugin-singlefile";
-import { fileURLToPath, URL } from "node:url";
-
-export default defineConfig({
-  root: "src",
-  base: "./",
-  plugins: [viteSingleFile()],
-  build: {
-    outDir: "../dist",
-    emptyOutDir: false,
-    cssCodeSplit: false,
-    assetsInlineLimit: 100_000_000,
-    rollupOptions: {
-      input: {
-        "change-info-streamer-bot": fileURLToPath(new URL("./src/index.html", import.meta.url)),
-      },
-      output: {
-        inlineDynamicImports: true,
-      },
-    },
-  },
+import { standaloneConfig } from '@maseaaao/build-config';
+import { fileURLToPath } from 'node:url';
+export default standaloneConfig({
+  root: fileURLToPath(new URL('./src', import.meta.url)),
+  outDir: '../dist',
+  fileName: 'change-info-streamer-bot.ru.html',
 });

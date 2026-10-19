@@ -56,11 +56,11 @@ export interface ActionSummary {
   enabled: boolean;
 }
 
-export type Platform = "twitch";
+export type Platform = 'twitch';
 
 export interface AllForm {
   twitchTitle: string;
-  twitchTitleMode: "subtitle" | "full";
+  twitchTitleMode: 'subtitle' | 'full';
   subtitle: string;
   twitchCategory: TwitchCategory | null;
   twitchTags: string[];

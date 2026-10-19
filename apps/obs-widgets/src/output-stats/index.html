@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="referrer" content="no-referrer" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'nonce-MgyZalLFWAZRipi5-O9bEdvvw-6jjJU5'; style-src 'nonce-MgyZalLFWAZRipi5-O9bEdvvw-6jjJU5'; script-src-attr 'none'; style-src-attr 'none'; connect-src ws: wss:; img-src data:; font-src data:; object-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'none'; manifest-src 'none'; media-src 'none'; require-trusted-types-for 'script'; trusted-types 'none'"
+    />
+    <title>Статистика выходов Aitum 0.3.1 (неофициальная)</title>
+  </head>
+  <body>
+    <div class="header-bar">
+      <div class="status-group" role="status" aria-live="polite">
+        <div id="status-dot" data-status="disconnected"></div>
+        <span id="status-text">Отключено</span>
+      </div>
+      <input
+        type="text"
+        id="target-url"
+        value="ws://localhost:4455/"
+        aria-label="Адрес OBS WebSocket"
+        autocomplete="off"
+        autocapitalize="none"
+        spellcheck="false"
+      />
+      <input
+        type="password"
+        id="target-password"
+        placeholder="Пароль"
+        aria-label="Пароль OBS WebSocket"
+        autocomplete="current-password"
+      />
+      <label class="remember-control">
+        <input id="remember-credentials" type="checkbox" />
+        <span>Запомнить</span>
+      </label>
+      <button id="connect-button" type="button">ПОДКЛЮЧИТЬ</button>
+      <button id="forget-button" class="secondary" type="button">ЗАБЫТЬ</button>
+    </div>
+
+    <div class="container">
+      <div class="row-header grid-layout">
+        <span>Выход</span>
+        <span class="header-cell" title="Целевой FPS по пиковым значениям сессии">Цель</span>
+        <span class="header-cell" title="Кадров в секунду сейчас">FPS</span>
+        <span class="header-cell" title="Текущий битрейт отправки">Битрейт</span>
+        <span class="header-cell" title="Потеря кадров (сеть и отказы)">Потери сети</span>
+        <span class="header-cell" title="Накопленные задержки кодирования и обработки"
+          >Кодирование</span
+        >
+        <span class="header-cell" title="Общая стабильность трансляции">Состояние</span>
+        <span class="header-cell" title="Состояние процесса">Статус</span>
+      </div>
+      <div id="display"></div>
+
+      <div class="history-section">
+        <div class="history-title">ИСТОРИЯ СЕССИИ (ЖУРНАЛ)</div>
+        <div id="history-log"></div>
+      </div>
+    </div>
+
+    <script type="module" src="./main.js"></script
+  ></body>
+</html>

@@ -3,6 +3,13 @@
   "version": "1.1.0",
   "private": true,
   "scripts": {
-    "build": "node build.mjs"
+    "build": "vite build"
+  },
+  "type": "module",
+  "dependencies": {
+    "@maseaaao/design": "1.0.0"
+  },
+  "devDependencies": {
+    "@maseaaao/build-config": "1.0.0"
   }
 }

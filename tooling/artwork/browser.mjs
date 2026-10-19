@@ -1,5 +1,5 @@
-import {existsSync} from "node:fs";
-import {chromium} from "playwright-core";
+import { existsSync } from 'node:fs';
+import { chromium } from 'playwright-core';
 
 export function launchBrowser() {
   const customExecutable = process.env.CHROME_BIN || process.env.CHROME_PATH;
@@ -12,6 +12,6 @@ export function launchBrowser() {
   return chromium.launch({
     executablePath,
     headless: true,
-    args: ["--no-sandbox", "--disable-dev-shm-usage"],
+    args: ['--no-sandbox', '--disable-dev-shm-usage'],
   });
 }

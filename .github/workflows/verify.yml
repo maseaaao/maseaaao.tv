@@ -9,41 +9,39 @@ permissions:
   contents: read
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version-file: .node-version
           cache: npm
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
       - run: npm ci
       - run: npm run browser:install
-      - run: npm run build:website
+      - run: npm run build:all
       - run: npm run check
-      - run: npm run check:stream-info
-      - run: npm test
-      - run: npm run build:stream-info
-      - run: npm run build:tuna
+      - run: npm run test:checks
       - name: Verify committed website publication
-        run: git diff --exit-code -- dist apps/website/public/assets/brand.css apps/website/public/assets/fonts apps/obs-widgets/output-stats/index.html apps/stream-info/dist apps/stream-info/streamerbot-import.txt
+        run: git diff --exit-code -- dist apps/obs-widgets/dist apps/stream-info/dist apps/tuna-widget/dist apps/stream-info/streamerbot-import.txt
       - uses: actions/upload-artifact@v4
         with:
           name: standalone-tools
           path: |
             apps/stream-info/dist/*.html
             apps/tuna-widget/dist/*.html
+            apps/obs-widgets/dist/**
   companion-build:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version-file: .node-version
           cache: npm
       - run: npm ci
       - run: npm run prepare:companion-libs
