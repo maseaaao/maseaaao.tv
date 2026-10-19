@@ -113,6 +113,8 @@
 
 ## Этап 7. Полноценный дизайн-ревью artwork и всех экранов — QA/design gate
 
+- [x] Подготовить переносимый Chrome screenshot-скрипт без локального `reserve.py`: `LANDING_DETAIL_OUT=/tmp/ui-shots node --test tests/landing-corrections.test.mjs`. Он создаёт изображения, но их визуальная оценка ещё не выполнена.
+
 - [ ] Проверить конечные screenshots сайта, Stream Info, OBS Output Stats, social-strip, Tuna, Streamlabs/DonationAlerts, всех 12 сцен, баннеров, панелей Twitch, OG/subscribe, favicon/avatar и 4K обоев. **Не** подменять дизайн-ревью чтением CSS.
 - [ ] Для Chrome/Chromium закрепить snapshots на 320/390/540/768/900/1024/1440/1920 px, 200% zoom, focus/keyboard, reduced motion, forced colors (где применимо); проверить контраст, overflow, читаемость, визуальную иерархию и одинаковые tokens.
 - [ ] Для OBS-композиций проверить изображения **вместе с реальными размерами и transform источников**, alpha, corners, QR, safe-zone, overlays и масштабирование 2560×1440/1080×1920. Слои не менять вслепую.
