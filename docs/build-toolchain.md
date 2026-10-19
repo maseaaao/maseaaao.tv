@@ -4,7 +4,7 @@
 
 | Пакет                    | Контракт                                                                                                                                         |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `@maseaaao/design`       | `brand.css`, `fonts.css`, `tokens.css`, `fonts/*`, `license`. Единственный источник Unbounded 600, полного Unicode-покрытия и OFL                |
+| `@maseaaao/design`       | `brand.css`, `fonts.css`, `tokens.css`, `fonts/*`, `license`. Единственный источник Unbounded 400/600, полного Unicode-покрытия и OFL            |
 | `@maseaaao/ui`           | `accessibility.css`: совпадающий `.sr-only` на сайте и в Stream Info. Остальные элементы остаются локальными, пока общий контракт не подтверждён |
 | `@maseaaao/build-config` | `standaloneConfig` для Vite + singlefile, `providerPlugins` для PostCSS. Только build/dev-зависимость                                            |
 
@@ -12,14 +12,14 @@
 
 ## Источники и результаты
 
-| Команда                                                  | Источник                                            | Результат                                                                                  |
-| -------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `build:website`                                          | apps/website/src + неизменяемая apps/website/public | корневой dist; прежние маршруты страниц, content hash у bundles                            |
-| `build:stream-info`                                      | apps/stream-info/src                                | dist/change-info-streamer-bot.ru.html и отдельный streamerbot-import.txt                   |
-| `build:tuna`                                             | apps/tuna-widget/src                                | dist/obs-tuna-widget.html                                                                  |
-| `build:widgets`                                          | apps/obs-widgets/src                                | apps/obs-widgets/dist: два standalone HTML, provider CSS/HTML/JS, sounds и transparent.png |
-| `build:artwork`                                          | artwork + шаблоны сцен/layout.json                  | .build-cache/artwork; автономные HTML для просмотра и screenshot                           |
-| `render:scenes`, `render:banners`, другие render-команды | подготовленные artwork HTML                         | существующие пути artwork/.../rendered и public images сайта                               |
+| Команда                                                  | Источник                                             | Результат                                                                                  |
+| -------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `build:website`                                          | apps/website/src SFC → Vue SSR + apps/website/public | корневой dist; прежние маршруты страниц, content hash у bundles                            |
+| `build:stream-info`                                      | apps/stream-info/src                                 | dist/change-info-streamer-bot.ru.html и отдельный streamerbot-import.txt                   |
+| `build:tuna`                                             | apps/tuna-widget/src                                 | dist/obs-tuna-widget.html                                                                  |
+| `build:widgets`                                          | apps/obs-widgets/src                                 | apps/obs-widgets/dist: два standalone HTML, provider CSS/HTML/JS, sounds и transparent.png |
+| `build:artwork`                                          | artwork + шаблоны сцен/layout.json                   | .build-cache/artwork; автономные HTML для просмотра и screenshot                           |
+| `render:scenes`, `render:banners`, другие render-команды | подготовленные artwork HTML                          | существующие пути artwork/.../rendered и public images сайта                               |
 
 `build:all` явно собирает Tuna, Stream Info, виджеты и сайт. Порядок workspaces не используется как планировщик. Сборки не переписывают исходники других продуктов. Каждый standalone HTML владеет отдельным output, поэтому соседние результаты не удаляются. Временные artwork HTML и staging находятся вне source.
 
@@ -70,3 +70,7 @@ Playwright и Sharp используются через один renderImage; IC
 - Выполнены render:scenes и render:favicon; размеры, alpha, QR и соответствие сцен исходникам проверены тестами. Скриншоты сайта и Stream Info визуально проверены.
 - C#-тесты в этой Linux-среде не подтверждены: .NET CLI ранее завершался ошибкой чтения сведений о процессе. Windows-сборка помощников/архивов и GitHub Actions для новых коммитов не проверены. Полный npm test не объявляется прошедшим вместо этих проверок.
 - Рабочие OBS/Streamer.bot/Companion и CSS у провайдеров не обновлялись. Изменения подготовлены локально; предыдущий отказ автоматического разрешения push не обходился.
+
+## Перенос сайта на Vue SSR
+
+`apps/website/vite.config.mjs` использует общий `prepareVuePages`: официальный SSR готовит контент и стили SFC в собственный build cache, затем обычная web-сборка Vite публикует шесть готовых HTML. `buildVuePages` использует ту же подготовку для автономных fixtures. Сайт выбирает внешний WOFF2 Unbounded 400 с content hash; Vue runtime и компилятор в клиентских chunks запрещены. Продуктовые `stream.js`/`check.js`, маршруты и SEO сохранены. Старый `theme.css` удалён; композиция использует семантические токены без второй темы.

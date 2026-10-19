@@ -7,9 +7,6 @@ import { JSDOM } from 'jsdom';
 
 const root = resolve(import.meta.dirname, '..');
 const read = (name) => readFileSync(resolve(root, name), 'utf8');
-const font = readFileSync(
-  new URL(import.meta.resolve('@maseaaao/design/fonts/unbounded-600.woff2')),
-);
 const license = readFileSync(
   new URL(import.meta.resolve('@maseaaao/design/license')),
   'utf8',
@@ -45,8 +42,12 @@ for (const [name, weight] of [
 test('the website publishes the canonical font under a fingerprinted URL and preloads the same bytes', () => {
   const { document } = new JSDOM(read('dist/index.html')).window;
   const href = document.querySelector('link[rel="preload"][as="font"]').getAttribute('href');
-  assert.match(href, /^\/bundles\/unbounded-600-[\w-]+\.woff2$/);
-  assert(readFileSync(resolve(root, 'dist', href.slice(1))).equals(font));
+  assert.match(href, /^\/bundles\/unbounded-400-[\w-]+\.woff2$/);
+  assert(
+    readFileSync(resolve(root, 'dist', href.slice(1))).equals(
+      readFileSync(new URL(import.meta.resolve('@maseaaao/design/fonts/unbounded-400.woff2'))),
+    ),
+  );
   assert(read('dist/_headers').includes('/bundles/*'));
   assert.equal(read('dist/licenses/Unbounded-OFL.txt').trim(), license);
 });

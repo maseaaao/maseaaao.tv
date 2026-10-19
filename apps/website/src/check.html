@@ -10,66 +10,12 @@
     <link rel="icon" href="favicon.ico?v=rounded-1" />
     <link rel="stylesheet" href="assets/design.css" />
     <link rel="stylesheet" href="assets/site.css" />
-    <link rel="stylesheet" href="assets/theme.css" />
+
+    <!--page-styles-->
   </head>
 
   <body class="checker">
-    <header>
-      <h1>Stream Checker</h1>
-      <div class="global-actions">
-        <button type="button" data-action="add-all">Добавить все</button>
-        <button type="button" data-action="remove-all" data-kind="remove">Удалить все</button>
-      </div>
-    </header>
-
-    <main class="grid">
-      <section class="card" data-platform="youtube">
-        <div class="card-header">
-          <div>
-            <div class="title">YouTube</div>
-            <div class="status" data-status>iframe не создан</div>
-          </div>
-
-          <div class="actions">
-            <button type="button" data-action="add">Добавить</button>
-            <button type="button" data-action="remove" data-kind="remove">Удалить</button>
-            <a
-              class="button"
-              href="https://www.youtube.com/channel/UCyJNPWpOcPfMo5csKa27yGg/live"
-              target="_blank"
-              rel="noreferrer"
-              >Открыть</a
-            >
-          </div>
-        </div>
-
-        <div class="slot" data-slot>
-          <div class="placeholder">YouTube-плеер не загружен</div>
-        </div>
-      </section>
-
-      <section class="card" data-platform="twitch">
-        <div class="card-header">
-          <div>
-            <div class="title">Twitch</div>
-            <div class="status" data-status>iframe не создан</div>
-          </div>
-
-          <div class="actions">
-            <button type="button" data-action="add">Добавить</button>
-            <button type="button" data-action="remove" data-kind="remove">Удалить</button>
-            <a class="button" href="https://www.twitch.tv/maseaaao" target="_blank" rel="noreferrer"
-              >Открыть</a
-            >
-          </div>
-        </div>
-
-        <div class="slot" data-slot>
-          <div class="placeholder">Twitch-плеер не загружен</div>
-        </div>
-      </section>
-    </main>
-
+    <!--page-content-->
     <script type="module" src="assets/check.js"></script>
   </body>
 </html>

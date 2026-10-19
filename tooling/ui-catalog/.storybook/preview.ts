@@ -1,5 +1,6 @@
 import type { Preview } from '@storybook/vue3-vite';
 import '@maseaaao/design/tokens.css';
+import '@maseaaao/ui/accessibility.css';
 import '@maseaaao/design/fonts-400.css';
 import '@maseaaao/design/fonts-600.css';
 

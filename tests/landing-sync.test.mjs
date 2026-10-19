@@ -227,9 +227,11 @@ test('upstream feature contract rejects removed Twitch hooks', () => {
   }
 });
 
-test('approved Twitch caption and donation label survive synchronization', () => {
-  assert.ok(html.includes('Смотреть стримы'), 'lost local Twitch supporting copy');
-  assert.ok(html.includes('Поддержать стрим'));
+test('approved watch and support labels survive the Vue redesign', () => {
+  assert.ok(html.includes('Зайди на стрим'));
+  assert.ok(html.includes('Поддержать'));
+  assert.ok(!html.includes('Стример и автор'));
+  assert.ok(html.includes('Сообщество ЛОББИ'));
   assert.ok(!html.includes('Во время трансляции'));
 });
 
@@ -269,17 +271,12 @@ test('external destinations and executable scripts survive; approved copy and SE
     assert.equal(scripts.length, 1);
     assert.match(scripts[0].src, /^\/bundles\/index.html-[\w-]+\.js$/);
     assert.equal(await current.page.locator('script[type="module"][src]').count(), 1);
-    for (const copy of [
-      'Стример и автор',
-      'Анонсы, новости, розыгрыши',
-      'Записи и нарезки',
-      'Поддержать стрим',
-    ]) {
+    for (const copy of ['Стример', 'Зайди на стрим', 'Поддержать', 'Сообщество ЛОББИ']) {
       assert.ok(actual.text.includes(copy.replace(/\s+/g, '')), copy);
     }
     assert.deepEqual(
       await current.page.locator('.tiles--secondary .tile__title').allTextContents(),
-      ['Лобби', 'YouTube', 'Instagram', 'TikTok'],
+      ['Telegram', 'YouTube', 'Сообщество ЛОББИ', 'Instagram', 'TikTok', 'Записи стримов'],
     );
     assert.equal(
       await current.page.locator('.tile--instagram .tile__meta,.tile--tiktok .tile__meta').count(),
@@ -304,7 +301,7 @@ test('only the full-character-set local accent font is requested', async () => {
   const { context, traffic } = await newPage();
   try {
     const requests = traffic.fonts;
-    assert.ok(requests.some((request) => /\/unbounded-600-[\w-]+\.woff2$/.test(request.url)));
+    assert.ok(requests.some((request) => /\/unbounded-400-[\w-]+\.woff2$/.test(request.url)));
     for (const request of requests) {
       assert.equal(request.status, 200);
       assert.ok(request.url.startsWith(origin));

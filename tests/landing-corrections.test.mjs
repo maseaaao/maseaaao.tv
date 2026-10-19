@@ -296,7 +296,12 @@ test('enlarged landing text stays readable without horizontal overflow in every 
           const separated = await page.evaluate(() => {
             const badge = document.querySelector('.live-badge').getBoundingClientRect();
             const copy = document.querySelector('.identity__copy').getBoundingClientRect();
-            return badge.right <= copy.left || badge.bottom <= copy.top || badge.top >= copy.bottom;
+            return (
+              badge.right <= copy.left ||
+              badge.left >= copy.right ||
+              badge.bottom <= copy.top ||
+              badge.top >= copy.bottom
+            );
           });
           assert.equal(
             separated,
@@ -457,7 +462,7 @@ if (process.env.LANDING_DETAIL_OUT) {
           donation: {
             background: getComputedStyle(document.querySelector('.tile--donationalerts'))
               .backgroundColor,
-            ink: getComputedStyle(document.querySelector('.tile--donationalerts .tile__meta'))
+            ink: getComputedStyle(document.querySelector('.tile--donationalerts .tile__title'))
               .color,
           },
         }));

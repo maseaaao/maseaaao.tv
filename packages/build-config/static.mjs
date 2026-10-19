@@ -36,6 +36,45 @@ export async function buildVuePages({ root, ssrEntry, pages, outDir, cacheDir })
       throw Error(`Invalid or duplicate output: ${page.output}`);
     names.add(page.output);
   }
+  const { renderPage, styleFile } = await prepareVuePages({ root, ssrEntry, cacheDir });
+  await mkdir(outDir, { recursive: true });
+  for (const page of pages) {
+    const source = resolve(root, page.source);
+    const css = relative(dirname(source), styleFile).split(sep).join('/');
+    const config = vueStandaloneConfig({
+      root,
+      outDir: join(cacheDir, page.output),
+      fileName: basename(page.output),
+      budgets: page.budgets,
+    });
+    config.build.modulePreload = false;
+    config.build.rollupOptions = { input: source };
+    config.plugins.push({
+      name: 'vue-static-content',
+      transformIndexHtml: {
+        order: 'pre',
+        async handler(html) {
+          const rendered = await renderPage(page.output);
+          if (typeof rendered !== 'string') throw Error('renderPage must return HTML');
+          return replaceMarker(
+            replaceMarker(html, '<!--page-content-->', rendered),
+            '<!--page-styles-->',
+            `<link rel="stylesheet" href="${encodeURI(css)}">`,
+          );
+        },
+      },
+    });
+    await build({ ...config, configFile: false });
+    await mkdir(dirname(join(outDir, page.output)), { recursive: true });
+    await cp(join(cacheDir, page.output, basename(page.output)), join(outDir, page.output));
+  }
+}
+
+/** Compile build-time Vue pages once; consumers choose standalone or web delivery. */
+export async function prepareVuePages({ root, ssrEntry, cacheDir }) {
+  root = resolve(root);
+  cacheDir = resolve(cacheDir);
+  outsideSource(root, cacheDir);
   const ssrDir = join(cacheDir, 'ssr');
   await build({
     configFile: false,
@@ -59,35 +98,5 @@ export async function buildVuePages({ root, ssrEntry, pages, outDir, cacheDir })
     pathToFileURL(join(ssrDir, 'render.mjs')).href + '?build=' + Date.now()
   );
   if (typeof module.renderPage !== 'function') throw Error('SSR entry must export renderPage');
-  await mkdir(outDir, { recursive: true });
-  for (const page of pages) {
-    const source = resolve(root, page.source);
-    const css = relative(dirname(source), join(ssrDir, 'style.css')).split(sep).join('/');
-    const config = vueStandaloneConfig({
-      root,
-      outDir: join(cacheDir, page.output),
-      fileName: basename(page.output),
-      budgets: page.budgets,
-    });
-    config.build.modulePreload = false;
-    config.build.rollupOptions = { input: source };
-    config.plugins.push({
-      name: 'vue-static-content',
-      transformIndexHtml: {
-        order: 'pre',
-        async handler(html) {
-          const rendered = await module.renderPage(page.output);
-          if (typeof rendered !== 'string') throw Error('renderPage must return HTML');
-          return replaceMarker(
-            replaceMarker(html, '<!--page-content-->', rendered),
-            '<!--page-styles-->',
-            `<link rel="stylesheet" href="${encodeURI(css)}">`,
-          );
-        },
-      },
-    });
-    await build({ ...config, configFile: false });
-    await mkdir(dirname(join(outDir, page.output)), { recursive: true });
-    await cp(join(cacheDir, page.output, basename(page.output)), join(outDir, page.output));
-  }
+  return { renderPage: module.renderPage, styleFile: join(ssrDir, 'style.css') };
 }

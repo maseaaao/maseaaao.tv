@@ -2,14 +2,28 @@
   "name": "@maseaaao/website",
   "private": true,
   "scripts": {
-    "build": "node ../../tooling/build-website.mjs"
+    "build": "node ../../tooling/build-website.mjs",
+    "check": "vue-tsc --noEmit"
   },
   "type": "module",
   "dependencies": {
     "@maseaaao/design": "1.0.0",
-    "@maseaaao/ui": "1.0.0"
+    "@maseaaao/ui": "1.0.0",
+    "vue": "3.5.44"
   },
   "devDependencies": {
-    "vite": "6.4.3"
+    "vite": "6.4.3",
+    "@maseaaao/build-config": "1.0.0",
+    "vue-tsc": "3.0.8",
+    "typescript": "5.8.3"
+  },
+  "exports": {
+    "./HomePage.vue": "./src/components/HomePage.vue",
+    "./CheckerPage.vue": "./src/components/CheckerPage.vue",
+    "./DocsPage.vue": "./src/components/DocsPage.vue",
+    "./ToolsPage.vue": "./src/components/ToolsPage.vue",
+    "./StreamInfoPage.vue": "./src/components/StreamInfoPage.vue",
+    "./TunaPage.vue": "./src/components/TunaPage.vue",
+    "./ui.css": "./src/assets/site.css"
   }
 }

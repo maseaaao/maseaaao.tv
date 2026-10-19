@@ -2,7 +2,7 @@
 
 Общаться по-русски. Начинать с README.md и документации затронутой подсистемы.
 
-- `apps/website/src` — редактируемый сайт без UI-фреймворка; `apps/website/public` содержит неизменяемые публичные ресурсы. После изменения выполнять `npm run build:website`; корневой `dist` — отслеживаемый результат для Cloudflare.
+- `apps/website/src` — страницы Vue SFC, предварительно отрендеренные официальным Vue SSR в готовый HTML; клиентский Vue runtime сайту не нужен; `apps/website/public` содержит неизменяемые публичные ресурсы. После изменения выполнять `npm run build:website`; корневой `dist` — отслеживаемый результат для Cloudflare.
 - `apps/stream-info` — полный продукт с C#, импортом и русским интерфейсом. Проверки из корня: `check:stream-info`, `test:stream-info`, `build:stream-info`.
 - `apps/tuna-widget` — автономный виджет; сохранять тайминги, ретраи, ограничение попыток и параметры URL. Проверки: `build:tuna`, `node --test tests/tuna-widget.test.mjs`.
 - `packages/design` — единственный источник общей палитры и шрифтов; `packages/ui` — подтверждённые общие UI-примитивы; `packages/build-config` — только конфигурации сборки. Интерфейсы только светлые.

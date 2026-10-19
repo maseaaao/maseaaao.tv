@@ -12,7 +12,8 @@
     "change-info-streamer-bot": "1.4.0",
     "@maseaaao/design": "1.0.0",
     "@maseaaao/ui": "1.0.0",
-    "vue": "3.5.44"
+    "vue": "3.5.44",
+    "@maseaaao/website": "*"
   },
   "devDependencies": {
     "@maseaaao/build-config": "1.0.0",
