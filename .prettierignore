@@ -1,0 +1,11 @@
+node_modules
+package-lock.json
+dist
+**/dist
+.build-cache
+build
+**/rendered
+apps/stream-info/streamerbot-import.txt
+**/*.tgz
+**/*.exe
+**/*.dll

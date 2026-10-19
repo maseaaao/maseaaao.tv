@@ -8,11 +8,13 @@
     "generate-import": "node scripts/generate-import.mjs && node scripts/verify-import.mjs",
     "check": "tsc --noEmit",
     "test": "vitest run && dotnet run --project tests/csharp/StreamerbotTests.csproj --configuration Release",
-    "build": "npm run generate-import && npm run check && node scripts/build.mjs && node scripts/verify-build.mjs",
+    "build": "npm run generate-import && npm run check && vite build && node scripts/verify-build.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@streamerbot/client": "2.0.1"
+    "@streamerbot/client": "2.0.1",
+    "@maseaaao/design": "1.0.0",
+    "@maseaaao/ui": "1.0.0"
   },
   "devDependencies": {
     "@types/node": "22.15.30",
@@ -22,6 +24,7 @@
     "typescript": "5.8.3",
     "vite": "6.4.3",
     "vite-plugin-singlefile": "2.3.4",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.0",
+    "@maseaaao/build-config": "1.0.0"
   }
 }

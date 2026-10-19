@@ -1,14 +1,14 @@
-import fs from "node:fs/promises";
-import os from "node:os";
-import { fileURLToPath } from "node:url";
-import path from "node:path";
-import sharp from "sharp";
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+import sharp from 'sharp';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = path.resolve(SCRIPT_DIR, "../..");
-const DEFAULT_TARGETS = ["apps/website/public", "artwork"];
-const IMAGE_EXTENSIONS = new Set([".jpeg", ".jpg", ".png", ".webp"]);
-const SKIPPED_DIRECTORIES = new Set([".git", "node_modules"]);
+const REPO_ROOT = path.resolve(SCRIPT_DIR, '../..');
+const DEFAULT_TARGETS = ['apps/website/public', 'artwork'];
+const IMAGE_EXTENSIONS = new Set(['.jpeg', '.jpg', '.png', '.webp']);
+const SKIPPED_DIRECTORIES = new Set(['.git', 'node_modules']);
 
 async function main() {
   const targets = process.argv.slice(2);
@@ -21,22 +21,20 @@ async function main() {
   }
 
   if (files.length === 0) {
-    console.log("No optimizable images found.");
+    console.log('No optimizable images found.');
     return;
   }
 
   const results = [];
 
-  for (const file of files.sort((left, right) =>
-    left.localeCompare(right, "en"),
-  )) {
+  for (const file of files.sort((left, right) => left.localeCompare(right, 'en'))) {
     try {
       results.push(await optimizeImage(file));
     } catch (error) {
       results.push({
         file,
-        kind: "failed",
-        message: error?.message ?? "Unknown error",
+        kind: 'failed',
+        message: error?.message ?? 'Unknown error',
         saved: 0,
       });
     }
@@ -67,10 +65,7 @@ async function collectImageFiles(directoryPath, files) {
       continue;
     }
 
-    if (
-      entry.isFile() &&
-      IMAGE_EXTENSIONS.has(path.extname(entry.name).toLowerCase())
-    ) {
+    if (entry.isFile() && IMAGE_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) {
       files.push(entryPath);
     }
   }
@@ -79,50 +74,38 @@ async function collectImageFiles(directoryPath, files) {
 async function optimizeImage(file) {
   const extension = path.extname(file).toLowerCase();
 
-  if (extension === ".jpg" || extension === ".jpeg") {
+  if (extension === '.jpg' || extension === '.jpeg') {
     return optimizeJpeg(file);
   }
 
-  if (extension === ".png") {
-    return optimizeWithSharp(file, "png");
+  if (extension === '.png') {
+    return optimizeWithSharp(file, 'png');
   }
 
-  return optimizeWithSharp(file, "webp");
+  return optimizeWithSharp(file, 'webp');
 }
 
 async function optimizeJpeg(file) {
-  const workDirectory = await fs.mkdtemp(
-    path.join(os.tmpdir(), "maseaaao-images-"),
-  );
-  const outputFile = path.join(workDirectory, "optimized.jpg");
+  const workDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'maseaaao-images-'));
+  const outputFile = path.join(workDirectory, 'optimized.jpg');
   const originalSize = await getFileSize(file);
 
   try {
     const input = await fs.readFile(file);
-    await sharp(input)
-      .keepMetadata()
-      .jpeg({ mozjpeg: true, quality: 100 })
-      .toFile(outputFile);
+    await sharp(input).keepMetadata().jpeg({ mozjpeg: true, quality: 100 }).toFile(outputFile);
 
     return await keepIfSmaller(file, outputFile, originalSize);
   } catch (error) {
     await removeIfExists(outputFile);
     throw error;
   } finally {
-    await fs
-      .rm(workDirectory, { force: true, recursive: true })
-      .catch(() => {});
+    await fs.rm(workDirectory, { force: true, recursive: true }).catch(() => {});
   }
 }
 
 async function optimizeWithSharp(file, format) {
-  const workDirectory = await fs.mkdtemp(
-    path.join(os.tmpdir(), "maseaaao-images-"),
-  );
-  const tempFile = path.join(
-    workDirectory,
-    `optimized${path.extname(file).toLowerCase()}`,
-  );
+  const workDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'maseaaao-images-'));
+  const tempFile = path.join(workDirectory, `optimized${path.extname(file).toLowerCase()}`);
   const originalSize = await getFileSize(file);
   const input = await fs.readFile(file);
   const image = sharp(input, { animated: true }).keepMetadata();
@@ -130,7 +113,7 @@ async function optimizeWithSharp(file, format) {
   try {
     let output;
 
-    if (format === "png") {
+    if (format === 'png') {
       output = await image
         .png({
           adaptiveFiltering: true,
@@ -154,9 +137,7 @@ async function optimizeWithSharp(file, format) {
     await removeIfExists(tempFile);
     throw error;
   } finally {
-    await fs
-      .rm(workDirectory, { force: true, recursive: true })
-      .catch(() => {});
+    await fs.rm(workDirectory, { force: true, recursive: true }).catch(() => {});
   }
 }
 
@@ -167,7 +148,7 @@ async function keepIfSmaller(file, tempFile, originalSize) {
     await removeIfExists(tempFile);
     return {
       file,
-      kind: "kept",
+      kind: 'kept',
       saved: 0,
     };
   }
@@ -177,10 +158,10 @@ async function keepIfSmaller(file, tempFile, originalSize) {
   } catch (error) {
     await removeIfExists(tempFile);
 
-    if (error?.code === "EPERM" || error?.code === "EACCES") {
+    if (error?.code === 'EPERM' || error?.code === 'EACCES') {
       return {
         file,
-        kind: "kept",
+        kind: 'kept',
         message: `optimized copy was smaller but could not replace original (${error.code})`,
         saved: 0,
       };
@@ -191,7 +172,7 @@ async function keepIfSmaller(file, tempFile, originalSize) {
 
   return {
     file,
-    kind: "optimized",
+    kind: 'optimized',
     saved: originalSize - optimizedSize,
   };
 }
@@ -210,13 +191,13 @@ async function replaceFile(sourceFile, destinationFile) {
     await fs.rename(sourceFile, destinationFile);
     return;
   } catch (error) {
-    if (error?.code === "EXDEV") {
+    if (error?.code === 'EXDEV') {
       await fs.copyFile(sourceFile, destinationFile);
       await fs.rm(sourceFile, { force: true });
       return;
     }
 
-    if (error?.code !== "EEXIST" && error?.code !== "EPERM") {
+    if (error?.code !== 'EEXIST' && error?.code !== 'EPERM') {
       throw error;
     }
   }
@@ -234,15 +215,13 @@ function printSummary(results) {
   for (const result of results) {
     const relativeFile = path.relative(REPO_ROOT, result.file);
 
-    if (result.kind === "optimized") {
+    if (result.kind === 'optimized') {
       optimized += 1;
       saved += result.saved;
       console.log(`[ok] ${relativeFile} saved ${formatBytes(result.saved)}`);
-    } else if (result.kind === "kept") {
+    } else if (result.kind === 'kept') {
       kept += 1;
-      console.log(
-        `[keep] ${relativeFile}${result.message ? `: ${result.message}` : ""}`,
-      );
+      console.log(`[keep] ${relativeFile}${result.message ? `: ${result.message}` : ''}`);
     } else {
       failed += 1;
       console.warn(`[fail] ${relativeFile}: ${result.message}`);
@@ -271,6 +250,6 @@ function formatBytes(bytes) {
 }
 
 await main().catch((error) => {
-  console.error(error?.message ?? "Image optimization failed.");
+  console.error(error?.message ?? 'Image optimization failed.');
   process.exitCode = 1;
 });

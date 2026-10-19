@@ -1,0 +1,181 @@
+@import '@maseaaao/design/fonts.css';
+@import '@maseaaao/design/tokens.css';
+
+/* Warm-light theme · Streamlabs custom CSS.
+   Keep {font_size} / {message_hide_delay} substitution in Streamlabs.
+   All fonts are embedded to work in remote-origin OBS browser sources. */
+:root {
+  --cm-surface: var(--surface);
+  --cm-raised: var(--hud-surface);
+  --cm-line: var(--line);
+  --cm-text: var(--text);
+  --cm-muted: var(--dim);
+  --cm-accent: var(--accent);
+  --cm-corner-size: 20px;
+  --cm-corner-stroke: 2px;
+}
+html,
+body {
+  margin: 0;
+  background: transparent !important;
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+body {
+  font-family: Arial, sans-serif;
+  font-weight: 400;
+  font-size: var(--provider-font-size);
+  line-height: 1.45;
+  color: var(--cm-text);
+  text-shadow: none;
+}
+#log {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0 16px 16px;
+}
+#log > div {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  padding: 16px 24px;
+  border: 1px solid var(--cm-line);
+  border-radius: 2px;
+  background: var(--cm-surface);
+  overflow: hidden;
+  animation:
+    slideInSoft 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) forwards,
+    fadeAway 0.5s ease var(--provider-hide-delay) forwards;
+}
+#log > div::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: var(--cm-corner-size);
+  height: var(--cm-corner-size);
+  border-top: var(--cm-corner-stroke) solid var(--cm-accent);
+  border-right: var(--cm-corner-stroke) solid var(--cm-accent);
+  transform: scale(calc(1 / var(--cm-output-scale, 1)));
+  transform-origin: top right;
+  pointer-events: none;
+}
+#log > div {
+  animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1), ease;
+}
+#log > div.deleted {
+  visibility: hidden;
+}
+#log > div.host {
+  background: var(--cm-raised);
+  border-color: var(--cm-accent);
+}
+#log > div.mention {
+  border-color: var(--cm-accent);
+}
+#log .meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+  color: var(--cm-accent);
+  font-family: Unbounded, Arial, sans-serif;
+  font-weight: 600;
+  font-size: 0.7em;
+  line-height: 1.4;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+}
+#log .badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+}
+#log .badges:empty {
+  display: none;
+}
+#log .name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#log .message {
+  display: block;
+  min-width: 0;
+  font-family: Arial, sans-serif;
+  color: var(--cm-text);
+  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+}
+.colon {
+  display: none;
+}
+.badge {
+  display: inline-block;
+  flex: none;
+  height: 1em;
+  width: auto;
+  vertical-align: middle;
+}
+#log .emote {
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  padding: 0 0.15em;
+  position: relative;
+}
+#log .emote img {
+  display: inline-block;
+  height: 1.35em;
+  opacity: 0;
+}
+
+@keyframes slideInSoft {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeAway {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #log > div {
+    animation-name: appearStill, fadeAway;
+  }
+}
+
+@keyframes appearStill {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

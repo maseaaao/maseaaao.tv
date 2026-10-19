@@ -1,5 +1,6 @@
 # Agent discovery (RFC 8288 / RFC 9727) — Link headers on the homepage
 /
+  Cache-Control: public, max-age=0, must-revalidate
   Link: </.well-known/api-catalog>; rel="api-catalog"
   Link: </manifest.webmanifest>; rel="describedby"
 
@@ -26,4 +27,11 @@
   Cache-Control: public, max-age=0, must-revalidate
 
 /assets/fonts/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Vite emits content-addressed bundles only in this namespace.
+/bundles/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.html
   Cache-Control: public, max-age=0, must-revalidate

@@ -1,7 +1,9 @@
-@import url("../../packages/design/brand.css");
+@import '../../packages/design/brand.css';
+
 * {
   box-sizing: border-box;
 }
+
 html,
 body {
   width: 100%;
@@ -9,6 +11,7 @@ body {
   margin: 0;
   overflow: hidden;
 }
+
 body {
   display: grid;
   place-items: center;
@@ -16,6 +19,7 @@ body {
   color: var(--surface);
   font-family: Arial, sans-serif;
 }
+
 .mark {
   display: flex;
   flex-direction: column;
@@ -23,17 +27,20 @@ body {
   gap: 76px;
   transform: translateY(-24px);
 }
+
 .icon {
   display: block;
   width: 640px;
   height: 640px;
   overflow: visible;
 }
+
 @media (orientation: portrait) {
   .mark {
     gap: 104px;
     transform: translateY(-72px);
   }
+
   .icon {
     width: 820px;
     height: 820px;

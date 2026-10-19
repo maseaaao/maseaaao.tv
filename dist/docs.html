@@ -8,40 +8,37 @@
     <title>Документация — maseaaao.tv</title>
     <meta
       name="description"
-      content="Документация ресурсов maseaaao.tv: каталог для агентов, manifest, sitemap и robots.txt." />
+      content="Документация ресурсов maseaaao.tv: каталог для агентов, manifest, sitemap и robots.txt."
+    />
     <link rel="canonical" href="https://maseaaao.tv/docs.html" />
 
     <link rel="icon" type="image/x-icon" href="favicon.ico?v=rounded-1" />
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png?v=rounded-1" />
-    <link rel="stylesheet" href="assets/brand.css" />
-    <link rel="stylesheet" href="assets/site.css" />
-    <link rel="stylesheet" href="assets/theme.css" />
+    <link rel="stylesheet" crossorigin href="/bundles/site-WbkkVUq-.css">
+    <link rel="stylesheet" crossorigin href="/bundles/theme-CoqRwdox.css">
+    <link rel="preload" href="/bundles/unbounded-600-CPXfwbxF.woff2" as="font" type="font/woff2" crossorigin="anonymous">
   </head>
   <body class="docs">
     <main>
       <h1>maseaaao.tv — документация</h1>
-      <p class="subtitle">
-        Человекочитаемая документация ресурсов сайта для людей и агентов.
-      </p>
+      <p class="subtitle"> Человекочитаемая документация ресурсов сайта для людей и агентов. </p>
 
       <p><a class="tool-link" href="tools/index.html">Инструменты стрима и версии</a></p>
 
       <section>
         <h2>Обзор</h2>
         <p>
-          maseaaao.tv — статический сайт-хаб стримера maseaaao: стримы, клипы,
-          соцсети и контакты. Публичных серверных API нет — все ресурсы
-          отдаются как статические файлы по HTTPS.
+          maseaaao.tv — статический сайт-хаб стримера maseaaao: стримы, клипы, соцсети и контакты.
+          Публичных серверных API нет — все ресурсы отдаются как статические файлы по HTTPS.
         </p>
       </section>
 
       <section>
         <h2>Каталог для агентов (RFC 9727)</h2>
         <p>
-          <code>GET /.well-known/api-catalog</code> — каталог ресурсов в
-          формате Linkset JSON (RFC 9264). Главная страница ссылается на него
-          через HTTP-заголовок <code>Link</code> с отношением
-          <code>rel="api-catalog"</code>.
+          <code>GET /.well-known/api-catalog</code> — каталог ресурсов в формате Linkset JSON (RFC
+          9264). Главная страница ссылается на него через HTTP-заголовок <code>Link</code> с
+          отношением <code>rel="api-catalog"</code>.
         </p>
       </section>
 

@@ -2,6 +2,14 @@
   "name": "@maseaaao/design",
   "private": true,
   "exports": {
-    "./brand.css": "./brand.css"
-  }
+    "./brand.css": "./brand.css",
+    "./fonts.css": "./fonts.css",
+    "./tokens.css": "./tokens.css",
+    "./fonts/*": "./fonts/*",
+    "./license": "./licenses/Unbounded-OFL.txt"
+  },
+  "version": "1.0.0",
+  "sideEffects": [
+    "**/*.css"
+  ]
 }

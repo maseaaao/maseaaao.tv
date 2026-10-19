@@ -4,7 +4,7 @@
 
 ## Браузерные ресурсы
 
-Собрать сайт/виджеты: `npm run build:website`, Stream Info: `npm run build:stream-info`, Tuna: `npm run build:tuna`.
+Собрать сайт: `npm run build:website`, виджеты: `npm run build:widgets`, Stream Info: `npm run build:stream-info`, Tuna: `npm run build:tuna`.
 
 Проверить план: `npm run sync:local -- --product stream-info`. Группы: `stream-info`, `tuna`, `widgets`. По умолчанию ожидается соседняя папка Streamer.bot; другую папку OBS указать через `--obs-root`.
 

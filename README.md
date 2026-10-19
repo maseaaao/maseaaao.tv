@@ -2,16 +2,16 @@
 
 Сайт, оформление OBS и собственные инструменты стрима. Один репозиторий, отдельные версии приложений. Интерфейсы на русском, светлое оформление. Unbounded — встроенный акцентный шрифт, Arial — системный основной.
 
-| Каталог | Назначение |
-| --- | --- |
-| apps/website/public | Исходники сайта; dist — готовая публикация Cloudflare |
+| Каталог          | Назначение                                                  |
+| ---------------- | ----------------------------------------------------------- |
+| apps/website/src | Исходники сайта; dist — готовая публикация Cloudflare       |
 | apps/stream-info | Русский автономный док Twitch, C# API и импорт Streamer.bot |
-| apps/tuna-widget | Автономный музыкальный виджет Tuna |
-| apps/obs-widgets | Соцполоса, статистика OBS, чат, CSS DonationAlerts и звуки |
-| packages/design | Общая палитра, Unbounded и лицензия |
-| artwork | Логотип, баннеры, сцены, панели и два варианта обоев 4K |
-| integrations | Исходники модулей Companion и интеграций Streamer.bot |
-| tooling | Сборка, генераторы, проверка и установка ресурсов |
+| apps/tuna-widget | Автономный музыкальный виджет Tuna                          |
+| apps/obs-widgets | Соцполоса, статистика OBS, чат, CSS DonationAlerts и звуки  |
+| packages/design  | Общая палитра, Unbounded и лицензия                         |
+| artwork          | Логотип, баннеры, сцены, панели и два варианта обоев 4K     |
+| integrations     | Исходники модулей Companion и интеграций Streamer.bot       |
+| tooling          | Сборка, генераторы, проверка и установка ресурсов           |
 
 ## Разработка
 
@@ -20,11 +20,9 @@
 ```powershell
 npm ci
 npm run browser:install
-npm run build:website
-npm run build:stream-info
-npm run build:tuna
+npm run build:all
 npm run check
-npm test
+npm run test:checks
 ```
 
 Для установленного браузера можно задать `CHROME_BIN`. Временные тестовые каталоги создаются в системной временной папке и удаляются после тестов.
@@ -38,3 +36,11 @@ OBS читает изображения непосредственно из `art
 Cloudflare использует корневой `wrangler.jsonc`, команду `npm run build:website` и каталог `dist`. Готовый dist хранится в Git и проверяется CI; его собирают из исходников, а не редактируют вручную.
 
 [Архитектура](docs/architecture.md) · [Установка](docs/local-installation.md) · [Выпуски](docs/releasing.md)
+
+## Качество и общие пакеты
+
+`npm run check` запускает Prettier, ESLint (включая типизированные TS-проверки и HTML), Stylelint, typecheck и предметные проверки. Исправления: `npm run format` и `npm run lint:fix`. Публичные API и fixtures проверяются подставными обработчиками.
+
+`npm test` сначала собирает все браузерные продукты, затем выполняет `test:checks`. C#-проверки требуют .NET SDK 8; упаковка Companion — Windows. `test:website` готовит artwork HTML во временном build-каталоге и проверяет готовые публикации.
+
+`@maseaaao/design` экспортирует шрифты/токены, `@maseaaao/ui` — общие accessibility-примитивы, `@maseaaao/build-config` — preset автономного HTML и PostCSS. Runtime не импортирует build-конфигурацию. [Устройство сборок](docs/build-toolchain.md).

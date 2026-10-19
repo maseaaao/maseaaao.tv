@@ -1,8 +1,8 @@
-import { randomUUID } from "node:crypto";
-import { StreamerbotClient } from "@streamerbot/client";
+import { randomUUID } from 'node:crypto';
+import { StreamerbotClient } from '@streamerbot/client';
 
-const actionName = "STREAM INFO | API";
-const responseEvent = "stream_info_api_response";
+const actionName = 'STREAM INFO | API';
+const responseEvent = 'stream_info_api_response';
 
 let connectedResolve;
 let connectedReject;
@@ -12,19 +12,19 @@ const connected = new Promise((resolve, reject) => {
 });
 
 const client = new StreamerbotClient({
-  host: "127.0.0.1",
+  host: '127.0.0.1',
   port: 8080,
-  endpoint: "/",
+  endpoint: '/',
   immediate: false,
   autoReconnect: false,
   retries: 0,
-  logLevel: "none",
+  logLevel: 'none',
   onConnect: connectedResolve,
   onError: connectedReject,
 });
 
 const pending = new Map();
-await client.on("Custom.CodeEvent", (payload) => {
+await client.on('Custom.CodeEvent', (payload) => {
   const root = payload?.data;
   if (root?.eventName !== responseEvent || !root.args?.requestId) return;
   const resolve = pending.get(root.args.requestId);
@@ -50,7 +50,9 @@ try {
   await client.connect();
   await Promise.race([
     connected,
-    new Promise((_, reject) => setTimeout(() => reject(new Error("WebSocket connection timeout")), 10_000)),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('WebSocket connection timeout')), 10_000),
+    ),
   ]);
 
   const actions = await client.getActions();
@@ -59,23 +61,29 @@ try {
 
   const requestId = `codex-live-${randomUUID()}`;
   const reply = waitForResponse(requestId);
-  await client.doAction({ id: action.id }, { command: "getState", requestId, payloadJson: "{}" });
+  await client.doAction({ id: action.id }, { command: 'getState', requestId, payloadJson: '{}' });
   const response = await reply;
 
   if (response.ok !== true || response.apiVersion !== 4 || !response.data) {
     throw new Error(`Unexpected Action response: ${JSON.stringify(response)}`);
   }
 
-  console.log(JSON.stringify({
-    websocketReady: client.ready,
-    actionId: action.id,
-    actionEnabled: action.enabled,
-    apiVersion: response.apiVersion,
-    responseOk: response.ok,
-    twitchConnected: response.data.twitch?.connected === true,
-    twitchLive: response.data.twitch?.live === true,
-    templatesPresent: typeof response.data.templates?.twitchTemplate === "string",
-  }, null, 2));
+  console.log(
+    JSON.stringify(
+      {
+        websocketReady: client.ready,
+        actionId: action.id,
+        actionEnabled: action.enabled,
+        apiVersion: response.apiVersion,
+        responseOk: response.ok,
+        twitchConnected: response.data.twitch?.connected === true,
+        twitchLive: response.data.twitch?.live === true,
+        templatesPresent: typeof response.data.templates?.twitchTemplate === 'string',
+      },
+      null,
+      2,
+    ),
+  );
 } finally {
   await client.disconnect().catch(() => {});
 }

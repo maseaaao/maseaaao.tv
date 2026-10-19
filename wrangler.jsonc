@@ -2,13 +2,10 @@
   "name": "maseaaao-tv",
   "compatibility_date": "2026-01-15",
   "assets": {
-    "directory": "./dist"
+    "directory": "./dist",
   },
   "build": {
     "command": "npm run build:website",
-    "watch_dir": [
-      "apps/website/public",
-      "packages/design"
-    ]
-  }
+    "watch_dir": ["apps/website/public", "packages/design"],
+  },
 }

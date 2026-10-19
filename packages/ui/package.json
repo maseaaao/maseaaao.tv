@@ -1,0 +1,11 @@
+{
+  "name": "@maseaaao/ui",
+  "version": "1.0.0",
+  "private": true,
+  "exports": {
+    "./accessibility.css": "./accessibility.css"
+  },
+  "sideEffects": [
+    "**/*.css"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "@maseaaao/build-config",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.mjs",
+    "./postcss": "./postcss.mjs"
+  },
+  "peerDependencies": {
+    "vite": "^6.4.3",
+    "vite-plugin-singlefile": "^2.3.4",
+    "postcss-import": "^17.0.1",
+    "postcss-url": "^10.1.4"
+  },
+  "dependencies": {
+    "@maseaaao/design": "1.0.0"
+  }
+}

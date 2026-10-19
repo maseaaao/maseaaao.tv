@@ -1,5 +1,15 @@
 {
   "name": "@maseaaao/obs-widgets",
   "version": "1.0.0",
-  "private": true
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@maseaaao/design": "1.0.0"
+  },
+  "devDependencies": {
+    "@maseaaao/build-config": "1.0.0"
+  },
+  "scripts": {
+    "build": "node ../../tooling/build-widgets.mjs"
+  }
 }
