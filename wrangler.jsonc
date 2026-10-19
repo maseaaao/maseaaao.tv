@@ -6,6 +6,6 @@
   },
   "build": {
     "command": "npm run build:website",
-    "watch_dir": ["apps/website/public", "packages/design"],
+    "watch_dir": ["apps/website/src", "apps/website/public", "packages/design", "packages/ui", "artwork/brand/rendered/website"],
   },
 }

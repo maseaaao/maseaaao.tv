@@ -1,6 +1,6 @@
 # UI Renewal — отдельный план исправлений и финального качества
 
-**Дата:** 2026-10-19. **Статус:** план; ни один пункт ниже не считается выполненным.  
+**Дата:** 2026-10-19. **Статус:** реализация по этапам с открытой платформенной приёмкой; отметки ниже обозначают подготовленные изменения исходников, а не успешный запуск тестов.  
 **База:** `main` @ `b0be32e`; отдельный неподключённый коммит `ee7a967` содержит черновую команду приёмки и **не** является выполненным этапом.  
 **Связанные документы:** `docs/ui-renewal-plan.md` (исходная миграция — не изменять её чекбоксы в рамках этого плана), `docs/remaining-work.md` (живые установки/Companion), аудит от 2026-10-19 и его независимое ревью.
 
@@ -122,12 +122,14 @@
 
 ## Этап 8. Точечный архитектурный и документационный долг — P2/P3
 
-- [ ] Привести `packages/ui`/design docs, `LiveStatusBadge` comments и `docs/build-toolchain.md` в соответствие с реальными workspace exports и потребителями; не извлекать компонент до появления второго подтверждённого контракта.
+- [x] Привести `packages/ui`/design docs, `LiveStatusBadge` comments и `docs/build-toolchain.md` в соответствие с реальными workspace exports и потребителями; не извлекать компонент до появления второго подтверждённого контракта.
 - [ ] Проверить `CategorySearch.vue` ARIA combobox/listbox с screen reader + keyboard/IME; убрать двойной Tab flow при подтверждённом неудобстве, сохраняя семантику опций.
 - [ ] Убрать ненужный inline `onerror` аватара при эквивалентном fallback и проверить строгий CSP/no-JS; аудит других HTML inline event handlers.
-- [ ] Почистить устаревшие `_headers` пути (`assets/stream.js`, theme/site/brand), sitemap/lastmod и docs ссылки; проверить `wrangler` deploy paths и кеш immutable vs revalidate.
-- [ ] Исправить `artwork/scenes/SETUP.md` (вес Unbounded и актуальный `.build-cache`), инструкции Python >=3.11, README продуктов, AGENTS; связать план с `docs/remaining-work.md` без переноса статуса оттуда в этот файл.
+- [x] Почистить устаревшие `_headers` пути (`assets/stream.js`, theme/site/brand), sitemap/lastmod и docs ссылки; проверить `wrangler` deploy paths и кеш immutable vs revalidate.
+- [x] Исправить `artwork/scenes/SETUP.md` (вес Unbounded и актуальный `.build-cache`), инструкции Python >=3.11, README продуктов, AGENTS; связать план с `docs/remaining-work.md` без переноса статуса оттуда в этот файл.
 - [ ] Проверить `npm audit` заново и triage dev advisory `braces` (7 high в предыдущем отчёте); без игнорирования предупреждений или форсирования небезопасных override.
+
+**Непроверенное:** Chrome/layout/a11y ручная проверка, форматтер, CI и `npm audit` не выполнялись на этом шаге.
 
 **Готово, когда:** документация совпадает с поставляемыми файлами, а рефакторинг не меняет без тестов старый API. **Коммит:** `chore(architecture): align contracts, metadata and docs`.
 

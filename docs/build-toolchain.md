@@ -73,4 +73,8 @@ Playwright и Sharp используются через один renderImage; IC
 
 ## Перенос сайта на Vue SSR
 
-`apps/website/vite.config.mjs` использует общий `prepareVuePages`: официальный SSR готовит контент и стили SFC в собственный build cache, затем обычная web-сборка Vite публикует шесть готовых HTML. `buildVuePages` использует ту же подготовку для автономных fixtures. Сайт выбирает внешний WOFF2 Unbounded 400 с content hash; Vue runtime и компилятор в клиентских chunks запрещены. Продуктовые `stream.js`/`check.js`, маршруты и SEO сохранены. Старый `theme.css` удалён; композиция использует семантические токены без второй темы.
+`apps/website/vite.config.mjs` использует общий `prepareVuePages`: официальный SSR готовит контент и стили SFC в собственный build cache, затем обычная web-сборка Vite публикует шесть готовых HTML. `buildVuePages` использует ту же подготовку для автономных fixtures. Сайт выбирает внешний WOFF2 Unbounded 400 с content hash; Vue runtime и компилятор в клиентских chunks запрещены. На главной Twitch media/чат и `stream.js` удалены по решению владельца; `check.js` остался только у диагностического Stream Checker. Маршруты, canonical, JSON-LD и SEO сохранены. Старый `theme.css` удалён; композиция использует семантические токены без второй темы.
+
+## Разграничение LIVE и диагностического плеера
+
+Главная не использует iframe, сторонний Twitch SDK и runtime-проверку эфира. Статус LIVE без безопасного авторизованного backend не публикуется. `check.html` остаётся самостоятельной диагностической страницей с ручным iframe, его тесты не относятся к главной.
