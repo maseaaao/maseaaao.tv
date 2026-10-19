@@ -43,6 +43,6 @@ Cloudflare использует корневой `wrangler.jsonc`, команд�
 
 `npm test` сначала собирает все браузерные продукты, затем выполняет `test:checks`. C#-проверки требуют .NET SDK 8; упаковка Companion — Windows. `test:website` готовит artwork HTML во временном build-каталоге и проверяет готовые публикации.
 
-`@maseaaao/design` экспортирует шрифты/токены, `@maseaaao/ui` — общие accessibility-примитивы, `@maseaaao/build-config` — preset автономного HTML и PostCSS. Runtime не импортирует build-конфигурацию. [Устройство сборок](docs/build-toolchain.md).
+`@maseaaao/design` экспортирует шрифты/токены, `@maseaaao/ui` — AppButton, FieldInput, IconIndicator, LiveStatusBadge и доступные UI-примитивы, `@maseaaao/build-config` — preset автономного HTML и PostCSS. Runtime не импортирует build-конфигурацию. [Устройство сборок](docs/build-toolchain.md).
 
 Сайт предварительно рендерится из Vue SFC при сборке: готовые страницы работают без Vue runtime и гидрации. Главная — статическая страница ссылок без Twitch iframe, чата и клиентского SDK; интерактивные плееры есть только у самостоятельного диагностического Stream Checker. [Разработка сайта](apps/website/README.md).

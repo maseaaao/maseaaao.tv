@@ -5,7 +5,7 @@
 | Пакет                    | Контракт                                                                                                                                         |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `@maseaaao/design`       | `brand.css`, `fonts.css`, `tokens.css`, `fonts/*`, `license`. Единственный источник Unbounded 400/600, полного Unicode-покрытия и OFL            |
-| `@maseaaao/ui`           | `accessibility.css`: совпадающий `.sr-only` на сайте и в Stream Info. Остальные элементы остаются локальными, пока общий контракт не подтверждён |
+| `@maseaaao/ui` | Общие AppButton/FieldInput/IconIndicator/LiveStatusBadge и accessibility.css; подтверждённое переиспользование, без лишнего выделения компонентов |
 | `@maseaaao/build-config` | `standaloneConfig` для Vite + singlefile, `providerPlugins` для PostCSS. Только build/dev-зависимость                                            |
 
 Направление зависимостей: приложения используют design/ui; build-config использует design и инструменты сборки. Пакеты private, не публикуются в npm. Шрифты/CSS экспортируются исходными файлами и обрабатываются потребителем.
