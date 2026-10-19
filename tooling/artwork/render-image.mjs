@@ -19,7 +19,9 @@ export async function renderImage(
     await page.route(/^https?:/, (route) => route.abort());
     await page.goto(pathToFileURL(source).href);
     await page.evaluate(async () => {
-      await document.fonts.load('600 16px Unbounded', 'Проверка English');
+      const fonts = await document.fonts.load('600 16px Unbounded', 'Проверка English');
+      if (!fonts.length || fonts.some((font) => font.status !== 'loaded'))
+        throw Error('Accent font is unavailable');
       await document.fonts.ready;
       await Promise.all([...document.images].map((image) => image.decode()));
     });
