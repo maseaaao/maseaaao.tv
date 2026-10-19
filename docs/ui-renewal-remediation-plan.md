@@ -135,13 +135,15 @@
 
 ## Этап 9. Полный детерминированный build/CI/visual pipeline — QA gate
 
-- [ ] Проверить и исправить черновой `ee7a967` **до** включения: `git diff --check` проверяет whitespace, но не stale/binary generated resources. Перенести подходящие части в актуальную ветку отдельно, с учётом нового лендинга без Twitch JS.
-- [ ] Построить единый граф: `check:source` → шрифты/аватар → artwork SSR → scenes+brand+banners+panels+wallpapers → ui/storybook+standalone apps → website → `check` → тесты → проверка outputs. Включить полный граф в CI с фиксированными версиями environment.
-- [ ] Проверять **все** управляемые tracked outputs через `git diff --exit-code -- <paths>` + обнаружение новых/untracked/stale outputs и manifest/hashes. Отдельно учитывать допустимые различия растров Windows/Linux — baseline привязать к зафиксированному Chrome/Chromium/OS, не маскировать шум отключением проверки.
-- [ ] Устранить зависимость optional screenshot test от чужого `../Streamer.bot/backup/.../reserve.py` — isolated checkout не должен требовать локальных бэкапов. Разделить генерацию images и утверждённые baseline.
+- [x] Проверить и исправить черновой `ee7a967` **до** включения: `git diff --check` проверяет whitespace, но не stale/binary generated resources. Перенести подходящие части в актуальную ветку отдельно, с учётом нового лендинга без Twitch JS.
+- [x] Построить единый граф: `check:source` → шрифты/аватар → artwork SSR → scenes+brand+banners+panels+wallpapers → ui/storybook+standalone apps → website → `check` → тесты → проверка outputs. Включить полный граф в CI с фиксированными версиями environment.
+- [x] Проверять **все** управляемые tracked outputs через `git diff --exit-code -- <paths>` + обнаружение новых/untracked/stale outputs и manifest/hashes. Отдельно учитывать допустимые различия растров Windows/Linux — baseline привязать к зафиксированному Chrome/Chromium/OS, не маскировать шум отключением проверки.
+- [x] Устранить зависимость optional screenshot test от чужого `../Streamer.bot/backup/.../reserve.py` — isolated checkout не должен требовать локальных бэкапов. Разделить генерацию images и утверждённые baseline.
 - [ ] Запустить `npm ci`, `npm run check:source`, финальные сборки, `npm run check`, `npm run test:ui`, `npm run test:ui-probe`, `npm run test:static`, `npm run test:checks`, полный `npm test`, C#/.NET 8, Windows Companion packager и проверку архива там, где доступны зависимости. Не отмечать неисполненное пройденным.
 - [ ] Проверить byte-size budgets, no duplicated Vue/browser compiler, no remote UI assets for file:// HTML, собственность output directories, отсутствие изменения исходников и устойчивость чистого checkout.
 - [ ] Сформировать build provenance: hash каждого артефакта, tool versions, статус тестов, связь commit↔release; убедиться, что CI проверил **именно** публикуемый commit.
+
+**Непроверенное:** новый pipeline и GitHub Actions не запускались, а отслеживаемые конечные файлы после исправлений должны быть пересобраны и приняты в целевом Chrome/Chromium. До этого в CI возможен закономерный красный результат.
 
 **Готово, когда:** обязательная последовательность воспроизводима и CI ломается на устаревшем бинарнике, недостающем файле, regressions и неправильной упаковке. **Коммит:** `ci: verify full UI artifact graph and reproducibility`.
 

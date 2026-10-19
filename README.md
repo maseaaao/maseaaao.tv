@@ -20,12 +20,12 @@
 ```powershell
 npm ci
 npm run browser:install
-npm run build:all
-npm run check
-npm run test:checks
+npm run verify:ui-renewal
 ```
 
 Для установленного браузера можно задать `CHROME_BIN`. Временные тестовые каталоги создаются в системной временной папке и удаляются после тестов.
+
+Полная команда приёмки требует также `python3 -m pip install -r tooling/artwork/requirements-fonts.txt` и .NET SDK 8. Она проверяет воспроизводимость всех управляемых результатов по Git.
 
 Генераторы запускаются явно: `render:logo`, `render:scenes`, `render:banners`, `render:twitch-description`, `render:wallpapers`, `render:favicon`. `full` перестраивает весь комплект. Обои: `desktop-4k.png` 3840×2160 и `portrait-4k.png` 2160×3840.
 

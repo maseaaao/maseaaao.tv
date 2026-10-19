@@ -78,3 +78,11 @@ Playwright и Sharp используются через один renderImage; IC
 ## Разграничение LIVE и диагностического плеера
 
 Главная не использует iframe, сторонний Twitch SDK и runtime-проверку эфира. Статус LIVE без безопасного авторизованного backend не публикуется. `check.html` остаётся самостоятельной диагностической страницей с ручным iframe, его тесты не относятся к главной.
+
+## Полный граф приёмки UI Renewal
+
+`npm run verify:ui-renewal` выполняет по порядку: source lint/typecheck, подготовку WOFF2/логотипа, однократную сборку artwork HTML, полный рендер 12 сцен и всех banners/panels/favicon/wallpapers/website art, сборку UI/stories и всех отдельных продуктов, сборку website **после** изображений, repository checks, браузерные/UI/C# тесты, и `check:artifacts` с `git diff --check`.
+
+`npm run check:artifacts` сравнивает **все управляемые артефакты** с коммитом включая WEBP/PNG/JPEG/ICO, standalone HTML и import; отмечает новые или изменённые untracked файлы, формирует SHA-256 manifest в `.build-cache/verify/artifacts.sha256`. Если Chrome/Sharp/OS дают отличающиеся бинарные изображения, CI останавливается до явного принятия эталона. Не отключать проверку из-за недетерминизма. Рендеры не меняют исходники и живую установку OBS.
+
+Команды доступны только после `npm ci`, установки Chromium и `python3 -m pip install -r tooling/artwork/requirements-fonts.txt`. Для полной приёмки C# нужен .NET 8, для Companion упаковки — Windows job. Отсутствие локальных инструментов — блокер запуска, а не зелёный результат.
