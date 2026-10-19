@@ -9,7 +9,17 @@ export default {
     '**/rendered/**',
     'tests/**',
   ],
-  overrides: [{ files: ['**/*.html'], customSyntax: 'postcss-html' }],
+  overrides: [
+    { files: ['**/*.{html,vue}'], customSyntax: 'postcss-html' },
+    {
+      files: ['**/*.vue'],
+      rules: {
+        'declaration-property-value-disallowed-list': {
+          '/.*/': ['/#[0-9a-f]{3,8}\\b/i', '/rgba?\\(/', '/hsla?\\(/'],
+        },
+      },
+    },
+  ],
   rules: {
     // Component/state selectors intentionally override earlier base selectors.
     'no-descending-specificity': null,

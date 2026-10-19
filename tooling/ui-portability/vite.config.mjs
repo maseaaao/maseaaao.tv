@@ -1,11 +1,10 @@
 import { fileURLToPath } from 'node:url';
-import vue from '@vitejs/plugin-vue';
-import { standaloneConfig } from '@maseaaao/build-config';
+import { vueStandaloneConfig } from '@maseaaao/build-config/vue';
 
-const config = standaloneConfig({
+export default vueStandaloneConfig({
   root: fileURLToPath(new URL('./src/', import.meta.url)),
   outDir: '../../../.build-cache/ui-portability',
   fileName: 'ui-portability.html',
   nonce: 'ui-portability-probe',
+  budgets: { html: 300000, js: 120000 },
 });
-export default { ...config, plugins: [vue(), ...config.plugins] };

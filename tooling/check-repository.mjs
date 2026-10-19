@@ -94,5 +94,5 @@ for (const directory of ['apps', 'artwork', 'packages/design']) {
 }
 assert.deepEqual(
   readdirSync(resolve(root, 'packages/design/fonts')).sort(),
-  ['Unbounded.ttf', 'unbounded-600.woff2'].sort(),
+  ['Unbounded.ttf', 'unbounded-400.woff2', 'unbounded-600.woff2'].sort(),
 );

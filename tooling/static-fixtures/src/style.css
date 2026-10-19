@@ -1,0 +1,30 @@
+@import '@maseaaao/design/fonts-400.css';
+@import '@maseaaao/design/tokens.css';
+body {
+  margin: 0;
+  padding: 24px;
+  background: var(--color-brand);
+  color: var(--color-text);
+  font-family: Arial, sans-serif;
+}
+.panel {
+  padding: 24px;
+  background: var(--color-surface);
+  border-radius: 20px;
+}
+h1 {
+  font:
+    400 30px/1.4 Unbounded,
+    Arial,
+    sans-serif;
+}
+button {
+  min-height: 44px;
+}
+.artwork {
+  width: 1200px;
+  height: 480px;
+}
+body:has(.artwork) {
+  padding: 0;
+}

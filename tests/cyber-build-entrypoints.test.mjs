@@ -5,7 +5,7 @@ const root = new URL('../', import.meta.url);
 test('production rebuild uses current generators without retired aliases', async () => {
   const p = JSON.parse(await fs.readFile(new URL('package.json', root), 'utf8'));
   assert.equal(p.scripts['render:scenes'], 'node tooling/artwork/build-cyber-scenes.mjs');
-  assert.equal(p.scripts['build:fonts'], 'python tooling/artwork/build-web-fonts.py');
+  assert.equal(p.scripts['build:fonts'], 'python3 tooling/artwork/build-web-fonts.py');
   assert.equal((p.scripts.full.match(/npm run build:all/g) || []).length, 1);
   assert(!p.scripts.full.includes('npm run build:website'));
   assert(!p.scripts.postfull);

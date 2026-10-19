@@ -23,8 +23,15 @@ jobs:
           dotnet-version: 8.0.x
       - run: npm ci
       - run: npm run browser:install
+      - run: python3 -m pip install -r tooling/artwork/requirements-fonts.txt
+      - run: npm run check:source
+      - run: npm run build:fonts
+      - run: npm run build:ui
       - run: npm run build:all
       - run: npm run check
+      - run: npm run test:ui
+      - run: npm run test:ui-probe
+      - run: npm run test:static
       - run: npm run test:checks
       - name: Verify committed website publication
         run: git diff --exit-code -- dist apps/obs-widgets/dist apps/stream-info/dist apps/tuna-widget/dist apps/stream-info/streamerbot-import.txt

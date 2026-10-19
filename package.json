@@ -10,7 +10,7 @@
     "test:website": "node tooling/artwork/cyber-site-test.mjs",
     "test:companion": "node integrations/companion/shared/test-helper-process.mjs && node integrations/companion/voice-control/test-guard.mjs && node integrations/companion/voice-control/test-runtime.mjs",
     "test": "npm run build:all && npm run test:checks",
-    "check": "npm run format:check && npm run lint && npm run typecheck && npm run check:repository",
+    "check": "npm run check:source && npm run check:repository",
     "sync:local": "node tooling/sync-local.mjs",
     "build:tuna": "npm run build --workspace apps/tuna-widget",
     "browser:install": "playwright-core install chromium",
@@ -24,15 +24,15 @@
     "full": "npm run render:logo && npm run build:fonts && npm run render:scenes && npm run render:cyber-site && npm run build:all",
     "render:cyber-site": "node tooling/artwork/cyber-site-render.mjs",
     "render:wallpapers": "node tooling/artwork/cyber-site-render.mjs wallpapers",
-    "build:fonts": "python tooling/artwork/build-web-fonts.py",
+    "build:fonts": "python3 tooling/artwork/build-web-fonts.py",
     "prepare:companion-libs": "powershell -NoProfile -ExecutionPolicy Bypass -File tooling/prepare-companion-libs.ps1",
     "test:local": "node tooling/local/test-action-targets.mjs && python tooling/local/test-companion-storage.py",
     "build:widgets": "npm run build --workspace apps/obs-widgets",
-    "build:all": "npm run build:tuna && npm run build:stream-info && npm run build:widgets && npm run build:website",
+    "build:all": "npm run build:artwork && npm run build:tuna && npm run build:stream-info && npm run build:widgets && npm run build:website",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint:js": "eslint . --max-warnings=0",
-    "lint:css": "stylelint \"{apps,packages,artwork}/**/*.{css,html}\" --max-warnings=0",
+    "lint:css": "stylelint \"{apps,packages,artwork,tooling/ui-catalog,tooling/ui-portability,tooling/static-fixtures}/**/*.{css,html,vue}\" --max-warnings=0",
     "lint": "npm run lint:js && npm run lint:css",
     "lint:fix": "npm run lint:js -- --fix && npm run lint:css -- --fix",
     "typecheck": "npm run check:stream-info",
@@ -40,8 +40,15 @@
     "test:checks": "npm run test:website && npm run test:stream-info && npm run test:companion && npm run test:local",
     "check:repository": "node tooling/check-repository.mjs",
     "build:ui-probe": "npm run build --workspace tooling/ui-portability",
-    "test:ui-probe": "npm run build:ui-probe && npm test --workspace tooling/ui-portability",
-    "build:ui-reference": "node tooling/build-ui-reference.mjs"
+    "test:ui-probe": "npm test --workspace tooling/ui-portability",
+    "build:ui-reference": "node tooling/build-ui-reference.mjs",
+    "build:storybook": "npm run build --workspace tooling/ui-catalog",
+    "test:ui": "npm test --workspace tooling/ui-catalog",
+    "check:ui": "npm run check --workspace tooling/ui-portability && npm run check --workspace tooling/ui-catalog && vue-tsc --noEmit --project tooling/static-fixtures/tsconfig.json",
+    "check:source": "npm run format:check && npm run lint && npm run typecheck && npm run check:ui",
+    "build:static-fixtures": "npm run build --workspace tooling/static-fixtures",
+    "test:static": "npm test --workspace tooling/static-fixtures",
+    "build:ui": "npm run build:ui-probe && npm run build:static-fixtures && npm run build:storybook"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
@@ -68,14 +75,18 @@
     "typescript-eslint": "8.71.2",
     "vite": "6.4.3",
     "vite-plugin-singlefile": "2.3.4",
-    "jsdom": "26.1.0"
+    "jsdom": "26.1.0",
+    "eslint-plugin-vue": "10.11.1",
+    "vue-eslint-parser": "10.3.0"
   },
   "workspaces": [
     "apps/*",
     "packages/*",
     "integrations/companion/system-microphone",
     "integrations/companion/voice-control",
-    "tooling/ui-portability"
+    "tooling/ui-portability",
+    "tooling/ui-catalog",
+    "tooling/static-fixtures"
   ],
   "engines": {
     "node": ">=22.20 <23"

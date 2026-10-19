@@ -5,7 +5,10 @@
   "type": "module",
   "exports": {
     ".": "./index.mjs",
-    "./postcss": "./postcss.mjs"
+    "./postcss": "./postcss.mjs",
+    "./vue-env": "./vue-env.d.ts",
+    "./vue": "./vue.mjs",
+    "./static": "./static.mjs"
   },
   "peerDependencies": {
     "vite": "^6.4.3",
@@ -14,6 +17,8 @@
     "postcss-url": "^10.1.4"
   },
   "dependencies": {
-    "@maseaaao/design": "1.0.0"
+    "@maseaaao/design": "1.0.0",
+    "@vitejs/plugin-vue": "5.2.4",
+    "vue": "3.5.44"
   }
 }

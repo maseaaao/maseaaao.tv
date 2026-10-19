@@ -1,0 +1,30 @@
+{
+  "name": "@maseaaao/ui-catalog",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "storybook dev -p 6006 --no-open --disable-telemetry",
+    "build": "storybook build -o ../../.build-cache/storybook --disable-telemetry",
+    "check": "vue-tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@maseaaao/design": "1.0.0",
+    "@maseaaao/ui": "1.0.0",
+    "vue": "3.5.44"
+  },
+  "devDependencies": {
+    "@maseaaao/build-config": "1.0.0",
+    "@storybook/addon-a11y": "10.6.2",
+    "@storybook/addon-vitest": "10.6.2",
+    "@storybook/vue3-vite": "10.6.2",
+    "@vitest/browser-playwright": "5.0.5",
+    "playwright": "1.58.2",
+    "storybook": "10.6.2",
+    "typescript": "5.8.3",
+    "vite": "6.4.3",
+    "vitest": "5.0.5",
+    "vue-tsc": "3.0.8",
+    "@vitejs/plugin-vue": "5.2.4"
+  }
+}

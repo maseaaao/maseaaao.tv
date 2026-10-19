@@ -1,27 +1,10 @@
 /* Proposal only. Move approved tokens to @maseaaao/design at stage 4. */
-@font-face {
-  font-family: Unbounded;
-  src: url('@maseaaao/design/fonts/Unbounded.ttf') format('truetype');
-  font-weight: 400 600;
-  font-style: normal;
-  font-display: swap;
-}
+@import '@maseaaao/design/fonts-400.css';
+@import '@maseaaao/design/tokens.css';
+
 :root {
   color-scheme: light;
 
-  --color-brand: #1616d9;
-  --color-canvas: #1616d9;
-  --color-surface: #f4f3ec;
-  --color-field: #fffef8;
-  --color-text: #20201e;
-  --color-muted: #60605a;
-  --color-border: #d2d1c9;
-  --color-border-control: #83837b;
-  --color-focus: #1616d9;
-  --color-action-hover: #1010a9;
-  --color-success: #176548;
-  --color-danger: #a42a36;
-  --color-warning: #815005;
   font-family: Arial, sans-serif;
   font-synthesis: none;
   color: var(--color-text);

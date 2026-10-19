@@ -1,24 +1,28 @@
-"""Build Unbounded 600 in WOFF2 with its complete character coverage.
+"""Build real Unbounded 400/600 WOFF2 instances with full character coverage.
 
-Requires fonttools[woff]. Arial is provided by the operating system.
+Requires fonttools[woff]; see requirements-fonts.txt. Arial is provided by the OS.
 """
 from io import BytesIO
 from pathlib import Path
-import re
 from fontTools.ttLib import TTFont
 from fontTools.varLib.instancer import instantiateVariableFont
 
 root = Path(__file__).resolve().parents[2]
-font = TTFont(root / "packages/design/fonts/Unbounded.ttf", recalcTimestamp=False)
-characters = set(font.getBestCmap())
-font = instantiateVariableFont(font, {"wght": 600}, inplace=True)
-assert set(font.getBestCmap()) == characters, "Character coverage must be preserved"
-font.flavor = "woff2"
-buffer = BytesIO()
-font.save(buffer)
-content = buffer.getvalue()
-name = "unbounded-600.woff2"
-output = root / "packages/design/fonts"
-output.mkdir(exist_ok=True)
-(output / name).write_bytes(content)
-print(f"{name}: {len(content)} bytes; {len(characters)} Unicode characters")
+source = root / "packages/design/fonts/Unbounded.ttf"
+output = source.parent
+characters = set(TTFont(source).getBestCmap())
+for weight in (400, 600):
+    font = TTFont(source, recalcTimestamp=False)
+    font = instantiateVariableFont(font, {"wght": weight}, inplace=True)
+    assert set(font.getBestCmap()) == characters, "Character coverage must be preserved"
+    assert font["OS/2"].usWeightClass == weight, "Instance weight must match the file name"
+    font.flavor = "woff2"
+    buffer = BytesIO()
+    font.save(buffer)
+    content = buffer.getvalue()
+    check = TTFont(BytesIO(content))
+    assert check["OS/2"].usWeightClass == weight
+    assert set(check.getBestCmap()) == characters
+    name = f"unbounded-{weight}.woff2"
+    (output / name).write_bytes(content)
+    print(f"{name}: {len(content)} bytes; {len(characters)} Unicode characters; weight {weight}")

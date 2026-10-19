@@ -19,9 +19,33 @@ export async function renderImage(
     await page.route(/^https?:/, (route) => route.abort());
     await page.goto(pathToFileURL(source).href);
     await page.evaluate(async () => {
-      const fonts = await document.fonts.load('600 16px Unbounded', 'Проверка English');
-      if (!fonts.length || fonts.some((font) => font.status !== 'loaded'))
-        throw Error('Accent font is unavailable');
+      const requested = new Map();
+      for (const element of document.querySelectorAll('*')) {
+        const style = getComputedStyle(element);
+        if (!style.fontFamily.includes('Unbounded') || !element.getClientRects().length) continue;
+        const text = [...element.childNodes]
+          .filter((node) => node.nodeType === Node.TEXT_NODE)
+          .map((node) => node.textContent ?? '')
+          .join('')
+          .trim();
+        if (text) requested.set(style.fontWeight, text);
+      }
+      for (const [weight, sample] of requested) {
+        const fonts = await document.fonts.load(`${weight} 16px Unbounded`, sample);
+        const desired = Number(weight);
+        const coversWeight = (font) => {
+          const range = font.weight.split(/\s+/).map(Number);
+          const lower = range[0];
+          const upper = range[1] ?? lower;
+          return lower <= desired && desired <= upper;
+        };
+        if (
+          !fonts.length ||
+          fonts.some((font) => font.status !== 'loaded') ||
+          !fonts.some(coversWeight)
+        )
+          throw Error(`Accent font is unavailable for weight ${weight}`);
+      }
       await document.fonts.ready;
       await Promise.all([...document.images].map((image) => image.decode()));
     });

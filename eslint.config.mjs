@@ -4,6 +4,8 @@ import globals from 'globals';
 import ts from 'typescript-eslint';
 import html from '@html-eslint/eslint-plugin';
 import prettier from 'eslint-config-prettier';
+import vue from 'eslint-plugin-vue';
+import vueParser from 'vue-eslint-parser';
 
 export default defineConfig([
   globalIgnores([
@@ -43,6 +45,7 @@ export default defineConfig([
     files: [
       'tests/**/*.mjs',
       'tooling/ui-portability/*.test.mjs',
+      'tooling/static-fixtures/*.test.mjs',
       'apps/stream-info/scripts/verify*-live.mjs',
       'apps/stream-info/scripts/verify-live.mjs',
       'tooling/artwork/*.mjs',
@@ -64,6 +67,69 @@ export default defineConfig([
     files: ['apps/stream-info/*.ts'],
     extends: [ts.configs.recommended],
     languageOptions: { parserOptions: { projectService: false } },
+  },
+  {
+    files: [
+      'tooling/ui-portability/src/**/*.ts',
+      'tooling/static-fixtures/src/**/*.ts',
+      'tooling/ui-catalog/**/*.ts',
+      'packages/ui/**/*.ts',
+    ],
+    extends: [ts.configs.recommendedTypeChecked],
+    languageOptions: {
+      parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
+    },
+  },
+  {
+    files: ['**/*.vue'],
+    extends: [ts.configs.recommendedTypeChecked, vue.configs['flat/recommended']],
+    languageOptions: {
+      parser: vueParser,
+      parserOptions: {
+        parser: ts.parser,
+        projectService: true,
+        extraFileExtensions: ['.vue'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: { 'vue/multi-word-component-names': 'error' },
+  },
+  {
+    files: [
+      '**/*.vue',
+      'tooling/ui-portability/src/**/*.ts',
+      'tooling/static-fixtures/src/**/*.ts',
+      'tooling/ui-catalog/**/*.ts',
+      'packages/ui/**/*.ts',
+    ],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-non-null-assertion': 'error',
+      '@typescript-eslint/ban-ts-comment': 'error',
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'TSAsExpression',
+          message: 'Validate the boundary or correct the type instead of asserting it.',
+        },
+        {
+          selector: 'TSTypeAssertion',
+          message: 'Type assertions require an explicit documented exception.',
+        },
+        { selector: 'TSNonNullExpression', message: 'Narrow nullable values with a guard.' },
+      ],
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@maseaaao/*/src/*', '**/packages/*/src/**', '**/apps/*/src/**'],
+              message: 'Use workspace exports; do not import another product internals.',
+            },
+          ],
+        },
+      ],
+    },
   },
   {
     files: ['**/*.html'],
