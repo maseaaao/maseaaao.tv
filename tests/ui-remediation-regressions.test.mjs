@@ -38,3 +38,18 @@ test('published product names and OBS credential storage key are unchanged', () 
   assert(install.includes('change-info-streamer-bot.ru.html'));
   assert(install.includes('obs-tuna-widget.html') || read('README.md').includes('Tuna'));
 });
+
+test('connection errors are not treated as authorization failures merely because a password exists', () => {
+  const client = read('apps/stream-info/src/composables/useStreamInfo.ts');
+  assert.doesNotMatch(client, /authNeeded = [^;]*Boolean\(settings\.password\)/);
+});
+
+test('IndexedDB transaction completion listeners are registered before awaiting read requests', () => {
+  const source = read('apps/obs-widgets/src/output-stats/main.js');
+  const start = source.indexOf('async function getOrCreateCredentialKey()');
+  const end = source.indexOf('async function deleteCredentialKey()', start);
+  assert(start !== -1 && end > start);
+  const keyLoader = source.slice(start, end);
+  assert.match(keyLoader, /const readCompleted = transactionToPromise\(readTransaction\)/);
+  assert(keyLoader.indexOf('const readCompleted') < keyLoader.indexOf('await requestToPromise('));
+});

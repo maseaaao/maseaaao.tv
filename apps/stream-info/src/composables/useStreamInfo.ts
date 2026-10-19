@@ -502,7 +502,7 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
       const message = error instanceof Error ? error.message : t('connectFailed');
       state.connection = 'disconnected';
       state.connectionError = message;
-      state.authNeeded = /auth|password|credential/i.test(message) || Boolean(settings.password);
+      state.authNeeded = /auth|password|credential/i.test(message);
     }
   }
 
