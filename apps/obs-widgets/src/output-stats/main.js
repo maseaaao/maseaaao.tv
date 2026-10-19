@@ -216,21 +216,21 @@ function openCredentialDatabase() {
 async function getOrCreateCredentialKey() {
   const database = await openCredentialDatabase();
   try {
-    const readTransaction = database.transaction(STORAGE.keyStoreName, 'readonly');
-    const storedKey = await requestToPromise(
-      readTransaction.objectStore(STORAGE.keyStoreName).get(STORAGE.credentialKeyId),
-    );
-    await transactionToPromise(readTransaction);
-
-    if (typeof CryptoKey !== 'undefined' && storedKey instanceof CryptoKey) return storedKey;
-
     const generatedKey = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, [
       'encrypt',
       'decrypt',
     ]);
-    const writeTransaction = database.transaction(STORAGE.keyStoreName, 'readwrite');
-    writeTransaction.objectStore(STORAGE.keyStoreName).put(generatedKey, STORAGE.credentialKeyId);
-    await transactionToPromise(writeTransaction);
+    // Both instances serialize the check-and-insert inside one readwrite transaction.
+    const transaction = database.transaction(STORAGE.keyStoreName, 'readwrite');
+    const completed = transactionToPromise(transaction);
+    const store = transaction.objectStore(STORAGE.keyStoreName);
+    const storedKey = await requestToPromise(store.get(STORAGE.credentialKeyId));
+    if (typeof CryptoKey !== 'undefined' && storedKey instanceof CryptoKey) {
+      await completed;
+      return storedKey;
+    }
+    store.put(generatedKey, STORAGE.credentialKeyId);
+    await completed;
     return generatedKey;
   } finally {
     database.close();
@@ -299,9 +299,24 @@ async function decryptCredentials(record) {
   };
 }
 
-async function saveCredentials(credentials) {
-  const record = await encryptCredentials(credentials);
-  localStorage.setItem(STORAGE.credentialRecordKey, JSON.stringify(record));
+let credentialMutation = Promise.resolve();
+let credentialRevision = 0;
+
+function serializeCredentialMutation(operation) {
+  const pending = credentialMutation.catch(() => undefined).then(operation);
+  credentialMutation = pending.catch(() => undefined);
+  return pending;
+}
+
+function saveCredentials(credentials, isCurrent = () => true) {
+  const revision = ++credentialRevision;
+  return serializeCredentialMutation(async () => {
+    if (revision !== credentialRevision || !isCurrent()) return false;
+    const record = await encryptCredentials(credentials);
+    if (revision !== credentialRevision || !isCurrent()) return false;
+    localStorage.setItem(STORAGE.credentialRecordKey, JSON.stringify(record));
+    return true;
+  });
 }
 
 async function loadCredentials() {
@@ -311,20 +326,25 @@ async function loadCredentials() {
   try {
     return await decryptCredentials(JSON.parse(serialized));
   } catch (error) {
-    localStorage.removeItem(STORAGE.credentialRecordKey);
-    throw new Error('Сохранённые данные не удалось расшифровать; они удалены.', {
+    // A transient IndexedDB failure must never permanently erase valid credentials.
+    throw new Error('Не удалось прочитать сохранённые данные. Запись сохранена; проверьте хранилище или удалите её вручную.', {
       cause: error,
     });
   }
 }
 
-async function forgetCredentials() {
-  localStorage.removeItem(STORAGE.credentialRecordKey);
-  try {
-    await deleteCredentialKey();
-  } catch {
-    // The ciphertext is already removed. A leftover non-exportable key is harmless.
-  }
+function forgetCredentials() {
+  const revision = ++credentialRevision;
+  return serializeCredentialMutation(async () => {
+    if (revision !== credentialRevision) return false;
+    localStorage.removeItem(STORAGE.credentialRecordKey);
+    try {
+      await deleteCredentialKey();
+    } catch {
+      // The ciphertext is already removed. A leftover non-exportable key is harmless.
+    }
+    return true;
+  });
 }
 
 async function getAuthHash(password, salt, challenge) {
@@ -697,19 +717,28 @@ async function handleIdentified(attempt) {
   state.pollTimer = window.setInterval(fetchData, CONFIG.pollIntervalMs);
 
   const credentialsToSave = { ...state.activeCredentials };
+  const stillCurrent = () => attempt === state.connectionAttempt && state.identified;
+  if (!window.crypto?.subtle || !window.indexedDB) {
+    credentialsToSave.password = '';
+    setStatus(STATUS.connected, 'Подключено · без сохранения данных');
+    return;
+  }
 
+  const remember = elements.rememberCredentials.checked;
   try {
-    if (elements.rememberCredentials.checked) {
-      await saveCredentials(credentialsToSave);
-      setStatus(STATUS.connected, 'Подключено · автоподключение включено');
-    } else {
-      await forgetCredentials();
-      setStatus(STATUS.connected, 'Подключено · данные не сохранены');
-    }
-  } catch {
+    const applied = remember
+      ? await saveCredentials(credentialsToSave, stillCurrent)
+      : await forgetCredentials();
+    if (!stillCurrent() || !applied) return;
     setStatus(
       STATUS.connected,
-      elements.rememberCredentials.checked
+      remember ? 'Подключено · автоподключение включено' : 'Подключено · данные не сохранены',
+    );
+  } catch {
+    if (!stillCurrent()) return;
+    setStatus(
+      STATUS.connected,
+      remember
         ? 'Подключено · не удалось безопасно сохранить данные'
         : 'Подключено · не удалось удалить сохранённые данные',
     );
@@ -751,7 +780,10 @@ function describeCloseEvent(event) {
   return `Отключено${event.code ? ` · код ${event.code}` : ''}`;
 }
 
+let connectionIntent = 0;
+
 function connect(credentials) {
+  ++connectionIntent;
   let normalizedUrl;
   try {
     normalizedUrl = normalizeWebSocketUrl(credentials.url);
@@ -824,6 +856,7 @@ function connect(credentials) {
 }
 
 function disconnect() {
+  ++connectionIntent;
   state.manualDisconnect = true;
   state.connectionAttempt += 1;
   state.identified = false;
@@ -835,6 +868,7 @@ function disconnect() {
 }
 
 async function connectFromInputs() {
+  const intent = ++connectionIntent;
   let normalizedUrl;
   try {
     normalizedUrl = normalizeWebSocketUrl(elements.targetUrl.value);
@@ -857,7 +891,7 @@ async function connectFromInputs() {
     }
   }
 
-  connect({ url: normalizedUrl, password });
+  if (intent === connectionIntent) connect({ url: normalizedUrl, password });
 }
 
 async function initialize() {
@@ -874,14 +908,19 @@ async function initialize() {
   });
 
   elements.forgetButton.addEventListener('click', () => {
-    void forgetCredentials().then(() => {
-      elements.targetPassword.value = '';
-      elements.rememberCredentials.checked = false;
-      setStatus(
-        state.identified ? STATUS.connected : STATUS.disconnected,
-        state.identified ? 'Подключено · сохранённые данные удалены' : 'Сохранённые данные удалены',
-      );
-    });
+    ++connectionIntent;
+    void forgetCredentials().then(
+      (applied) => {
+        if (!applied) return;
+        elements.targetPassword.value = '';
+        elements.rememberCredentials.checked = false;
+        setStatus(
+          state.identified ? STATUS.connected : STATUS.disconnected,
+          state.identified ? 'Подключено · сохранённые данные удалены' : 'Сохранённые данные удалены',
+        );
+      },
+      () => setStatus(STATUS.error, 'Не удалось удалить сохранённые данные'),
+    );
   });
 
   for (const input of [elements.targetUrl, elements.targetPassword]) {
@@ -896,12 +935,17 @@ async function initialize() {
   });
 
   if (!window.crypto?.subtle || !window.indexedDB) {
-    setStatus(STATUS.error, 'Безопасное хранилище данных недоступно в этом браузере');
+    elements.rememberCredentials.checked = false;
+    elements.rememberCredentials.disabled = true;
+    elements.forgetButton.disabled = true;
+    setStatus(STATUS.disconnected, 'Безопасное хранилище недоступно · можно подключиться вручную');
     return;
   }
 
+  const startupIntent = connectionIntent;
   try {
     const savedCredentials = await loadCredentials();
+    if (startupIntent !== connectionIntent) return;
     if (!savedCredentials) {
       setStatus(STATUS.disconnected, 'Отключено');
       return;
@@ -912,6 +956,7 @@ async function initialize() {
     connect(savedCredentials);
     savedCredentials.password = '';
   } catch (error) {
+    if (startupIntent !== connectionIntent) return;
     setStatus(
       STATUS.error,
       error instanceof Error ? error.message : 'Не удалось загрузить данные подключения',

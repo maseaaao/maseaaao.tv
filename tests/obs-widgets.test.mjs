@@ -134,3 +134,39 @@ test('social strip remains static, transparent and readable with all five timed 
     await browser.close();
   }
 });
+
+test('transient IndexedDB failure does not delete saved OBS credentials', async () => {
+  const browser = await launchBrowser();
+  try {
+    const page = await browser.newPage();
+    await page.addInitScript(() => {
+      const record = JSON.stringify({
+        version: 1,
+        algorithm: 'AES-GCM',
+        iv: 'AAAA',
+        ciphertext: 'BBBB',
+      });
+      localStorage.setItem('easy-output-stats.credentials.v1', record);
+      IDBFactory.prototype.open = function () {
+        throw new Error('Fixture: temporary IndexedDB failure');
+      };
+      window.WebSocket = class extends EventTarget {
+        static CONNECTING = 0;
+        static OPEN = 1;
+        readyState = 3;
+        close() {}
+        send() {}
+      };
+    });
+    await page.goto(
+      pathToFileURL(resolve(import.meta.dirname, '../apps/obs-widgets/dist/output-stats/index.html')).href,
+    );
+    await page.waitForFunction(() => document.querySelector('#status-text').textContent.includes('Запись сохранена'));
+    assert.equal(
+      await page.evaluate(() => localStorage.getItem('easy-output-stats.credentials.v1') !== null),
+      true,
+    );
+  } finally {
+    await browser.close();
+  }
+});
