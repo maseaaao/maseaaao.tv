@@ -216,6 +216,14 @@ function openCredentialDatabase() {
 async function getOrCreateCredentialKey() {
   const database = await openCredentialDatabase();
   try {
+    // Fast path: a normal restore should not generate and then discard a new AES key.
+    const readTransaction = database.transaction(STORAGE.keyStoreName, 'readonly');
+    const existingKey = await requestToPromise(
+      readTransaction.objectStore(STORAGE.keyStoreName).get(STORAGE.credentialKeyId),
+    );
+    await transactionToPromise(readTransaction);
+    if (typeof CryptoKey !== 'undefined' && existingKey instanceof CryptoKey) return existingKey;
+
     const generatedKey = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, [
       'encrypt',
       'decrypt',
