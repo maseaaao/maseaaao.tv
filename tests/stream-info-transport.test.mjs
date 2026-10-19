@@ -191,7 +191,8 @@ for (const order of ['ack-first', 'event-first', 'ack-error', 'missing-event']) 
         const held = await incoming;
         assert.equal(held.payload.twitchTemplate, 'Новый %subtitle%');
         const dirty = page.getByText('Есть несохранённые изменения шаблонов', { exact: true });
-        const success = page.getByText('Шаблоны сохранены', { exact: true });
+        const dialog = page.getByRole('dialog');
+        const success = dialog.getByRole('status').filter({ hasText: 'Шаблоны сохранены' });
         const send = async (phase) => {
           if (phase === 'event') held.respond();
           else
@@ -217,7 +218,10 @@ for (const order of ['ack-first', 'event-first', 'ack-error', 'missing-event']) 
             );
             await page.clock.fastForward(15000);
           }
-          await page.getByText('Не удалось сохранить шаблоны', { exact: true }).waitFor();
+          await dialog
+            .getByRole('alert')
+            .filter({ hasText: 'Не удалось сохранить шаблоны' })
+            .waitFor();
           assert(await dirty.isVisible());
           assert(await save.isEnabled());
           assert.equal(await success.count(), 0);
@@ -245,6 +249,14 @@ for (const order of ['ack-first', 'event-first', 'ack-error', 'missing-event']) 
           assert.equal(await dirty.count(), 0);
           assert(await save.isEnabled());
         }
+        const failed = order === 'ack-error' || order === 'missing-event';
+        const feedback = dialog
+          .getByRole(failed ? 'alert' : 'status')
+          .filter({ hasText: failed ? 'Не удалось сохранить шаблоны' : 'Шаблоны сохранены' });
+        assert(await feedback.isVisible(), 'Save feedback must be inside the active dialog');
+        await feedback.getByRole('button', { name: 'Закрыть уведомление', exact: true }).click();
+        await feedback.waitFor({ state: 'detached' });
+        assert(await dialog.isVisible(), 'Dismissing feedback must keep settings open');
         assert.deepEqual(errors, []);
         await context.close();
       } finally {

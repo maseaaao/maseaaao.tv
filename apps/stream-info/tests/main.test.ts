@@ -1063,6 +1063,9 @@ describe('Stream Info Vue interactions', () => {
       expect(document.querySelector('.notices > [role="status"]')?.textContent).toContain(
         'Шаблоны сохранены',
       );
+      const notice = required(document.querySelector('.notices > [role="status"]'));
+      expect(notice.closest('[inert]')).toBeNull();
+      expect(document.querySelector('[role="dialog"]')?.contains(notice)).toBe(true);
     },
   );
 
@@ -1085,6 +1088,9 @@ describe('Stream Info Vue interactions', () => {
       expect(document.querySelector('.notices > [role="alert"]')?.textContent).toContain(
         'ACK rejected',
       );
+      const notice = required(document.querySelector('.notices > [role="alert"]'));
+      expect(notice.closest('[inert]')).toBeNull();
+      expect(document.querySelector('[role="dialog"]')?.contains(notice)).toBe(true);
       request.respond(savedTemplateResponse('Rejected %subtitle%'));
       await vi.advanceTimersByTimeAsync(15_000);
       expect(localStorage.getItem('change-info-streamer-bot.settings.v1')).toBe(before);

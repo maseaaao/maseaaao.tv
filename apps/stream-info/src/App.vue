@@ -8,6 +8,7 @@ import AppIcon from './components/AppIcon.vue';
 import PlatformSwitch from './components/PlatformSwitch.vue';
 import TwitchCard from './components/TwitchCard.vue';
 import SettingsDialog from './components/SettingsDialog.vue';
+import StreamNotices from './components/StreamNotices.vue';
 import TemplatePreview from './components/TemplatePreview.vue';
 import { useStreamInfo } from './composables/useStreamInfo';
 import { isTemplateValid, titleFromTemplate } from './templates';
@@ -223,31 +224,7 @@ async function copyImport(): Promise<void> {
       ><span>Stream Info {{ version }}</span
       ><span>{{ t('updated') }} {{ updatedAt }}</span></footer
     >
-    <div class="notices"
-      ><NoticeBanner
-        v-for="notice in state.notices"
-        :key="notice.id"
-        :variant="notice.kind"
-        :title="notice.title"
-        dismissible
-        :dismiss-label="t('closeNotice')"
-        @dismiss="closeNotice(notice.id)"
-        ><template #icon
-          ><AppIcon
-            :name="
-              notice.kind === 'error'
-                ? 'error'
-                : notice.kind === 'warning'
-                  ? 'warning'
-                  : notice.kind === 'success'
-                    ? 'check'
-                    : 'info'
-            " /></template
-        ><span v-for="line in notice.lines" :key="line" class="notice-line">{{
-          line
-        }}</span></NoticeBanner
-      ></div
-    >
+    <StreamNotices v-if="state.modal === null" :notices="state.notices" @dismiss="closeNotice" />
   </div>
   <SettingsDialog v-if="state.modal === 'settings'" @close="closeSettings"
     ><section class="settings-section"
@@ -304,7 +281,7 @@ async function copyImport(): Promise<void> {
           ><template #icon><AppIcon name="braces" /></template>{{ t('saveTemplates') }}</AppButton
         ></div
       ></section
-    ><template #footer
+    ><StreamNotices :notices="state.notices" @dismiss="closeNotice" /><template #footer
       ><AppButton variant="primary" @click="saveConnection">{{
         t('saveConnection')
       }}</AppButton></template

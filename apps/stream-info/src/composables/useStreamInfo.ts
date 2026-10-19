@@ -32,7 +32,7 @@ type CardEffect = 'success' | 'flash-error' | null;
 
 type NoticeKind = 'info' | 'warning' | 'error' | 'success';
 
-interface Notice {
+export interface Notice {
   id: string;
   title: string;
   lines: string[];
