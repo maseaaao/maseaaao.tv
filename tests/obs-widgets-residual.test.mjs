@@ -272,14 +272,40 @@ test('output statistics labels and rendered statuses are Russian, without a real
     assert.equal(await page.locator('#connect-button').innerText(), 'ПОДКЛЮЧИТЬ');
     assert.equal(await page.locator('#status-text').innerText(), 'Отключено');
     assert.match(await page.locator('.row-header').innerText(), /Выход/);
+    await page.getByLabel('Пароль OBS WebSocket', { exact: true }).fill('fixture-only-password');
+    await page.getByLabel('Запомнить', { exact: true }).check();
     await page.locator('#connect-button').click();
     await page.waitForFunction(() =>
       document.querySelector('#display').textContent.includes('НОРМА'),
     );
     assert.match(await page.locator('#display').innerText(), /НОРМА/);
     assert.match(await page.locator('#display').innerText(), /ЭФИР/);
+    await page.waitForFunction(
+      () => localStorage.getItem('easy-output-stats.credentials.v1') !== null,
+    );
+    const saved = await page.evaluate(() =>
+      localStorage.getItem('easy-output-stats.credentials.v1'),
+    );
+    assert(
+      saved && !saved.includes('fixture-only-password'),
+      'Remember stores an encrypted record, never the raw password',
+    );
+    await page.reload();
+    await page.waitForFunction(() =>
+      document.querySelector('#display').textContent.includes('НОРМА'),
+    );
+    assert(
+      await page.getByLabel('Запомнить', { exact: true }).isChecked(),
+      'Saved credentials restore on reopening the built file',
+    );
+    assert.equal(await page.getByLabel('Пароль OBS WebSocket', { exact: true }).inputValue(), '');
+    await page.locator('#forget-button').click();
+    await page.waitForFunction(
+      () => localStorage.getItem('easy-output-stats.credentials.v1') === null,
+    );
+    assert.equal(await page.getByLabel('Запомнить', { exact: true }).isChecked(), false);
     await page.evaluate(async () => {
-      await document.fonts.load('600 12px Unbounded', 'История English');
+      await document.fonts.load('400 12px Unbounded', 'История English');
       await document.fonts.ready;
     });
     assert.equal(
@@ -297,7 +323,65 @@ test('output statistics labels and rendered statuses are Russian, without a real
         `output width ${width}`,
       );
     }
+    if (process.env.WIDGET_SHOTS) {
+      await page.screenshot({
+        path: resolve(process.env.WIDGET_SHOTS, 'stats-1000.png'),
+        fullPage: true,
+      });
+      await page.setViewportSize({ width: 390, height: 700 });
+      await page.screenshot({
+        path: resolve(process.env.WIDGET_SHOTS, 'stats-390.png'),
+        fullPage: true,
+      });
+    }
+    const row = page
+      .getByRole('table', { name: 'Выходы OBS', exact: true })
+      .getByRole('row')
+      .nth(1);
+    assert.equal(
+      await row.getByRole('cell').count(),
+      8,
+      'Every metric remains available on narrow screens',
+    );
+    await page.setViewportSize({ width: 320, height: 700 });
+    const scroll = page.getByRole('region', {
+      name: 'Таблица выходов: прокрутка по горизонтали',
+      exact: true,
+    });
+    await scroll.focus();
+    await page.keyboard.press('ArrowRight');
+    await page.waitForFunction(() => document.querySelector('.stats-scroll').scrollLeft > 0);
+    assert(await scroll.evaluate((element) => element === document.activeElement));
     await page.locator('#connect-button').click();
+    await page.evaluate(() => {
+      const elements = [...document.querySelectorAll('body, body *')];
+      const sizes = elements.map((element) => parseFloat(getComputedStyle(element).fontSize));
+      elements.forEach((element, index) => {
+        element.style.fontSize = `${sizes[index] * 2}px`;
+      });
+    });
+    assert(
+      await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+      'Stats text at 200% fits the viewport',
+    );
+    assert(
+      await page
+        .locator('.grid-layout > *')
+        .evaluateAll((cells) => cells.every((cell) => cell.scrollWidth <= cell.clientWidth + 1)),
+      'Each enlarged header and value stays within its own column',
+    );
+    for (const id of ['connect-button', 'forget-button', 'target-url', 'target-password'])
+      assert((await page.locator(`#${id}`).boundingBox()).height >= 44, `${id}: touch target`);
+    assert.deepEqual(
+      await page.evaluate(() => window.fixtureCsp),
+      [],
+      'CSP remains strict through keyboard and enlarged text checks',
+    );
+    if (process.env.WIDGET_SHOTS)
+      await page.screenshot({
+        path: resolve(process.env.WIDGET_SHOTS, 'stats-320-text-200.png'),
+        fullPage: true,
+      });
     await page.locator('#target-url').fill('https://invalid.example');
     await page.locator('#connect-button').click();
     assert.match(await page.locator('#status-text').innerText(), /Разрешены только/);

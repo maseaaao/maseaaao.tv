@@ -1,5 +1,3 @@
-import './styles.css';
-
 ('use strict');
 
 const CONFIG = Object.freeze({
@@ -428,6 +426,7 @@ function fetchData() {
 
 function createTextCell(text, classNames = [], title = '') {
   const cell = document.createElement('span');
+  cell.setAttribute('role', 'cell');
   cell.textContent = String(text);
   if (classNames.length > 0) cell.classList.add(...classNames);
   if (title) cell.title = title;
@@ -436,6 +435,7 @@ function createTextCell(text, classNames = [], title = '') {
 
 function saveToHistory(name, rejections, networkDrops, encoderDrops, wasRejected) {
   const row = document.createElement('div');
+  row.setAttribute('role', 'row');
   row.classList.add('history-row', wasRejected ? 'hist-rejected' : 'hist-ok');
   row.append(
     createTextCell(new Date().toLocaleTimeString()),
@@ -619,6 +619,7 @@ function render() {
     const encoderDrops = state.encoderDropCounters.get(name) ?? 0;
 
     const row = document.createElement('div');
+    row.setAttribute('role', 'row');
     row.classList.add('output-row', 'grid-layout', 'active-row');
     row.append(
       createTextCell(name, ['output-name']),

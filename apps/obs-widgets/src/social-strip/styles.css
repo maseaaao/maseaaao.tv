@@ -1,7 +1,9 @@
-@import '@maseaaao/design/brand.css';
+@import '@maseaaao/design/fonts-400.css';
+@import '@maseaaao/design/tokens.css';
 
 * {
   box-sizing: border-box;
+  font-synthesis: none;
 }
 html,
 body {
@@ -19,9 +21,9 @@ body {
   align-items: center;
   justify-content: center;
   gap: 16px;
-  background: #f4f3ec;
-  color: #1616d9;
-  border: 1px solid #d2d1c9;
+  background: var(--color-surface);
+  color: var(--color-brand);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
 }
 .logos {
@@ -55,16 +57,16 @@ body {
 }
 .name {
   font:
-    600 32px/1.15 Unbounded,
+    400 32px/1.15 Unbounded,
     Arial,
     sans-serif;
   letter-spacing: -0.5px;
-  color: #20201e;
+  color: var(--color-text);
 }
 .divider {
   height: 28px;
   width: 1px;
-  background: #d2d1c9;
+  background: var(--color-border);
 }
 .logo svg {
   display: block;
@@ -92,5 +94,25 @@ body {
   .logo {
     animation: none;
     opacity: 1;
+  }
+}
+
+@media (width < 540px) {
+  .strip {
+    gap: 8px;
+  }
+  .logos {
+    gap: 8px;
+    height: 40px;
+  }
+  .logo {
+    width: 18px;
+    height: 18px;
+  }
+  .name {
+    font-size: clamp(20px, 5.8vw, 32px);
+  }
+  .divider {
+    height: 24px;
   }
 }

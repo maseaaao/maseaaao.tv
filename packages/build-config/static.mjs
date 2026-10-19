@@ -40,7 +40,6 @@ export async function buildVuePages({ root, ssrEntry, pages, outDir, cacheDir })
   await mkdir(outDir, { recursive: true });
   for (const page of pages) {
     const source = resolve(root, page.source);
-    const css = relative(dirname(source), styleFile).split(sep).join('/');
     const config = vueStandaloneConfig({
       root,
       outDir: join(cacheDir, page.output),
@@ -49,21 +48,7 @@ export async function buildVuePages({ root, ssrEntry, pages, outDir, cacheDir })
     });
     config.build.modulePreload = false;
     config.build.rollupOptions = { input: source };
-    config.plugins.push({
-      name: 'vue-static-content',
-      transformIndexHtml: {
-        order: 'pre',
-        async handler(html) {
-          const rendered = await renderPage(page.output);
-          if (typeof rendered !== 'string') throw Error('renderPage must return HTML');
-          return replaceMarker(
-            replaceMarker(html, '<!--page-content-->', rendered),
-            '<!--page-styles-->',
-            `<link rel="stylesheet" href="${encodeURI(css)}">`,
-          );
-        },
-      },
-    });
+    config.plugins.push(vuePagePlugin({ root, renderPage, styleFile, pageName: page.output }));
     await build({ ...config, configFile: false });
     await mkdir(dirname(join(outDir, page.output)), { recursive: true });
     await cp(join(cacheDir, page.output, basename(page.output)), join(outDir, page.output));
@@ -99,4 +84,25 @@ export async function prepareVuePages({ root, ssrEntry, cacheDir }) {
   );
   if (typeof module.renderPage !== 'function') throw Error('SSR entry must export renderPage');
   return { renderPage: module.renderPage, styleFile: join(ssrDir, 'style.css') };
+}
+
+/** Inject official SSR output before Vite processes the final HTML document. */
+export function vuePagePlugin({ root, renderPage, styleFile, pageName }) {
+  return {
+    name: 'vue-static-content',
+    transformIndexHtml: {
+      order: 'pre',
+      async handler(html, context) {
+        const name = pageName ?? relative(root, context.filename).split(sep).join('/');
+        const rendered = await renderPage(name);
+        if (typeof rendered !== 'string') throw Error('renderPage must return HTML');
+        const css = relative(dirname(context.filename), styleFile).split(sep).join('/');
+        return replaceMarker(
+          replaceMarker(html, '<!--page-content-->', rendered),
+          '<!--page-styles-->',
+          `<link rel="stylesheet" href="${encodeURI(css)}">`,
+        );
+      },
+    },
+  };
 }

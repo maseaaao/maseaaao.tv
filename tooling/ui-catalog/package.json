@@ -14,7 +14,8 @@
     "@maseaaao/ui": "1.0.0",
     "vue": "3.5.44",
     "@maseaaao/website": "*",
-    "@maseaaao/tuna-widget": "1.1.0"
+    "@maseaaao/tuna-widget": "1.1.0",
+    "@maseaaao/obs-widgets": "1.0.0"
   },
   "devDependencies": {
     "@maseaaao/build-config": "1.0.0",

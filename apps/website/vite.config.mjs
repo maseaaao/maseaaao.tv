@@ -1,8 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
 import { fileURLToPath } from 'node:url';
-import { relative, dirname, sep } from 'node:path';
-import { prepareVuePages } from '@maseaaao/build-config/static';
+import { prepareVuePages, vuePagePlugin } from '@maseaaao/build-config/static';
 
 export default defineConfig(async () => {
   const root = fileURLToPath(new URL('./src/', import.meta.url));
@@ -16,6 +15,7 @@ export default defineConfig(async () => {
     publicDir: '../public',
     base: '/',
     plugins: [
+      vuePagePlugin({ root, renderPage, styleFile }),
       {
         name: 'website-vue-pages',
         generateBundle(_options, bundle) {
@@ -35,23 +35,6 @@ export default defineConfig(async () => {
             )
               throw Error(`Website HTML budget exceeded: ${entry.fileName}`);
           }
-        },
-        transformIndexHtml: {
-          order: 'pre',
-          async handler(html, context) {
-            const name = relative(root, context.filename).split(sep).join('/');
-            for (const marker of ['<!--page-content-->', '<!--page-styles-->'])
-              if (html.split(marker).length !== 2) throw Error(`Expected exactly one ${marker}`);
-            const rendered = await renderPage(name);
-            if (typeof rendered !== 'string') throw Error('renderPage must return HTML');
-            const styles = relative(dirname(context.filename), styleFile).split(sep).join('/');
-            return html
-              .replace('<!--page-content-->', () => rendered)
-              .replace(
-                '<!--page-styles-->',
-                () => `<link rel="stylesheet" href="${encodeURI(styles)}">`,
-              );
-          },
         },
       },
       {
