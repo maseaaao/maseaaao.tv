@@ -44,7 +44,7 @@
     "build:ui-reference": "node tooling/build-ui-reference.mjs",
     "build:storybook": "npm run build --workspace tooling/ui-catalog",
     "test:ui": "npm test --workspace tooling/ui-catalog",
-    "check:ui": "npm run check --workspace tooling/ui-portability && npm run check --workspace tooling/ui-catalog && vue-tsc --noEmit --project tooling/static-fixtures/tsconfig.json",
+    "check:ui": "npm run check --workspace tooling/ui-portability && npm run check --workspace tooling/ui-catalog && npm run check --workspace packages/ui && vue-tsc --noEmit --project tooling/static-fixtures/tsconfig.json",
     "check:source": "npm run format:check && npm run lint && npm run typecheck && npm run check:ui",
     "build:static-fixtures": "npm run build --workspace tooling/static-fixtures",
     "test:static": "npm test --workspace tooling/static-fixtures",

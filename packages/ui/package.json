@@ -2,10 +2,28 @@
   "name": "@maseaaao/ui",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "exports": {
-    "./accessibility.css": "./accessibility.css"
+    "./accessibility.css": "./accessibility.css",
+    "./AppButton.vue": "./src/AppButton.vue",
+    "./IconIndicator.vue": "./src/IconIndicator.vue",
+    "./FieldInput.vue": "./src/FieldInput.vue",
+    "./ChipTag.vue": "./src/ChipTag.vue",
+    "./NoticeBanner.vue": "./src/NoticeBanner.vue",
+    "./LiveStatusBadge.vue": "./src/LiveStatusBadge.vue"
   },
   "sideEffects": [
     "**/*.css"
-  ]
+  ],
+  "dependencies": {
+    "@maseaaao/design": "1.0.0",
+    "vue": "3.5.44"
+  },
+  "devDependencies": {
+    "@maseaaao/build-config": "1.0.0",
+    "vue-tsc": "3.0.8"
+  },
+  "scripts": {
+    "check": "vue-tsc --noEmit"
+  }
 }
