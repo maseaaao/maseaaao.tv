@@ -486,7 +486,7 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
         const message = error instanceof Error ? error.message : t('connectFailed');
         state.connectionError = message;
         state.connection = 'disconnected';
-        state.authNeeded = /auth|password|credential/i.test(message) || Boolean(settings.password);
+        state.authNeeded = /auth|password|credential/i.test(message);
       },
     });
     const isCurrent = () => !disposed && generation === connectionGeneration && client === next;
@@ -635,13 +635,11 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
   async function persistSubtitle(subtitle: string): Promise<boolean> {
     const current = taskGuard();
     const value = subtitle.trim();
-    settings.lastSubtitle = value;
-    state.templateDraft.subtitle = value;
-    saveSettings();
-    if (disposed || !client?.ready || !state.action) {
+    if (value === settings.lastSubtitle) {
       state.subtitleDirty = false;
       return true;
     }
+    if (disposed || !client?.ready || !state.action) return false;
     try {
       const response = await callAction('saveTemplates', {
         twitchTemplate: settings.twitchTemplate,
@@ -649,7 +647,10 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
       });
       if (!current()) return false;
       if (!response.ok) throw new Error(response.error?.message ?? t('subtitleStateSaveFailed'));
-      state.subtitleDirty = false;
+      settings.lastSubtitle = value;
+      saveSettings();
+      // Do not overwrite newer editor input after a slow acknowledgement.
+      if (state.templateDraft.subtitle.trim() === value) state.subtitleDirty = false;
       return true;
     } catch (error) {
       if (!current()) return false;
@@ -841,7 +842,8 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
     }
     state.allSaving = true;
     try {
-      if (!(await persistSubtitle(form.subtitle))) return;
+      if (form.subtitle.trim() !== settings.lastSubtitle && !(await persistSubtitle(form.subtitle)))
+        return;
       if (!current()) return;
       const twitchPayload: TwitchUpdatePayload = {};
       const twitchTitle = inlineTitle('twitch', form);
@@ -1122,16 +1124,23 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
     state.modal = null;
   }
   function saveConnection(): void {
-    Object.assign(settings, {
-      host: state.settingsDraft.host.trim(),
-      password: state.settingsDraft.password,
-      rememberPassword: state.settingsDraft.rememberPassword,
-      endpoint: state.settingsDraft.endpoint.trim() || '/',
-      port: Math.max(1, Math.min(65535, Number(state.settingsDraft.port) || 8080)),
-    });
+    const draft = state.settingsDraft;
+    const next = {
+      host: draft.host.trim(),
+      password: draft.password,
+      rememberPassword: draft.rememberPassword,
+      endpoint: draft.endpoint.trim() || '/',
+      port: Math.max(1, Math.min(65535, Number(draft.port) || 8080)),
+    };
+    const connectionChanged =
+      next.host !== settings.host ||
+      next.port !== settings.port ||
+      next.endpoint !== settings.endpoint ||
+      next.password !== settings.password;
+    Object.assign(settings, next);
     saveSettings();
     closeSettings();
-    void connect();
+    if (connectionChanged || state.connection !== 'connected') void connect();
   }
   function onVisibility(): void {
     if (document.visibilityState === 'visible') void refreshState(false);

@@ -61,11 +61,13 @@
 **Файлы:** `apps/stream-info/src/composables/useStreamInfo.ts`, соответствующие компоненты/tests и при необходимости C# action без изменения стабильных API/ID.
 
 - [ ] Сначала добавить падающие тесты: `persistSubtitle` backend reject/timeout/disconnect/late response/reopen; подтверждённое/неопределённое сохранение и сохранение черновика без ложного success.
-- [ ] Разделить editable draft, last-confirmed server state и persisted local value; фиксировать подтверждённое значение только после ACK, не терять текст при partial success/reconnect; повторный запрос не должен молча перетирать более свежий draft.
-- [ ] Сравнивать поля семантически: не отправлять `saveTemplates` при изменении только title/category/tags и не блокировать unrelated Twitch update ошибкой неизменённого subtitle. Проверить частичное применение.
-- [ ] Различать network/auth/action-missing/action-outdated errors; при пароле в storage не считать любую транспортную ошибку auth-проблемой. Проверить восстановление после неверного пароля.
-- [ ] Не переподключать WebSocket при сохранении настроек, если host/port/endpoint/credentials не изменились; проверить конфигурацию `rememberPassword` отдельно от транспорта.
+- [x] Разделить editable draft, last-confirmed server state и persisted local value; фиксировать подтверждённое значение только после ACK, не терять текст при partial success/reconnect; повторный запрос не должен молча перетирать более свежий draft.
+- [x] Сравнивать поля семантически: не отправлять `saveTemplates` при изменении только title/category/tags и не блокировать unrelated Twitch update ошибкой неизменённого subtitle. Проверить частичное применение.
+- [x] Различать network/auth/action-missing/action-outdated errors; при пароле в storage не считать любую транспортную ошибку auth-проблемой. Проверить восстановление после неверного пароля.
+- [x] Не переподключать WebSocket при сохранении настроек, если host/port/endpoint/credentials не изменились; проверить конфигурацию `rememberPassword` отдельно от транспорта.
 - [ ] Добавить детерминированные тесты повторного save, stale request generation, presets, category pagination, IME, status notices и UI после reconnect. Стабильные имена Actions, IDs, persistent keys и локальные флаги сохранить.
+
+**Проверка:** добавлены browser-transport fixtures на redundant save и backend-rejection; их выполнение и полная матрица reconnect/timeout **не подтверждены**.
 
 **Готово, когда:** подтверждённое backend и local состояние не расходятся без обозначения ошибки, чужие изменения не блокируются лишними write, нет ложной авторизации. **Коммит:** `fix(stream-info): reconcile persisted state and transport lifecycle`.
 

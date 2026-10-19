@@ -266,3 +266,84 @@ for (const order of ['ack-first', 'event-first', 'ack-error', 'missing-event']) 
     },
   );
 }
+
+test(
+  'changing only full Twitch title does not send a redundant saveTemplates command',
+  { timeout: 60000 },
+  async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'stream-info-title-'));
+    const browser = await launchBrowser();
+    const commands = [];
+    try {
+      const file = join(directory, 'dock.html');
+      await cp(
+        new URL('../apps/stream-info/dist/change-info-streamer-bot.ru.html', import.meta.url),
+        file,
+      );
+      const context = await browser.newContext();
+      await mockTransport(context, commands);
+      const page = await context.newPage();
+      await page.goto(pathToFileURL(file).href);
+      await page.getByLabel('Тема стрима', { exact: true }).waitFor();
+      await page.getByRole('button', { name: 'Полное название', exact: true }).click();
+      await page.getByLabel('Полное название', { exact: true }).fill('Новое название стрима');
+      await page.getByRole('button', { name: 'Применить изменения', exact: true }).click();
+      await page.waitForFunction(() => document.body.textContent.includes('Изменения применены'));
+      assert.equal(commands.filter((entry) => entry.command === 'saveTemplates').length, 0);
+      assert(
+        commands.some(
+          (entry) =>
+            entry.command === 'updateTwitch' &&
+            entry.payload.title === 'Новое название стрима',
+        ),
+      );
+      await context.close();
+    } finally {
+      await browser.close();
+      await rm(directory, { recursive: true, force: true });
+    }
+  },
+);
+
+test(
+  'failed subtitle persistence keeps the last confirmed value in local storage',
+  { timeout: 60000 },
+  async () => {
+    const directory = await mkdtemp(join(tmpdir(), 'stream-info-rejected-'));
+    const browser = await launchBrowser();
+    try {
+      const file = join(directory, 'dock.html');
+      await cp(
+        new URL('../apps/stream-info/dist/change-info-streamer-bot.ru.html', import.meta.url),
+        file,
+      );
+      const context = await browser.newContext();
+      await mockTransport(context, [], (request) => {
+        if (request.command !== 'saveTemplates') return false;
+        request.ack({ status: 'error', error: 'Fixture rejection' });
+        return true;
+      });
+      const page = await context.newPage();
+      await page.goto(pathToFileURL(file).href);
+      const subtitle = page.getByLabel('Тема стрима', { exact: true });
+      await subtitle.waitFor();
+      await page.waitForFunction(
+        () =>
+          JSON.parse(localStorage.getItem('change-info-streamer-bot.settings.v1') || '{}')
+            .lastSubtitle === 'Исходное название',
+      );
+      await subtitle.fill('Не подтверждённая тема');
+      await page.getByRole('button', { name: 'Применить изменения', exact: true }).click();
+      await page.getByText('Подзаголовок не сохранён в Streamer.bot', { exact: false }).waitFor();
+      const saved = await page.evaluate(() =>
+        JSON.parse(localStorage.getItem('change-info-streamer-bot.settings.v1')),
+      );
+      assert.equal(saved.lastSubtitle, 'Исходное название');
+      assert.equal(await subtitle.inputValue(), 'Не подтверждённая тема');
+      await context.close();
+    } finally {
+      await browser.close();
+      await rm(directory, { recursive: true, force: true });
+    }
+  },
+);
