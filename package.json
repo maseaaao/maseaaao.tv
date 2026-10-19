@@ -38,7 +38,9 @@
     "typecheck": "npm run check:stream-info",
     "build:artwork": "node tooling/build-artwork.mjs",
     "test:checks": "npm run test:website && npm run test:stream-info && npm run test:companion && npm run test:local",
-    "check:repository": "node tooling/check-repository.mjs"
+    "check:repository": "node tooling/check-repository.mjs",
+    "build:ui-probe": "npm run build --workspace tooling/ui-portability",
+    "test:ui-probe": "npm run build:ui-probe && npm test --workspace tooling/ui-portability"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
@@ -71,7 +73,8 @@
     "apps/*",
     "packages/*",
     "integrations/companion/system-microphone",
-    "integrations/companion/voice-control"
+    "integrations/companion/voice-control",
+    "tooling/ui-portability"
   ],
   "engines": {
     "node": ">=22.20 <23"

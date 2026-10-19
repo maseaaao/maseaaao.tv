@@ -333,11 +333,6 @@
       "sha256": "8e70ac525de624f03936e00304d347ce91698a3d0c66fcbfbaa78df41277eace"
     },
     {
-      "path": "dist/.DS_Store",
-      "bytes": 6148,
-      "sha256": "ea9bd74ac753d58a0671f820a5317c8c7deccf0bf077128df19de7cfacc2fad9"
-    },
-    {
       "path": "dist/.well-known/api-catalog",
       "bytes": 1215,
       "sha256": "cb37897936e5c2d5a07004cf204a11f4670e53104b55e6efaae8af13589ff8bf"
@@ -363,11 +358,6 @@
       "sha256": "43762e1ef3743b89ee0f185150bfa07b9cada14559c57d79b60af86c82b25ed1"
     },
     {
-      "path": "dist/assets/.DS_Store",
-      "bytes": 6148,
-      "sha256": "c499d2736fe9bea6871a91f01b238b9cd02a7569d71bfd281fe9a787b4d7d1c7"
-    },
-    {
       "path": "dist/assets/avatar-128.webp",
       "bytes": 1278,
       "sha256": "fafe2ef233d4a3d4f63b4020e741a2d7d6eaea20e65050f1532ddc2b05b1f800"
@@ -391,11 +381,6 @@
       "path": "dist/assets/avatar-96.webp",
       "bytes": 1012,
       "sha256": "3a2ba3921ee30210ebf52334117b6796eaff1333f4d615effe7a24d5f67de41e"
-    },
-    {
-      "path": "dist/assets/fonts/.DS_Store",
-      "bytes": 6148,
-      "sha256": "aebb8cf3c36bf5e85c19c20dc37df1433b2deebe5583f9ba8ca91a19fba259e4"
     },
     {
       "path": "dist/assets/maseaaao.tv.png",

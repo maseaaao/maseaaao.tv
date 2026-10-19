@@ -1,0 +1,37 @@
+@import '@maseaaao/design/brand.css';
+
+body {
+  margin: 0;
+  padding: 24px;
+  color: var(--hud-text);
+  background: var(--hud-bg);
+  font-family: Arial, sans-serif;
+}
+main {
+  max-width: 540px;
+  margin: auto;
+  padding: 24px;
+  border: 1px solid var(--hud-border);
+  background: var(--hud-surface);
+}
+h1 {
+  overflow-wrap: anywhere;
+  font:
+    600 24px/1.4 Unbounded,
+    Arial,
+    sans-serif;
+}
+form {
+  display: grid;
+  gap: 12px;
+}
+input,
+button {
+  min-height: 44px;
+  min-width: 0;
+  font: inherit;
+}
+:focus-visible {
+  outline: 3px solid var(--hud-accent);
+  outline-offset: 3px;
+}

@@ -42,6 +42,7 @@ export default defineConfig([
   {
     files: [
       'tests/**/*.mjs',
+      'tooling/ui-portability/*.test.mjs',
       'apps/stream-info/scripts/verify*-live.mjs',
       'apps/stream-info/scripts/verify-live.mjs',
       'tooling/artwork/*.mjs',
