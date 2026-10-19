@@ -26,12 +26,25 @@ jobs:
       - run: python3 -m pip install -r tooling/artwork/requirements-fonts.txt
       - run: npm run verify:ui-renewal
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: standalone-tools
           path: |
             apps/stream-info/dist/*.html
             apps/tuna-widget/dist/*.html
             apps/obs-widgets/dist/**
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: website-and-artwork-preview
+          if-no-files-found: warn
+          path: |
+            dist/**
+            artwork/scenes/rendered/**
+            artwork/banners/rendered/**
+            artwork/twitch-description/rendered/**
+            artwork/brand/rendered/website/**
+            artwork/wallpapers/rendered/**
   companion-build:
     runs-on: windows-latest
     steps:

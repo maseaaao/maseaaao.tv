@@ -86,3 +86,5 @@ Playwright и Sharp используются через один renderImage; IC
 `npm run check:artifacts` сравнивает **все управляемые артефакты** с коммитом включая WEBP/PNG/JPEG/ICO, standalone HTML и import; отмечает новые или изменённые untracked файлы, формирует SHA-256 manifest в `.build-cache/verify/artifacts.sha256`. Если Chrome/Sharp/OS дают отличающиеся бинарные изображения, CI останавливается до явного принятия эталона. Не отключать проверку из-за недетерминизма. Рендеры не меняют исходники и живую установку OBS.
 
 Команды доступны только после `npm ci`, установки Chromium и `python3 -m pip install -r tooling/artwork/requirements-fonts.txt`. Для полной приёмки C# нужен .NET 8, для Companion упаковки — Windows job. Отсутствие локальных инструментов — блокер запуска, а не зелёный результат.
+
+При неуспешном CI временные сборки можно изучить во вкладке Actions → Artifacts: `standalone-tools` и `website-and-artwork-preview`. Наличие прикреплённых файлов не означает, что проверки пройдены. В частности, `check:artifacts` вправе падать до принятия обновлённого tracked baseline.
