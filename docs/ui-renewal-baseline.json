@@ -1,0 +1,543 @@
+{
+  "date": "2026-10-19",
+  "scope": "Исходные отслеживаемые поставки до миграции; реальные байты, без gzip. Не результат новой сборки. Inline CSS включает data URL шрифта; отдельно их не суммировать.",
+  "files": [
+    {
+      "path": "apps/obs-widgets/dist/donors/donationalerts-stream-stats.css",
+      "bytes": 156712,
+      "sha256": "8d63d45e9196c1071e503228273e2340d4d4f0b6f8cd3a1f475bcec1e1b18e77"
+    },
+    {
+      "path": "apps/obs-widgets/dist/output-stats/index.html",
+      "bytes": 182808,
+      "sha256": "1afdc4d13ea0a32f5bfc4fc4d4724484bc828edbd7affccb518a758732468aeb",
+      "inlineScriptBytes": 17622,
+      "inlineStyleBytes": 157459
+    },
+    {
+      "path": "apps/obs-widgets/dist/social-strip/index.html",
+      "bytes": 158359,
+      "sha256": "71656027b8142ed1d84a47dc17b6f9e22886d85df712b46b41f398e9f39a58b0",
+      "inlineScriptBytes": 710,
+      "inlineStyleBytes": 150813
+    },
+    {
+      "path": "apps/obs-widgets/dist/social-strip/transparent.png",
+      "bytes": 70,
+      "sha256": "c2153f77e11087fcb078ae38527fa83bef29791e3700e30cc87fec4405a66d0f"
+    },
+    {
+      "path": "apps/obs-widgets/dist/sounds/health-warning.mp3",
+      "bytes": 15810,
+      "sha256": "7189ef6c33d21b4f9be89d1ca208816241327cbe2772d573334f238a9d2b26c5"
+    },
+    {
+      "path": "apps/obs-widgets/dist/sounds/notif.mp3",
+      "bytes": 25100,
+      "sha256": "60cec357c3ae2df2edb95b77dd473c5df020e952b60bb901ee25f4c2a3ec7945"
+    },
+    {
+      "path": "apps/obs-widgets/dist/streamlabs-chat/chat-box.css",
+      "bytes": 157625,
+      "sha256": "edbde106eb06d1a61fd9fe962c7ed6eadf536e4445e8c5be8b40fdd422373722"
+    },
+    {
+      "path": "apps/obs-widgets/dist/streamlabs-chat/chat-box.html",
+      "bytes": 421,
+      "sha256": "c14428e174026e0db2c91cc5c71003e74885b0d52fa576dc295810a2d5cf6d6f",
+      "inlineScriptBytes": 250,
+      "inlineStyleBytes": 0
+    },
+    {
+      "path": "apps/obs-widgets/dist/streamlabs-chat/chat-box.js",
+      "bytes": 934,
+      "sha256": "b440cf0bc7ca12668849c5eb3a837bcf4098ba25d3cf8fefdf7c09f0d7b09197"
+    },
+    {
+      "path": "apps/obs-widgets/dist/streamlabs-chat/donationalerts-alerts.css",
+      "bytes": 156531,
+      "sha256": "86f5c577ca42d418cb5f3a32a18c34cc9cc9373ba15028f16e2c8e6cc7e14ff5"
+    },
+    {
+      "path": "apps/stream-info/dist/change-info-streamer-bot.ru.html",
+      "bytes": 275912,
+      "sha256": "d5bfa2f86a2ff3797e7040e0a763bd8d2531c3340806d71ed7259d745d4355c6",
+      "inlineScriptBytes": 103747,
+      "inlineStyleBytes": 167267
+    },
+    {
+      "path": "apps/stream-info/streamerbot-import.txt",
+      "bytes": 21293,
+      "sha256": "a26b14f55084fb69bfb5f2b2e846c285b195273ab1ce272bd7c5551e7cee5048"
+    },
+    {
+      "path": "apps/tuna-widget/dist/obs-tuna-widget.html",
+      "bytes": 166198,
+      "sha256": "e541c6dbfa1d74334ee42b2fbb2899229f6707b23d5710657da3e04a7dbeea16",
+      "inlineScriptBytes": 8155,
+      "inlineStyleBytes": 151996
+    },
+    {
+      "path": "apps/website/public/.well-known/api-catalog",
+      "bytes": 1215,
+      "sha256": "cb37897936e5c2d5a07004cf204a11f4670e53104b55e6efaae8af13589ff8bf"
+    },
+    {
+      "path": "apps/website/public/_headers",
+      "bytes": 1207,
+      "sha256": "4b5888e3ec9f1c3f3337740fc26f9d67b63b5aabf24e875a1d8de947e8d92629"
+    },
+    {
+      "path": "apps/website/public/android-chrome-512x512.png",
+      "bytes": 164962,
+      "sha256": "783c6007ca888538f01ef81609c6e7114d98b64cce0f059441a7021023f62bd2"
+    },
+    {
+      "path": "apps/website/public/apple-touch-icon-1024x1024.png",
+      "bytes": 500008,
+      "sha256": "c18e68b49573201e1df05de71e0cdc3a273565fc1983b80030f454098b5e0b25"
+    },
+    {
+      "path": "apps/website/public/apple-touch-icon.png",
+      "bytes": 21662,
+      "sha256": "43762e1ef3743b89ee0f185150bfa07b9cada14559c57d79b60af86c82b25ed1"
+    },
+    {
+      "path": "apps/website/public/assets/avatar-128.webp",
+      "bytes": 1278,
+      "sha256": "fafe2ef233d4a3d4f63b4020e741a2d7d6eaea20e65050f1532ddc2b05b1f800"
+    },
+    {
+      "path": "apps/website/public/assets/avatar-192.webp",
+      "bytes": 1720,
+      "sha256": "c809b54ce39b01103f2590bcb62177f149535e8170c000b28dd21953b2e6f4de"
+    },
+    {
+      "path": "apps/website/public/assets/avatar-288.webp",
+      "bytes": 2632,
+      "sha256": "64baa4b36f10d884e5afdb434ffdc91ab6ae0f7204bc873c6baba83700807f4b"
+    },
+    {
+      "path": "apps/website/public/assets/avatar-64.webp",
+      "bytes": 744,
+      "sha256": "617f359debe0598b176391020216d119e33ada9f2106d71a319a8326f7f6cabe"
+    },
+    {
+      "path": "apps/website/public/assets/avatar-96.webp",
+      "bytes": 1012,
+      "sha256": "3a2ba3921ee30210ebf52334117b6796eaff1333f4d615effe7a24d5f67de41e"
+    },
+    {
+      "path": "apps/website/public/assets/maseaaao.tv.png",
+      "bytes": 37760,
+      "sha256": "51cef08ab10496a0eb6638c3f568ea87d42bb3757c243fdf828d25d830be7133"
+    },
+    {
+      "path": "apps/website/public/assets/subscribe-512.png",
+      "bytes": 19380,
+      "sha256": "7027cb47dd722a52dd81b6796b61f87292e5e11e2e764f2dbec3b517ed97b3d5"
+    },
+    {
+      "path": "apps/website/public/assets/subscribe-background-ai.png",
+      "bytes": 5243,
+      "sha256": "d3d48aac58c955c8051aa614d63b158f806a72b5e77013c2b786c52ca894161c"
+    },
+    {
+      "path": "apps/website/public/favicon-16x16.png",
+      "bytes": 667,
+      "sha256": "afa998e999aa4cde34093fe277a05f38d44a94cc04075de5df82f67f2f6972d6"
+    },
+    {
+      "path": "apps/website/public/favicon-32x32.png",
+      "bytes": 1550,
+      "sha256": "28d99c30f2bee2538e33f784395f385a9e1ab91ed21712c1e0fe0d811691b1c9"
+    },
+    {
+      "path": "apps/website/public/favicon-48x48.png",
+      "bytes": 2507,
+      "sha256": "df440472eb48276dbb6efb9ac4649203f80147d46aebc74540aae07f78843f6f"
+    },
+    {
+      "path": "apps/website/public/favicon.ico",
+      "bytes": 15086,
+      "sha256": "20596152e2fe193ac749089894c7d46b4e4665c691191e41c87fa37cc0d643d6"
+    },
+    {
+      "path": "apps/website/public/manifest.webmanifest",
+      "bytes": 518,
+      "sha256": "e83f9859090aeed5e8797fcb67058cb1782ac6f6161d8246b7d278738a948807"
+    },
+    {
+      "path": "apps/website/public/og-image.jpg",
+      "bytes": 47163,
+      "sha256": "ea5a1489224ce1b0d957e849789fee4296ff3479219fe06c639d542ccc36bcdb"
+    },
+    {
+      "path": "apps/website/public/robots.txt",
+      "bytes": 121,
+      "sha256": "ca549ac5187ba063fc0ada31201a298f22738366e957e77ceeb094d9e1983768"
+    },
+    {
+      "path": "apps/website/public/sitemap.xml",
+      "bytes": 293,
+      "sha256": "1abecaf1b7c6b7742d8b8c5c7177ed2f9b4c0f50f120bd6babddec34c4cb497c"
+    },
+    {
+      "path": "artwork/banners/rendered/twitch.jpeg",
+      "bytes": 31459,
+      "sha256": "da57d7521d83b653867c6b9cb7f11ac7dc8a3ee13f0d18f1c7e5a97eac9116da"
+    },
+    {
+      "path": "artwork/banners/rendered/youtube.jpeg",
+      "bytes": 70222,
+      "sha256": "9ea1a37af5f794723b63c5db443e6d7e6abc083d7e4dd46372d6ff6823c7d21b"
+    },
+    {
+      "path": "artwork/logo/logo.png",
+      "bytes": 1178629,
+      "sha256": "08c65c958c44d27f9e1bb21ba3c87bc0ea4da2f242a7fe458ec5890b58f92ede"
+    },
+    {
+      "path": "artwork/logo/rendered/avatar-1024.png",
+      "bytes": 696676,
+      "sha256": "7d89401451010463f12c17e6b619b3437c7858caf20d118b346924ce73924191"
+    },
+    {
+      "path": "artwork/logo/rendered/avatar-256.png",
+      "bytes": 43266,
+      "sha256": "4ff9b664b7c9ee4c0bcb6183e8bbc0a86a074ac4c8212480a4d325ba11ace19e"
+    },
+    {
+      "path": "artwork/logo/rendered/avatar-circle-1024.png",
+      "bytes": 628759,
+      "sha256": "9efb4ee627d7dca76353556ff46fbc7e2962523d04f7c83735a7615fd0dc11a5"
+    },
+    {
+      "path": "artwork/logo/rendered/avatar-circle-256.png",
+      "bytes": 41488,
+      "sha256": "e738494a77ba1889a41cd2c63aa9f6d1de5937b2c8de5d8865795d667f10ba89"
+    },
+    {
+      "path": "artwork/logo/rendered/avatar-circle-512.png",
+      "bytes": 174437,
+      "sha256": "7efada417e91d221a7192b9e1e0917e2302b473b1a304e571b1ea7b92178cb48"
+    },
+    {
+      "path": "artwork/logo/rendered/logo-circle.webp",
+      "bytes": 401354,
+      "sha256": "5212041dacd8389175a8b714e5a79477bbc1df74ea1849bb434a84d999023ecb"
+    },
+    {
+      "path": "artwork/logo/rendered/maseaaao.webp",
+      "bytes": 158932,
+      "sha256": "6c9c266cfa3584c861b7f5549d74843edf16e2b6a655cca87171aa2bf9cdb437"
+    },
+    {
+      "path": "artwork/scenes/rendered/00-blank-vertical.webp",
+      "bytes": 128,
+      "sha256": "6b4eee47f4a6e60aa732b05191f61d284a7ad404ea856cf66e5d93774f6e0999"
+    },
+    {
+      "path": "artwork/scenes/rendered/00-blank.webp",
+      "bytes": 198,
+      "sha256": "2664799d09e882d44266a1ac187fcb83c78c9838a62fd0ff996ae5d1e156c5b8"
+    },
+    {
+      "path": "artwork/scenes/rendered/01-start-vertical.webp",
+      "bytes": 9546,
+      "sha256": "f5e0408ba9e8d61d12e40a391bb1223c16a999db84fb2eb26dfcae83c8bffa98"
+    },
+    {
+      "path": "artwork/scenes/rendered/01-start.webp",
+      "bytes": 13034,
+      "sha256": "a8928a95ea11d91f69734cd2903716c37345dda8547e182c0411975529b2086d"
+    },
+    {
+      "path": "artwork/scenes/rendered/02-pause-vertical.webp",
+      "bytes": 9576,
+      "sha256": "bf4024a599aacf615edd3ee9b5864b654e930d1cc796e80fcf752afe735e6467"
+    },
+    {
+      "path": "artwork/scenes/rendered/02-pause.webp",
+      "bytes": 13350,
+      "sha256": "218c62945fd6d8a8d3253382916437eb3f32999f0a758967439799fdc02e543d"
+    },
+    {
+      "path": "artwork/scenes/rendered/04-camera-horizontal.webp",
+      "bytes": 3922,
+      "sha256": "2e33a381a8c09a68ce587b2a0ddcb8cf5a360a47fa0111ec49dfa1f57ca41bf3"
+    },
+    {
+      "path": "artwork/scenes/rendered/04-camera-vertical.webp",
+      "bytes": 1232,
+      "sha256": "d7eba25f59485b80f0dd29a6bb1aee5f95ce6db3f2ad2c090140468d18ecbfbf"
+    },
+    {
+      "path": "artwork/scenes/rendered/99-end-vertical.webp",
+      "bytes": 9226,
+      "sha256": "d2fea8d9f7039e8c6ed19b80374ff6f0b33eca6bd7c64eeb00b69a26d6577d0b"
+    },
+    {
+      "path": "artwork/scenes/rendered/99-end.webp",
+      "bytes": 12234,
+      "sha256": "2a1e7b83bfa2eb6d2d62cc45a2ea24fc451ba47dc9cdcf5dbfb740c41863a42b"
+    },
+    {
+      "path": "artwork/scenes/rendered/background.webp",
+      "bytes": 198,
+      "sha256": "2664799d09e882d44266a1ac187fcb83c78c9838a62fd0ff996ae5d1e156c5b8"
+    },
+    {
+      "path": "artwork/scenes/rendered/cam-frame.webp",
+      "bytes": 552,
+      "sha256": "b9391c39875acb2ac3020cac38decbc52906eeea29f6fb6fdd89b3732f0c9274"
+    },
+    {
+      "path": "artwork/sounds/CENSOR_mac-quack.mp3",
+      "bytes": 19154,
+      "sha256": "927f67628de12590305881411146f4a05b2ddb9a7fcafb80a8e97d3de5686540"
+    },
+    {
+      "path": "artwork/twitch-description/rendered/01-about.jpeg",
+      "bytes": 4882,
+      "sha256": "4c67a80a93c5e7f599fe492084e74105153b8c2ae7b0f1f01ca567a9f1e5e1af"
+    },
+    {
+      "path": "artwork/twitch-description/rendered/02-rules.jpeg",
+      "bytes": 5509,
+      "sha256": "f5f5b171d0137906332165a260a6eb5db184859da20cf04cd31a9d471191bf37"
+    },
+    {
+      "path": "artwork/twitch-description/rendered/03-donate.jpeg",
+      "bytes": 4420,
+      "sha256": "d209672e44ae57def02bcba19ab392b2d1548e68ff4a5fdc54e9e8edd469b07a"
+    },
+    {
+      "path": "artwork/twitch-description/rendered/04-devices.jpeg",
+      "bytes": 5382,
+      "sha256": "50fb876f6bedb394c9007d04e490f99fe69a5bcca04234f588d2beaad10772a9"
+    },
+    {
+      "path": "artwork/twitch-description/rendered/05-specs.jpeg",
+      "bytes": 6840,
+      "sha256": "55b70aaa6260d613a36021047b483afebc6e37e547b4c48dd9bf05fcfd0b9b9d"
+    },
+    {
+      "path": "artwork/wallpapers/rendered/desktop-4k.png",
+      "bytes": 135332,
+      "sha256": "8ff3b887f2c70516616e50041d56731ad965fac2e30625846e2a52c0b80b0fba"
+    },
+    {
+      "path": "artwork/wallpapers/rendered/portrait-4k.png",
+      "bytes": 147306,
+      "sha256": "8e70ac525de624f03936e00304d347ce91698a3d0c66fcbfbaa78df41277eace"
+    },
+    {
+      "path": "dist/.DS_Store",
+      "bytes": 6148,
+      "sha256": "ea9bd74ac753d58a0671f820a5317c8c7deccf0bf077128df19de7cfacc2fad9"
+    },
+    {
+      "path": "dist/.well-known/api-catalog",
+      "bytes": 1215,
+      "sha256": "cb37897936e5c2d5a07004cf204a11f4670e53104b55e6efaae8af13589ff8bf"
+    },
+    {
+      "path": "dist/_headers",
+      "bytes": 1207,
+      "sha256": "4b5888e3ec9f1c3f3337740fc26f9d67b63b5aabf24e875a1d8de947e8d92629"
+    },
+    {
+      "path": "dist/android-chrome-512x512.png",
+      "bytes": 164962,
+      "sha256": "783c6007ca888538f01ef81609c6e7114d98b64cce0f059441a7021023f62bd2"
+    },
+    {
+      "path": "dist/apple-touch-icon-1024x1024.png",
+      "bytes": 500008,
+      "sha256": "c18e68b49573201e1df05de71e0cdc3a273565fc1983b80030f454098b5e0b25"
+    },
+    {
+      "path": "dist/apple-touch-icon.png",
+      "bytes": 21662,
+      "sha256": "43762e1ef3743b89ee0f185150bfa07b9cada14559c57d79b60af86c82b25ed1"
+    },
+    {
+      "path": "dist/assets/.DS_Store",
+      "bytes": 6148,
+      "sha256": "c499d2736fe9bea6871a91f01b238b9cd02a7569d71bfd281fe9a787b4d7d1c7"
+    },
+    {
+      "path": "dist/assets/avatar-128.webp",
+      "bytes": 1278,
+      "sha256": "fafe2ef233d4a3d4f63b4020e741a2d7d6eaea20e65050f1532ddc2b05b1f800"
+    },
+    {
+      "path": "dist/assets/avatar-192.webp",
+      "bytes": 1720,
+      "sha256": "c809b54ce39b01103f2590bcb62177f149535e8170c000b28dd21953b2e6f4de"
+    },
+    {
+      "path": "dist/assets/avatar-288.webp",
+      "bytes": 2632,
+      "sha256": "64baa4b36f10d884e5afdb434ffdc91ab6ae0f7204bc873c6baba83700807f4b"
+    },
+    {
+      "path": "dist/assets/avatar-64.webp",
+      "bytes": 744,
+      "sha256": "617f359debe0598b176391020216d119e33ada9f2106d71a319a8326f7f6cabe"
+    },
+    {
+      "path": "dist/assets/avatar-96.webp",
+      "bytes": 1012,
+      "sha256": "3a2ba3921ee30210ebf52334117b6796eaff1333f4d615effe7a24d5f67de41e"
+    },
+    {
+      "path": "dist/assets/fonts/.DS_Store",
+      "bytes": 6148,
+      "sha256": "aebb8cf3c36bf5e85c19c20dc37df1433b2deebe5583f9ba8ca91a19fba259e4"
+    },
+    {
+      "path": "dist/assets/maseaaao.tv.png",
+      "bytes": 37760,
+      "sha256": "51cef08ab10496a0eb6638c3f568ea87d42bb3757c243fdf828d25d830be7133"
+    },
+    {
+      "path": "dist/assets/subscribe-512.png",
+      "bytes": 19380,
+      "sha256": "7027cb47dd722a52dd81b6796b61f87292e5e11e2e764f2dbec3b517ed97b3d5"
+    },
+    {
+      "path": "dist/assets/subscribe-background-ai.png",
+      "bytes": 5243,
+      "sha256": "d3d48aac58c955c8051aa614d63b158f806a72b5e77013c2b786c52ca894161c"
+    },
+    {
+      "path": "dist/bundles/check.html-CUK8QVQM.js",
+      "bytes": 2232,
+      "sha256": "cc341b4b8533eefb4cbee4d27e4f4bec257644eb56242f3d7eeffbd2d0f4add1"
+    },
+    {
+      "path": "dist/bundles/index.html-BsGYYkig.js",
+      "bytes": 3701,
+      "sha256": "cb16347735420fc77ba4917a4de8e3a746e4f4e29cf2d90d8c0ac3f263614290"
+    },
+    {
+      "path": "dist/bundles/modulepreload-polyfill-B5Qt9EMX.js",
+      "bytes": 711,
+      "sha256": "d2a32840421496e872ade591618d2fa5c33797605d1aec04301717e5a90757d0"
+    },
+    {
+      "path": "dist/bundles/site-WbkkVUq-.css",
+      "bytes": 12695,
+      "sha256": "81ce06bc25f21d05649287af72b0389142b5b225ceb1fb7b3d8a9d34acf4ce2f"
+    },
+    {
+      "path": "dist/bundles/theme-CoqRwdox.css",
+      "bytes": 325,
+      "sha256": "579af1ac1fe4428e5a8af47d8ee346b23bcb4cf3eeefd3535fced4b46d9b9312"
+    },
+    {
+      "path": "dist/bundles/unbounded-600-CPXfwbxF.woff2",
+      "bytes": 111736,
+      "sha256": "729593e0b438dbe3bd3e617ad85f2c98aa68fd3b250e4c9afc0e71f94db6eceb"
+    },
+    {
+      "path": "dist/check.html",
+      "bytes": 2873,
+      "sha256": "663ce8c885e9a11832959fb5cf744443c2bc4021a61451dc4f8a1a251db74a7e",
+      "inlineScriptBytes": 0,
+      "inlineStyleBytes": 0
+    },
+    {
+      "path": "dist/docs.html",
+      "bytes": 3178,
+      "sha256": "c1faa8210e9801576bc2af045746bb56c1e4f8f86cc532424a240c37047ebce1",
+      "inlineScriptBytes": 0,
+      "inlineStyleBytes": 0
+    },
+    {
+      "path": "dist/favicon-16x16.png",
+      "bytes": 667,
+      "sha256": "afa998e999aa4cde34093fe277a05f38d44a94cc04075de5df82f67f2f6972d6"
+    },
+    {
+      "path": "dist/favicon-32x32.png",
+      "bytes": 1550,
+      "sha256": "28d99c30f2bee2538e33f784395f385a9e1ab91ed21712c1e0fe0d811691b1c9"
+    },
+    {
+      "path": "dist/favicon-48x48.png",
+      "bytes": 2507,
+      "sha256": "df440472eb48276dbb6efb9ac4649203f80147d46aebc74540aae07f78843f6f"
+    },
+    {
+      "path": "dist/favicon.ico",
+      "bytes": 15086,
+      "sha256": "20596152e2fe193ac749089894c7d46b4e4665c691191e41c87fa37cc0d643d6"
+    },
+    {
+      "path": "dist/index.html",
+      "bytes": 21671,
+      "sha256": "2a0c48572ca4df7d4ea31f1b36032cbda5d050b83143e053f66268a9f3b37b41",
+      "inlineScriptBytes": 799,
+      "inlineStyleBytes": 86
+    },
+    {
+      "path": "dist/licenses/Unbounded-OFL.txt",
+      "bytes": 4391,
+      "sha256": "0ffe0a13450d66fcb678824aac041cdc41a3423f153b778feff2167624e67bb2"
+    },
+    {
+      "path": "dist/manifest.webmanifest",
+      "bytes": 518,
+      "sha256": "e83f9859090aeed5e8797fcb67058cb1782ac6f6161d8246b7d278738a948807"
+    },
+    {
+      "path": "dist/og-image.jpg",
+      "bytes": 47163,
+      "sha256": "ea5a1489224ce1b0d957e849789fee4296ff3479219fe06c639d542ccc36bcdb"
+    },
+    {
+      "path": "dist/robots.txt",
+      "bytes": 121,
+      "sha256": "ca549ac5187ba063fc0ada31201a298f22738366e957e77ceeb094d9e1983768"
+    },
+    {
+      "path": "dist/sitemap.xml",
+      "bytes": 293,
+      "sha256": "1abecaf1b7c6b7742d8b8c5c7177ed2f9b4c0f50f120bd6babddec34c4cb497c"
+    },
+    {
+      "path": "dist/tools/index.html",
+      "bytes": 1246,
+      "sha256": "356ffb34db834f6ac0e54f340451291a17558e045a216dae8c8a47545cfcd43a",
+      "inlineScriptBytes": 0,
+      "inlineStyleBytes": 0
+    },
+    {
+      "path": "dist/tools/stream-info.html",
+      "bytes": 1562,
+      "sha256": "545c27dd00679546dc2db45199dfc6000d1b1e710dfb7897575327769c08dad2",
+      "inlineScriptBytes": 0,
+      "inlineStyleBytes": 0
+    },
+    {
+      "path": "dist/tools/tuna-widget.html",
+      "bytes": 1437,
+      "sha256": "00316602901d216b5aa8509b5d01ab8dd06ed950e7f42904cf2fe4066ac19294",
+      "inlineScriptBytes": 0,
+      "inlineStyleBytes": 0
+    },
+    {
+      "path": "packages/design/fonts/Unbounded.ttf",
+      "bytes": 778272,
+      "sha256": "323b511be380c8d474ef030686b71aedde501f8d9cd46da558b7c40454372c3f"
+    },
+    {
+      "path": "packages/design/fonts/unbounded-600.woff2",
+      "bytes": 111736,
+      "sha256": "729593e0b438dbe3bd3e617ad85f2c98aa68fd3b250e4c9afc0e71f94db6eceb"
+    }
+  ]
+}
