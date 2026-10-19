@@ -21,13 +21,18 @@ test('chat and alert skins use canonical warm-light tokens without changing even
       .parse(css.replaceAll('{font_size}', '32px').replaceAll('{message_hide_delay}', '600s'))
       .walkDecls((decl) => declarations.set(decl.prop, decl.value));
     for (const [name, value] of Object.entries({
-      '--cm-surface': 'var(--surface)',
-      '--cm-raised': 'var(--hud-surface)',
-      '--cm-text': 'var(--text)',
-      '--cm-accent': 'var(--accent)',
+      '--cm-surface': 'var(--color-surface)',
+      '--cm-raised': 'var(--color-field)',
+      '--cm-text': 'var(--color-text)',
+      '--cm-accent': 'var(--color-brand)',
     }))
       assert.equal(declarations.get(name), value, `${file}: ${name}`);
     assert.doesNotMatch(css, /#C182F3|rgba\(10,13,18|#68517E/i);
+    assert.doesNotMatch(
+      css,
+      /--hud-|--space-|--font-display/,
+      'Provider exports omit unrelated layout/compatibility tokens',
+    );
   }
   const chat = read('apps/obs-widgets/dist/streamlabs-chat/chat-box.css');
   assert.match(chat, /font-size:\s*\{font_size\}/);
@@ -116,14 +121,17 @@ test('real Chromium provider-shaped text stress fixtures load fonts and retain l
       { badge, transparent },
     );
     await page.evaluate(async () => {
-      await document.fonts.load('600 24px Unbounded', 'Проверка English');
+      await document.fonts.load('400 24px Unbounded', 'Проверка English');
       await document.fonts.ready;
     });
     await page.waitForTimeout(350);
     assert.equal(await page.locator('#log > .host').count(), 1);
     assert.equal(await page.locator('#log > .mention').count(), 1);
     const metrics = await page.evaluate(() => ({
-      font: document.fonts.check('600 24px Unbounded', 'Кириллица'),
+      font: [...document.fonts].some(
+        (face) => face.family === 'Unbounded' && face.weight === '400' && face.status === 'loaded',
+      ),
+      weight: getComputedStyle(document.querySelector('#log .meta')).fontWeight,
       bg: getComputedStyle(document.querySelector('#log>div.mention')).backgroundColor,
       overflow: [...document.querySelectorAll('#log .message')].some(
         (x) => x.scrollWidth > x.clientWidth + 1,
@@ -134,6 +142,7 @@ test('real Chromium provider-shaped text stress fixtures load fonts and retain l
       delay: getComputedStyle(document.querySelector('#log>div')).animationDelay,
     }));
     assert.equal(metrics.font, true);
+    assert.equal(metrics.weight, '400');
     assert.equal(metrics.bg, 'rgb(244, 243, 236)');
     assert.equal(metrics.overflow, false);
     assert.equal(metrics.name, 'ellipsis');
@@ -159,7 +168,7 @@ test('real Chromium provider-shaped text stress fixtures load fonts and retain l
           : `<div class="widget-stream-stats"><div class="stats-list"><div class="stats-list-item fade-in-out-enter-active"><div class="stats-item-main-row">${long} — 123 456 ₽</div><div class="stats-item-additional-row">За месяц · ${long}</div></div></div></div>`;
       await p.locator('body').evaluate((b, h) => (b.innerHTML = h), html);
       await p.evaluate(async () => {
-        await document.fonts.load('600 32px Unbounded', 'Проверка English');
+        await document.fonts.load('400 32px Unbounded', 'Проверка English');
         await document.fonts.ready;
       });
       const measure = await p.evaluate((kind) => {
@@ -173,6 +182,11 @@ test('real Chromium provider-shaped text stress fixtures load fonts and retain l
         const rect = card.getBoundingClientRect();
         return {
           font: getComputedStyle(row).fontFamily,
+          weight: getComputedStyle(row).fontWeight,
+          loaded400: [...document.fonts].some(
+            (face) =>
+              face.family === 'Unbounded' && face.weight === '400' && face.status === 'loaded',
+          ),
           text: getComputedStyle(text).color,
           x: rect.right,
           height: rect.height,
@@ -188,6 +202,8 @@ test('real Chromium provider-shaped text stress fixtures load fonts and retain l
         };
       }, kind);
       assert.match(measure.font, /Unbounded/);
+      assert.equal(measure.weight, '400');
+      assert.equal(measure.loaded400, true);
       assert.equal(measure.overflow, false);
       assert.ok(measure.x <= 1101, JSON.stringify(measure));
       assert.ok(measure.height <= (kind === 'alerts' ? 367 : 148), JSON.stringify(measure));

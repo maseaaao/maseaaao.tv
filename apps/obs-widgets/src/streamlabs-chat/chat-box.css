@@ -1,18 +1,16 @@
-@import '@maseaaao/design/fonts.css';
+@import '@maseaaao/design/fonts-400.css';
 @import '@maseaaao/design/tokens.css';
 
 /* Warm-light theme · Streamlabs custom CSS.
    Keep {font_size} / {message_hide_delay} substitution in Streamlabs.
    All fonts are embedded to work in remote-origin OBS browser sources. */
 :root {
-  --cm-surface: var(--surface);
-  --cm-raised: var(--hud-surface);
-  --cm-line: var(--line);
-  --cm-text: var(--text);
-  --cm-muted: var(--dim);
-  --cm-accent: var(--accent);
-  --cm-corner-size: 20px;
-  --cm-corner-stroke: 2px;
+  --cm-surface: var(--color-surface);
+  --cm-raised: var(--color-field);
+  --cm-line: var(--color-border);
+  --cm-text: var(--color-text);
+  --cm-muted: var(--color-muted);
+  --cm-accent: var(--color-brand);
 }
 html,
 body {
@@ -31,6 +29,7 @@ body {
 body {
   font-family: Arial, sans-serif;
   font-weight: 400;
+  font-synthesis: none;
   font-size: var(--provider-font-size);
   line-height: 1.45;
   color: var(--cm-text);
@@ -53,25 +52,12 @@ body {
   gap: 8px;
   padding: 16px 24px;
   border: 1px solid var(--cm-line);
-  border-radius: 2px;
+  border-radius: var(--radius-field);
   background: var(--cm-surface);
   overflow: hidden;
   animation:
     slideInSoft 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) forwards,
     fadeAway 0.5s ease var(--provider-hide-delay) forwards;
-}
-#log > div::before {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: var(--cm-corner-size);
-  height: var(--cm-corner-size);
-  border-top: var(--cm-corner-stroke) solid var(--cm-accent);
-  border-right: var(--cm-corner-stroke) solid var(--cm-accent);
-  transform: scale(calc(1 / var(--cm-output-scale, 1)));
-  transform-origin: top right;
-  pointer-events: none;
 }
 #log > div {
   animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1), ease;
@@ -94,7 +80,7 @@ body {
   max-width: 100%;
   color: var(--cm-accent);
   font-family: Unbounded, Arial, sans-serif;
-  font-weight: 600;
+  font-weight: 400;
   font-size: 0.7em;
   line-height: 1.4;
   letter-spacing: -0.015em;
@@ -120,7 +106,6 @@ body {
   font-family: Arial, sans-serif;
   color: var(--cm-text);
   overflow-wrap: anywhere;
-  overflow-wrap: break-word;
 }
 .colon {
   display: none;

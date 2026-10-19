@@ -1,17 +1,15 @@
-@import '@maseaaao/design/fonts.css';
+@import '@maseaaao/design/fonts-400.css';
 @import '@maseaaao/design/tokens.css';
 
 /* Warm-light theme · DonationAlerts · no event/animation overrides.
    Remote-safe embedded fonts; provider owns visibility and alert duration. */
 :root {
-  --cm-surface: var(--surface);
-  --cm-raised: var(--hud-surface);
-  --cm-line: var(--line);
-  --cm-text: var(--text);
-  --cm-muted: var(--dim);
-  --cm-accent: var(--accent);
-  --cm-corner-size: 20px;
-  --cm-corner-stroke: 2px;
+  --cm-surface: var(--color-surface);
+  --cm-raised: var(--color-field);
+  --cm-line: var(--color-border);
+  --cm-text: var(--color-text);
+  --cm-muted: var(--color-muted);
+  --cm-accent: var(--color-brand);
 }
 html,
 body {
@@ -29,9 +27,9 @@ body {
   box-sizing: border-box;
   padding: 12px 24px;
   overflow: hidden;
-  background: transparent !important;
-  border: 0 !important;
-  border-radius: 0;
+  background: var(--cm-surface) !important;
+  border: 1px solid var(--cm-line) !important;
+  border-radius: var(--radius-field);
   box-shadow: none !important;
   text-align: center;
 }
@@ -43,7 +41,7 @@ body {
 .alert-container #donation-alert .title {
   font-family: Unbounded, Arial, sans-serif !important;
   font-size: clamp(24px, 2.7vw, 32px) !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   line-height: 1.2 !important;
   letter-spacing: -0.025em;
   background: none;
@@ -75,7 +73,7 @@ body {
    Enforce typography on provider spans as well as their parent rows. */
 .alert-container #donation-alert .title * {
   font-family: Unbounded, Arial, sans-serif !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
 }
 .alert-container #donation-alert .message * {
   font-family: Arial, sans-serif !important;

@@ -1,16 +1,15 @@
-@import '@maseaaao/design/fonts.css';
+@import '@maseaaao/design/fonts-400.css';
+@import '@maseaaao/design/tokens.css';
 
 /* Blue / warm light · DonationAlerts stream stats / donors.
    Provider owns rotation, opacity, layout and event duration. */
 :root {
-  --cm-surface: #f4f3ec;
-  --cm-raised: #fffef8;
-  --cm-line: #d2d1c9;
-  --cm-text: #20201e;
-  --cm-muted: #60605a;
-  --cm-accent: #1616d9;
-  --cm-corner-size: 20px;
-  --cm-corner-stroke: 2px;
+  --cm-surface: var(--color-surface);
+  --cm-raised: var(--color-field);
+  --cm-line: var(--color-border);
+  --cm-text: var(--color-text);
+  --cm-muted: var(--color-muted);
+  --cm-accent: var(--color-brand);
 }
 html,
 body {
@@ -27,7 +26,7 @@ body {
   padding: 0;
   background: transparent;
   border: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-field);
 }
 .widget-stream-stats .fade-move {
   transition-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
@@ -42,9 +41,9 @@ body {
   width: fit-content;
   max-width: 100%;
   padding: 6px 12px;
-  background: #f4f3ec;
+  background: var(--color-surface);
   border: 1px solid var(--cm-line);
-  border-radius: 12px;
+  border-radius: var(--radius-field);
 }
 .widget-stream-stats .stats-list-item::before {
   content: none;
@@ -53,7 +52,7 @@ body {
 .widget-stream-stats > .stats-main-row {
   font-family: Unbounded, Arial, sans-serif !important;
   font-size: clamp(32px, 3.6vw, 36px) !important;
-  font-weight: 600 !important;
+  font-weight: 400 !important;
   letter-spacing: -0.025em;
   line-height: 1.15;
   color: var(--cm-text) !important;

@@ -12,6 +12,12 @@
 
 `node --test tests/obs-widgets.test.mjs tests/obs-widgets-residual.test.mjs` проверяет готовые HTML с подставным OBS, CSP, remember/reopen/forget на изолированных данных, клавиатуру, текст, размеры и alpha. В Storybook — те же SFC без контроллера и сетевых подключений. Проверки macOS/Chromium не заменяют Windows 11/OBS CEF; версии и целевая приёмка отмечаются в плане.
 
+## Форматы провайдеров
+
+Streamlabs и DonationAlerts получают исходные HTML/JS и готовый CSS из dist. Vue туда не внедряется. Сборка встраивает один Unbounded 400/OFL и только используемые семантические токены; сохраняет имена адаптеров `--cm-*`, placeholders, обработчики событий и задержки анимаций. Чат, alert и донатеры используют светлую поверхность; внешний canvas остаётся прозрачным.
+
+Каталог показывает именно готовые CSS и шаблон Streamlabs через exports `delivery/*`. После правок provider source сначала выполнить `npm run build:widgets`, затем `npm run build:storybook` или `npm run test:ui`. Offline fixtures проверяют формат поставки, но не подтверждают DOM/CSP аккаунта внешнего провайдера.
+
 ## Установка
 
 `npm run sync:local -- --product widgets` показывает назначения, `--apply` обновляет локальные ресурсы с резервными копиями. Публикация CSS в Streamlabs/DonationAlerts выполняется отдельно через интерфейс сервиса. Единственный исходник CSS донатеров — src/donors/donationalerts-stream-stats.css. Сборка не обновляет рабочие источники/настройки OBS и не запускает эфир.
