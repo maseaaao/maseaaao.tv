@@ -100,10 +100,12 @@
 
 ## Этап 6. Tuna и эксплуатационная производительность — P2/P3
 
-- [ ] Добавить opt-in debug diagnostics для HTTP/Tuna/обложек (port/CORS/timeouts), без ошибок/секретов в live overlay; сохранить прежний normal-mode appearance.
+- [x] Добавить opt-in debug diagnostics для HTTP/Tuna/обложек (port/CORS/timeouts), без ошибок/секретов в live overlay; сохранить прежний normal-mode appearance.
 - [ ] Удалить невидимые glow image nodes **только если** новые контрактные тесты подтверждают отсутствие изменения загрузки обложек/переходов; иначе оставить и записать как принятое ограничение.
 - [ ] Прогнать pause→resume, смену двух треков, overtake при медленной загрузке, reconnect Tuna server, 404 cover, offline recovery, варианты query params и source resizing.
 - [ ] Измерить baseline CPU/memory/GC/Network в Chrome и позже OBS при нескольких одновременно активных Browser Sources. Оптимизировать polling/updates только при измеренном отклонении, не ухудшать 1% low OBS без оснований.
+
+**Непроверенное:** Chrome/OBS ресурсные замеры и полная матрица overtake/retry не выполнялись. Debug включается только параметром `debug=1`; никаких подробностей в визуальном overlay нет.
 
 **Готово, когда:** нормальный overlay функционально эквивалентен исходному, отказ диагностируем, ресурсы не накапливаются. **Коммит:** `test(tuna): harden media lifecycle and diagnostics`.
 

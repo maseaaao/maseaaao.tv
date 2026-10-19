@@ -186,3 +186,29 @@ test(
     }
   },
 );
+
+test('Tuna exposes opt-in local debugging without changing the visual overlay', async () => {
+  const browser = await launchBrowser();
+  try {
+    const page = await browser.newPage({
+      viewport: { width: 420, height: 82 },
+    });
+    const messages = [];
+    page.on('console', (message) => {
+      if (message.type() === 'debug') messages.push(message.text());
+    });
+    await page.route(/^http:\/\/localhost:1608\//, (route) => route.abort());
+    await page.goto(
+      pathToFileURL(resolve(import.meta.dirname, '../apps/tuna-widget/dist/obs-tuna-widget.html')).href +
+        '?debug=1&poll=100&timeout=500&fail=1',
+    );
+    await page.waitForFunction(
+      () => document.querySelector('#player').dataset.play === '0',
+    );
+    await page.waitForTimeout(650);
+    assert(messages.some((line) => line.includes('[tuna-widget] poll failed')));
+    assert.equal(await page.locator('#title').textContent(), '');
+  } finally {
+    await browser.close();
+  }
+});

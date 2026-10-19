@@ -2,6 +2,10 @@
   'use strict';
 
   const query = new URLSearchParams(location.search);
+  const debug = query.get('debug') === '1';
+  const trace = (event, error) => {
+    if (debug) console.debug('[tuna-widget]', event, error instanceof Error ? error.message : String(error));
+  };
 
   const num = (name, fallback, min = -Infinity, max = Infinity) => {
     const raw = query.get(name);
@@ -495,7 +499,8 @@
         }
 
         return;
-      } catch {
+      } catch (error) {
+        trace('cover retry ' + (attempt + 1) + '/' + cfg.tries, error);
         // The next attempt gets a new cache-busting URL.
       }
     }
@@ -641,8 +646,9 @@
 
       state.errorCount = 0;
       process(parse(raw));
-    } catch {
+    } catch (error) {
       state.errorCount += 1;
+      trace('poll failed ' + state.errorCount + '/' + cfg.fail, error);
 
       /* One or two lost polls must not make the widget blink. */
       if (state.errorCount >= cfg.fail) {
