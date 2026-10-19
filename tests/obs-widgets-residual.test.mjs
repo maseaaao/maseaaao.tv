@@ -323,9 +323,7 @@ test('output statistics labels and rendered statuses are Russian, without a real
     await page.waitForFunction(
       () => localStorage.getItem('easy-output-stats.credentials.v1') === null,
     );
-    await page.waitForFunction(
-      () => !document.getElementById('remember-credentials').checked,
-    );
+    await page.waitForFunction(() => !document.getElementById('remember-credentials').checked);
     await page.evaluate(async () => {
       await document.fonts.load('400 12px Unbounded', 'История English');
       await document.fonts.ready;
