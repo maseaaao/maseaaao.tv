@@ -24,6 +24,7 @@
     "./ToolsPage.vue": "./src/components/ToolsPage.vue",
     "./StreamInfoPage.vue": "./src/components/StreamInfoPage.vue",
     "./TunaPage.vue": "./src/components/TunaPage.vue",
-    "./ui.css": "./src/assets/site.css"
+    "./ui.css": "./src/assets/site.css",
+    "./qr.png": "./public/assets/maseaaao.tv.png"
   }
 }

@@ -4,6 +4,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkMigrationContract, checkFontFamilies } from './migration-contract.mjs';
+import { generatedWebsiteImages } from './website-assets.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 checkMigrationContract(root);
@@ -52,6 +53,13 @@ for (const file of files(resolve(root, 'apps/website/public'))) {
   assert(
     existsSync(output) && readFileSync(output).equals(readFileSync(file)),
     `Missing or stale public resource: ${output}`,
+  );
+}
+for (const [name, bytes] of generatedWebsiteImages(root)) {
+  const output = resolve(root, 'dist', name);
+  assert(
+    existsSync(output) && readFileSync(output).equals(bytes),
+    `Missing or stale generated resource: ${output}`,
   );
 }
 for (const name of [

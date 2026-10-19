@@ -39,30 +39,6 @@ h1 {
   gap: var(--space-4);
   margin-bottom: var(--space-6);
 }
-.status-group {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-  color: var(--color-muted);
-  overflow-wrap: anywhere;
-}
-#status-dot {
-  width: 10px;
-  height: 10px;
-  flex: none;
-  border-radius: 50%;
-  background: var(--color-muted);
-}
-#status-dot[data-status='connecting'] {
-  background: var(--color-warning);
-}
-#status-dot[data-status='connected'] {
-  background: var(--color-success);
-}
-#status-dot[data-status='error'] {
-  background: var(--color-danger);
-}
 .header-bar {
   display: grid;
   gap: var(--space-4);

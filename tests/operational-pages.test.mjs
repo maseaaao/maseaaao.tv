@@ -137,7 +137,7 @@ for (const file of ['check.html', 'docs.html']) {
             overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
             bodyFont: getComputedStyle(document.body).fontFamily,
             accentLoaded: [...document.fonts].some(
-              (f) => f.family === 'Unbounded' && f.status === 'loaded',
+              (f) => f.family === 'Unbounded' && f.weight === '400' && f.status === 'loaded',
             ),
             small: [...document.querySelectorAll('a,button')]
               .filter(
@@ -179,13 +179,15 @@ test('all banners and Twitch panels load local fonts without clipping supplied h
       height: 64,
     })),
   ]) {
-    const page = await open(item.file, item.width);
+    const page = await open('.build-cache/' + item.file, item.width);
     try {
       await page.setViewportSize({ width: item.width, height: item.height });
       await page.evaluate(() => document.fonts.ready);
       assert.equal(
         await page.evaluate(() =>
-          [...document.fonts].some((f) => f.family === 'Unbounded' && f.status === 'loaded'),
+          [...document.fonts].some(
+            (f) => f.family === 'Unbounded' && f.weight === '400' && f.status === 'loaded',
+          ),
         ),
         true,
         item.file + ': accent font must actually load',

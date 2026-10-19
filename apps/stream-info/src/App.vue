@@ -3,7 +3,7 @@ import { computed, onScopeDispose } from 'vue';
 import AppButton from '@maseaaao/ui/AppButton.vue';
 import FieldInput from '@maseaaao/ui/FieldInput.vue';
 import IconIndicator from '@maseaaao/ui/IconIndicator.vue';
-import NoticeBanner from '@maseaaao/ui/NoticeBanner.vue';
+import NoticeBanner from './components/NoticeBanner.vue';
 import AppIcon from './components/AppIcon.vue';
 import PlatformSwitch from './components/PlatformSwitch.vue';
 import TwitchCard from './components/TwitchCard.vue';

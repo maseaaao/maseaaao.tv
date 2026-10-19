@@ -1,14 +1,12 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
-import jsQR from 'jsqr';
-import { generateQrWithLogo } from './generate-qr-with-logo.mjs';
 
 const root = path.resolve(import.meta.dirname, '../..');
 const logoDir = path.join(root, 'artwork/logo');
-const assets = path.join(root, 'apps/website/public/assets');
+const assets = path.join(root, 'artwork/brand/rendered/website/assets');
+await fs.mkdir(assets, { recursive: true });
 const logo = await fs.readFile(path.join(logoDir, 'logo.png'));
-const url = 'https://maseaaao.tv';
 await fs.mkdir(path.join(logoDir, 'rendered'), { recursive: true });
 // Preserve the approved original, including its colour and background.
 for (const size of [64, 96, 128, 192, 288])
@@ -52,33 +50,4 @@ for (const size of [1024, 512, 256]) {
       await sharp(circle).webp({ lossless: true }).toBuffer(),
     );
 }
-const result = await generateQrWithLogo({
-  text: url,
-  width: 800,
-  margin: 4,
-  errorCorrectionLevel: 'H',
-  logo,
-  logoFraction: 0.2,
-  color: { dark: '#20201e', light: '#f4f3ec' },
-  tile: { fill: '#f4f3ec', stroke: '#f4f3ec', strokeOpacity: 0 },
-});
-const jpeg = await sharp(result.buffer)
-  .flatten({ background: '#111113' })
-  .jpeg({ quality: 100, chromaSubsampling: '4:4:4' })
-  .toBuffer();
-// Check both the saved JPEG representation and stream-sized versions, not just the PNG generator result.
-const checks = [];
-for (const size of [result.width, 400, 300, 240, 200]) {
-  const { data, info } = await sharp(jpeg)
-    .resize(size, size)
-    .ensureAlpha()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
-  const decoded = jsQR(new Uint8ClampedArray(data), info.width, info.height)?.data;
-  if (decoded !== url) throw Error(`QR decode failed at ${size}px`);
-  checks.push(size);
-}
-await fs.writeFile(path.join(assets, 'maseaaao.tv.png'), result.buffer);
-console.log(
-  `Approved logo installed; existing logo canvas retained at 1920x540. QR -> ${url}; decoded JPEG at ${checks.join(', ')} px. Run render:scenes to refresh scene exports.`,
-);
+console.log('Avatar derivatives refreshed; approved logo and QR originals preserved.');

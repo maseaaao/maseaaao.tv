@@ -1,14 +1,16 @@
-function readCssNumber(name, fallback) {
-  const rawValue = getComputedStyle(document.documentElement).getPropertyValue(name);
+function readCssNumber(element, name, fallback) {
+  const rawValue = getComputedStyle(element).getPropertyValue(name);
   const parsed = Number.parseFloat(rawValue);
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
 function applyBannerScale() {
-  const baseWidth = readCssNumber('--banner-width', 2048);
-  const baseHeight = readCssNumber('--banner-height', 1152);
+  const viewport = document.querySelector('.banner-viewport');
+  if (!(viewport instanceof HTMLElement)) return;
+  const baseWidth = readCssNumber(viewport, '--banner-width', 2560);
+  const baseHeight = readCssNumber(viewport, '--banner-height', 1440);
   const scale = Math.min(window.innerWidth / baseWidth, window.innerHeight / baseHeight);
-  document.documentElement.style.setProperty('--banner-scale', scale.toFixed(5));
+  viewport.style.setProperty('--banner-scale', scale.toFixed(5));
 }
 
 applyBannerScale();

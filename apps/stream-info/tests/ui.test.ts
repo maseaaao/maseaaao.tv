@@ -3,16 +3,16 @@ import { resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { mount, type VueWrapper } from '@vue/test-utils';
 import AppButton from '@maseaaao/ui/AppButton.vue';
-import ChipTag from '@maseaaao/ui/ChipTag.vue';
+import ChipTag from '../src/components/ChipTag.vue';
 
 const styles = readFileSync(resolve('src/styles.css'), 'utf8');
 const tokens = readFileSync(resolve('../../packages/design/tokens.css'), 'utf8');
 // Vitest does not inject SFC styles and jsdom cannot resolve custom properties.
 // Load the actual shared component style blocks, then resolve the one size token
 // when measuring. No test-only control sizing rules are introduced here.
-const componentStyles = ['AppButton', 'ChipTag']
+const componentStyles = ['../../packages/ui/src/AppButton.vue', 'src/components/ChipTag.vue']
   .map((name) => {
-    const source = readFileSync(resolve(`../../packages/ui/src/${name}.vue`), 'utf8');
+    const source = readFileSync(resolve(name), 'utf8');
     return source.match(/<style[^>]*>([\s\S]*?)<\/style>/)?.[1] ?? '';
   })
   .join('\n');

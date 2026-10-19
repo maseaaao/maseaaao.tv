@@ -1,17 +1,11 @@
-html,
-body {
-  margin: 0;
+.logo-artwork {
   width: 100%;
   height: 100%;
-  overflow: hidden;
-  background: transparent;
-}
-body {
   display: flex;
   align-items: center;
   justify-content: center;
 }
-img {
+.logo-artwork img {
   display: block;
   width: 100%;
   height: 100%;

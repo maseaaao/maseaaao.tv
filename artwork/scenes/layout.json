@@ -7,84 +7,120 @@
       "file": "01-start.html",
       "rendered": "rendered/01-start.webp",
       "width": 2560,
-      "height": 1440
+      "height": 1440,
+      "kind": "status",
+      "map": "horizontal",
+      "copy": "начало"
     },
     {
       "name": "01-start-vertical",
       "file": "01-start-vertical.html",
       "rendered": "rendered/01-start-vertical.webp",
       "width": 1080,
-      "height": 1920
+      "height": 1920,
+      "kind": "status",
+      "map": "vertical-status",
+      "copy": "начало"
     },
     {
       "name": "02-pause",
       "file": "02-pause.html",
       "rendered": "rendered/02-pause.webp",
       "width": 2560,
-      "height": 1440
+      "height": 1440,
+      "kind": "status",
+      "map": "horizontal",
+      "copy": "пауза"
     },
     {
       "name": "02-pause-vertical",
       "file": "02-pause-vertical.html",
       "rendered": "rendered/02-pause-vertical.webp",
       "width": 1080,
-      "height": 1920
+      "height": 1920,
+      "kind": "status",
+      "map": "vertical-status",
+      "copy": "пауза"
     },
     {
       "name": "99-end",
       "file": "99-end.html",
       "rendered": "rendered/99-end.webp",
       "width": 2560,
-      "height": 1440
+      "height": 1440,
+      "kind": "status",
+      "map": "horizontal",
+      "copy": "конец"
     },
     {
       "name": "99-end-vertical",
       "file": "99-end-vertical.html",
       "rendered": "rendered/99-end-vertical.webp",
       "width": 1080,
-      "height": 1920
+      "height": 1920,
+      "kind": "status",
+      "map": "vertical-status",
+      "copy": "конец"
     },
     {
       "name": "04-camera-horizontal",
       "file": "04-camera-horizontal.html",
       "rendered": "rendered/04-camera-horizontal.webp",
       "width": 2560,
-      "height": 1440
+      "height": 1440,
+      "kind": "camera",
+      "map": "horizontal",
+      "copy": ""
     },
     {
       "name": "04-camera-vertical",
       "file": "04-camera-vertical.html",
       "rendered": "rendered/04-camera-vertical.webp",
       "width": 1080,
-      "height": 1920
+      "height": 1920,
+      "kind": "camera",
+      "map": "vertical-camera",
+      "copy": ""
     },
     {
       "name": "00-blank",
       "file": "00-blank.html",
       "rendered": "rendered/00-blank.webp",
       "width": 2560,
-      "height": 1440
+      "height": 1440,
+      "kind": "blank",
+      "map": "horizontal",
+      "copy": ""
     },
     {
       "name": "background",
       "file": "background.html",
       "rendered": "rendered/background.webp",
       "width": 2560,
-      "height": 1440
+      "height": 1440,
+      "kind": "blank",
+      "map": "horizontal",
+      "copy": ""
     },
     {
       "name": "00-blank-vertical",
       "file": "00-blank-vertical.html",
       "rendered": "rendered/00-blank-vertical.webp",
       "width": 1080,
-      "height": 1920
+      "height": 1920,
+      "kind": "gameplay",
+      "map": "vertical-status",
+      "copy": ""
     },
     {
       "name": "cam-frame",
       "file": "cam-frame.html",
       "rendered": "rendered/cam-frame.webp",
       "width": 600,
-      "height": 341
+      "height": 341,
+      "kind": "tile",
+      "map": "horizontal",
+      "copy": ""
     }
   ],
   "horizontal": {
@@ -94,7 +130,13 @@
     "donors": [120, 1200, 1100, 147.4],
     "alerts": [120, 824, 1100, 366.67],
     "qr": [2180, 1160, 250, 250],
-    "social": [0, 0, 2560, 53.333333333333336]
+    "social": [0, 0, 2560, 53.333333333333336],
+    "camera": [32, 32, 2496, 1376],
+    "identity": [120, 112, 64, 64],
+    "header": [120, 220, 1400, 1],
+    "titleField": [88, 400, 1432, 264],
+    "title": [120, 440],
+    "titleSize": 160
   },
   "vertical-status": {
     "canvas": [1080, 1920],
@@ -104,7 +146,11 @@
     "donors": [120, 1320, 720, 96.48],
     "alerts": [428, 1565, 612, 204],
     "qr": [120, 1540, 260, 260],
-    "social": [0, 1856, 1080, 64]
+    "social": [0, 1856, 1080, 64],
+    "identity": [120, 156, 48, 48],
+    "header": [120, 244, 720, 1],
+    "titleField": [88, 268, 784, 176],
+    "titleSize": 88
   },
   "vertical-camera": {
     "canvas": [1080, 1920],
@@ -113,7 +159,8 @@
     "music": [120, 1344, 720, 144],
     "donors": [120, 1344, 720, 96.48],
     "alerts": [120, 1510, 720, 240],
-    "social": [0, 608, 1080, 64]
+    "social": [0, 608, 1080, 64],
+    "lowerBackground": [0, 608, 1080, 1312]
   },
   "chatFit": {
     "horizontal": {

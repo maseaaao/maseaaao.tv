@@ -5,7 +5,9 @@
   "type": "module",
   "exports": {
     "./App.vue": "./src/App.vue",
-    "./ui.css": "./src/styles.css"
+    "./ui.css": "./src/styles.css",
+    "./ChipTag.vue": "./src/components/ChipTag.vue",
+    "./NoticeBanner.vue": "./src/components/NoticeBanner.vue"
   },
   "scripts": {
     "dev": "vite",

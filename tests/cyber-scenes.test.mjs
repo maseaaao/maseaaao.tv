@@ -49,7 +49,14 @@ for (const [stem, copy] of [
           await heading.evaluate((e) => getComputedStyle(e).color),
           'rgb(244, 243, 236)',
         );
-        assert.ok(await page.evaluate(() => document.fonts.check('600 88px Unbounded')));
+        assert.equal(await heading.evaluate((e) => getComputedStyle(e).fontWeight), '400');
+        assert.ok(
+          await page.evaluate(() =>
+            [...document.fonts].some(
+              (f) => f.family === 'Unbounded' && f.weight === '400' && f.status === 'loaded',
+            ),
+          ),
+        );
         assert.ok(await page.evaluate(() => document.fonts.check('400 32px Arial')));
         for (const key of ['chat', 'music', 'donors', 'alerts']) {
           const slot = page.locator(`[data-zone="${key}"]`);
@@ -75,14 +82,7 @@ for (const [stem, copy] of [
           Object.fromEntries(['x', 'y', 'width', 'height'].map((k, i) => [k, map.qr[i]])),
         );
         assert.equal(await page.locator('body').innerText(), `maseaaao\n${copy}`);
-        assert.equal(
-          await page.evaluate(
-            () =>
-              document.querySelector('.grid').style.opacity ||
-              getComputedStyle(document.querySelector('.grid')).opacity,
-          ),
-          '0',
-        );
+        assert.equal(await page.locator('.grid,.corner').count(), 0);
         assert.deepEqual(errors, []);
         const image = path.join(root, 'artwork/scenes/rendered', `${name}.webp`);
         const meta = await sharp(image).metadata();
@@ -183,7 +183,7 @@ test('cam-frame: exact 600x341 blue frame with a transparent center', async () =
   assert.deepEqual([...data.subarray(300 * 4, 300 * 4 + 3)], [22, 22, 217]);
 });
 
-test('blank horizontal and background: quiet full-size Cyber-Monolith surfaces', async () => {
+test('blank horizontal and background: quiet full-size blue surfaces', async () => {
   for (const name of ['00-blank', 'background']) {
     const image = path.join(root, 'artwork/scenes/rendered', `${name}.webp`);
     const meta = await sharp(image).metadata();
@@ -192,12 +192,7 @@ test('blank horizontal and background: quiet full-size Cyber-Monolith surfaces',
     try {
       await page.goto(pathToFileURL(path.join(scenes, `${name}.html`)).href);
       assert.equal(await page.locator('body').innerText(), '');
-      assert.equal(
-        await page.locator('.grid').count(),
-        1,
-        'quiet surface uses the restrained HUD grid',
-      );
-      assert.equal(await page.locator('.grid').evaluate((e) => getComputedStyle(e).opacity), '0');
+      assert.equal(await page.locator('.grid,.corner').count(), 0, 'no decorative overlay');
     } finally {
       await page.close();
     }

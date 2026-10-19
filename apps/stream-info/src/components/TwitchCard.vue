@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import AppButton from '@maseaaao/ui/AppButton.vue';
 import FieldInput from '@maseaaao/ui/FieldInput.vue';
-import ChipTag from '@maseaaao/ui/ChipTag.vue';
+import ChipTag from './ChipTag.vue';
 import LiveStatusBadge from '@maseaaao/ui/LiveStatusBadge.vue';
 import AppIcon from './AppIcon.vue';
 import CategorySearch from './CategorySearch.vue';

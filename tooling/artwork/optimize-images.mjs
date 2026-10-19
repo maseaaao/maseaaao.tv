@@ -6,7 +6,18 @@ import sharp from 'sharp';
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, '../..');
-const DEFAULT_TARGETS = ['apps/website/public', 'artwork'];
+const DEFAULT_TARGETS = [
+  'artwork/banners/rendered',
+  'artwork/brand/rendered',
+  'artwork/scenes/rendered',
+  'artwork/twitch-description/rendered',
+  'artwork/wallpapers/rendered',
+];
+const protectedFiles = new Set(
+  ['artwork/logo/logo.png', 'apps/website/public/assets/maseaaao.tv.png'].map((name) =>
+    path.join(REPO_ROOT, name),
+  ),
+);
 const IMAGE_EXTENSIONS = new Set(['.jpeg', '.jpg', '.png', '.webp']);
 const SKIPPED_DIRECTORIES = new Set(['.git', 'node_modules']);
 
@@ -72,6 +83,8 @@ async function collectImageFiles(directoryPath, files) {
 }
 
 async function optimizeImage(file) {
+  if (protectedFiles.has(file))
+    return { file, kind: 'kept', saved: 0, message: 'protected original' };
   const extension = path.extname(file).toLowerCase();
 
   if (extension === '.jpg' || extension === '.jpeg') {

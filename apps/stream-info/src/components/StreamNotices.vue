@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import NoticeBanner from '@maseaaao/ui/NoticeBanner.vue';
+import NoticeBanner from './NoticeBanner.vue';
 import AppIcon from './AppIcon.vue';
 import type { Notice } from '../composables/useStreamInfo';
 import { t } from '../messages';

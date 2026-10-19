@@ -1,9 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
+import { generatedWebsiteImages } from '../../tooling/website-assets.mjs';
 import { fileURLToPath } from 'node:url';
 import { prepareVuePages, vuePagePlugin } from '@maseaaao/build-config/static';
 
 export default defineConfig(async () => {
+  const generated = generatedWebsiteImages(fileURLToPath(new URL('../../', import.meta.url)));
   const root = fileURLToPath(new URL('./src/', import.meta.url));
   const { renderPage, styleFile } = await prepareVuePages({
     root,
@@ -16,6 +18,16 @@ export default defineConfig(async () => {
     base: '/',
     plugins: [
       vuePagePlugin({ root, renderPage, styleFile }),
+      {
+        name: 'generated-website-images',
+        generateBundle(_options, bundle) {
+          for (const [fileName, source] of generated) {
+            if (fileName in bundle || fileName === 'bundles' || fileName.startsWith('bundles/'))
+              throw Error(`Website resource collision: ${fileName}`);
+            this.emitFile({ type: 'asset', fileName, source });
+          }
+        },
+      },
       {
         name: 'website-vue-pages',
         generateBundle(_options, bundle) {

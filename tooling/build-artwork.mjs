@@ -1,19 +1,23 @@
-import { readdir, mkdir, cp, rm } from 'node:fs/promises';
+import { readdir, rm, readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { build } from 'vite';
-import { standaloneConfig } from '@maseaaao/build-config';
+import sharp from 'sharp';
+import jsQR from 'jsqr';
+import { buildVuePages } from '@maseaaao/build-config/static';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 export async function buildArtwork() {
-  execFileSync(
-    process.execPath,
-    [path.join(root, 'tooling/artwork/build-cyber-scenes.mjs'), '--prepare'],
-    { stdio: 'inherit' },
-  );
+  const { data, info } = await sharp(
+    await readFile(path.join(root, 'apps/website/public/assets/maseaaao.tv.png')),
+  )
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  if (jsQR(new Uint8ClampedArray(data), info.width, info.height)?.data !== 'https://maseaaao.tv')
+    throw Error('Supplied QR is unreadable; no substitute will be invented.');
+  const source = path.join(root, 'artwork');
   const output = path.join(root, '.build-cache/artwork');
-  await rm(output, { recursive: true, force: true });
+  const pages = [];
   for (const directory of [
     'scenes',
     'banners',
@@ -22,22 +26,25 @@ export async function buildArtwork() {
     'wallpapers',
     'twitch-description',
   ]) {
-    const source = path.join(
-      root,
-      directory === 'scenes' ? '.build-cache/artwork-source' : 'artwork',
-      directory,
-    );
-    for (const name of (await readdir(source)).filter((name) => name.endsWith('.html')).sort()) {
-      const staging = path.join(root, '.build-cache/artwork-staging', directory, name);
-      const config = standaloneConfig({ root: source, outDir: staging, fileName: name });
-      config.build.rollupOptions = { input: path.join(source, name) };
-      config.logLevel = 'warn';
-      await build({ ...config, configFile: false });
-      await mkdir(path.join(output, directory), { recursive: true });
-      await cp(path.join(staging, name), path.join(output, directory, name));
+    for (const name of (await readdir(path.join(source, directory)))
+      .filter((name) => name.endsWith('.html'))
+      .sort()) {
+      pages.push({
+        source: `${directory}/${name}`,
+        output: `${directory}/${name}`,
+        budgets: { html: 4000000, js: 2000 },
+      });
     }
   }
-  console.log('Artwork HTML prepared with embedded workspace design, fonts and local assets.');
+  await rm(output, { recursive: true, force: true });
+  await buildVuePages({
+    root: source,
+    ssrEntry: 'render.mjs',
+    pages,
+    outDir: output,
+    cacheDir: path.join(root, '.build-cache/artwork-vue'),
+  });
+  console.log('Artwork: official Vue SSR, embedded font/assets, no client Vue.');
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url))
   await buildArtwork();

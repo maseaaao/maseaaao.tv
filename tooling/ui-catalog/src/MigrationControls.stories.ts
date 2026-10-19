@@ -2,9 +2,9 @@ import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, userEvent, within } from 'storybook/test';
 import { ref } from 'vue';
 import AppButton from '@maseaaao/ui/AppButton.vue';
-import ChipTag from '@maseaaao/ui/ChipTag.vue';
+import ChipTag from 'change-info-streamer-bot/ChipTag.vue';
 import IconIndicator from '@maseaaao/ui/IconIndicator.vue';
-import NoticeBanner from '@maseaaao/ui/NoticeBanner.vue';
+import NoticeBanner from 'change-info-streamer-bot/NoticeBanner.vue';
 
 const meta: Meta = { title: 'Композиции/Контракты элементов дока' };
 export default meta;

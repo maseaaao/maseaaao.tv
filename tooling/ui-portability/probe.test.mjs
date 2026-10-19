@@ -156,7 +156,14 @@ test(
       await page.getByRole('button', { name: 'Сохранить настройки' }).click();
       await status(page, 'Настройки сохранены');
       await page.evaluate(() => document.fonts.ready);
-      assert(await page.evaluate(() => document.fonts.check('600 20px Unbounded')));
+      assert(
+        await page.evaluate(() =>
+          [...document.fonts].some(
+            (face) =>
+              face.family === 'Unbounded' && face.weight === '400' && face.status === 'loaded',
+          ),
+        ),
+      );
       assert.equal(await page.locator('html').getAttribute('data-csp-violation'), null);
       t.diagnostic(
         `Chrome ${context.browser()?.version()}; ${process.platform}; HTML ${Buffer.byteLength(html)} bytes; first ready ${await page.evaluate(() => Math.round(performance.now()))} ms (includes interactions, not a startup budget)`,

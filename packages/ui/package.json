@@ -8,8 +8,6 @@
     "./AppButton.vue": "./src/AppButton.vue",
     "./IconIndicator.vue": "./src/IconIndicator.vue",
     "./FieldInput.vue": "./src/FieldInput.vue",
-    "./ChipTag.vue": "./src/ChipTag.vue",
-    "./NoticeBanner.vue": "./src/NoticeBanner.vue",
     "./LiveStatusBadge.vue": "./src/LiveStatusBadge.vue"
   },
   "sideEffects": [

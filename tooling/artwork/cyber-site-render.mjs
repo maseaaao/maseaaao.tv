@@ -8,7 +8,7 @@ import { launchBrowser } from './browser.mjs';
 
 const root = path.resolve(import.meta.dirname, '../..');
 const requested = process.argv[2] || 'all';
-await buildArtwork();
+if (!process.argv.includes('--prepared')) await buildArtwork();
 const browser = await launchBrowser();
 
 async function render(source, target, width, height, format = 'png', scale = 1) {
@@ -53,23 +53,36 @@ try {
     }
   }
   if (requested === 'all' || requested === 'brand') {
-    await render('artwork/brand/og.html', 'apps/website/public/og-image.jpg', 1200, 630, 'jpeg');
+    await render(
+      'artwork/brand/og.html',
+      'artwork/brand/rendered/website/og-image.jpg',
+      1200,
+      630,
+      'jpeg',
+    );
     await render(
       'artwork/brand/subscribe.html',
-      'apps/website/public/assets/subscribe-512.png',
+      'artwork/brand/rendered/website/assets/subscribe-512.png',
       512,
       512,
     );
     await render(
       'artwork/brand/background.html',
-      'apps/website/public/assets/subscribe-background-ai.png',
+      'artwork/brand/rendered/website/assets/subscribe-background-ai.png',
       512,
       512,
     );
   }
   if (['all', 'brand', 'favicon'].includes(requested)) {
-    await render('artwork/brand/icon.html', 'apps/website/public/icon-master.png', 512, 512);
-    const master = await fs.readFile(path.join(root, 'apps/website/public/icon-master.png'));
+    await render(
+      'artwork/brand/icon.html',
+      'artwork/brand/rendered/website/icon-master.png',
+      512,
+      512,
+    );
+    const master = await fs.readFile(
+      path.join(root, 'artwork/brand/rendered/website/icon-master.png'),
+    );
     const favicon = await sharp(master)
       .composite([
         {
@@ -84,12 +97,12 @@ try {
       const data = await sharp(favicon).resize(size).png().toBuffer();
       icons.push({ size, data });
       await fs.writeFile(
-        path.join(root, 'apps/website/public/favicon-' + size + 'x' + size + '.png'),
+        path.join(root, 'artwork/brand/rendered/website/favicon-' + size + 'x' + size + '.png'),
         data,
       );
     }
     await fs.writeFile(
-      path.join(root, 'apps/website/public/favicon.ico'),
+      path.join(root, 'artwork/brand/rendered/website/favicon.ico'),
       await pngToIco(icons.map((icon) => icon.data)),
     );
     if (requested !== 'favicon') {
@@ -101,10 +114,10 @@ try {
         await sharp(master)
           .resize(size)
           .png()
-          .toFile(path.join(root, 'apps/website/public', name));
+          .toFile(path.join(root, 'artwork/brand/rendered/website', name));
       }
     }
-    await fs.unlink(path.join(root, 'apps/website/public/icon-master.png'));
+    await fs.unlink(path.join(root, 'artwork/brand/rendered/website/icon-master.png'));
   }
   if (requested === 'all' || requested === 'wallpapers') {
     await render(

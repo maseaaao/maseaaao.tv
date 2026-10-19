@@ -31,8 +31,16 @@ test('builds preserve sources, clean owned outputs and never delete a sibling st
     'apps/stream-info/src',
     'packages/design',
     'packages/ui',
+    'artwork/components',
+    'artwork/scenes',
+    'artwork/banners',
+    'artwork/brand',
+    'apps/website/public',
   ];
   const before = sources.flatMap(snapshot);
+  const oldWebsite = snapshot('dist');
+  execFileSync(process.execPath, ['tooling/build-artwork.mjs'], { cwd: root, stdio: 'pipe' });
+  assert.deepEqual(snapshot('dist'), oldWebsite, 'Artwork HTML build must not change the website');
   execFileSync(process.execPath, ['tooling/build-website.mjs'], { cwd: root, stdio: 'pipe' });
   const website = snapshot('dist');
   const stale = resolve(root, 'apps/obs-widgets/dist/retired.css');

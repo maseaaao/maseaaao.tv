@@ -12,17 +12,15 @@ defineProps<{
   /** Текст статуса на языке продукта; компонент не хранит собственные строки. */
   label: string;
   inverted?: boolean;
+  dotId?: string;
+  labelId?: string;
 }>();
 </script>
 
 <template>
   <p class="icon-indicator" :class="{ 'icon-indicator--inverted': inverted }" role="status">
-    <span
-      class="icon-indicator__dot"
-      :class="`icon-indicator__dot--${status}`"
-      aria-hidden="true"
-    ></span>
-    <span class="icon-indicator__label">{{ label }}</span>
+    <span :id="dotId" class="icon-indicator__dot" :data-status="status" aria-hidden="true"></span>
+    <span :id="labelId" class="icon-indicator__label">{{ label }}</span>
   </p>
 </template>
 
@@ -44,15 +42,15 @@ defineProps<{
   border: 1px solid currentcolor;
   background: var(--color-border-control);
 }
-.icon-indicator__dot--connected {
+.icon-indicator__dot[data-status='connected'] {
   background: var(--color-success);
   border-color: var(--color-success);
 }
-.icon-indicator__dot--connecting {
+.icon-indicator__dot[data-status='connecting'] {
   background: var(--color-warning);
   border-color: var(--color-warning);
 }
-.icon-indicator__dot--error {
+.icon-indicator__dot[data-status='error'] {
   background: var(--color-danger);
   border-color: var(--color-danger);
 }
@@ -67,13 +65,13 @@ defineProps<{
   background: var(--color-surface);
   border-color: var(--color-surface);
 }
-.icon-indicator--inverted .icon-indicator__dot--connected {
+.icon-indicator--inverted .icon-indicator__dot[data-status='connected'] {
   background: color-mix(in srgb, var(--color-success) 25%, var(--color-surface));
 }
-.icon-indicator--inverted .icon-indicator__dot--connecting {
+.icon-indicator--inverted .icon-indicator__dot[data-status='connecting'] {
   background: color-mix(in srgb, var(--color-warning) 25%, var(--color-surface));
 }
-.icon-indicator--inverted .icon-indicator__dot--error {
+.icon-indicator--inverted .icon-indicator__dot[data-status='error'] {
   background: color-mix(in srgb, var(--color-danger) 25%, var(--color-surface));
 }
 </style>

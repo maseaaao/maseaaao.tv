@@ -1,4 +1,4 @@
-@import './fonts.css';
+@import './fonts-400.css';
 @import './tokens.css';
 [hidden] {
   display: none !important;

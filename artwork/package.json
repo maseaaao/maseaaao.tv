@@ -1,0 +1,27 @@
+{
+  "name": "@maseaaao/artwork",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@maseaaao/design": "1.0.0"
+  },
+  "devDependencies": {
+    "@maseaaao/build-config": "1.0.0",
+    "vue": "3.5.44",
+    "typescript": "5.8.3",
+    "vue-tsc": "3.0.8",
+    "@maseaaao/website": "*"
+  },
+  "scripts": {
+    "check": "vue-tsc --noEmit"
+  },
+  "exports": {
+    "./SceneArtwork.vue": "./components/SceneArtwork.vue",
+    "./BannerArtwork.vue": "./components/BannerArtwork.vue",
+    "./TwitchPanel.vue": "./components/TwitchPanel.vue",
+    "./BrandArtwork.vue": "./components/BrandArtwork.vue",
+    "./WallpaperArtwork.vue": "./components/WallpaperArtwork.vue",
+    "./styles.css": "./styles.css"
+  }
+}

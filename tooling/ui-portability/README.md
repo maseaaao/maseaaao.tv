@@ -9,7 +9,7 @@ npm ci
 npm run test:ui-probe
 ```
 
-Для установленного Chrome задать `CHROME_BIN`. Итоговый файл: `.build-cache/ui-portability/ui-portability.html`. Его можно скопировать в пустой каталог: CSS, JS, Unbounded 600 и OFL встроены. Файл не требует сервера UI. Тестовый endpoint существует только на loopback во время теста; рабочие Streamer.bot/OBS не используются.
+Для установленного Chrome задать `CHROME_BIN`. Итоговый файл: `.build-cache/ui-portability/ui-portability.html`. Его можно скопировать в пустой каталог: CSS, JS, Unbounded 400 и OFL встроены. Файл не требует сервера UI. Тестовый endpoint существует только на loopback во время теста; рабочие Streamer.bot/OBS не используются.
 
 ## Зафиксированная цепочка
 

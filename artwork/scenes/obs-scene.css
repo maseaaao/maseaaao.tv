@@ -1,153 +1,81 @@
-* {
-  box-sizing: border-box;
-}
-html,
-body {
-  margin: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: transparent;
-}
-body {
-  font-family: var(--hud-body);
-  color: var(--hud-text);
-}
 .canvas {
   position: relative;
   overflow: hidden;
-  width: var(--width);
-  height: var(--height);
-  background: var(--hud-bg);
+  background: var(--color-surface);
+  font-family: var(--font-body);
+  color: var(--color-text);
 }
-.grid {
-  display: none;
-  opacity: 0;
+.canvas.blank {
+  background: var(--color-canvas);
+}
+.canvas.camera,
+.canvas.gameplay,
+.canvas.tile {
+  background: transparent;
 }
 .identity {
   position: absolute;
-  left: 120px;
-  top: 112px;
   display: flex;
   align-items: center;
   gap: 24px;
-  font-family: var(--hud-display);
-  font-size: 32px;
-  font-weight: 600;
+  font: 400 32px/1.5 var(--font-display);
   letter-spacing: -0.035em;
-  height: 64px;
-  background: var(--hud-bg);
+  background: var(--color-surface);
 }
 .identity img {
-  width: 64px;
-  height: 64px;
   object-fit: contain;
 }
 .vertical .identity {
-  top: 156px;
   font-size: 28px;
-  gap: 24px;
-  height: 48px;
-}
-.vertical .identity img {
-  width: 48px;
-  height: 48px;
 }
 .header-rule {
   position: absolute;
-  left: 120px;
-  top: 220px;
-  width: 1400px;
-  height: 1px;
-  background: var(--hud-border);
-}
-.vertical .header-rule {
-  top: 244px;
-  width: 720px;
+  background: var(--color-border);
 }
 .title-field {
   position: absolute;
-  left: 88px;
-  top: 400px;
-  width: 1432px;
-  height: 264px;
-  background: var(--hud-accent);
-  border-radius: 32px;
+  background: var(--color-brand);
+  border-radius: var(--radius-surface);
 }
-.vertical .title-field {
-  top: 268px;
-  width: 784px;
-  height: 176px;
-}
-h1 {
+.canvas h1 {
   position: absolute;
-  left: 120px;
-  top: 440px;
   margin: 0;
-  font-family: Unbounded, Arial, sans-serif;
-  font-size: 160px;
+  font-family: var(--font-display);
   line-height: 1.08;
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.035em;
-  color: var(--hud-bg);
-  background: transparent;
-}
-.vertical h1 {
-  top: 300px;
-  font-size: 88px;
+  color: var(--color-surface);
 }
 .zone {
   position: absolute;
   pointer-events: none;
 }
 .panel {
-  background: var(--hud-surface);
-  border: 1px solid var(--hud-border);
-  border-radius: 20px;
+  background: var(--color-field);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-surface);
 }
-.zone[data-zone='music'],
-.zone[data-zone='donors'] {
-  background: var(--hud-bg);
-}
-
 .qr {
   position: absolute;
   display: block;
   object-fit: contain;
   image-rendering: pixelated;
-  background: #eee;
-}
-.social {
-  background: var(--hud-bg);
-  border-top: 1px solid var(--hud-border);
-}
-.canvas.overlay:not(.vertical) .zone[data-zone='music'],
-.canvas.overlay:not(.vertical) .zone[data-zone='donors'] {
-  background: transparent;
-}
-.canvas.overlay,
-.canvas.gameplay,
-.canvas.camera-tile {
-  background: transparent;
+  background: var(--color-surface);
 }
 .lower-background {
   position: absolute;
-  left: 0;
-  top: 608px;
-  width: 1080px;
-  height: 1312px;
   overflow: hidden;
-  background: var(--hud-bg);
+  background: var(--color-surface);
 }
 .camera-frame {
   position: absolute;
   pointer-events: none;
-  border: 2px solid var(--hud-accent);
-  border-radius: 20px;
+  border: 2px solid var(--color-brand);
+  border-radius: var(--radius-surface);
 }
-.camera-tile {
-  border: 2px solid var(--hud-accent);
-  border-radius: 12px;
+.canvas.tile {
+  border: 2px solid var(--color-brand);
+  border-radius: var(--radius-field);
 }
 .vertical .camera-frame {
   border: 0;

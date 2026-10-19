@@ -1,0 +1,24 @@
+@import '@maseaaao/design/fonts-400.css';
+@import '@maseaaao/design/tokens.css';
+@import './banners/banner.css';
+@import './brand/brand.css';
+@import './scenes/obs-scene.css';
+@import './twitch-description/panel.css';
+@import './wallpapers/wallpaper.css';
+@import './logo/logo.css';
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+}
+body {
+  font: 400 28px/1.5 var(--font-body);
+  color: var(--color-text);
+  font-synthesis: none;
+}

@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, userEvent, within } from 'storybook/test';
-import NoticeBanner from './NoticeBanner.vue';
+import NoticeBanner from 'change-info-streamer-bot/NoticeBanner.vue';
 
 const meta: Meta<typeof NoticeBanner> = {
-  title: 'Компоненты/NoticeBanner',
+  title: 'Stream Info/NoticeBanner',
   component: NoticeBanner,
   args: { title: 'Есть несохранённые изменения' },
 };

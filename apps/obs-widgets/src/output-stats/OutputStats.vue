@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import AppButton from '@maseaaao/ui/AppButton.vue';
 import FieldInput from '@maseaaao/ui/FieldInput.vue';
+import IconIndicator from '@maseaaao/ui/IconIndicator.vue';
 </script>
 
 <template>
   <main class="stats-shell">
     <header class="stats-heading">
       <h1>Статистика выходов</h1>
-      <div class="status-group" role="status" aria-live="polite">
-        <div id="status-dot" data-status="disconnected" aria-hidden="true"></div>
-        <span id="status-text">Отключено</span>
-      </div>
+      <IconIndicator
+        status="disconnected"
+        label="Отключено"
+        dot-id="status-dot"
+        label-id="status-text"
+      />
     </header>
     <div class="header-bar">
       <div class="connection-fields">
