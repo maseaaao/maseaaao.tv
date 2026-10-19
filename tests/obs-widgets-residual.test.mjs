@@ -98,6 +98,9 @@ test('real Chromium provider-shaped text stress fixtures load fonts and retain l
             '#8a2940',
             'maseaaao ' + 'Сверхдлинноесловобезпробелов'.repeat(8),
           ],
+          ['imaseaaao', '#1616d9', 'Пишу обычное сообщение без упоминаний.'],
+          ['viewer', '#1616d9', 'Это пример ника maseaaaotest, без настоящего упоминания.'],
+          ['viewer2', '#1616d9', '@maseaaao добрый вечер'],
         ];
         for (const [from, color, message] of data) {
           const holder = document.createElement('div');
@@ -126,7 +129,8 @@ test('real Chromium provider-shaped text stress fixtures load fonts and retain l
     });
     await page.waitForTimeout(350);
     assert.equal(await page.locator('#log > .host').count(), 1);
-    assert.equal(await page.locator('#log > .mention').count(), 1);
+    assert.equal(await page.locator('#log > .mention').count(), 2);
+    assert.equal(await page.locator('#log > div[data-from="imaseaaao"].mention').count(), 0);
     const metrics = await page.evaluate(() => ({
       font: [...document.fonts].some(
         (face) => face.family === 'Unbounded' && face.weight === '400' && face.status === 'loaded',

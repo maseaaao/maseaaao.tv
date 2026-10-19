@@ -88,11 +88,13 @@
 
 ## Этап 5. Provider skins: Chat/DonationAlerts, реальные данные — P2
 
-- [ ] Добавить падающие fixtures на сообщение пользователя, ник которого **содержит** `maseaaao`, но текст его не упоминает; различать author и **message-only**; вложенные элементы, badges и emotes не должны давать false mention.
-- [ ] Исправить `apps/obs-widgets/src/streamlabs-chat/chat-box.js`: host по точному `data-from`, mention по содержимому `.message`, защищённому от посторонних metadata; проверить MutationObserver для динамического добавления.
+- [x] Добавить падающие fixtures на сообщение пользователя, ник которого **содержит** `maseaaao`, но текст его не упоминает; различать author и **message-only**; вложенные элементы, badges и emotes не должны давать false mention.
+- [x] Исправить `apps/obs-widgets/src/streamlabs-chat/chat-box.js`: host по точному `data-from`, mention по содержимому `.message`, защищённому от посторонних metadata; проверить MutationObserver для динамического добавления.
 - [ ] Проверить generated CSS/provider placeholders после PostCSS; не вставлять `{font_size}`/`{message_hide_delay}` в локальный OBS CSS без подстановки провайдера.
 - [ ] Проверить clipping донатеров и алертов по фактическим зонам `layout.json`: кириллица, emoji/ZWJ, длинный ник, многострочный текст, emotes/badges, fade timings и transparent alpha. Зафиксировать явную политику сокращения, а не скрывать существенные данные случайным ellipsis.
 - [ ] Провести provider preview на **реальном** DOM/CSP Streamlabs/DonationAlerts без живых донатов/сообщений; обнаруженные несовместимости вынести в отдельные чекбоксы и regression fixtures.
+
+**Непроверенное:** обновлены provider-shaped fixtures, но реальные Streamlabs/DonationAlerts CSP и визуальная приёмка в OBS не проверялись.
 
 **Готово, когда:** нет ложных упоминаний и визуально неприемлемой обрезки; provider lifecycle не нарушен. **Коммит:** `fix(providers): align chat and alert rendering with provider contracts`.
 
