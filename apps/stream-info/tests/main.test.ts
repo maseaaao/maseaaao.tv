@@ -1,40 +1,97 @@
 import { required, textValue, parseRecord } from './assertions';
+import { mount, type VueWrapper } from '@vue/test-utils';
+import { nextTick } from 'vue';
 import type { MockInstance } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mockStreamerbot } from './mocks/streamerbot-client';
 import packageJson from '../package.json';
 
-vi.mock('@streamerbot/client', async () => import('./mocks/streamerbot-client'));
+const clientMock = vi.hoisted(
+  (): { current?: typeof import('./mocks/streamerbot-client') } => ({}),
+);
+vi.mock('@streamerbot/client', async () => {
+  const module = await import('./mocks/streamerbot-client');
+  clientMock.current = module;
+  return module;
+});
 
 const flush = async (): Promise<void> => {
   await Promise.resolve();
   await Promise.resolve();
-  await new Promise((resolve) => window.setTimeout(resolve, 0));
-  await Promise.resolve();
+  if (vi.isFakeTimers()) await vi.advanceTimersByTimeAsync(0);
+  else await new Promise((resolve) => window.setTimeout(resolve, 0));
+  await nextTick();
 };
 
-function action(name: string, index = 0): HTMLButtonElement {
-  const button = document.querySelectorAll<HTMLButtonElement>(`[data-action="${name}"]`)[index];
-  if (!button) throw new Error(`Action ${name} is not rendered.`);
-  return button;
-}
+type Field = HTMLInputElement | HTMLTextAreaElement;
+let wrapper: VueWrapper | undefined;
 
-function click(name: string, index = 0): void {
-  action(name, index).click();
+// Deliberately small helpers: native labels/aria-label and explicit roles, not a
+// second accessibility-name implementation. All queries target the mounted DOM.
+function queryField(name: string | RegExp): Field | null {
+  const matches = (value: string) =>
+    typeof name === 'string' ? value.trim() === name : name.test(value.trim());
+  const fields = Array.from(document.querySelectorAll<Field>('input, textarea'));
+  return (
+    fields.find(
+      (field) =>
+        matches(field.getAttribute('aria-label') ?? '') ||
+        Array.from(field.labels ?? []).some((label) => matches(label.textContent ?? '')),
+    ) ?? null
+  );
 }
-
-function setValue(selector: string, value: string): HTMLInputElement | HTMLTextAreaElement {
-  const field = document.querySelector<HTMLInputElement | HTMLTextAreaElement>(selector);
-  if (!field) throw new Error(`Field ${selector} is not rendered.`);
-  field.value = value;
-  field.dispatchEvent(new Event('input', { bubbles: true }));
-  return field;
+function field(name: string | RegExp): Field {
+  return required(queryField(name));
 }
-
+function buttons(name: string | RegExp): HTMLButtonElement[] {
+  return Array.from(document.querySelectorAll<HTMLButtonElement>('button')).filter((button) => {
+    const label = (button.getAttribute('aria-label') ?? button.textContent ?? '').trim();
+    return typeof name === 'string' ? label === name : name.test(label);
+  });
+}
+function button(name: string | RegExp, index = 0): HTMLButtonElement {
+  const value = buttons(name)[index];
+  if (!value)
+    throw new Error(
+      `Button ${name} is not rendered. Available: ${Array.from(document.querySelectorAll('button'))
+        .map((b) => b.getAttribute('aria-label') ?? b.textContent)
+        .join(', ')}`,
+    );
+  return value;
+}
+function roleText(role: 'status' | 'alert', text: string): HTMLElement | null {
+  return (
+    Array.from(document.querySelectorAll<HTMLElement>(`[role="${role}"]`)).find(
+      (element) => element.textContent?.trim() === text,
+    ) ?? null
+  );
+}
+function options(): HTMLButtonElement[] {
+  return Array.from(document.querySelectorAll<HTMLButtonElement>('[role="option"]'));
+}
+function categoryOption(index = 0): HTMLButtonElement {
+  return required(options()[index]);
+}
+function optionNamed(name: string): HTMLButtonElement | null {
+  return options().find((value) => value.textContent?.trim() === name) ?? null;
+}
+async function click(name: string | RegExp, index = 0): Promise<void> {
+  button(name, index).click();
+  await nextTick();
+}
+async function setValue(name: string | RegExp, value: string): Promise<Field> {
+  const input = field(name);
+  input.value = value;
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  await nextTick();
+  return input;
+}
 async function boot(): Promise<void> {
-  await import('../src/main');
+  wrapper?.unmount();
+  wrapper = undefined;
+  document.body.innerHTML = '<div id="app"></div>';
+  const { default: App } = await import('../src/App.vue');
+  wrapper = mount(App, { attachTo: required(document.querySelector('#app')) });
   await flush();
   await flush();
 }
@@ -43,13 +100,89 @@ function commands(): string[] {
   return mockStreamerbot.actionCalls.map((call) => textValue(call.args.command));
 }
 
-describe('Stream Info HTML actions', () => {
+interface ControlledAction {
+  args: Record<string, unknown>;
+  acknowledge(): void;
+  rejectAck(error: Error): void;
+  respond(envelope: Record<string, unknown>): void;
+}
+
+// Keep the existing client mock, but separate transport ACK from CodeEvent.
+// Install before mounting so each client retains its own registered event handler.
+async function controlActions(
+  command: 'saveTemplates' | 'updateTwitch' | 'runPreset',
+): Promise<ControlledAction[]> {
+  await import('@streamerbot/client');
+  const { StreamerbotClient } = required(clientMock.current);
+  type Client = InstanceType<typeof StreamerbotClient>;
+  type Handler = Parameters<Client['on']>[1];
+  const handlers = new WeakMap<Client, Handler>();
+  // The original is deliberately rebound with .call(this), not invoked unbound.
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  const originalOn = StreamerbotClient.prototype.on;
+  vi.spyOn(StreamerbotClient.prototype, 'on').mockImplementation(function (
+    this: Client,
+    event,
+    handler,
+  ) {
+    if (event === 'Custom.CodeEvent') handlers.set(this, handler);
+    return originalOn.call(this, event, handler);
+  });
+  // eslint-disable-next-line @typescript-eslint/unbound-method -- Rebound via .call(this).
+  const originalAction = StreamerbotClient.prototype.doAction;
+  const pending: ControlledAction[] = [];
+  vi.spyOn(StreamerbotClient.prototype, 'doAction').mockImplementation(function (
+    this: Client,
+    action,
+    args = {},
+  ) {
+    const controlled =
+      command === 'runPreset' ? action.id === 'preset-pubg' : args.command === command;
+    if (!controlled) return originalAction.call(this, action, args);
+    mockStreamerbot.actionCalls.push({ id: action.id, args });
+    return new Promise<void>((resolve, reject) => {
+      pending.push({
+        args,
+        acknowledge: resolve,
+        rejectAck: reject,
+        respond: (envelope) =>
+          required(handlers.get(this))({
+            data: {
+              eventName: 'stream_info_api_response',
+              args: {
+                apiVersion: 4,
+                requestId: textValue(args.requestId),
+                command: textValue(args.command),
+                ok: true,
+                data: {},
+                error: null,
+                ...envelope,
+              },
+            },
+          }),
+      });
+    });
+  });
+  return pending;
+}
+
+function savedTemplateResponse(template: string): Record<string, unknown> {
+  return {
+    data: {
+      templates: { twitchTemplate: template, subtitle: 'Старт', configured: true },
+    },
+  };
+}
+
+describe('Stream Info Vue interactions', () => {
   const open = vi.fn(() => null);
   const writeText = vi.fn(() => Promise.resolve());
   let timeoutSpy: MockInstance<typeof window.setTimeout>;
   let intervalSpy: MockInstance<typeof window.setInterval>;
+  let clipboardDescriptor: PropertyDescriptor | undefined;
 
   beforeEach(() => {
+    clipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
     // resetModules does not dispose callbacks belonging to the previous app.
     // Track real timers as well as the fake timers used by individual tests.
     timeoutSpy = vi.spyOn(window, 'setTimeout');
@@ -68,6 +201,9 @@ describe('Stream Info HTML actions', () => {
   });
 
   afterEach(() => {
+    wrapper?.unmount();
+    wrapper = undefined;
+    document.body.replaceChildren();
     vi.clearAllTimers();
     vi.useRealTimers();
     for (const result of timeoutSpy.mock.results) {
@@ -78,14 +214,15 @@ describe('Stream Info HTML actions', () => {
     }
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
+    if (clipboardDescriptor) Object.defineProperty(navigator, 'clipboard', clipboardDescriptor);
+    else Reflect.deleteProperty(navigator, 'clipboard');
   });
 
-  function togglePlatform(platform: 'twitch', scope = 'subtitle'): void {
-    const input = document.querySelector<HTMLInputElement>(
-      `[data-input="platform-enabled"][data-scope="${scope}-${platform}"]`,
-    );
-    if (!input) throw new Error('Platform switch missing');
-    input.click();
+  async function togglePlatform(_platform: 'twitch'): Promise<void> {
+    required(
+      document.querySelector<HTMLInputElement>('[role="switch"][aria-label="Обновлять Twitch"]'),
+    ).click();
+    await nextTick();
   }
 
   it.each(['onConnect', 'onDisconnect', 'onError'] as const)(
@@ -94,21 +231,21 @@ describe('Stream Info HTML actions', () => {
       await boot();
       vi.useFakeTimers();
       const old = required(mockStreamerbot.instances[0]);
-      setValue('[data-input="category-query"][data-kind="twitch"]', 'Adventure');
-      click('open-settings');
-      click('save-settings');
+      await setValue('Категория', 'Adventure');
+      await click('Настройки');
+      await click('Сохранить подключение');
       await vi.advanceTimersByTimeAsync(250);
       mockStreamerbot.deferSearch = true;
-      setValue('[data-input="category-query"][data-kind="twitch"]', 'Adventure new');
+      await setValue('Категория', 'Adventure new');
       await vi.advanceTimersByTimeAsync(250);
       old.options[hook]?.(new Error('old password error'));
       await vi.advanceTimersByTimeAsync(0);
-      expect(document.querySelector('.connection-connected')).not.toBeNull();
+      expect(roleText('status', 'Streamer.bot подключён')).not.toBeNull();
       required(mockStreamerbot.pendingSearches[0]).reply({
         data: { results: [{ id: 'fresh', name: 'Adventure new' }] },
       });
       await vi.advanceTimersByTimeAsync(0);
-      expect(action('choose-category').dataset.id).toBe('fresh');
+      expect(categoryOption().textContent?.trim()).toBe('Adventure new');
       expect(document.querySelector('.auth-panel')).toBeNull();
     },
   );
@@ -129,7 +266,7 @@ describe('Stream Info HTML actions', () => {
           finish = resolve;
         });
       });
-      click('refresh-state');
+      await click('Обновить данные');
       await vi.advanceTimersByTimeAsync(0);
       let disconnected: () => void = () => {
         throw new Error('Fixture callback was not installed');
@@ -142,26 +279,26 @@ describe('Stream Info HTML actions', () => {
       );
       mockStreamerbot.state = structuredClone(mockStreamerbot.state);
       mockStreamerbot.state.twitch.accountName = 'Replacement account';
-      click('open-settings');
-      click('save-settings');
+      await click('Настройки');
+      await click('Сохранить подключение');
       if (timing === 'before') {
         finish();
         await vi.advanceTimersByTimeAsync(0);
-        expect(document.querySelector('.connection-connecting')).not.toBeNull();
-        expect(document.querySelector('.notice')).toBeNull();
-        expect(document.querySelector('.autocomplete-list')).toBeNull();
+        expect(roleText('status', 'Подключение…')).not.toBeNull();
+        expect(document.querySelector('.notices > [role]')).toBeNull();
+        expect(document.querySelector('[role="listbox"]')).toBeNull();
       }
       disconnected();
       await vi.advanceTimersByTimeAsync(0);
-      setValue('[data-input="category-query"][data-kind="twitch"]', 'Adventure');
+      await setValue('Категория', 'Adventure');
       await vi.advanceTimersByTimeAsync(250);
       finish();
       await vi.advanceTimersByTimeAsync(0);
-      expect(document.querySelector('[data-platform="twitch"]')?.textContent).toContain(
+      expect(document.querySelector('section[aria-label="Twitch"]')?.textContent).toContain(
         'Replacement account',
       );
-      expect(action('choose-category').dataset.id).toBe('493057');
-      expect(document.querySelector('.notice')).toBeNull();
+      expect(categoryOption().textContent?.trim()).toBe('PUBG: BATTLEGROUNDS');
+      expect(document.querySelector('.notices > [role]')).toBeNull();
     },
   );
 
@@ -178,38 +315,34 @@ describe('Stream Info HTML actions', () => {
           finish = resolve;
         }),
     );
-    click('open-settings');
-    click('save-settings');
+    await click('Настройки');
+    await click('Сохранить подключение');
     old.options.onDisconnect?.();
     old.options.onConnect?.();
     old.options.onError?.(new Error('old password error'));
     await vi.advanceTimersByTimeAsync(0);
-    expect(document.querySelector('.connection-connecting')).not.toBeNull();
+    expect(roleText('status', 'Подключение…')).not.toBeNull();
     expect(document.querySelector('.auth-panel')).toBeNull();
     finish();
     await vi.advanceTimersByTimeAsync(0);
-    expect(document.querySelector('.connection-connected')).not.toBeNull();
+    expect(roleText('status', 'Streamer.bot подключён')).not.toBeNull();
   });
 
   it('renders a failed search envelope as retryable error, never empty', async () => {
     await boot();
     vi.useFakeTimers();
     mockStreamerbot.searchReply = { ok: false, error: { message: 'Search unavailable' } };
-    setValue('[data-input="category-query"][data-kind="twitch"]', 'Adventure');
+    await setValue('Категория', 'Adventure');
     await vi.advanceTimersByTimeAsync(250);
-    expect(document.querySelector('.category-search-status')?.textContent).toContain(
-      'Search unavailable',
-    );
-    expect(document.querySelector('.autocomplete-list')?.textContent).not.toContain(
-      'Ничего не найдено',
-    );
+    expect(roleText('alert', 'Search unavailable')).not.toBeNull();
+    expect(roleText('status', 'Ничего не найдено')).toBeNull();
     mockStreamerbot.searchReply = {
       ok: true,
       data: { results: [{ id: 'adventure', name: 'Adventure', imageUrl: '' }] },
     };
-    click('retry-category-search');
+    await click('Повторить поиск');
     await vi.advanceTimersByTimeAsync(250);
-    expect(action('choose-category').textContent).toContain('Adventure');
+    expect(categoryOption().textContent).toContain('Adventure');
     expect(
       JSON.parse(textValue(mockStreamerbot.actionCalls.at(-1)?.args.payloadJson)),
     ).toMatchObject({
@@ -221,87 +354,86 @@ describe('Stream Info HTML actions', () => {
     await boot();
     vi.useFakeTimers();
     mockStreamerbot.deferSearch = true;
-    const selector = '[data-input="category-query"][data-kind="twitch"]';
-    setValue(selector, 'Alpha');
+    const selector = 'Категория';
+    await setValue(selector, 'Alpha');
     await vi.advanceTimersByTimeAsync(250);
-    setValue(selector, 'Beta');
+    await setValue(selector, 'Beta');
     await vi.advanceTimersByTimeAsync(250);
-    setValue(selector, 'Alpha');
+    await setValue(selector, 'Alpha');
     await vi.advanceTimersByTimeAsync(250);
     expect(mockStreamerbot.pendingSearches).toHaveLength(1);
     required(mockStreamerbot.pendingSearches[0]).reply({
       data: { results: [{ id: 'old', name: 'Old Alpha' }] },
     });
     await vi.advanceTimersByTimeAsync(0);
-    expect(document.querySelector('[data-id="old"]')).toBeNull();
+    expect(optionNamed('Old Alpha')).toBeNull();
     expect(mockStreamerbot.pendingSearches).toHaveLength(2);
     expect(required(mockStreamerbot.pendingSearches[1]).payload).toEqual({ query: 'Alpha' });
     required(mockStreamerbot.pendingSearches[1]).reply({
       data: { results: [{ id: 'new', name: 'Alpha new' }] },
     });
     await vi.advanceTimersByTimeAsync(0);
-    expect(action('choose-category').dataset.id).toBe('new');
+    expect(categoryOption().textContent?.trim()).toBe('Alpha new');
   });
 
   it('invalidates pending search on reconnect but retains the query draft', async () => {
     await boot();
     vi.useFakeTimers();
     mockStreamerbot.deferSearch = true;
-    setValue('[data-input="category-query"][data-kind="twitch"]', 'Adventure');
+    await setValue('Категория', 'Adventure');
     await vi.advanceTimersByTimeAsync(250);
     mockStreamerbot.disconnectHook?.();
     required(mockStreamerbot.pendingSearches[0]).reply({
       data: { results: [{ id: 'stale', name: 'Adventure stale' }] },
     });
-    click('open-settings');
-    click('save-settings');
+    await click('Настройки');
+    await click('Сохранить подключение');
     await vi.advanceTimersByTimeAsync(250);
-    expect(
-      document.querySelector<HTMLInputElement>('[data-input="category-query"][data-kind="twitch"]')
-        ?.value,
-    ).toBe('Adventure');
-    expect(document.querySelector('[data-id="stale"]')).toBeNull();
+    expect(queryField('Категория')?.value).toBe('Adventure');
+    expect(optionNamed('Adventure stale')).toBeNull();
     expect(mockStreamerbot.pendingSearches).toHaveLength(2);
     required(mockStreamerbot.pendingSearches[1]).reply({
       data: { results: [{ id: 'fresh', name: 'Adventure fresh' }] },
     });
     await vi.advanceTimersByTimeAsync(0);
-    expect(action('choose-category').dataset.id).toBe('fresh');
+    expect(categoryOption().textContent?.trim()).toBe('Adventure fresh');
   });
 
   it('retains category input identity, caret and composition through background refresh', async () => {
     await boot();
     vi.useFakeTimers();
-    const selector = '[data-input="category-query"][data-kind="twitch"]';
-    const input = required(document.querySelector<HTMLInputElement>(selector));
+    const selector = 'Категория';
+    const input = required(queryField(selector));
     input.focus();
     input.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true }));
-    setValue(selector, '冒険');
+    await nextTick();
+    await setValue(selector, '冒険');
     input.setSelectionRange(1, 1);
-    click('refresh-state');
+    await click('Обновить данные');
     await vi.advanceTimersByTimeAsync(500);
-    expect(document.querySelector(selector)).toBe(input);
+    expect(queryField(selector)).toBe(input);
     expect(document.activeElement).toBe(input);
     expect(input.selectionStart).toBe(1);
     expect(commands().filter((command) => command === 'searchTwitchCategories')).toHaveLength(0);
     input.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true }));
+    await nextTick();
     await vi.advanceTimersByTimeAsync(250);
     expect(commands().filter((command) => command === 'searchTwitchCategories')).toHaveLength(1);
-    click('refresh-state');
+    await click('Обновить данные');
     await vi.advanceTimersByTimeAsync(0);
-    expect(document.querySelector(selector)).toBe(input);
+    expect(queryField(selector)).toBe(input);
     expect(input.value).toBe('冒険');
   });
 
   it('preserves a focused category button by ID through refresh', async () => {
     await boot();
     vi.useFakeTimers();
-    setValue('[data-input="category-query"][data-kind="twitch"]', 'PUBG');
+    await setValue('Категория', 'PUBG');
     await vi.advanceTimersByTimeAsync(250);
-    action('choose-category').focus();
-    click('refresh-state');
+    categoryOption().focus();
+    await click('Обновить данные');
     await vi.advanceTimersByTimeAsync(0);
-    expect((document.activeElement as HTMLElement).dataset.id).toBe('493057');
+    expect(document.activeElement).toBe(optionNamed('PUBG: BATTLEGROUNDS'));
   });
 
   it('shows ranked batches of twenty and merges cursor pages beyond one hundred candidates', async () => {
@@ -315,11 +447,11 @@ describe('Stream Info HTML actions', () => {
     mockStreamerbot.searchReply = {
       data: { results, cursor: 'page-two', hasMore: true, partial: false },
     };
-    setValue('[data-input="category-query"][data-kind="twitch"]', 'Adventure');
+    await setValue('Категория', 'Adventure');
     await vi.advanceTimersByTimeAsync(250);
-    expect(document.querySelectorAll('[data-action="choose-category"]')).toHaveLength(20);
-    for (let index = 0; index < 4; index++) click('more-categories');
-    expect(document.querySelectorAll('[data-action="choose-category"]')).toHaveLength(100);
+    expect(options()).toHaveLength(20);
+    for (let index = 0; index < 4; index++) await click('Показать ещё');
+    expect(options()).toHaveLength(100);
     mockStreamerbot.searchReply = {
       data: {
         results: [
@@ -334,22 +466,22 @@ describe('Stream Info HTML actions', () => {
         partial: false,
       },
     };
-    const list = required(document.querySelector<HTMLElement>('.autocomplete-list'));
+    const list = required(document.querySelector<HTMLElement>('[role="listbox"]'));
     list.scrollTop = 77;
-    action('choose-category', 50).focus();
-    click('more-categories');
-    expect(document.querySelectorAll('[data-action="choose-category"]')).toHaveLength(100);
+    categoryOption(50).focus();
+    await click('Показать ещё');
+    expect(options()).toHaveLength(100);
     await vi.advanceTimersByTimeAsync(0);
-    expect(document.querySelectorAll('[data-action="choose-category"]')).toHaveLength(120);
-    expect(document.querySelector<HTMLElement>('.autocomplete-list')?.scrollTop).toBe(77);
-    expect((document.activeElement as HTMLElement).dataset.id).toBe('game-50');
+    expect(options()).toHaveLength(120);
+    expect(document.querySelector<HTMLElement>('[role="listbox"]')?.scrollTop).toBe(77);
+    expect(document.activeElement).toBe(optionNamed('Adventure 50'));
     expect(JSON.parse(textValue(mockStreamerbot.actionCalls.at(-1)?.args.payloadJson))).toEqual({
       query: 'Adventure',
       cursor: 'page-two',
     });
-    click('more-categories');
-    expect(document.querySelectorAll('[data-action="choose-category"]')).toHaveLength(130);
-    expect(document.querySelector('[data-action="more-categories"]')).toBeNull();
+    await click('Показать ещё');
+    expect(options()).toHaveLength(130);
+    expect(buttons('Показать ещё')[0] ?? null).toBeNull();
   });
 
   it('shows partial warnings separately from errors and does not call a continuable page empty', async () => {
@@ -364,17 +496,16 @@ describe('Stream Info HTML actions', () => {
         warnings: ['Some sources unavailable'],
       },
     };
-    setValue('[data-input="category-query"][data-kind="twitch"]', 'Adventure');
+    await setValue('Категория', 'Adventure');
     await vi.advanceTimersByTimeAsync(250);
     expect(document.querySelector('.category-search-warning')?.textContent).toContain(
       'Some sources unavailable',
     );
-    expect(document.querySelector('.autocomplete-list')?.textContent).not.toContain(
-      'Ничего не найдено',
-    );
-    expect(action('more-categories').disabled).toBe(false);
+    expect(roleText('status', 'Результатов: 0')).not.toBeNull();
+    expect(roleText('status', 'Ничего не найдено')).toBeNull();
+    expect(button('Показать ещё').disabled).toBe(false);
     mockStreamerbot.searchReply = { ok: false, error: { message: 'Page failed' } };
-    click('more-categories');
+    await click('Показать ещё');
     await vi.advanceTimersByTimeAsync(0);
     expect(document.querySelector('.category-search-status')?.textContent).toContain('Page failed');
     mockStreamerbot.searchReply = {
@@ -385,13 +516,13 @@ describe('Stream Info HTML actions', () => {
         partial: false,
       },
     };
-    click('retry-category-search');
+    await click('Повторить поиск');
     await vi.advanceTimersByTimeAsync(250);
     expect(JSON.parse(textValue(mockStreamerbot.actionCalls.at(-1)?.args.payloadJson))).toEqual({
       query: 'Adventure',
       cursor: 'continue',
     });
-    expect(action('choose-category').dataset.id).toBe('found');
+    expect(categoryOption().textContent?.trim()).toBe('Adventure');
   });
 
   it('supports accessible keyboard selection without guessing the first result', async () => {
@@ -405,10 +536,7 @@ describe('Stream Info HTML actions', () => {
         ],
       },
     };
-    const input = setValue(
-      '[data-input="category-query"][data-kind="twitch"]',
-      'Adventure',
-    ) as HTMLInputElement;
+    const input = (await setValue('Категория', 'Adventure')) as HTMLInputElement;
     input.focus();
     await vi.advanceTimersByTimeAsync(250);
     expect(input.getAttribute('role')).toBe('combobox');
@@ -417,21 +545,24 @@ describe('Stream Info HTML actions', () => {
       document.getElementById(required(input.getAttribute('aria-controls')))?.getAttribute('role'),
     ).toBe('listbox');
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await nextTick();
     expect(input.value).toBe('Adventure');
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await nextTick();
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    await nextTick();
     const active = input.getAttribute('aria-activedescendant');
-    expect(document.getElementById(required(active))?.dataset.id).toBe('two');
-    click('refresh-state');
+    expect(document.getElementById(required(active))?.textContent?.trim()).toBe('Adventure two');
+    await click('Обновить данные');
     await vi.advanceTimersByTimeAsync(0);
     expect(input.getAttribute('aria-activedescendant')).toBe(active);
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+    await nextTick();
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await nextTick();
     expect(input.value).toBe('');
-    expect(
-      document.querySelector('[data-platform="twitch"] .selected-category')?.textContent,
-    ).toContain('Adventure one');
-    expect(action('save-all').disabled).toBe(false);
+    expect(document.querySelector('.selected-category')?.textContent).toContain('Adventure one');
+    expect(button('Применить изменения').disabled).toBe(false);
   });
 
   it('scrolls the keyboard-active category into view after rendering', async () => {
@@ -451,10 +582,12 @@ describe('Stream Info HTML actions', () => {
           })),
         },
       };
-      const input = setValue('[data-input="category-query"][data-kind="twitch"]', 'Adventure');
+      const input = await setValue('Категория', 'Adventure');
       await vi.advanceTimersByTimeAsync(250);
-      for (let i = 0; i < 15; i++)
+      for (let i = 0; i < 15; i++) {
         input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+        await nextTick();
+      }
       expect(scroll).toHaveBeenLastCalledWith({ block: 'nearest' });
       expect(scroll.mock.contexts.at(-1)).toBe(
         document.getElementById(required(input.getAttribute('aria-activedescendant'))),
@@ -467,50 +600,54 @@ describe('Stream Info HTML actions', () => {
 
   it('transfers, traps and returns settings focus with an inert background', async () => {
     await boot();
-    const opener = action('open-settings');
+    const opener = button('Настройки');
     opener.focus();
-    click('open-settings');
+    await click('Настройки');
     const dialog = required(document.querySelector<HTMLElement>('[role="dialog"]'));
     expect(dialog.contains(document.activeElement)).toBe(true);
-    expect(document.querySelector('main')?.hasAttribute('inert')).toBe(true);
-    action('save-settings').focus();
-    action('save-settings').dispatchEvent(
+    expect(Boolean(document.querySelector('main')?.closest('[inert]'))).toBe(true);
+    button('Сохранить подключение').focus();
+    button('Сохранить подключение').dispatchEvent(
       new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }),
     );
-    expect(document.activeElement).toBe(action('close-modal'));
-    action('close-modal').dispatchEvent(
+    await nextTick();
+    expect(document.activeElement).toBe(button('Закрыть'));
+    button('Закрыть').dispatchEvent(
       new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true }),
     );
-    expect(document.activeElement).toBe(action('save-settings'));
-    action('save-settings').dispatchEvent(
+    await nextTick();
+    expect(document.activeElement).toBe(button('Сохранить подключение'));
+    button('Сохранить подключение').dispatchEvent(
       new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
     );
+    await nextTick();
+    // Dialog focus restoration is scheduled after its unmount patch.
+    await nextTick();
     expect(document.querySelector('[role="dialog"]')).toBeNull();
-    expect(document.activeElement).toBe(action('open-settings'));
-    expect(document.querySelector('main')?.hasAttribute('inert')).toBe(false);
+    expect(document.activeElement).toBe(button('Настройки'));
+    expect(Boolean(document.querySelector('main')?.closest('[inert]'))).toBe(false);
   });
 
   it('preserves focus on a dialog action button during a background full render', async () => {
     await boot();
-    click('open-settings');
-    const save = action('save-settings');
+    await click('Настройки');
+    const save = button('Сохранить подключение');
     save.focus();
     expect(document.activeElement).toBe(save);
-    click('refresh-state');
+    await click('Обновить данные');
     await flush();
-    expect(document.activeElement).toBe(action('save-settings'));
+    expect(document.activeElement).toBe(button('Сохранить подключение'));
   });
 
   it('returns focus to category query input instead of BODY when choosing a category', async () => {
     await boot();
     vi.useFakeTimers();
     mockStreamerbot.searchReply = { data: { results: [{ id: 'pubg', name: 'PUBG' }] } };
-    setValue('[data-input="category-query"][data-kind="twitch"]', 'PUBG');
+    await setValue('Категория', 'PUBG');
     await vi.advanceTimersByTimeAsync(250);
-    click('choose-category');
-    expect(document.activeElement).toBe(
-      document.querySelector('[data-input="category-query"][data-kind="twitch"]'),
-    );
+    categoryOption().click();
+    await nextTick();
+    expect(document.activeElement).toBe(queryField('Категория'));
   });
 
   it('retains load-more focus while fetching the next page', async () => {
@@ -519,34 +656,38 @@ describe('Stream Info HTML actions', () => {
     mockStreamerbot.searchReply = {
       data: { results: [{ id: 'one', name: 'Adventure one' }], cursor: 'next', hasMore: true },
     };
-    setValue('[data-input="category-query"][data-kind="twitch"]', 'Adventure');
+    await setValue('Категория', 'Adventure');
     await vi.advanceTimersByTimeAsync(250);
     mockStreamerbot.deferSearch = true;
-    action('more-categories').focus();
-    click('more-categories');
-    expect((document.activeElement as HTMLElement).dataset.action).toBe('more-categories');
+    button('Показать ещё').focus();
+    await click('Показать ещё');
+    expect(document.activeElement).toBe(button('Показать ещё'));
+    expect(button('Показать ещё').disabled).toBe(false);
+    expect(button('Показать ещё').getAttribute('aria-disabled')).toBe('true');
+    await click('Показать ещё');
+    expect(mockStreamerbot.pendingSearches).toHaveLength(1);
     required(mockStreamerbot.pendingSearches[0]).reply({
       data: { results: [{ id: 'two', name: 'Adventure two' }], cursor: 'third', hasMore: true },
     });
     await vi.advanceTimersByTimeAsync(0);
-    expect((document.activeElement as HTMLElement).dataset.action).toBe('more-categories');
+    expect(document.activeElement).toBe(button('Показать ещё'));
+    expect(button('Показать ещё').getAttribute('aria-disabled')).toBe('false');
+    expect(mockStreamerbot.pendingSearches).toHaveLength(1);
   });
 
   it('renders old results-only replies including a genuine empty result', async () => {
     await boot();
     vi.useFakeTimers();
     mockStreamerbot.searchReply = { data: { results: [] } };
-    setValue('[data-input="category-query"][data-kind="twitch"]', 'Puzzle');
+    await setValue('Категория', 'Puzzle');
     await vi.advanceTimersByTimeAsync(250);
-    expect(document.querySelector('.category-search-status')?.textContent).toContain(
-      'Ничего не найдено',
-    );
-    expect(document.querySelector('[data-action="retry-category-search"]')).toBeNull();
+    expect(roleText('status', 'Ничего не найдено')).not.toBeNull();
+    expect(buttons('Повторить поиск')[0] ?? null).toBeNull();
     mockStreamerbot.searchReply = { data: { results: [{ id: 'puzzle', name: 'Puzzle' }] } };
-    setValue('[data-input="category-query"][data-kind="twitch"]', 'Puzzles');
+    await setValue('Категория', 'Puzzles');
     await vi.advanceTimersByTimeAsync(250);
-    expect(action('choose-category').dataset.id).toBe('puzzle');
-    expect(document.querySelector('[data-action="more-categories"]')).toBeNull();
+    expect(categoryOption().textContent?.trim()).toBe('Puzzle');
+    expect(buttons('Показать ещё')[0] ?? null).toBeNull();
   });
 
   it('keeps candidates after a continuation failure and retries only that cursor', async () => {
@@ -555,12 +696,12 @@ describe('Stream Info HTML actions', () => {
     mockStreamerbot.searchReply = {
       data: { results: [{ id: 'sim', name: 'Simulator' }], cursor: 'next', hasMore: true },
     };
-    setValue('[data-input="category-query"][data-kind="twitch"]', 'Simulator');
+    await setValue('Категория', 'Simulator');
     await vi.advanceTimersByTimeAsync(250);
     mockStreamerbot.searchReply = { ok: false, error: { message: 'Temporarily unavailable' } };
-    click('more-categories');
+    await click('Показать ещё');
     await vi.advanceTimersByTimeAsync(0);
-    expect(action('choose-category').dataset.id).toBe('sim');
+    expect(categoryOption().textContent?.trim()).toBe('Simulator');
     expect(document.querySelector('.category-search-status')?.textContent).toContain(
       'Temporarily unavailable',
     );
@@ -574,9 +715,9 @@ describe('Stream Info HTML actions', () => {
         hasMore: false,
       },
     };
-    click('retry-category-search');
+    await click('Повторить поиск');
     await vi.advanceTimersByTimeAsync(0);
-    expect(document.querySelectorAll('[data-action="choose-category"]')).toHaveLength(2);
+    expect(options()).toHaveLength(2);
     expect(JSON.parse(textValue(mockStreamerbot.actionCalls.at(-1)?.args.payloadJson))).toEqual({
       query: 'Simulator',
       cursor: 'next',
@@ -597,23 +738,20 @@ describe('Stream Info HTML actions', () => {
         ],
       },
     };
-    setValue('[data-input="category-query"][data-kind="twitch"]', 'Safe');
+    await setValue('Категория', 'Safe');
     await vi.advanceTimersByTimeAsync(250);
-    const option = action('choose-category');
+    const option = categoryOption();
     expect(option.querySelectorAll('img')).toHaveLength(1);
     expect(option.querySelector('[onerror]')).toBeNull();
     expect(option.querySelector('strong')?.textContent).toBe('<img src=x onerror="unsafe()">');
     required(option.querySelector('img')).dispatchEvent(new Event('error'));
-    expect(option.querySelector('.category-image')?.classList.contains('failed')).toBe(true);
-    const sheet = document.createElement('style');
-    sheet.textContent = readFileSync(resolve('src/styles.css'), 'utf8');
-    document.head.append(sheet);
-    expect(getComputedStyle(required(option.querySelector('img'))).display).toBe('none');
-    expect(getComputedStyle(required(option.querySelector('.category-fallback'))).display).not.toBe(
-      'none',
-    );
-    sheet.remove();
-    click('choose-category');
+    await nextTick();
+    // The Vue cover removes a failed image rather than hiding it with legacy CSS.
+    expect(option.querySelector('img')).toBeNull();
+    const fallback = required(option.querySelector('svg.icon-defaultCategory'));
+    expect(getComputedStyle(fallback).display).not.toBe('none');
+    categoryOption().click();
+    await nextTick();
     expect(document.querySelector('.selected-category')?.textContent).toContain(
       '<img src=x onerror="unsafe()">',
     );
@@ -625,10 +763,10 @@ describe('Stream Info HTML actions', () => {
       await boot();
       vi.useFakeTimers();
       mockStreamerbot.searchReply = envelope;
-      setValue('[data-input="category-query"][data-kind="twitch"]', 'Puzzle');
+      await setValue('Категория', 'Puzzle');
       await vi.advanceTimersByTimeAsync(250);
-      expect(document.querySelector('[data-action="retry-category-search"]')).not.toBeNull();
-      expect(document.querySelector('[data-action="choose-category"]')).toBeNull();
+      expect(buttons('Повторить поиск')[0] ?? null).not.toBeNull();
+      expect(options()[0] ?? null).toBeNull();
     },
   );
 
@@ -644,7 +782,7 @@ describe('Stream Info HTML actions', () => {
         warnings: ['One source unavailable'],
       },
     };
-    setValue('[data-input="category-query"][data-kind="twitch"]', 'Adventure');
+    await setValue('Категория', 'Adventure');
     await vi.advanceTimersByTimeAsync(250);
     mockStreamerbot.searchReply = {
       data: {
@@ -654,7 +792,7 @@ describe('Stream Info HTML actions', () => {
         partial: false,
       },
     };
-    click('more-categories');
+    await click('Показать ещё');
     await vi.advanceTimersByTimeAsync(0);
     expect(document.querySelector('.category-search-warning')?.textContent).toContain(
       'One source unavailable',
@@ -665,34 +803,29 @@ describe('Stream Info HTML actions', () => {
     'requires explicit selection for unresolved %s text while retaining current category',
     async (platform) => {
       await boot();
-      const selector = `[data-input="category-query"][data-kind="${platform}"]`;
-      setValue(selector, 'Unresolved');
-      expect(
-        document.querySelector(`[data-platform="${platform}"] .selected-category`),
-      ).not.toBeNull();
-      expect(action('save-all').disabled).toBe(true);
-      click('save-all');
+      const selector = 'Категория';
+      await setValue(selector, 'Unresolved');
+      expect(document.querySelector('.selected-category')).not.toBeNull();
+      expect(button('Применить изменения').disabled).toBe(true);
+      await click('Применить изменения');
       expect(commands()).not.toContain('saveTemplates');
-      togglePlatform(platform);
-      expect(action('save-all').disabled).toBe(true);
-      togglePlatform(platform);
-      setValue(selector, '');
-      expect(action('save-all').disabled).toBe(false);
+      await togglePlatform(platform);
+      expect(button('Применить изменения').disabled).toBe(true);
+      await togglePlatform(platform);
+      await setValue(selector, '');
+      expect(button('Применить изменения').disabled).toBe(false);
     },
   );
 
   it('keeps search candidates and draft when closing settings', async () => {
     await boot();
     vi.useFakeTimers();
-    setValue('[data-input="category-query"][data-kind="twitch"]', 'PUBG');
+    await setValue('Категория', 'PUBG');
     await vi.advanceTimersByTimeAsync(250);
-    click('open-settings');
-    click('close-modal');
-    expect(action('choose-category').textContent).toContain('PUBG');
-    expect(
-      document.querySelector<HTMLInputElement>('[data-input="category-query"][data-kind="twitch"]')
-        ?.value,
-    ).toBe('PUBG');
+    await click('Настройки');
+    await click('Закрыть');
+    expect(categoryOption().textContent).toContain('PUBG');
+    expect(queryField('Категория')?.value).toBe('PUBG');
   });
 
   it.each(['twitch'] as const)(
@@ -700,18 +833,18 @@ describe('Stream Info HTML actions', () => {
     async (platform) => {
       mockStreamerbot.state[platform].tags = ['invalid tag'];
       await boot();
-      expect(action('save-all').disabled).toBe(true);
-      togglePlatform(platform);
-      expect(action('save-all').disabled).toBe(true);
-      expect(document.querySelector(`[data-platform="${platform}"]`)).toBeNull();
-      expect(
-        document.querySelector(`[data-input="inline-title"][data-kind="${platform}"]`),
-      ).toBeNull();
-      setValue('[data-input="main-subtitle"]', 'Selected platform only');
-      click('save-all');
+      expect(button('Применить изменения').disabled).toBe(true);
+      await togglePlatform(platform);
+      expect(button('Применить изменения').disabled).toBe(true);
+      expect(document.querySelector('section[aria-label="Twitch"]')).toBeNull();
+      expect(queryField('Полное название')).toBeNull();
+      await setValue('Тема стрима', 'Selected platform only');
+      await click('Применить изменения');
       await flush();
       expect(commands()).not.toContain('updateTwitch');
-      expect(document.querySelector('.notice')?.textContent ?? '').not.toContain('Пропущено');
+      expect(document.querySelector('.notices > [role]')?.textContent ?? '').not.toContain(
+        'Пропущено',
+      );
     },
   );
 
@@ -719,70 +852,58 @@ describe('Stream Info HTML actions', () => {
     'keeps disabled %s drafts and excludes title, category and tag writes in the combined editor',
     async (platform) => {
       await boot();
-      setValue('[data-input="main-subtitle"]', 'Combined change');
-      setValue(`[data-input="tag-draft"][data-scope="all-${platform}"]`, 'Draft');
-      togglePlatform(platform);
-      expect(
-        document.querySelector(`[data-input="tag-draft"][data-scope="all-${platform}"]`),
-      ).toBeNull();
-      expect(
-        document.querySelector(`[data-input="category-query"][data-scope="all-${platform}"]`),
-      ).toBeNull();
+      await setValue('Тема стрима', 'Combined change');
+      await setValue('Добавить тег', 'Draft');
+      await togglePlatform(platform);
+      expect(queryField('Добавить тег')).toBeNull();
+      expect(queryField('Категория')).toBeNull();
       expect(document.querySelectorAll('.inline-editor')).toHaveLength(0);
       expect(
-        document.querySelector<HTMLInputElement>(
-          `[data-input="platform-enabled"][data-scope="subtitle-${platform}"]`,
-        )?.disabled,
+        document.querySelector<HTMLInputElement>('[role="switch"][aria-label="Обновлять Twitch"]')
+          ?.disabled,
       ).toBe(false);
-      togglePlatform(platform);
-      expect(
-        document.querySelector<HTMLInputElement>(
-          `[data-input="tag-draft"][data-scope="all-${platform}"]`,
-        )?.value,
-      ).toBe('Draft');
-      togglePlatform(platform);
-      click('save-all');
-      expect(action('save-all').disabled).toBe(true);
+      await togglePlatform(platform);
+      expect(queryField('Добавить тег')?.value).toBe('Draft');
+      await togglePlatform(platform);
+      await click('Применить изменения');
+      expect(button('Применить изменения').disabled).toBe(true);
       await flush();
       expect(commands()).not.toContain('updateTwitch');
-      togglePlatform(platform);
-      expect(
-        document.querySelector<HTMLInputElement>(
-          `[data-input="tag-draft"][data-scope="all-${platform}"]`,
-        )?.value,
-      ).toBe('Draft');
+      await togglePlatform(platform);
+      expect(queryField('Добавить тег')?.value).toBe('Draft');
     },
   );
 
   it('prevents any save with Twitch disabled and restores selection after reopening', async () => {
     await boot();
-    togglePlatform('twitch');
-    expect(action('save-all').disabled).toBe(true);
-    expect(action('save-all').disabled).toBe(true);
+    await togglePlatform('twitch');
+    expect(button('Применить изменения').disabled).toBe(true);
+    expect(button('Применить изменения').disabled).toBe(true);
     expect(document.querySelectorAll('.inline-editor')).toHaveLength(0);
     expect(document.querySelectorAll('.platform-card')).toHaveLength(0);
     const before = mockStreamerbot.actionCalls.length;
-    click('save-all');
-    click('save-all');
+    await click('Применить изменения');
+    await click('Применить изменения');
     await flush();
     expect(mockStreamerbot.actionCalls.length).toBe(before);
     vi.resetModules();
     document.body.innerHTML = '<div id="app"></div>';
     await boot();
     expect(
-      document.querySelector<HTMLInputElement>('[data-scope="subtitle-twitch"]')?.checked,
+      document.querySelector<HTMLInputElement>('[role="switch"][aria-label="Обновлять Twitch"]')
+        ?.checked,
     ).toBe(false);
-    expect(action('save-all').disabled).toBe(true);
-    togglePlatform('twitch');
-    expect(action('save-all').disabled).toBe(false);
-    expect(document.querySelector('[data-platform="twitch"]')).not.toBeNull();
+    expect(button('Применить изменения').disabled).toBe(true);
+    await togglePlatform('twitch');
+    expect(button('Применить изменения').disabled).toBe(false);
+    expect(document.querySelector('section[aria-label="Twitch"]')).not.toBeNull();
   });
 
   it('uses availability as well as selection and gives Twitch the correct unavailable reason', async () => {
     mockStreamerbot.state.twitch.connected = false;
     await boot();
-    expect(action('save-all').disabled).toBe(true);
-    expect(action('save-all').disabled).toBe(true);
+    expect(button('Применить изменения').disabled).toBe(true);
+    expect(button('Применить изменения').disabled).toBe(true);
     expect(required(document.querySelectorAll('.inline-editor')[0]).textContent).toContain(
       'Аккаунт не подключён',
     );
@@ -790,70 +911,59 @@ describe('Stream Info HTML actions', () => {
 
   it('renders stream editors directly on the main page without editor modals', async () => {
     await boot();
-    expect(document.querySelector('[data-action="open-all"]')).toBeNull();
-    expect(document.querySelector('[data-action="edit-twitch"]')).toBeNull();
+    expect(buttons('Изменить всё')[0] ?? null).toBeNull();
+    expect(buttons('Изменить Twitch')[0] ?? null).toBeNull();
     expect(document.querySelectorAll('.inline-editor')).toHaveLength(1);
     expect(
-      document.querySelectorAll('[data-action="title-mode"][data-mode="subtitle"].active'),
+      buttons('По шаблону').filter((button) => button.getAttribute('aria-pressed') === 'true'),
     ).toHaveLength(1);
-    click('title-mode', 1);
-    setValue('[data-input="inline-title"][data-kind="twitch"]', 'Inline Twitch title');
-    expect(document.querySelector('.modal')).toBeNull();
-    expect(
-      document.querySelector<HTMLInputElement>('[data-input="inline-title"][data-kind="twitch"]')
-        ?.value,
-    ).toBe('Inline Twitch title');
-    click('refresh-state');
+    await click('Полное название');
+    await setValue('Полное название', 'Inline Twitch title');
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+    expect(queryField('Полное название')?.value).toBe('Inline Twitch title');
+    await click('Обновить данные');
     await flush();
-    expect(
-      document.querySelector<HTMLInputElement>('[data-input="inline-title"][data-kind="twitch"]')
-        ?.value,
-    ).toBe('Inline Twitch title');
-    click('open-settings');
-    click('close-modal');
-    expect(
-      document.querySelector<HTMLInputElement>('[data-input="inline-title"][data-kind="twitch"]')
-        ?.value,
-    ).toBe('Inline Twitch title');
+    expect(queryField('Полное название')?.value).toBe('Inline Twitch title');
+    await click('Настройки');
+    await click('Закрыть');
+    expect(queryField('Полное название')?.value).toBe('Inline Twitch title');
   });
 
   it('identifies connection saving and unsaved templates in Russian', async () => {
     const label = 'Сохранить подключение';
     const dirty = 'Есть несохранённые изменения шаблонов';
     await boot();
-    click('open-settings');
-    expect(action('save-settings').textContent).toBe(label);
+    await click('Настройки');
+    expect(button('Сохранить подключение').textContent).toBe(label);
     expect(document.querySelector('.template-dirty')?.textContent).toBe('');
     const original = mockStreamerbot.state.templates.twitchTemplate;
-    setValue('[data-input="settings-twitch-template"]', 'Draft %subtitle%');
+    await setValue('Шаблон Twitch', 'Draft %subtitle%');
     expect(document.querySelector('.template-dirty')?.textContent).toBe(dirty);
-    setValue('[data-input="settings-twitch-template"]', original);
+    await setValue('Шаблон Twitch', original);
     expect(document.querySelector('.template-dirty')?.textContent).toBe('');
   });
 
   it('saves connection independently while preserving unsaved templates', async () => {
     await boot();
-    click('open-settings');
-    setValue('[data-input="settings-twitch-template"]', 'Draft %subtitle%');
-    setValue('[data-input="settings-host"]', 'localhost');
-    click('save-settings');
+    await click('Настройки');
+    await setValue('Шаблон Twitch', 'Draft %subtitle%');
+    await setValue('Хост', 'localhost');
+    await click('Сохранить подключение');
     await flush();
     expect(commands()).not.toContain('saveTemplates');
-    click('open-settings');
-    expect(
-      document.querySelector<HTMLTextAreaElement>('[data-input="settings-twitch-template"]')?.value,
-    ).toBe('Draft %subtitle%');
+    await click('Настройки');
+    expect(queryField('Шаблон Twitch')?.value).toBe('Draft %subtitle%');
     expect(document.querySelector('.template-dirty')?.textContent).toContain('несохранённые');
-    click('save-templates');
+    await click('Сохранить шаблоны');
     await flush();
     expect(document.querySelector('.template-dirty')?.textContent).toBe('');
   });
 
   it('recovers unsaved template edits from this browser tab after reload', async () => {
     await boot();
-    click('open-settings');
-    setValue('[data-input="settings-twitch-template"]', 'Recovered %subtitle%');
-    click('close-modal');
+    await click('Настройки');
+    await setValue('Шаблон Twitch', 'Recovered %subtitle%');
+    await click('Закрыть');
     expect(sessionStorage.getItem('change-info-streamer-bot.template-draft.v1')).toContain(
       'Recovered %subtitle%',
     );
@@ -861,12 +971,10 @@ describe('Stream Info HTML actions', () => {
     vi.resetModules();
     document.body.innerHTML = '<div id="app"></div>';
     await boot();
-    click('open-settings');
-    expect(
-      document.querySelector<HTMLTextAreaElement>('[data-input="settings-twitch-template"]')?.value,
-    ).toBe('Recovered %subtitle%');
+    await click('Настройки');
+    expect(queryField('Шаблон Twitch')?.value).toBe('Recovered %subtitle%');
     expect(document.querySelector('.template-dirty')?.textContent).toContain('несохранённые');
-    click('save-templates');
+    await click('Сохранить шаблоны');
     await flush();
     expect(sessionStorage.getItem('change-info-streamer-bot.template-draft.v1')).toBeNull();
   });
@@ -874,18 +982,18 @@ describe('Stream Info HTML actions', () => {
   it('saves templates independently and does not revert them when saving connection', async () => {
     await boot();
     const connections = mockStreamerbot.connectCalls;
-    click('open-settings');
-    setValue('[data-input="settings-host"]', 'localhost');
-    setValue('[data-input="settings-twitch-template"]', 'Saved %subtitle%');
-    click('save-templates');
+    await click('Настройки');
+    await setValue('Хост', 'localhost');
+    await setValue('Шаблон Twitch', 'Saved %subtitle%');
+    await click('Сохранить шаблоны');
     await flush();
     expect(mockStreamerbot.connectCalls).toBe(connections);
-    expect(document.querySelector('.modal')).not.toBeNull();
+    expect(document.querySelector('[role="dialog"]')).not.toBeNull();
     const persisted = () =>
       parseRecord(required(localStorage.getItem('change-info-streamer-bot.settings.v1')));
     expect(persisted().host).toBe('127.0.0.1');
     expect(persisted().twitchTemplate).toBe('Saved %subtitle%');
-    click('save-settings');
+    await click('Сохранить подключение');
     expect(persisted().host).toBe('localhost');
     expect(persisted().twitchTemplate).toBe('Saved %subtitle%');
     await flush();
@@ -895,8 +1003,8 @@ describe('Stream Info HTML actions', () => {
     'keeps newer template edit %s unsaved when an earlier save completes',
     async (latestEdit) => {
       await boot();
-      click('open-settings');
-      setValue('[data-input="settings-twitch-template"]', 'First %subtitle%');
+      await click('Настройки');
+      await setValue('Шаблон Twitch', 'First %subtitle%');
       const latest =
         latestEdit === 'original' ? mockStreamerbot.state.templates.twitchTemplate : latestEdit;
       const client = required(mockStreamerbot.instances[0]);
@@ -910,74 +1018,262 @@ describe('Stream Info HTML actions', () => {
         });
         await original(action, args);
       });
-      click('save-templates');
-      setValue('[data-input="settings-twitch-template"]', latest);
+      await click('Сохранить шаблоны');
+      await setValue('Шаблон Twitch', latest);
       if (latestEdit === 'original')
         expect(document.querySelector('.template-dirty')?.textContent).toBe('');
       finish();
       await flush();
-      expect(
-        document.querySelector<HTMLTextAreaElement>('[data-input="settings-twitch-template"]')
-          ?.value,
-      ).toBe(latest);
+      expect(queryField('Шаблон Twitch')?.value).toBe(latest);
       expect(document.querySelector('.template-dirty')?.textContent).toContain('несохранённые');
       expect(mockStreamerbot.state.templates.twitchTemplate).toBe('First %subtitle%');
     },
   );
 
+  it.each(['ack-first', 'event-first'] as const)(
+    'requires both independent template-save completions (%s)',
+    async (order) => {
+      vi.useFakeTimers();
+      const pending = await controlActions('saveTemplates');
+      await boot();
+      await click('Настройки');
+      await setValue('Шаблон Twitch', 'Saved %subtitle%');
+      await click('Сохранить шаблоны');
+      const request = required(pending[0]);
+      expect(parseRecord(textValue(request.args.payloadJson))).toMatchObject({
+        twitchTemplate: 'Saved %subtitle%',
+      });
+      const before = localStorage.getItem('change-info-streamer-bot.settings.v1');
+      if (order === 'ack-first') request.acknowledge();
+      else request.respond(savedTemplateResponse('Saved %subtitle%'));
+      await flush();
+      expect(button('Сохранить шаблоны').disabled).toBe(true);
+      expect(roleText('status', 'Есть несохранённые изменения шаблонов')).not.toBeNull();
+      expect(document.querySelector('.notices > [role]')).toBeNull();
+      expect(localStorage.getItem('change-info-streamer-bot.settings.v1')).toBe(before);
+      if (order === 'ack-first') request.respond(savedTemplateResponse('Saved %subtitle%'));
+      else request.acknowledge();
+      await flush();
+      expect(button('Сохранить шаблоны').disabled).toBe(false);
+      expect(document.querySelector('.template-dirty')?.textContent).toBe('');
+      expect(
+        parseRecord(required(localStorage.getItem('change-info-streamer-bot.settings.v1')))
+          .twitchTemplate,
+      ).toBe('Saved %subtitle%');
+      expect(document.querySelector('.notices > [role="status"]')?.textContent).toContain(
+        'Шаблоны сохранены',
+      );
+    },
+  );
+
+  it.each([false, true])(
+    'rejects a failed ACK even if CodeEvent already arrived: %s',
+    async (eventFirst) => {
+      vi.useFakeTimers();
+      const pending = await controlActions('saveTemplates');
+      await boot();
+      await click('Настройки');
+      await setValue('Шаблон Twitch', 'Rejected %subtitle%');
+      await click('Сохранить шаблоны');
+      const request = required(pending[0]);
+      const before = localStorage.getItem('change-info-streamer-bot.settings.v1');
+      if (eventFirst) request.respond(savedTemplateResponse('Rejected %subtitle%'));
+      request.rejectAck(new Error('ACK rejected'));
+      await flush();
+      expect(button('Сохранить шаблоны').disabled).toBe(false);
+      expect(roleText('status', 'Есть несохранённые изменения шаблонов')).not.toBeNull();
+      expect(document.querySelector('.notices > [role="alert"]')?.textContent).toContain(
+        'ACK rejected',
+      );
+      request.respond(savedTemplateResponse('Rejected %subtitle%'));
+      await vi.advanceTimersByTimeAsync(15_000);
+      expect(localStorage.getItem('change-info-streamer-bot.settings.v1')).toBe(before);
+      expect(field('Шаблон Twitch').value).toBe('Rejected %subtitle%');
+      expect(document.querySelectorAll('.notices > [role]')).toHaveLength(1);
+    },
+  );
+
+  it.each([false, true])(
+    'bounds a missing CodeEvent to 15 seconds with ACK completed: %s',
+    async (acknowledged) => {
+      vi.useFakeTimers();
+      const pending = await controlActions('saveTemplates');
+      await boot();
+      await click('Настройки');
+      await setValue('Шаблон Twitch', 'Timed out %subtitle%');
+      await click('Сохранить шаблоны');
+      const request = required(pending[0]);
+      if (acknowledged) request.acknowledge();
+      await vi.advanceTimersByTimeAsync(14_999);
+      expect(button('Сохранить шаблоны').disabled).toBe(true);
+      expect(document.querySelector('.notices > [role]')).toBeNull();
+      await vi.advanceTimersByTimeAsync(1);
+      expect(button('Сохранить шаблоны').disabled).toBe(false);
+      expect(document.querySelector('.notices > [role="alert"]')?.textContent).toContain(
+        '15 секунд',
+      );
+      expect(roleText('status', 'Есть несохранённые изменения шаблонов')).not.toBeNull();
+      const before = localStorage.getItem('change-info-streamer-bot.settings.v1');
+      request.respond(savedTemplateResponse('Timed out %subtitle%'));
+      request.acknowledge();
+      await flush();
+      expect(localStorage.getItem('change-info-streamer-bot.settings.v1')).toBe(before);
+      expect(document.querySelectorAll('.notices > [role]')).toHaveLength(1);
+      expect(field('Шаблон Twitch').value).toBe('Timed out %subtitle%');
+    },
+  );
+
+  async function startControlledOperation(
+    command: 'saveTemplates' | 'updateTwitch' | 'runPreset',
+  ): Promise<void> {
+    if (command === 'saveTemplates') {
+      if (!document.querySelector('[role="dialog"]')) await click('Настройки');
+      await setValue('Шаблон Twitch', 'Pending %subtitle%');
+      await click('Сохранить шаблоны');
+    } else if (command === 'updateTwitch') {
+      await click('Полное название');
+      await setValue('Полное название', 'Pending title');
+      await click('Применить изменения');
+    } else await click('PUBG');
+    await flush();
+  }
+
+  async function retireOperation(lifecycle: 'reconnect' | 'dispose'): Promise<void> {
+    if (lifecycle === 'reconnect') {
+      if (!document.querySelector('[role="dialog"]')) await click('Настройки');
+      await click('Сохранить подключение');
+      await flush();
+    } else {
+      required(wrapper).unmount();
+      wrapper = undefined;
+      await boot();
+    }
+  }
+
+  for (const command of ['saveTemplates', 'updateTwitch'] as const) {
+    for (const lifecycle of ['reconnect', 'dispose'] as const) {
+      it.each(['ack', 'event'] as const)(
+        `ignores retired ${command} after ${lifecycle} while waiting for %s`,
+        async (boundary) => {
+          vi.useFakeTimers();
+          const pending = await controlActions(command);
+          await boot();
+          await startControlledOperation(command);
+          const retired = required(pending[0]);
+          const envelope =
+            command === 'saveTemplates'
+              ? savedTemplateResponse('Retired %subtitle%')
+              : { ok: false, data: { fields: { title: false, category: false, tags: false } } };
+          if (boundary === 'ack') retired.respond(envelope);
+          else retired.acknowledge();
+          await flush();
+          await retireOperation(lifecycle);
+          await startControlledOperation(command);
+          expect(pending).toHaveLength(2);
+          const before = {
+            html: document.body.innerHTML,
+            settings: localStorage.getItem('change-info-streamer-bot.settings.v1'),
+            draft: sessionStorage.getItem('change-info-streamer-bot.template-draft.v1'),
+            calls: mockStreamerbot.actionCalls.length,
+            timers: vi.getTimerCount(),
+          };
+          retired.respond(envelope);
+          retired.acknowledge();
+          await vi.advanceTimersByTimeAsync(1000);
+          expect(document.body.innerHTML).toBe(before.html);
+          expect(localStorage.getItem('change-info-streamer-bot.settings.v1')).toBe(
+            before.settings,
+          );
+          expect(sessionStorage.getItem('change-info-streamer-bot.template-draft.v1')).toBe(
+            before.draft,
+          );
+          expect(mockStreamerbot.actionCalls).toHaveLength(before.calls);
+          expect(vi.getTimerCount()).toBe(before.timers);
+          expect(
+            button(command === 'saveTemplates' ? 'Сохранить шаблоны' : 'Применить изменения')
+              .disabled,
+          ).toBe(true);
+          expect(document.querySelector('.notices > [role]')).toBeNull();
+        },
+      );
+    }
+  }
+
+  it.each(['reconnect', 'dispose'] as const)(
+    'ignores a retired preset ACK after %s without refreshing or resetting the new preset',
+    async (lifecycle) => {
+      vi.useFakeTimers();
+      const pending = await controlActions('runPreset');
+      await boot();
+      await startControlledOperation('runPreset');
+      const retired = required(pending[0]);
+      await retireOperation(lifecycle);
+      await startControlledOperation('runPreset');
+      expect(pending).toHaveLength(2);
+      const before = mockStreamerbot.actionCalls.length;
+      const timers = vi.getTimerCount();
+      retired.acknowledge();
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(button('PUBG').disabled).toBe(true);
+      expect(mockStreamerbot.actionCalls).toHaveLength(before);
+      expect(vi.getTimerCount()).toBe(timers);
+      expect(document.querySelector('.notices > [role]')).toBeNull();
+    },
+  );
+
   it('retains the unsaved template status when saving fails', async () => {
     await boot();
-    click('open-settings');
-    setValue('[data-input="settings-twitch-template"]', 'Draft %subtitle%');
+    await click('Настройки');
+    await setValue('Шаблон Twitch', 'Draft %subtitle%');
     vi.spyOn(required(mockStreamerbot.instances[0]), 'doAction').mockRejectedValueOnce(
       new Error('Save rejected'),
     );
-    click('save-templates');
+    await click('Сохранить шаблоны');
     await flush();
     expect(document.querySelector('.template-dirty')?.textContent).toContain('несохранённые');
-    expect(document.querySelector('.notice')?.textContent).toContain('Save rejected');
+    expect(document.querySelector('.notices > [role]')?.textContent).toContain('Save rejected');
   });
 
   it('runs refresh, links, preset, template and settings actions without real platform changes', async () => {
     await boot();
     const beforeRefresh = commands().filter((command) => command === 'getState').length;
-    click('refresh-state');
+    await click('Обновить данные');
     await flush();
     expect(commands().filter((command) => command === 'getState').length).toBeGreaterThan(
       beforeRefresh,
     );
 
-    click('open-link', 0);
-    expect(open).toHaveBeenCalledWith(
-      'https://www.twitch.tv/tester',
-      '_blank',
-      'noopener,noreferrer',
+    const streamLink = required(
+      document.querySelector<HTMLAnchorElement>('a[aria-label="Открыть стрим"]'),
     );
+    expect(streamLink.href).toBe('https://www.twitch.tv/tester');
+    expect(streamLink.target).toBe('_blank');
+    expect(streamLink.relList.contains('noopener')).toBe(true);
+    expect(streamLink.relList.contains('noreferrer')).toBe(true);
+    // Native links preserve navigation without triggering jsdom/real navigation.
+    expect(open).not.toHaveBeenCalled();
 
-    click('run-preset');
+    await click('PUBG');
     await flush();
     expect(mockStreamerbot.actionCalls.some((call) => call.id === 'preset-pubg')).toBe(true);
 
-    expect(document.querySelector('[data-input="settings-twitch-template"]')).toBeNull();
-    setValue('[data-input="main-subtitle"]', 'Тестовый подзаголовок');
-    click('save-all');
+    expect(queryField('Шаблон Twitch')).toBeNull();
+    await setValue('Тема стрима', 'Тестовый подзаголовок');
+    await click('Применить изменения');
     await flush();
     await flush();
     expect(commands()).toContain('saveTemplates');
     expect(document.querySelector('.template-value, .template-token')).not.toBeNull();
     expect(commands()).toContain('updateTwitch');
 
-    click('open-settings');
-    expect(document.querySelector('[data-input="settings-twitch-template"]')).not.toBeNull();
-    setValue('[data-input="settings-twitch-template"]', 'Переопределённый %subtitle%');
-    click('reset-templates');
-    expect(
-      (document.querySelector('[data-input="settings-twitch-template"]') as HTMLTextAreaElement)
-        .value,
-    ).toContain('!tg');
+    await click('Настройки');
+    expect(queryField('Шаблон Twitch')).not.toBeNull();
+    await setValue('Шаблон Twitch', 'Переопределённый %subtitle%');
+    await click('Сбросить');
+    expect((queryField('Шаблон Twitch') as HTMLTextAreaElement).value).toContain('!tg');
 
-    setValue('[data-input="settings-host"]', 'localhost');
-    click('save-settings');
+    await setValue('Хост', 'localhost');
+    await click('Сохранить подключение');
     await flush();
     expect(mockStreamerbot.connectCalls).toBeGreaterThan(1);
   });
@@ -985,17 +1281,19 @@ describe('Stream Info HTML actions', () => {
   it('keeps Twitch results selectable when blur emits a duplicate change', async () => {
     await boot();
     vi.useFakeTimers();
-    const selector = '[data-input="category-query"][data-scope="all-twitch"]';
-    const fieldBefore = required(document.querySelector<HTMLInputElement>(selector));
-    setValue(selector, 'PUBG');
-    expect(document.querySelector(selector)).toBe(fieldBefore);
+    const selector = 'Категория';
+    const fieldBefore = required(queryField(selector));
+    await setValue(selector, 'PUBG');
+    expect(queryField(selector)).toBe(fieldBefore);
     await vi.advanceTimersByTimeAsync(350);
-    const option = action('choose-category');
-    const field = required(document.querySelector<HTMLInputElement>(selector));
+    const option = categoryOption();
+    const field = required(queryField(selector));
     field.dispatchEvent(new Event('change', { bubbles: true }));
+    await nextTick();
     expect(option.isConnected).toBe(true);
     option.click();
-    expect(document.querySelector<HTMLInputElement>(selector)?.value).toBe('');
+    await nextTick();
+    expect(queryField(selector)?.value).toBe('');
     expect(document.querySelector('.selected-category')?.textContent).toContain('PUBG');
   });
 
@@ -1003,55 +1301,61 @@ describe('Stream Info HTML actions', () => {
     await boot();
     vi.useFakeTimers();
     mockStreamerbot.searchDelay = 200;
-    const selector = '[data-input="category-query"][data-scope="all-twitch"]';
-    setValue(selector, 'PUBG');
+    const selector = 'Категория';
+    await setValue(selector, 'PUBG');
     await vi.advanceTimersByTimeAsync(320);
-    setValue(selector, '');
-    const clearedField = document.querySelector(selector);
+    await setValue(selector, '');
+    const clearedField = queryField(selector);
     await vi.advanceTimersByTimeAsync(220);
-    expect(document.querySelector(selector)).toBe(clearedField);
-    setValue(selector, 'Rust');
-    expect(document.querySelector('[data-action="choose-category"]')).toBeNull();
-    expect(document.querySelector('.autocomplete-list')?.textContent).not.toContain(
-      'Ничего не найдено',
-    );
-    setValue(selector, '');
+    expect(queryField(selector)).toBe(clearedField);
+    await setValue(selector, 'Rust');
+    expect(options()[0] ?? null).toBeNull();
+    expect(roleText('status', 'Ищем категории…')).not.toBeNull();
+    expect(roleText('status', 'Ничего не найдено')).toBeNull();
+    await setValue(selector, '');
   });
 
   it('places the combined save action outside the subtitle and platform cards', async () => {
     await boot();
-    expect(action('save-all').closest('.subtitle-panel, .platform-card')).toBeNull();
-    expect(action('save-all').closest('.save-panel')).not.toBeNull();
-    expect(action('save-all').textContent).toBe('Применить изменения');
-    expect(
-      document.querySelector('.cards')?.nextElementSibling?.classList.contains('save-panel'),
-    ).toBe(true);
+    expect(button('Применить изменения').closest('.subtitle-panel, .platform-card')).toBeNull();
+    expect(button('Применить изменения').closest('.save-panel')).not.toBeNull();
+    expect(button('Применить изменения').textContent).toBe('Применить изменения');
+    const card = required(document.querySelector('section[aria-label="Twitch"]'));
+    const savePanel = required(button('Применить изменения').closest('.save-panel'));
+    expect(savePanel.parentElement).toBe(card.parentElement);
+    expect(card.compareDocumentPosition(savePanel) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
   });
 
   it('announces edits immediately, confirms saving and clears confirmation on the next edit', async () => {
     await boot();
-    expect(document.querySelector('.save-status')?.textContent).toBe('Данные загружены');
-    setValue('[data-input="main-subtitle"]', 'Новый эфир');
-    expect(document.querySelector('.save-status')?.textContent).toBe(
-      'Есть несохранённые изменения',
-    );
-    click('save-all');
-    expect(document.querySelector('.save-status')?.textContent).toBe('Сохраняем…');
+    expect(
+      document.querySelector('[aria-label="Изменить информацию"] [role="status"]')?.textContent,
+    ).toBe('Данные загружены');
+    await setValue('Тема стрима', 'Новый эфир');
+    expect(
+      document.querySelector('[aria-label="Изменить информацию"] [role="status"]')?.textContent,
+    ).toBe('Есть несохранённые изменения');
+    await click('Применить изменения');
+    expect(
+      document.querySelector('[aria-label="Изменить информацию"] [role="status"]')?.textContent,
+    ).toBe('Сохраняем…');
     await flush();
-    expect(document.querySelector('.save-status')?.textContent).toBe('Изменения применены');
-    click('remove-tag');
-    expect(document.querySelector('.save-status')?.textContent).toBe(
-      'Есть несохранённые изменения',
-    );
+    expect(
+      document.querySelector('[aria-label="Изменить информацию"] [role="status"]')?.textContent,
+    ).toBe('Изменения применены');
+    await click(/^Удалить тег[: ]/);
+    expect(
+      document.querySelector('[aria-label="Изменить информацию"] [role="status"]')?.textContent,
+    ).toBe('Есть несохранённые изменения');
   });
 
   it('announces unsaved category searches without replacing the focused search input', async () => {
     await boot();
-    const input = setValue('[data-input="category-query"][data-kind="twitch"]', 'PUBG');
-    expect(document.querySelector('.save-status')?.textContent).toBe(
-      'Есть несохранённые изменения',
-    );
-    expect(document.querySelector('[data-input="category-query"][data-kind="twitch"]')).toBe(input);
+    const input = await setValue('Категория', 'PUBG');
+    expect(
+      document.querySelector('[aria-label="Изменить информацию"] [role="status"]')?.textContent,
+    ).toBe('Есть несохранённые изменения');
+    expect(queryField('Категория')).toBe(input);
   });
 
   it('keeps the pending status when a platform rejects the update', async () => {
@@ -1062,34 +1366,31 @@ describe('Stream Info HTML actions', () => {
       if (args?.command === 'updateTwitch') throw new Error('Update rejected');
       return original(action, args);
     });
-    setValue('[data-input="main-subtitle"]', 'Не сохранится');
-    click('save-all');
+    await setValue('Тема стрима', 'Не сохранится');
+    await click('Применить изменения');
     await flush();
-    expect(document.querySelector('.save-status')?.textContent).toBe(
-      'Есть несохранённые изменения',
-    );
+    expect(
+      document.querySelector('[aria-label="Изменить информацию"] [role="status"]')?.textContent,
+    ).toBe('Есть несохранённые изменения');
     expect(document.querySelector('.notices')?.textContent).toContain('Update rejected');
     expect(document.querySelector('.notice--error[role="alert"] .icon-error')).not.toBeNull();
   });
 
   it('keeps unsent tag text and pending status after applying other fields', async () => {
     await boot();
-    setValue('[data-input="tag-draft"][data-scope="all-twitch"]', 'Draft');
-    click('save-all');
+    await setValue('Добавить тег', 'Draft');
+    await click('Применить изменения');
     await flush();
+    expect(queryField('Добавить тег')?.value).toBe('Draft');
     expect(
-      document.querySelector<HTMLInputElement>('[data-input="tag-draft"][data-scope="all-twitch"]')
-        ?.value,
-    ).toBe('Draft');
-    expect(document.querySelector('.save-status')?.textContent).toContain(
-      'Остались несохранённые изменения',
-    );
+      document.querySelector('[aria-label="Изменить информацию"] [role="status"]')?.textContent,
+    ).toContain('Остались несохранённые изменения');
   });
 
   it('renders unchanged as information', async () => {
     await boot();
-    click('title-mode', 1);
-    click('save-all');
+    await click('Полное название');
+    await click('Применить изменения');
     await flush();
     const info = document.querySelector('.notice--info');
     expect(info?.textContent).toContain('Нет изменений');
@@ -1099,60 +1400,57 @@ describe('Stream Info HTML actions', () => {
 
   it('shows a selected category once and invites a new search without exposing IDs', async () => {
     await boot();
-    for (const platform of ['twitch']) {
-      const card = required(document.querySelector(`[data-platform="${platform}"]`));
+    {
+      const card = required(document.querySelector('section[aria-label="Twitch"]'));
       const selected = required(card.querySelector('.selected-category'));
-      const search = required(
-        card.querySelector<HTMLInputElement>('[data-input="category-query"]'),
-      );
+      const search = required(queryField('Категория'));
       expect(selected.textContent).not.toContain('ID');
       expect(search.placeholder).toBe('Найти другую категорию');
       expect(search.value).toBe('');
       expect(search.placeholder).not.toContain(required(selected.textContent));
     }
     vi.useFakeTimers();
-    setValue('[data-input="category-query"][data-kind="twitch"]', 'PUBG');
+    await setValue('Категория', 'PUBG');
     await vi.advanceTimersByTimeAsync(250);
-    expect(action('choose-category').dataset.id).toBe('493057');
-    expect(action('choose-category').textContent).not.toContain('ID:');
-    click('choose-category');
+    expect(categoryOption().textContent?.trim()).toBe('PUBG: BATTLEGROUNDS');
+    expect(categoryOption().textContent).not.toContain('ID:');
+    categoryOption().click();
+    await nextTick();
   });
 
   it('edits titles, categories and tags inline and applies them through mocks', async () => {
     await boot();
-    setValue('[data-input="tag-draft"][data-scope="all-twitch"]', 'Rust');
-    document
-      .querySelector<HTMLInputElement>('[data-input="tag-draft"][data-scope="all-twitch"]')
-      ?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-    expect(
-      document.querySelectorAll('[data-scope="all-twitch"][data-action="remove-tag"]'),
-    ).toHaveLength(2);
-    click('remove-tag', 1);
-    expect(
-      document.querySelectorAll('[data-scope="all-twitch"][data-action="remove-tag"]'),
-    ).toHaveLength(1);
-    click('title-mode', 1);
-    setValue('[data-input="inline-title"][data-kind="twitch"]', 'Новое Twitch название');
+    await setValue('Добавить тег', 'Rust');
+    queryField('Добавить тег')?.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
+    );
+    await nextTick();
+    expect(buttons(/^Удалить тег[: ]/)).toHaveLength(2);
+    await click(/^Удалить тег[: ]/, 1);
+    expect(buttons(/^Удалить тег[: ]/)).toHaveLength(1);
+    await click('Полное название');
+    await setValue('Полное название', 'Новое Twitch название');
     vi.useFakeTimers();
-    setValue('[data-input="category-query"][data-scope="all-twitch"]', 'PUBG');
+    await setValue('Категория', 'PUBG');
     await vi.advanceTimersByTimeAsync(250);
-    expect(document.querySelector('[data-action="choose-category"]')).not.toBeNull();
-    click('choose-category');
-    expect(document.querySelector('[data-action="choose-category"]')).toBeNull();
+    expect(options()[0] ?? null).not.toBeNull();
+    categoryOption().click();
+    await nextTick();
+    expect(options()[0] ?? null).toBeNull();
     vi.useRealTimers();
-    click('save-all');
+    await click('Применить изменения');
     await flush();
     const twitch = mockStreamerbot.actionCalls.find((call) => call.args.command === 'updateTwitch');
     expect(JSON.parse(textValue(twitch?.args.payloadJson))).toMatchObject({
       title: 'Новое Twitch название',
     });
-    expect(document.querySelector('.modal')).toBeNull();
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
   });
 
   it('saves the combined form through mock Action replies and leaves no real side effects', async () => {
     await boot();
-    setValue('[data-input="main-subtitle"]', 'Рейтинг');
-    click('save-all');
+    await setValue('Тема стрима', 'Рейтинг');
+    await click('Применить изменения');
     await flush();
     await flush();
     expect(commands()).toContain('saveTemplates');
@@ -1162,34 +1460,34 @@ describe('Stream Info HTML actions', () => {
   it('closes notices and verifies import-screen copy/toggle/check actions', async () => {
     mockStreamerbot.actions = [];
     await boot();
-    click('toggle-import');
-    expect(document.querySelector('.import-code')).not.toBeNull();
-    click('copy-import');
+    await click('Показать строку');
+    expect(queryField('Import-строка Streamer.bot')).not.toBeNull();
+    await click('Скопировать Import-строку');
     await flush();
     expect(writeText).toHaveBeenCalledTimes(1);
-    click('check-action');
+    await click('Проверить снова');
     await flush();
-    expect(document.querySelector('[data-action="check-action"]')).not.toBeNull();
+    expect(buttons('Проверить снова')[0] ?? null).not.toBeNull();
 
     mockStreamerbot.actions = [
       { id: 'api-action', name: 'STREAM INFO | API', group: 'STREAM INFO', enabled: true },
     ];
-    click('check-action');
+    await click('Проверить снова');
     await flush();
-    click('open-settings');
-    setValue('[data-input="settings-twitch-template"]', 'Тест %subtitle%');
-    click('save-templates');
+    await click('Настройки');
+    await setValue('Шаблон Twitch', 'Тест %subtitle%');
+    await click('Сохранить шаблоны');
     await flush();
-    expect(document.querySelector('.notice')).not.toBeNull();
-    click('close-notice');
-    expect(document.querySelector('.notice')).toBeNull();
+    expect(document.querySelector('.notices > [role]')).not.toBeNull();
+    await click('Закрыть уведомление');
+    expect(document.querySelector('.notices > [role]')).toBeNull();
   });
 
   it('renders password reconnect', async () => {
     mockStreamerbot.failConnect = true;
     await boot();
-    setValue('[data-input="auth-password"]', 'secret');
-    click('connect-password');
+    await setValue('Пароль', 'secret');
+    await click('Подключиться');
     await flush();
     expect(mockStreamerbot.connectCalls).toBeGreaterThan(1);
   });
@@ -1197,7 +1495,7 @@ describe('Stream Info HTML actions', () => {
   it('offers re-import for the previous API before enabling editing', async () => {
     mockStreamerbot.state.apiVersion = 3;
     await boot();
-    expect(document.querySelector('[data-action="check-action"]')).not.toBeNull();
+    expect(buttons('Проверить снова')[0] ?? null).not.toBeNull();
     expect(document.querySelector('.inline-editor')).toBeNull();
     expect(commands()).toEqual(['getState']);
   });
@@ -1205,10 +1503,10 @@ describe('Stream Info HTML actions', () => {
   it('renders a single platform and sends only its metadata and template', async () => {
     await boot();
     expect(document.querySelectorAll('.platform-card')).toHaveLength(1);
-    click('title-mode', 1);
-    setValue('[data-input="inline-title"][data-kind="twitch"]', 'Twitch only');
-    setValue('[data-input="main-subtitle"]', 'Updated');
-    click('save-all');
+    await click('Полное название');
+    await setValue('Полное название', 'Twitch only');
+    await setValue('Тема стрима', 'Updated');
+    await click('Применить изменения');
     await flush();
     const calls = mockStreamerbot.actionCalls.filter((call) => call.args.command !== 'getState');
     expect(calls.map((call) => call.args.command)).toEqual(['saveTemplates', 'updateTwitch']);
@@ -1224,24 +1522,200 @@ describe('Stream Info HTML actions', () => {
     await boot();
 
     expect(mockStreamerbot.connectCalls).toBe(0);
-    expect(document.querySelector('[data-platform="twitch"]')?.textContent).toContain('Maseaaao');
-    expect(document.querySelector('[data-input="main-subtitle"]')).not.toBeNull();
+    expect(document.querySelector('section[aria-label="Twitch"]')?.textContent).toContain(
+      'Maseaaao',
+    );
+    expect(queryField('Тема стрима')).not.toBeNull();
   });
 
   it('shows the version opposite the last-updated time', async () => {
     await boot();
 
-    const status = document.querySelector<HTMLElement>('.updated-at');
-    expect(status?.textContent).toContain('Обновлено:');
-    expect(status?.children[1]?.textContent).toBe(`v${packageJson.version}`);
-    expect(status?.children).toHaveLength(2);
+    const footer = required(document.querySelector<HTMLElement>('.dock-footer'));
+    expect(footer.children).toHaveLength(2);
+    expect(required(footer.children[0]).textContent).toContain(packageJson.version);
+    expect(required(footer.children[1]).textContent).toContain('Обновлено:');
   });
+  it('debounces category input for exactly 250ms and only searches the latest draft', async () => {
+    await boot();
+    vi.useFakeTimers();
+    await setValue('Категория', 'Adv');
+    await vi.advanceTimersByTimeAsync(249);
+    expect(commands()).not.toContain('searchTwitchCategories');
+    await setValue('Категория', 'Adventure');
+    await vi.advanceTimersByTimeAsync(249);
+    expect(commands()).not.toContain('searchTwitchCategories');
+    await vi.advanceTimersByTimeAsync(1);
+    const calls = mockStreamerbot.actionCalls.filter(
+      (call) => call.args.command === 'searchTwitchCategories',
+    );
+    expect(calls).toHaveLength(1);
+    expect(parseRecord(textValue(required(calls[0]).args.payloadJson))).toEqual({
+      query: 'Adventure',
+    });
+  });
+
+  it('refreshes preset state after 700ms rather than immediately', async () => {
+    await boot();
+    vi.useFakeTimers();
+    const before = commands().filter((command) => command === 'getState').length;
+    await click('PUBG');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(mockStreamerbot.actionCalls.some((call) => call.id === 'preset-pubg')).toBe(true);
+    await vi.advanceTimersByTimeAsync(699);
+    expect(commands().filter((command) => command === 'getState')).toHaveLength(before);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(commands().filter((command) => command === 'getState')).toHaveLength(before + 1);
+  });
+
+  it('times out an unanswered category request after 15 seconds and allows retry', async () => {
+    await boot();
+    vi.useFakeTimers();
+    mockStreamerbot.deferSearch = true;
+    await setValue('Категория', 'Adventure');
+    await vi.advanceTimersByTimeAsync(250);
+    await vi.advanceTimersByTimeAsync(14_999);
+    expect(buttons('Повторить поиск')).toHaveLength(0);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(document.querySelector('[role="alert"]')?.textContent).toContain('15 секунд');
+    expect(button('Повторить поиск').disabled).toBe(false);
+    required(mockStreamerbot.pendingSearches[0]).reply({
+      data: { results: [{ id: 'late', name: 'Too late' }] },
+    });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(optionNamed('Too late')).toBeNull();
+    await click('Повторить поиск');
+    expect(mockStreamerbot.pendingSearches).toHaveLength(2);
+    required(mockStreamerbot.pendingSearches[1]).reply({
+      data: { results: [{ id: 'fresh', name: 'Adventure retry' }] },
+    });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(categoryOption().textContent?.trim()).toBe('Adventure retry');
+  });
+
+  it.each([true, false])(
+    'restores a saved password only when rememberPassword is %s',
+    async (rememberPassword) => {
+      localStorage.setItem(
+        'change-info-streamer-bot.settings.v1',
+        JSON.stringify({
+          host: 'localhost',
+          port: 8123,
+          endpoint: '/stream',
+          password: 'saved-secret',
+          rememberPassword,
+        }),
+      );
+      await boot();
+      expect(required(mockStreamerbot.instances[0]).options).toMatchObject({
+        host: 'localhost',
+        port: 8123,
+        endpoint: '/stream',
+        password: rememberPassword ? 'saved-secret' : undefined,
+      });
+      await click('Настройки');
+      expect(field('Пароль').value).toBe(rememberPassword ? 'saved-secret' : '');
+    },
+  );
+
+  it('keeps partial field failures dirty and retains the unsent tag draft', async () => {
+    await boot();
+    mockStreamerbot.actionReplies.updateTwitch = {
+      ok: false,
+      data: { fields: { title: true, category: false, tags: true } },
+    };
+    await setValue('Тема стрима', 'Partial title');
+    await setValue('Добавить тег', 'Unsent');
+    await click('Применить изменения');
+    await flush();
+    expect(commands()).toContain('saveTemplates');
+    expect(commands()).toContain('updateTwitch');
+    const notice = required(document.querySelector('[role="alert"]'));
+    expect(notice.textContent).toContain('Не удалось изменить Twitch');
+    expect(Array.from(notice.querySelectorAll('.notice-line'), (line) => line.textContent)).toEqual(
+      ['Название: успешно', 'Категория: ошибка', 'Теги: успешно'],
+    );
+    expect(field('Добавить тег').value).toBe('Unsent');
+    expect(
+      document.querySelector('[aria-label="Изменить информацию"] [role="status"]')?.textContent,
+    ).toBe('Есть несохранённые изменения');
+    expect(button('Применить изменения').disabled).toBe(false);
+  });
+
+  it('unmounts timers and visibility listener and ignores retired replies after remount', async () => {
+    vi.useFakeTimers();
+    const addListener = vi.spyOn(document, 'addEventListener');
+    const removeListener = vi.spyOn(document, 'removeEventListener');
+    await boot();
+    const old = required(mockStreamerbot.instances[0]);
+    const disconnect = vi.spyOn(old, 'disconnect');
+    const listener = required(
+      addListener.mock.calls.find(([event]) => event === 'visibilitychange'),
+    )[1];
+    expect(vi.getTimerCount()).toBe(1);
+    mockStreamerbot.deferSearch = true;
+    await setValue('Категория', 'Retired query');
+    await vi.advanceTimersByTimeAsync(250);
+    const stale = required(mockStreamerbot.pendingSearches[0]);
+    required(wrapper).unmount();
+    wrapper = undefined;
+    await vi.advanceTimersByTimeAsync(0);
+    expect(disconnect).toHaveBeenCalledTimes(1);
+    expect(
+      removeListener.mock.calls.some(
+        ([event, callback]) => event === 'visibilitychange' && callback === listener,
+      ),
+    ).toBe(true);
+    expect(vi.getTimerCount()).toBe(0);
+    const before = mockStreamerbot.actionCalls.length;
+    document.dispatchEvent(new Event('visibilitychange'));
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(mockStreamerbot.actionCalls).toHaveLength(before);
+
+    await boot();
+    expect(vi.getTimerCount()).toBe(1);
+    await setValue('Категория', 'Current query');
+    await vi.advanceTimersByTimeAsync(250);
+    stale.reply({ data: { results: [{ id: 'stale', name: 'Retired result' }] } });
+    old.options.onConnect?.();
+    old.options.onError?.(new Error('retired password error'));
+    old.options.onDisconnect?.();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(field('Категория').value).toBe('Current query');
+    expect(optionNamed('Retired result')).toBeNull();
+    expect(roleText('status', 'Streamer.bot подключён')).not.toBeNull();
+    expect(document.querySelector('.auth-panel')).toBeNull();
+    required(mockStreamerbot.pendingSearches[1]).reply({
+      data: { results: [{ id: 'current', name: 'Current result' }] },
+    });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(categoryOption().textContent?.trim()).toBe('Current result');
+  });
+
   it("does not expose a theme selector or apply another tab's old preference", async () => {
     await boot();
     expect(document.querySelector('.theme-control')).toBeNull();
     window.dispatchEvent(
       new StorageEvent('storage', { key: 'stream-info.theme.v1', newValue: 'dark' }),
     );
+    await nextTick();
     expect(document.documentElement.dataset.theme).not.toBe('dark');
+  });
+
+  it('keeps an explicitly mounted showcase offline even when saving connection settings', async () => {
+    const { default: App } = await import('../src/App.vue');
+    wrapper = mount(App, {
+      props: { demo: true },
+      attachTo: required(document.querySelector('#app')),
+    });
+    await flush();
+    await flush();
+    expect(mockStreamerbot.connectCalls).toBe(0);
+    expect(field('Тема стрима').value).toBe('Ranked with chat');
+    await click('Настройки');
+    await click('Сохранить подключение');
+    await flush();
+    expect(mockStreamerbot.connectCalls).toBe(0);
+    expect(mockStreamerbot.actionCalls).toHaveLength(0);
   });
 });

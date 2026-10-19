@@ -3,7 +3,10 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { standaloneConfig } from './index.mjs';
 
-/** SFC compiler is build-only; only a single runtime-only Vue may reach the browser. */
+/**
+ * SFC compiler is build-only; only a single runtime-only Vue may reach the browser.
+ * @param {{ budgets?: { html: number, js: number } } & Record<string, unknown>} options
+ */
 export function vueStandaloneConfig({ budgets, ...options }) {
   const config = standaloneConfig(options);
   let jsBytes = 0;

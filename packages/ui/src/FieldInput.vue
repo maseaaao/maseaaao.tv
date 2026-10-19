@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed, useId } from 'vue';
+defineOptions({ inheritAttrs: false });
 /**
  * Поле ввода с лейблом. Подтверждена дублированием в Stream Info
  * (input/textarea + label) и OBS output-stats (поля подключения) —
@@ -11,7 +13,8 @@ const props = withDefaults(
   defineProps<{
     label: string;
     modelValue: string;
-    type?: 'text' | 'password' | 'url' | 'search';
+    id?: string;
+    type?: 'text' | 'password' | 'url' | 'search' | 'number';
     multiline?: boolean;
     placeholder?: string;
     disabled?: boolean;
@@ -24,6 +27,7 @@ const props = withDefaults(
   }>(),
   {
     type: 'text',
+    id: undefined,
     placeholder: undefined,
     disabled: false,
     readonly: false,
@@ -33,11 +37,16 @@ const props = withDefaults(
   },
 );
 
-defineEmits<{ 'update:modelValue': [string] }>();
-
-const inputId = `field-input-${Math.random().toString(36).slice(2, 10)}`;
-const descriptionId = `${inputId}-description`;
-const hasHelp = Boolean(props.error || props.description);
+const emit = defineEmits<{ 'update:modelValue': [string] }>();
+const generatedId = useId();
+const inputId = computed(() => props.id ?? `field-input-${generatedId}`);
+const descriptionId = computed(() => `${inputId.value}-description`);
+const hasHelp = computed(() => Boolean(props.error || props.description));
+function updateValue(event: Event): void {
+  const target = event.target;
+  if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)
+    emit('update:modelValue', target.value);
+}
 </script>
 
 <template>
@@ -45,6 +54,7 @@ const hasHelp = Boolean(props.error || props.description);
     <label class="field-input__label" :for="inputId">{{ label }}</label>
     <textarea
       v-if="multiline"
+      v-bind="$attrs"
       :id="inputId"
       class="field-input__control"
       :class="{ 'field-input__control--error': Boolean(error) }"
@@ -54,10 +64,11 @@ const hasHelp = Boolean(props.error || props.description);
       :readonly="readonly"
       :aria-invalid="Boolean(error) || undefined"
       :aria-describedby="hasHelp ? descriptionId : undefined"
-      @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
+      @input="updateValue"
     ></textarea>
     <input
       v-else
+      v-bind="$attrs"
       :id="inputId"
       class="field-input__control"
       :class="{ 'field-input__control--error': Boolean(error) }"
@@ -69,7 +80,7 @@ const hasHelp = Boolean(props.error || props.description);
       :autocomplete="autocomplete"
       :aria-invalid="Boolean(error) || undefined"
       :aria-describedby="hasHelp ? descriptionId : undefined"
-      @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
+      @input="updateValue"
     />
     <p
       v-if="hasHelp"
@@ -85,6 +96,7 @@ const hasHelp = Boolean(props.error || props.description);
 <style scoped>
 .field-input {
   display: grid;
+  min-width: 0;
   gap: var(--space-2);
   font-size: 14px;
 }
@@ -93,6 +105,7 @@ const hasHelp = Boolean(props.error || props.description);
 }
 .field-input__control {
   width: 100%;
+  box-sizing: border-box;
   min-height: var(--control-height);
   padding: var(--space-3);
   border: 1px solid var(--color-border-control);

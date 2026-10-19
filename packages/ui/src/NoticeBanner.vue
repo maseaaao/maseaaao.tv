@@ -19,14 +19,19 @@ withDefaults(
   { variant: 'info', dismissLabel: 'Скрыть' },
 );
 defineEmits<{ dismiss: [] }>();
-defineSlots<{ default?: () => unknown }>();
+defineSlots<{ default?: () => unknown; icon?: () => unknown }>();
 </script>
 
 <template>
-  <div class="notice" :class="`notice--${variant}`" role="status">
+  <div
+    class="notice"
+    :class="`notice--${variant}`"
+    :role="variant === 'error' ? 'alert' : 'status'"
+  >
+    <span v-if="$slots.icon" class="notice__icon" aria-hidden="true"><slot name="icon" /></span>
     <div class="notice__body">
       <strong class="notice__title">{{ title }}</strong>
-      <p v-if="$slots.default" class="notice__description"><slot /></p>
+      <div v-if="$slots.default" class="notice__description"><slot /></div>
     </div>
     <button
       v-if="dismissible"
@@ -70,6 +75,11 @@ defineSlots<{ default?: () => unknown }>();
 .notice__body {
   min-width: 0;
   flex: 1;
+}
+.notice__icon {
+  display: inline-flex;
+  flex: none;
+  margin-top: 2px;
 }
 .notice__title {
   display: block;

@@ -11,11 +11,12 @@ defineProps<{
   status: 'connected' | 'connecting' | 'disconnected' | 'error';
   /** Текст статуса на языке продукта; компонент не хранит собственные строки. */
   label: string;
+  inverted?: boolean;
 }>();
 </script>
 
 <template>
-  <p class="icon-indicator" role="status">
+  <p class="icon-indicator" :class="{ 'icon-indicator--inverted': inverted }" role="status">
     <span
       class="icon-indicator__dot"
       :class="`icon-indicator__dot--${status}`"
@@ -58,5 +59,21 @@ defineProps<{
 .icon-indicator__label {
   min-width: 0;
   color: var(--color-muted);
+}
+.icon-indicator--inverted .icon-indicator__label {
+  color: var(--color-surface);
+}
+.icon-indicator--inverted .icon-indicator__dot {
+  background: var(--color-surface);
+  border-color: var(--color-surface);
+}
+.icon-indicator--inverted .icon-indicator__dot--connected {
+  background: color-mix(in srgb, var(--color-success) 25%, var(--color-surface));
+}
+.icon-indicator--inverted .icon-indicator__dot--connecting {
+  background: color-mix(in srgb, var(--color-warning) 25%, var(--color-surface));
+}
+.icon-indicator--inverted .icon-indicator__dot--error {
+  background: color-mix(in srgb, var(--color-danger) 25%, var(--color-surface));
 }
 </style>

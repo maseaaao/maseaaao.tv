@@ -48,6 +48,7 @@ interface MockStreamerbot {
   failConnect: boolean;
   searchDelay: number;
   searchReply: Record<string, unknown> | null;
+  actionReplies: Record<string, Record<string, unknown>>;
   deferSearch: boolean;
   pendingSearches: Array<{
     payload: Record<string, unknown>;
@@ -74,6 +75,7 @@ export const mockStreamerbot: MockStreamerbot =
     failConnect: false,
     searchDelay: 0,
     searchReply: null,
+    actionReplies: {},
     deferSearch: false,
     pendingSearches: [],
     disconnectHook: null,
@@ -86,6 +88,7 @@ export const mockStreamerbot: MockStreamerbot =
       this.failConnect = false;
       this.searchDelay = 0;
       this.searchReply = null;
+      this.actionReplies = {};
       this.deferSearch = false;
       this.pendingSearches = [];
       this.disconnectHook = null;
@@ -175,6 +178,7 @@ export class StreamerbotClient {
     }
     if (command === 'searchTwitchCategories' && mockStreamerbot.searchReply)
       Object.assign(response, mockStreamerbot.searchReply);
+    Object.assign(response, mockStreamerbot.actionReplies[command]);
     const emit = () =>
       this.handlers.get('Custom.CodeEvent')?.({
         data: { eventName: 'stream_info_api_response', args: response },

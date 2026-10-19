@@ -8,15 +8,24 @@
  * Валидация тега (длина/пробелы/дубли) — бизнес-правило продукта,
  * компонент только отображает значение и эмитит запрос на удаление.
  */
-withDefaults(defineProps<{ label: string; removable?: boolean; removeLabel?: string }>(), {
-  removable: false,
-  removeLabel: 'Удалить',
-});
+withDefaults(
+  defineProps<{
+    label: string;
+    removable?: boolean;
+    removeLabel?: string;
+    variant?: 'neutral' | 'accent';
+  }>(),
+  {
+    variant: 'neutral',
+    removable: false,
+    removeLabel: 'Удалить',
+  },
+);
 defineEmits<{ remove: [] }>();
 </script>
 
 <template>
-  <span class="chip-tag">
+  <span class="chip-tag" :class="`chip-tag--${variant}`">
     <span class="chip-tag__label">{{ label }}</span>
     <button
       v-if="removable"
@@ -48,11 +57,16 @@ defineEmits<{ remove: [] }>();
 .chip-tag__label {
   min-width: 0;
 }
+.chip-tag--accent {
+  color: var(--color-brand);
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent-soft);
+}
 .chip-tag__remove {
   display: grid;
   flex: none;
-  width: 24px;
-  height: 24px;
+  width: var(--control-height);
+  height: var(--control-height);
   place-items: center;
   padding: 0;
   border: 0;

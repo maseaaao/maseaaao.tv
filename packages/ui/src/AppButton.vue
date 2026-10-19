@@ -23,6 +23,10 @@ withDefaults(
      * повторная запись заблокирована".
      */
     loading?: boolean;
+    /** Светлое действие на фирменном синем фоне, не отдельная тёмная тема. */
+    inverted?: boolean;
+    /** Необязательная обратная связь нажатия; отключена при reduced-motion. */
+    pressEffect?: boolean;
     target?: string;
     rel?: string;
     ariaLabel?: string;
@@ -31,6 +35,8 @@ withDefaults(
     variant: 'secondary',
     as: 'button',
     type: 'button',
+    inverted: false,
+    pressEffect: false,
     href: undefined,
     target: undefined,
     rel: undefined,
@@ -52,8 +58,15 @@ defineSlots<{
   <a
     v-if="as === 'a'"
     class="app-button"
-    :class="[`app-button--${variant}`, { 'app-button--loading': loading }]"
-    :href="disabled ? undefined : href"
+    :class="[
+      `app-button--${variant}`,
+      {
+        'app-button--loading': loading,
+        'app-button--inverted': inverted,
+        'app-button--press': pressEffect,
+      },
+    ]"
+    :href="disabled || loading ? undefined : href"
     :target="target"
     :rel="rel"
     :aria-disabled="disabled || loading || undefined"
@@ -67,7 +80,14 @@ defineSlots<{
   <button
     v-else
     class="app-button"
-    :class="[`app-button--${variant}`, { 'app-button--loading': loading }]"
+    :class="[
+      `app-button--${variant}`,
+      {
+        'app-button--loading': loading,
+        'app-button--inverted': inverted,
+        'app-button--press': pressEffect,
+      },
+    ]"
     :type="type"
     :disabled="disabled || loading"
     :aria-label="ariaLabel"
@@ -82,6 +102,8 @@ defineSlots<{
 <style scoped>
 .app-button {
   display: inline-flex;
+  box-sizing: border-box;
+  cursor: pointer;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
@@ -141,5 +163,24 @@ defineSlots<{
 .app-button:focus-visible {
   outline: 3px solid var(--color-focus);
   outline-offset: 4px;
+}
+.app-button--inverted {
+  color: var(--color-surface);
+  border-color: var(--color-surface);
+}
+.app-button--inverted:focus-visible {
+  outline-color: var(--color-surface);
+}
+.app-button--press:active:not(:disabled, [aria-disabled='true']) {
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-button {
+    transition: none;
+  }
+  .app-button--press:active:not(:disabled, [aria-disabled='true']) {
+    transform: none;
+  }
 }
 </style>

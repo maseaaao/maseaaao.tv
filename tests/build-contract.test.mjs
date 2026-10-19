@@ -14,20 +14,23 @@ const license = readFileSync(
   new URL(import.meta.resolve('@maseaaao/design/license')),
   'utf8',
 ).trim();
-for (const name of [
-  'apps/tuna-widget/dist/obs-tuna-widget.html',
-  'apps/stream-info/dist/change-info-streamer-bot.ru.html',
-  'apps/obs-widgets/dist/output-stats/index.html',
-  'apps/obs-widgets/dist/social-strip/index.html',
-  'apps/obs-widgets/dist/streamlabs-chat/chat-box.css',
-  'apps/obs-widgets/dist/streamlabs-chat/donationalerts-alerts.css',
-  'apps/obs-widgets/dist/donors/donationalerts-stream-stats.css',
+for (const [name, weight] of [
+  ['apps/tuna-widget/dist/obs-tuna-widget.html', 600],
+  ['apps/stream-info/dist/change-info-streamer-bot.ru.html', 400],
+  ['apps/obs-widgets/dist/output-stats/index.html', 600],
+  ['apps/obs-widgets/dist/social-strip/index.html', 600],
+  ['apps/obs-widgets/dist/streamlabs-chat/chat-box.css', 600],
+  ['apps/obs-widgets/dist/streamlabs-chat/donationalerts-alerts.css', 600],
+  ['apps/obs-widgets/dist/donors/donationalerts-stream-stats.css', 600],
 ])
   test(`${name} embeds exactly the canonical font and complete license`, () => {
     const text = read(name);
     const fonts = [...text.matchAll(/data:font\/woff2;base64,([A-Za-z0-9+/=]+)/g)];
     assert.equal(fonts.length, 1, 'One font-face, no embedded copies');
-    assert(Buffer.from(fonts[0][1], 'base64').equals(font));
+    const expected = readFileSync(
+      new URL(import.meta.resolve(`@maseaaao/design/fonts/unbounded-${weight}.woff2`)),
+    );
+    assert(Buffer.from(fonts[0][1], 'base64').equals(expected), `Canonical Unbounded ${weight}`);
     assert(text.includes(license));
     if (name.endsWith('.html')) {
       const { document } = new JSDOM(text).window;
@@ -67,7 +70,7 @@ test('build configuration is not imported into browser runtime and fonts are not
     'apps/tuna-widget/src',
     'apps/obs-widgets/src',
   ]) {
-    for (const file of files(directory).filter((name) => /\.(?:css|html|js|ts)$/.test(name))) {
+    for (const file of files(directory).filter((name) => /\.(?:css|html|js|ts|vue)$/.test(name))) {
       const source = read(file);
       assert(!/data:font\/[^;]+;base64,/.test(source), `Embedded font in source: ${file}`);
       assert(

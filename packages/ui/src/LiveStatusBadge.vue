@@ -30,7 +30,7 @@ defineProps<{
   background: var(--color-surface);
   color: var(--color-muted);
   font:
-    600 11px/1.5 Unbounded,
+    400 12px/1.5 Unbounded,
     Arial,
     sans-serif;
 }

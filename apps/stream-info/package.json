@@ -3,10 +3,14 @@
   "version": "1.4.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./App.vue": "./src/App.vue",
+    "./ui.css": "./src/styles.css"
+  },
   "scripts": {
     "dev": "vite",
     "generate-import": "node scripts/generate-import.mjs && node scripts/verify-import.mjs",
-    "check": "tsc --noEmit",
+    "check": "vue-tsc --noEmit",
     "test": "vitest run && dotnet run --project tests/csharp/StreamerbotTests.csproj --configuration Release",
     "build": "npm run generate-import && npm run check && vite build && node scripts/verify-build.mjs",
     "preview": "vite preview"
@@ -14,10 +18,13 @@
   "dependencies": {
     "@streamerbot/client": "2.0.1",
     "@maseaaao/design": "1.0.0",
-    "@maseaaao/ui": "1.0.0"
+    "@maseaaao/ui": "1.0.0",
+    "vue": "3.5.44"
   },
   "devDependencies": {
     "@types/node": "22.15.30",
+    "@vitejs/plugin-vue": "5.2.4",
+    "@vue/test-utils": "2.4.6",
     "jsdom": "^26.1.0",
     "lucide-static": "^1.28.0",
     "simple-icons": "^16.27.1",
@@ -25,6 +32,7 @@
     "vite": "6.4.3",
     "vite-plugin-singlefile": "2.3.4",
     "vitest": "^5.0.0",
+    "vue-tsc": "3.0.8",
     "@maseaaao/build-config": "1.0.0"
   }
 }
