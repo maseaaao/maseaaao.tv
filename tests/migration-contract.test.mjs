@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, readdirSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,11 +17,11 @@ function fixture(run) {
       join(directory, 'apps/stream-info/dist/change-info-streamer-bot.ru.html'),
       '<html lang="ru"></html>',
     );
-    cpSync(
-      new URL('artwork/wallpapers/rendered', root),
-      join(directory, 'artwork/wallpapers/rendered'),
-      { recursive: true },
-    );
+    const wallpapers = join(directory, 'artwork/wallpapers/rendered');
+    mkdirSync(wallpapers, { recursive: true });
+    const source = new URL('artwork/wallpapers/rendered/', root);
+    for (const name of readdirSync(source))
+      copyFileSync(new URL(name, source), join(wallpapers, name));
     run(directory);
   } finally {
     rmSync(directory, { recursive: true, force: true });
@@ -44,7 +44,8 @@ test('wallpaper contract rejects extra, missing, corrupt and incorrectly sized e
     (directory) => writeFileSync(join(directory, 'extra.png'), ''),
     (directory) => rmSync(join(directory, 'portrait-4k.png')),
     (directory) => writeFileSync(join(directory, 'desktop-4k.png'), 'not a png'),
-    (directory) => cpSync(join(directory, 'desktop-4k.png'), join(directory, 'portrait-4k.png')),
+    (directory) =>
+      copyFileSync(join(directory, 'desktop-4k.png'), join(directory, 'portrait-4k.png')),
   ])
     fixture((directory) => {
       mutation(join(directory, 'artwork/wallpapers/rendered'));

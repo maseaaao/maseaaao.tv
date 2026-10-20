@@ -2,9 +2,42 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, writeFile, rm, access, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { launchBrowser } from '../tooling/artwork/browser.mjs';
 import { renderImage } from '../tooling/artwork/render-image.mjs';
+
+test('first-frame scene exports match when the same standalone HTML is moved to another directory', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'artwork-compositor-'));
+  const browser = await launchBrowser({ softwareRendering: true });
+  try {
+    const source = resolve(import.meta.dirname, '../.build-cache/artwork/scenes/01-start.html');
+    const copy = join(directory, 'source.html');
+    await writeFile(copy, await readFile(source));
+    const first = join(directory, 'first.webp');
+    const second = join(directory, 'second.webp');
+    await renderImage(browser, {
+      source,
+      target: first,
+      width: 2560,
+      height: 1440,
+      format: 'webp',
+    });
+    await renderImage(browser, {
+      source: copy,
+      target: second,
+      width: 2560,
+      height: 1440,
+      format: 'webp',
+    });
+    assert(
+      (await readFile(first)).equals(await readFile(second)),
+      'Decoded images must finish painting before export',
+    );
+  } finally {
+    await browser.close();
+    await rm(directory, { recursive: true, force: true });
+  }
+});
 
 test('artwork renderer rejects a missing accent font before writing an export', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'artwork-font-'));

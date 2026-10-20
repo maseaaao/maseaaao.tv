@@ -37,6 +37,8 @@ Cloudflare использует корневой `wrangler.jsonc`, команд�
 
 [Архитектура](docs/architecture.md) · [Установка](docs/local-installation.md) · [Выпуски](docs/releasing.md)
 
+[План локальных доработок и миграции](docs/local-migration-plan.md) · [Результаты установки 20.10.2026](docs/local-migration-results.md)
+
 ## Качество и общие пакеты
 
 `npm run check` запускает Prettier, ESLint (включая типизированные TS-проверки и HTML), Stylelint, typecheck и предметные проверки. Исправления: `npm run format` и `npm run lint:fix`. Публичные API и fixtures проверяются подставными обработчиками.

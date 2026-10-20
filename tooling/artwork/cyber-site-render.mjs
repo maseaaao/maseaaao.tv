@@ -9,7 +9,7 @@ import { launchBrowser } from './browser.mjs';
 const root = path.resolve(import.meta.dirname, '../..');
 const requested = process.argv[2] || 'all';
 if (!process.argv.includes('--prepared')) await buildArtwork();
-const browser = await launchBrowser();
+const browser = await launchBrowser({ softwareRendering: true });
 
 async function render(source, target, width, height, format = 'png', scale = 1) {
   return renderImage(browser, {

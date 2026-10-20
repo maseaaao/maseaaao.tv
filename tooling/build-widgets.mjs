@@ -12,7 +12,9 @@ await rm(output, { recursive: true, force: true });
 for (const product of ['social-strip', 'output-stats']) {
   await build({ configFile: path.join(root, 'vite.config.mjs'), mode: product });
 }
-const license = await readFile(new URL(import.meta.resolve('@maseaaao/design/license')), 'utf8');
+const license = (
+  await readFile(new URL(import.meta.resolve('@maseaaao/design/license')), 'utf8')
+).replace(/\r\n?/g, '\n');
 for (const directory of ['streamlabs-chat', 'donors']) {
   await mkdir(path.join(output, directory), { recursive: true });
   const names =
@@ -31,7 +33,7 @@ for (const directory of ['streamlabs-chat', 'donors']) {
       to,
       map: false,
     });
-    let css = result.css;
+    let css = result.css.replace(/\r\n?/g, '\n');
     if (name === 'chat-box.css') {
       for (const [marker, placeholder] of [
         ['var(--provider-font-size)', '{font_size}'],

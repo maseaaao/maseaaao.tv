@@ -8,7 +8,7 @@ const root = path.resolve(import.meta.dirname, '../..');
 const layout = JSON.parse(await fs.readFile(path.join(root, 'artwork/scenes/layout.json'), 'utf8'));
 if (!process.argv.includes('--prepared')) await buildArtwork();
 if (!process.argv.includes('--prepare')) {
-  const browser = await launchBrowser();
+  const browser = await launchBrowser({ softwareRendering: true });
   try {
     for (const file of layout.files)
       await renderImage(browser, {

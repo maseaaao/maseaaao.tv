@@ -7,10 +7,9 @@ import { JSDOM } from 'jsdom';
 
 const root = resolve(import.meta.dirname, '..');
 const read = (name) => readFileSync(resolve(root, name), 'utf8');
-const license = readFileSync(
-  new URL(import.meta.resolve('@maseaaao/design/license')),
-  'utf8',
-).trim();
+const license = readFileSync(new URL(import.meta.resolve('@maseaaao/design/license')), 'utf8')
+  .replaceAll('\r\n', '\n')
+  .trim();
 for (const [name, weight] of [
   ['apps/tuna-widget/dist/obs-tuna-widget.html', 400],
   ['apps/stream-info/dist/change-info-streamer-bot.ru.html', 400],
@@ -21,7 +20,8 @@ for (const [name, weight] of [
   ['apps/obs-widgets/dist/donors/donationalerts-stream-stats.css', 400],
 ])
   test(`${name} embeds exactly the canonical font and complete license`, () => {
-    const text = read(name);
+    const text = read(name).replaceAll('\r\n', '\n');
+    assert(!read(name).includes('\r'), 'Generated text uses canonical LF on every platform');
     const fonts = [...text.matchAll(/data:font\/woff2;base64,([A-Za-z0-9+/=]+)/g)];
     assert.equal(fonts.length, 1, 'One font-face, no embedded copies');
     const expected = readFileSync(
@@ -49,7 +49,8 @@ test('the website publishes the canonical font under a fingerprinted URL and pre
     ),
   );
   assert(read('dist/_headers').includes('/bundles/*'));
-  assert.equal(read('dist/licenses/Unbounded-OFL.txt').trim(), license);
+  assert.equal(read('dist/licenses/Unbounded-OFL.txt').replaceAll('\r\n', '\n').trim(), license);
+  assert(!read('dist/licenses/Unbounded-OFL.txt').includes('\r'));
 });
 
 test('provider substitution occurs after CSS processing and leaves no intermediate markers', () => {

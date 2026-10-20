@@ -13,20 +13,7 @@
   Content-Type: application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"
 
 # Revalidate mutable resources after each deployment.
-/assets/brand.css
-  Cache-Control: public, max-age=0, must-revalidate
-/assets/site.css
-  Cache-Control: public, max-age=0, must-revalidate
-/assets/stream.js
-  Cache-Control: public, max-age=0, must-revalidate
-
 /og-image.jpg
-  Cache-Control: public, max-age=0, must-revalidate
-
-/assets/theme.css
-  Cache-Control: public, max-age=0, must-revalidate
-
-/assets/fonts/*
   Cache-Control: public, max-age=0, must-revalidate
 
 # Vite emits content-addressed bundles only in this namespace.

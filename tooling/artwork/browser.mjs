@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { chromium } from 'playwright-core';
 
-export function launchBrowser() {
+export function launchBrowser({ softwareRendering = false } = {}) {
   const customExecutable = process.env.CHROME_BIN || process.env.CHROME_PATH;
   const executablePath = customExecutable || chromium.executablePath();
   if (!existsSync(executablePath)) {
@@ -12,6 +12,10 @@ export function launchBrowser() {
   return chromium.launch({
     executablePath,
     headless: true,
-    args: ['--no-sandbox', '--disable-dev-shm-usage'],
+    args: [
+      '--no-sandbox',
+      '--disable-dev-shm-usage',
+      ...(softwareRendering ? ['--disable-gpu'] : []),
+    ],
   });
 }

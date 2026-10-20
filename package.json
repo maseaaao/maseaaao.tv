@@ -43,7 +43,7 @@
     "test:ui-probe": "npm test --workspace tooling/ui-portability",
     "build:ui-reference": "node tooling/build-ui-reference.mjs",
     "build:storybook": "npm run build --workspace tooling/ui-catalog",
-    "test:ui": "npm test --workspace tooling/ui-catalog",
+    "test:ui": "node tooling/patch-storybook-windows.mjs && npm test --workspace tooling/ui-catalog",
     "check:ui": "npm run check --workspace tooling/ui-portability && npm run check --workspace tooling/ui-catalog && npm run check --workspace packages/ui && vue-tsc --noEmit --project tooling/static-fixtures/tsconfig.json && npm run check --workspace apps/website && npm run check --workspace apps/tuna-widget && npm run check --workspace apps/obs-widgets && npm run check --workspace artwork",
     "check:source": "npm run format:check && npm run lint && npm run typecheck && npm run check:ui",
     "build:static-fixtures": "npm run build --workspace tooling/static-fixtures",

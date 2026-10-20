@@ -1,14 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  readFileSync,
-  readdirSync,
-  mkdtempSync,
-  mkdirSync,
-  cpSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
+import { readFileSync, readdirSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { cp } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
@@ -71,10 +64,10 @@ test('all artwork envelopes use official SSR output with embedded local resource
   }
   assert.equal(pages, 26);
 });
-test('generated website resources have exactly one owner and collisions fail before publication', () => {
+test('generated website resources have exactly one owner and collisions fail before publication', async () => {
   const directory = mkdtempSync(join(tmpdir(), 'website-assets-'));
   try {
-    cpSync(
+    await cp(
       join(root, 'artwork/brand/rendered/website'),
       join(directory, 'artwork/brand/rendered/website'),
       { recursive: true },

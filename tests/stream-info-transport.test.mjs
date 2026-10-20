@@ -41,7 +41,7 @@ async function mockTransport(context, commands, intercept) {
       const { command, requestId, payloadJson } = message.args;
       const payload = JSON.parse(payloadJson);
       commands.push({ command, payload });
-      const respond = () => {
+      const respond = (result = {}) => {
         let data = {};
         if (command === 'getState') data = state;
         if (command === 'saveTemplates') {
@@ -58,13 +58,21 @@ async function mockTransport(context, commands, intercept) {
             event: { source: 'Custom', type: 'CodeEvent' },
             data: {
               eventName: 'stream_info_api_response',
-              args: { apiVersion: 4, command, requestId, ok: true, data, error: null },
+              args: { apiVersion: 4, command, requestId, ok: true, data, error: null, ...result },
             },
           }),
         );
       };
       if (
-        intercept?.({ command, payload, requestId, transportId: message.id, ack: reply, respond })
+        intercept?.({
+          command,
+          payload,
+          requestId,
+          transportId: message.id,
+          ack: reply,
+          respond,
+          disconnect: () => socket.close(),
+        })
       )
         return;
       reply({});
@@ -304,48 +312,63 @@ test(
   },
 );
 
-test(
-  'failed subtitle persistence keeps the last confirmed value in local storage',
-  { timeout: 60000 },
-  async () => {
-    const directory = await mkdtemp(join(tmpdir(), 'stream-info-rejected-'));
-    const browser = await launchBrowser();
-    try {
-      const file = join(directory, 'dock.html');
-      await cp(
-        new URL('../apps/stream-info/dist/change-info-streamer-bot.ru.html', import.meta.url),
-        file,
-      );
-      const context = await browser.newContext();
-      await mockTransport(context, [], (request) => {
-        if (request.command !== 'saveTemplates') return false;
-        request.ack({ status: 'error', error: 'Fixture rejection' });
-        return true;
-      });
-      const page = await context.newPage();
-      await page.goto(pathToFileURL(file).href);
-      const subtitle = page.getByLabel('Тема стрима', { exact: true });
-      await subtitle.waitFor();
-      await page.waitForFunction(
-        () =>
-          JSON.parse(localStorage.getItem('change-info-streamer-bot.settings.v1') || '{}')
-            .lastSubtitle === 'Исходное название',
-      );
-      await subtitle.fill('Не подтверждённая тема');
-      await page.getByRole('button', { name: 'Применить изменения', exact: true }).click();
-      await page.getByText('Подзаголовок не сохранён в Streamer.bot', { exact: false }).waitFor();
-      const saved = await page.evaluate(() =>
-        JSON.parse(localStorage.getItem('change-info-streamer-bot.settings.v1')),
-      );
-      assert.equal(saved.lastSubtitle, 'Исходное название');
-      assert.equal(await subtitle.inputValue(), 'Не подтверждённая тема');
-      await context.close();
-    } finally {
-      await browser.close();
-      await rm(directory, { recursive: true, force: true });
-    }
-  },
-);
+for (const failure of ['ack-reject', 'backend-reject', 'timeout', 'disconnect'])
+  test(
+    `failed subtitle persistence preserves confirmed storage and the draft: ${failure}`,
+    { timeout: 60000 },
+    async () => {
+      const directory = await mkdtemp(join(tmpdir(), 'stream-info-rejected-'));
+      const browser = await launchBrowser();
+      try {
+        const file = join(directory, 'dock.html');
+        await cp(
+          new URL('../apps/stream-info/dist/change-info-streamer-bot.ru.html', import.meta.url),
+          file,
+        );
+        const context = await browser.newContext();
+        await mockTransport(context, [], (request) => {
+          if (request.command !== 'saveTemplates') return false;
+          if (failure === 'ack-reject')
+            request.ack({ status: 'error', error: 'Fixture rejection' });
+          else if (failure === 'disconnect') request.disconnect();
+          else {
+            request.ack({});
+            if (failure === 'backend-reject')
+              request.respond({ ok: false, error: { message: 'Fixture backend rejection' } });
+          }
+          return true;
+        });
+        const page = await context.newPage();
+        await page.goto(pathToFileURL(file).href);
+        const subtitle = page.getByLabel('Тема стрима', { exact: true });
+        await subtitle.waitFor();
+        await page.waitForFunction(
+          () =>
+            JSON.parse(localStorage.getItem('change-info-streamer-bot.settings.v1') || '{}')
+              .lastSubtitle === 'Исходное название',
+        );
+        await subtitle.fill('Не подтверждённая тема');
+        if (failure === 'timeout' || failure === 'disconnect') await page.clock.install();
+        await page.getByRole('button', { name: 'Применить изменения', exact: true }).click();
+        if (failure === 'timeout') await page.clock.fastForward(15001);
+        if (failure === 'disconnect')
+          await page.getByText('Streamer.bot не подключён', { exact: true }).first().waitFor();
+        else
+          await page
+            .getByText('Подзаголовок не сохранён в Streamer.bot', { exact: false })
+            .waitFor();
+        const saved = await page.evaluate(() =>
+          JSON.parse(localStorage.getItem('change-info-streamer-bot.settings.v1')),
+        );
+        assert.equal(saved.lastSubtitle, 'Исходное название');
+        assert.equal(await subtitle.inputValue(), 'Не подтверждённая тема');
+        await context.close();
+      } finally {
+        await browser.close();
+        await rm(directory, { recursive: true, force: true });
+      }
+    },
+  );
 
 test('reverted subtitle edit does not send any templates write', { timeout: 60000 }, async () => {
   const directory = await mkdtemp(join(tmpdir(), 'stream-info-revert-'));

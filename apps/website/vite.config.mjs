@@ -55,7 +55,10 @@ export default defineConfig(async () => {
           this.emitFile({
             type: 'asset',
             fileName: 'licenses/Unbounded-OFL.txt',
-            source: readFileSync(new URL(import.meta.resolve('@maseaaao/design/license'))),
+            source: readFileSync(
+              new URL(import.meta.resolve('@maseaaao/design/license')),
+              'utf8',
+            ).replace(/\r\n?/g, '\n'),
           });
         },
         transformIndexHtml: {

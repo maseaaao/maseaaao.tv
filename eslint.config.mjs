@@ -15,6 +15,7 @@ export default defineConfig([
     '.build-cache/**',
     'build/**',
     '**/rendered/**',
+    'integrations/companion/*/main.js',
   ]),
   {
     files: ['**/*.{js,mjs,cjs}'],

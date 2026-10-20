@@ -4,6 +4,8 @@
 **База:** `main` @ `b0be32e` (до разрешённого push); отдельный неподключённый коммит `ee7a967` содержит черновую команду приёмки и **не** является выполненным этапом.  
 **Связанные документы:** `docs/ui-renewal-plan.md` (исходная миграция — не изменять её чекбоксы в рамках этого плана), `docs/remaining-work.md` (живые установки/Companion), аудит от 2026-10-19 и его независимое ревью.
 
+**Локальная проверка 20.10.2026:** [результаты установки](local-migration-results.md). Source-check, полные сборки, npm test, .NET и 63 Storybook-истории запущены на Windows; устранены сбои переносимости проверок. Живые HTML/CSS и модули установлены, STOP удалён по уточнению пользователя. Общие отметки ниже не закрываются автоматически за счёт этих проверок: полный OBS/CEF lifecycle, screen reader, performance и утверждение визуальных baseline остаются отдельно.
+
 ## Обязательные продуктовые решения
 
 - **На главной странице полностью убрать встроенные Twitch-видео и чат.** Никаких iframe, Twitch Embed SDK, autoplay, кнопок раскрытия видео/чата и пустого медиаконтейнера. Сохранить обычную ссылку на Twitch и записи. Это **новое решение владельца**, поэтому старые баги размера player/chat, `::details-content`, двойного init и fallback закрываются _удалением функции_, а не её починкой.
@@ -39,7 +41,7 @@
 - [x] Удалить Twitch Embed SDK, `ResizeObserver`, двойной iframe-init, script `stream.js` и asset entry, **если** они больше не нужны LIVE-индикатору. Не оставлять мёртвые стили/JS или пустое место на странице.
 - [x] Сохранить единственный осмысленный главный CTA на Twitch, ссылки на записи и контакты; устранить дубли/неудачные подписи и обновить композицию без медиасекции. Сохранить корректную семантику и видимую клавиатурную навигацию.
 - [x] Переписать Storybook/тесты лендинга: отсутствие embedded video/chat и запросов к `player.twitch.tv`/`twitch.tv/embed`/`js/embed/v1.js`; доступные ссылки; 320/390/540/768/900/1024/1440/1920 px, 200% zoom, reduced-motion/no-JS.
-- [ ] Проверить метаданные, структурированные данные и отсутствие влияния на `check.html`, `tools/*`, `docs.html`.
+- [x] Проверены метаданные, структурированные данные и сохранность `check.html`, `tools/*`, `docs.html` в полном браузерном/предметном прогоне на Windows.
 - [ ] Получить и принять реальные Chrome screenshots нового главного экрана и состояний hover/focus/keyboard. Дизайн-проверку без просмотра скриншотов не считать выполненной.
 
 **Дополнительная проверка [ ]:** выполнить новые browser tests в Chrome/Chromium и визуально проверить screenshots. В этой среде они не запускались.
@@ -69,7 +71,7 @@
 - [x] Сравнивать поля семантически: не отправлять `saveTemplates` при изменении только title/category/tags и не блокировать unrelated Twitch update ошибкой неизменённого subtitle. Проверить частичное применение.
 - [x] Различать network/auth/action-missing/action-outdated errors; при пароле в storage не считать любую транспортную ошибку auth-проблемой. Проверить восстановление после неверного пароля.
 - [x] Не переподключать WebSocket при сохранении настроек, если host/port/endpoint/credentials не изменились; проверить конфигурацию `rememberPassword` отдельно от транспорта.
-- [ ] Добавить детерминированные тесты повторного save, stale request generation, presets, category pagination, IME, status notices и UI после reconnect. Стабильные имена Actions, IDs, persistent keys и локальные флаги сохранить.
+- [x] Выполнены 100 Vitest-проверок и браузерные fixtures на save/ACK, stale generation, presets, pagination, IME, notices/reconnect; добавлены отказ backend, timeout и disconnect для subtitle. Стабильные имена/ID/keys сохранены. Полный целевой OBS/CEF остаётся этапом 10.
 
 **Проверка:** добавлены browser-transport fixtures на redundant save и backend-rejection; их выполнение и полная матрица reconnect/timeout **не подтверждены**.
 
@@ -94,7 +96,7 @@
 
 - [x] Добавить падающие fixtures на сообщение пользователя, ник которого **содержит** `maseaaao`, но текст его не упоминает; различать author и **message-only**; вложенные элементы, badges и emotes не должны давать false mention.
 - [x] Исправить `apps/obs-widgets/src/streamlabs-chat/chat-box.js`: host по точному `data-from`, mention по содержимому `.message`, защищённому от посторонних metadata; проверить MutationObserver для динамического добавления.
-- [ ] Проверить generated CSS/provider placeholders после PostCSS; не вставлять `{font_size}`/`{message_hide_delay}` в локальный OBS CSS без подстановки провайдера.
+- [x] Проверены generated CSS/provider placeholders после PostCSS; для установленного OBS override использован проверяемый адаптер без необработанных placeholders и изменения жизненного цикла провайдера.
 - [ ] Проверить clipping донатеров и алертов по фактическим зонам `layout.json`: кириллица, emoji/ZWJ, длинный ник, многострочный текст, emotes/badges, fade timings и transparent alpha. Зафиксировать явную политику сокращения, а не скрывать существенные данные случайным ellipsis.
 - [ ] Провести provider preview на **реальном** DOM/CSP Streamlabs/DonationAlerts без живых донатов/сообщений; обнаруженные несовместимости вынести в отдельные чекбоксы и regression fixtures.
 
@@ -133,7 +135,7 @@
 - [x] Убрать ненужный inline `onerror` аватара при эквивалентном fallback и проверить строгий CSP/no-JS; аудит других HTML inline event handlers.
 - [x] Почистить устаревшие `_headers` пути (`assets/stream.js`, theme/site/brand), sitemap/lastmod и docs ссылки; проверить `wrangler` deploy paths и кеш immutable vs revalidate.
 - [x] Исправить `artwork/scenes/SETUP.md` (вес Unbounded и актуальный `.build-cache`), инструкции Python >=3.11, README продуктов, AGENTS; связать план с `docs/remaining-work.md` без переноса статуса оттуда в этот файл.
-- [ ] Проверить `npm audit` заново и triage dev advisory `braces` (7 high в предыдущем отчёте); без игнорирования предупреждений или форсирования небезопасных override.
+- [x] Свежий `npm audit` и triage выполнены: 7 high в dev-цепочке Stylelint/braces, исправленная версия для advisory не указана. Предложенное несовместимое понижение и скрытие предупреждений не применены; ссылка и границы риска — в отчёте.
 
 **Непроверенное:** Chrome/layout/a11y ручная проверка, форматтер, CI и `npm audit` не выполнялись на этом шаге.
 

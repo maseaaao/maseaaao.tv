@@ -48,6 +48,9 @@ export async function renderImage(
       }
       await document.fonts.ready;
       await Promise.all([...document.images].map((image) => image.decode()));
+      // Decoding does not guarantee that the compositor has painted resized
+      // images. Let layout and the following paint finish before the export.
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     });
     if (errors.length) throw Error(errors.join('\n'));
     const image = sharp(await page.screenshot({ omitBackground: true, animations: 'disabled' }));
