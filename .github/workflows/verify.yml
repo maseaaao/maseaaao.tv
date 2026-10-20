@@ -54,6 +54,7 @@ jobs:
           node-version-file: .node-version
           cache: npm
       - run: npm ci
+      - run: node --test tests/companion-libs-preparation.test.mjs
       - run: npm run prepare:companion-libs
       - run: npm run build --workspace integrations/companion/system-microphone
       - run: npm run build --workspace integrations/companion/voice-control

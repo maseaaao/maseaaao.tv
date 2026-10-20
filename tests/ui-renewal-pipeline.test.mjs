@@ -37,6 +37,13 @@ test('acceptance builds artwork before standalone products, then verifies genera
 test('CI uses the same acceptance script before artifact upload', () => {
   const workflow = readFileSync(resolve(root, '.github/workflows/verify.yml'), 'utf8');
   assert.match(workflow, /run: npm run verify:ui-renewal/);
+  const windowsJob = workflow.split('  companion-build:')[1];
+  assert.ok(windowsJob, 'Windows build job is present');
+  assert.match(
+    windowsJob,
+    /run: node --test tests\/companion-libs-preparation\.test\.mjs/,
+    'Windows-only preparation regressions must execute in the Windows job',
+  );
   const source = readFileSync(resolve(root, 'tooling/check-generated-artifacts.mjs'), 'utf8');
   assert.match(source, /'artwork\/scenes\/rendered'/);
   assert.match(source, /artifacts\.sha256/);
