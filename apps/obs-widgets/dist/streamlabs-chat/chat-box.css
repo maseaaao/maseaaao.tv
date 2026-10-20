@@ -108,11 +108,11 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
   --color-text: #20201e;
   --color-muted: #60605a;
   --color-border: #d2d1c9;
-  --radius-field: 0.75rem;
 }
-/* Warm-light theme · Streamlabs custom CSS.
+
+/* Streamlabs owns message delivery, deletion and the configured hide delay.
    Keep {font_size} / {message_hide_delay} substitution in Streamlabs.
-   All fonts are embedded to work in remote-origin OBS browser sources. */
+   The canvas is transparent; messages carry their own readable surfaces. */
 :root {
   --cm-surface: var(--color-surface);
   --cm-raised: var(--color-field);
@@ -121,27 +121,24 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
   --cm-muted: var(--color-muted);
   --cm-accent: var(--color-brand);
 }
-html,
-body {
-  margin: 0;
-  background: transparent !important;
-}
-
 * {
   box-sizing: border-box;
 }
 html,
 body {
+  width: 100%;
   height: 100%;
+  margin: 0;
   overflow: hidden;
+  background: transparent !important;
 }
 body {
+  color: var(--cm-text);
   font-family: Arial, sans-serif;
+  font-size: {font_size};
   font-weight: 400;
   font-synthesis: none;
-  font-size: {font_size};
-  line-height: 1.45;
-  color: var(--cm-text);
+  line-height: 1.4;
   text-shadow: none;
 }
 #log {
@@ -149,104 +146,141 @@ body {
   inset: auto 0 0;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  gap: 8px;
+  gap: 12px;
+  width: 100%;
+  margin: 0;
   padding: 0 16px 16px;
 }
 #log > div {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 8px;
-  padding: 16px 24px;
-  border: 1px solid var(--cm-line);
-  border-radius: var(--radius-field);
-  background: var(--cm-surface);
+  display: block;
+  flex: none;
+  min-width: 0;
+  margin: 0;
+  padding: 16px 20px;
   overflow: hidden;
+  border: 1px solid var(--cm-line);
+  border-radius: 14px;
+  background: var(--cm-surface);
+  box-shadow: none;
+  text-shadow: none;
   animation:
     slideInSoft 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) forwards,
     fadeAway 0.5s ease {message_hide_delay} forwards;
 }
-#log > div {
-  animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1), ease;
+
+/* Reset decorations left by a provider theme or a previous custom skin. */
+#log > div::before,
+#log > div::after,
+#log .meta::before,
+#log .meta::after {
+  content: none;
 }
 #log > div.deleted {
   visibility: hidden;
 }
-#log > div.host {
-  background: var(--cm-raised);
-  border-color: var(--cm-accent);
-}
-#log > div.mention {
-  border-color: var(--cm-accent);
-}
 #log .meta {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 8px;
   min-width: 0;
   max-width: 100%;
-  color: var(--cm-accent);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--cm-accent) !important;
   font-family: Unbounded, Arial, sans-serif;
+  font-size: 0.65em;
   font-weight: 400;
-  font-size: 0.7em;
-  line-height: 1.4;
-  letter-spacing: -0.015em;
+  line-height: 1.45;
+  letter-spacing: -0.025em;
+  text-align: left;
   white-space: nowrap;
 }
 #log .badges {
   display: inline-flex;
+  flex: 0 1 auto;
   align-items: center;
   gap: 4px;
-  flex: none;
+  min-width: 0;
+  max-width: 35%;
+  overflow: hidden;
 }
 #log .badges:empty {
   display: none;
 }
+#log .badge {
+  display: block;
+  flex: none;
+  width: auto;
+  height: 1em;
+  margin: 0;
+  vertical-align: middle;
+}
 #log .name {
+  display: block;
+  flex: 1 1 auto;
   min-width: 0;
+  margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 #log .message {
   display: block;
   min-width: 0;
-  font-family: Arial, sans-serif;
+  margin: 12px 0 0;
   color: var(--cm-text);
+  font-family: Arial, sans-serif;
+  font-size: 1em;
+  font-weight: 400;
+  line-height: 1.4;
   overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
-.colon {
+#log > div.host {
+  border-color: var(--cm-accent);
+}
+#log > div.host .meta {
+  max-width: none;
+  margin: -16px -20px 0;
+  padding: 12px 20px;
+  background: var(--cm-accent);
+  color: var(--cm-surface) !important;
+}
+#log > div.mention {
+  border-color: var(--cm-accent);
+  border-inline-start-width: 4px;
+  padding-inline-start: 17px;
+}
+#log .colon {
   display: none;
 }
-.badge {
-  display: inline-block;
-  flex: none;
-  height: 1em;
-  width: auto;
-  vertical-align: middle;
-}
 #log .emote {
+  position: relative;
+  display: inline-block;
+  padding: 0 0.1em;
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
-  padding: 0 0.15em;
-  position: relative;
+  vertical-align: middle;
 }
 #log .emote img {
   display: inline-block;
-  height: 1.35em;
+  width: auto;
+  height: 1.25em;
+  max-width: 100%;
   opacity: 0;
 }
 
 @keyframes slideInSoft {
   from {
     opacity: 0;
-    transform: translateX(24px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateY(0);
   }
 }
 
