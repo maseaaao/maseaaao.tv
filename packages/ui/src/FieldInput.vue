@@ -2,8 +2,7 @@
 import { computed, useId } from 'vue';
 defineOptions({ inheritAttrs: false });
 /**
- * Поле ввода с лейблом. Подтверждена дублированием в Stream Info
- * (input/textarea + label) и OBS output-stats (поля подключения) —
+ * Поле ввода с лейблом для Stream Info (input/textarea + label) —
  * см. docs/ui-renewal-plan.md, этап 5.
  *
  * Валидация значения, маски и autocomplete конкретного поля остаются

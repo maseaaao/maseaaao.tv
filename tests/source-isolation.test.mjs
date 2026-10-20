@@ -23,7 +23,7 @@ function snapshot(directory) {
   return rows.sort(([left], [right]) => left.localeCompare(right));
 }
 
-test('builds preserve sources, clean owned outputs and never delete a sibling standalone widget', async () => {
+test('builds preserve sources, clean owned outputs and standalone builds preserve provider outputs', async () => {
   const sources = [
     'apps/website/src',
     'apps/obs-widgets/src',
@@ -53,13 +53,13 @@ test('builds preserve sources, clean owned outputs and never delete a sibling st
     'Widget build must not change the website publication',
   );
   const configFile = resolve(root, 'apps/obs-widgets/vite.config.mjs');
-  for (const [first, second] of [
-    ['social-strip', 'output-stats'],
-    ['output-stats', 'social-strip'],
-  ]) {
-    const preserved = snapshot('apps/obs-widgets/dist/' + first);
-    await build({ configFile, mode: second, logLevel: 'silent' });
-    assert.deepEqual(snapshot('apps/obs-widgets/dist/' + first), preserved);
-  }
+  const siblings = ['streamlabs-chat', 'donors', 'sounds'];
+  const preserved = siblings.flatMap((name) => snapshot('apps/obs-widgets/dist/' + name));
+  await build({ configFile, mode: 'social-strip', logLevel: 'silent' });
+  assert.deepEqual(
+    siblings.flatMap((name) => snapshot('apps/obs-widgets/dist/' + name)),
+    preserved,
+    'Standalone build must not delete or rewrite provider assets',
+  );
   assert.deepEqual(sources.flatMap(snapshot), before, 'Builds must never rewrite source files');
 });

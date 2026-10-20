@@ -9,9 +9,7 @@ const root = fileURLToPath(new URL('../apps/obs-widgets/', import.meta.url));
 const source = path.join(root, 'src');
 const output = path.join(root, 'dist');
 await rm(output, { recursive: true, force: true });
-for (const product of ['social-strip', 'output-stats']) {
-  await build({ configFile: path.join(root, 'vite.config.mjs'), mode: product });
-}
+await build({ configFile: path.join(root, 'vite.config.mjs'), mode: 'social-strip' });
 const license = (
   await readFile(new URL(import.meta.resolve('@maseaaao/design/license')), 'utf8')
 ).replace(/\r\n?/g, '\n');

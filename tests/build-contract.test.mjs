@@ -13,7 +13,6 @@ const license = readFileSync(new URL(import.meta.resolve('@maseaaao/design/licen
 for (const [name, weight] of [
   ['apps/tuna-widget/dist/obs-tuna-widget.html', 400],
   ['apps/stream-info/dist/change-info-streamer-bot.ru.html', 400],
-  ['apps/obs-widgets/dist/output-stats/index.html', 400],
   ['apps/obs-widgets/dist/social-strip/index.html', 400],
   ['apps/obs-widgets/dist/streamlabs-chat/chat-box.css', 400],
   ['apps/obs-widgets/dist/streamlabs-chat/donationalerts-alerts.css', 400],

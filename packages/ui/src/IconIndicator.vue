@@ -1,8 +1,7 @@
 <script setup lang="ts">
 /**
- * Точка-индикатор статуса с обязательным текстом рядом. Подтверждена
- * дублированием в Stream Info (.connection i) и OBS output-stats
- * (#status-dot[data-status]) — см. docs/ui-renewal-plan.md, этап 5.
+ * Точка-индикатор статуса с обязательным текстом рядом для Stream Info
+ * (.connection i) — см. docs/ui-renewal-plan.md, этап 5.
  *
  * design-rules.md: "Статусы включают текст, не только цвет/точку" —
  * label обязателен, не опционален.

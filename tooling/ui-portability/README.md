@@ -25,7 +25,7 @@ Vue 3.5.44, @vitejs/plugin-vue 5.2.4 (peer Vite 5/6), Vite 6.4.3, vite-plugin-si
 
 ## CSP: явная разница с текущей статистикой OBS
 
-Образец сохраняет nonce для script/style, запрет inline handlers/атрибутных стилей, default-src none и `require-trusted-types-for 'script'`. Разрешает только loopback WebSocket как источник данных. Единственная необходимая адаптация Trusted Types — `trusted-types vue` вместо текущего `trusted-types 'none'` в output-stats. Vue создаёт именованную policy для статической разметки. Тест сначала требует отсутствие CSP violations в рабочем варианте, затем отдельно подставляет прежнюю none-policy и доказывает конфликт по securitypolicyviolation. Он не снимает Trusted Types и не разрешает eval/unsafe-inline.
+Образец сохраняет nonce для script/style, запрет inline handlers/атрибутных стилей, default-src none и `require-trusted-types-for 'script'`. Разрешает только loopback WebSocket как источник данных. Единственная необходимая адаптация Trusted Types — `trusted-types vue` вместо строгого варианта `trusted-types 'none'` контрольной fixture. Vue создаёт именованную policy для статической разметки. Тест сначала требует отсутствие CSP violations в рабочем варианте, затем отдельно подставляет прежнюю none-policy и доказывает конфликт по securitypolicyviolation. Он не снимает Trusted Types и не разрешает eval/unsafe-inline.
 
 До переноса статистики в этапе 6 отдельно проверить этот узкий policy diff и отсутствие v-html/недоверенного HTML в потребителях; текущая CSP продукта в этом этапе не меняется. Этот образец не доказывает совместимость всех будущих компонентов или clipboard/storage API OBS.
 

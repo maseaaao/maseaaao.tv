@@ -12,7 +12,7 @@
 
 ### AppButton (`AppButton.vue`)
 
-Кнопка-действие или ссылка-действие. Потребители: Stream Info (`.button`/`.icon-button`), сайт (`.tile`/кнопки чекера), OBS output-stats (`button`/`button.secondary`).
+Кнопка-действие или ссылка-действие. Потребители: Stream Info (`.button`/`.icon-button`), сайт (`.tile`/кнопки чекера).
 
 - Props: `variant?: 'primary' | 'secondary' | 'icon'` (по умолчанию `secondary`), `as?: 'button' | 'a'` (по умолчанию `button`), `href?: string`, `type?: 'button' | 'submit'`, `disabled?: boolean`, `loading?: boolean`, `target?: string`, `rel?: string`, `ariaLabel?: string`.
 - Events: `click: [MouseEvent]` (не эмитится при `disabled`/`loading`).
@@ -24,7 +24,7 @@
 
 ### IconIndicator (`IconIndicator.vue`)
 
-Точка-индикатор статуса с обязательным текстом рядом (design-rules.md: "Статусы включают текст, не только цвет/точку"). Потребители: Stream Info (`.connection i`), OBS output-stats (`#status-dot[data-status]`).
+Точка-индикатор статуса с обязательным текстом рядом (design-rules.md: "Статусы включают текст, не только цвет/точку"). Потребители: Stream Info (`.connection i`).
 
 - Props: `status: 'connected' | 'connecting' | 'disconnected' | 'error'` (обязателен), `label: string` (обязателен, без встроенных строк).
 - Events/slots: нет.
@@ -36,7 +36,7 @@
 
 ### FieldInput (`FieldInput.vue`)
 
-Поле ввода (`input`/`textarea`) с лейблом, описанием и ошибкой. Потребители: Stream Info (`input`/`textarea` + `label`), OBS output-stats (поля подключения).
+Поле ввода (`input`/`textarea`) с лейблом, описанием и ошибкой. Потребители: Stream Info (`input`/`textarea` + `label`).
 
 - Props: `label: string`, `modelValue: string` (оба обязательны), `type?: 'text' | 'password' | 'url' | 'search'` (по умолчанию `text`), `multiline?: boolean`, `placeholder?: string`, `disabled?: boolean`, `readonly?: boolean`, `error?: string`, `description?: string`, `autocomplete?: string`.
 - Events: `update:modelValue: [string]`.

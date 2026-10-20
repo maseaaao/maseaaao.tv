@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /**
  * Общая кнопка-действие. Подтверждена дублированием в Stream Info (.button/.icon-button),
- * website (.tile/кнопки чекера) и OBS output-stats (button/button.secondary) —
+ * website (.tile/кнопки чекера) —
  * см. docs/ui-renewal-plan.md, этап 5.
  *
  * Не делает сетевых вызовов и не содержит бизнес-логики: обработчик клика,
