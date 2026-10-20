@@ -431,8 +431,6 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
     const pending = requestResolvers.get(root.args.requestId);
     if (!pending || pending.generation !== connectionGeneration) return;
     const response = parseResponse(root.args);
-    cancelTimer(pending.timer);
-    requestResolvers.delete(root.args.requestId);
     if (response && response.command === pending.command) pending.resolve(response);
     else pending.reject(new Error(t('actionStateFailed')));
   }
@@ -577,31 +575,39 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
     const owner = client;
     const generation = connectionGeneration;
     const requestId = uuid();
-    const reply = new Promise<ActionResponse>((resolve, reject) => {
-      const timer = later(() => {
-        requestResolvers.delete(requestId);
-        reject(new Error(t('actionTimeout')));
-      }, REQUEST_TIMEOUT);
-      requestResolvers.set(requestId, { generation, command, resolve, reject, timer });
-    });
-    // Retirement can reject the reply before the transport acknowledgement.
-    void reply.catch(() => undefined);
+    const actionId = state.action.id;
     try {
-      const [, response] = await Promise.all([
-        owner.doAction(
-          { id: state.action.id },
-          { command, requestId, payloadJson: JSON.stringify(payload) },
-        ),
-        reply,
-      ]);
-      return response;
-    } catch (error) {
+      return await new Promise<ActionResponse>((resolve, reject) => {
+        let acknowledged = false;
+        let response: ActionResponse | null = null;
+        const finish = () => {
+          if (acknowledged && response) resolve(response);
+        };
+        // The deadline covers both independent completions, including event-first.
+        const timer = later(() => reject(new Error(t('actionTimeout'))), REQUEST_TIMEOUT);
+        requestResolvers.set(requestId, {
+          generation,
+          command,
+          timer,
+          reject,
+          resolve: (value) => {
+            response ??= value;
+            finish();
+          },
+        });
+        void owner
+          .doAction({ id: actionId }, { command, requestId, payloadJson: JSON.stringify(payload) })
+          .then(() => {
+            acknowledged = true;
+            finish();
+          }, reject);
+      });
+    } finally {
       const pending = requestResolvers.get(requestId);
       if (pending) {
         cancelTimer(pending.timer);
         requestResolvers.delete(requestId);
       }
-      throw error;
     }
   }
 

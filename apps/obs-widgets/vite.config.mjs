@@ -3,7 +3,7 @@ import { prepareVuePages, vuePagePlugin } from '@maseaaao/build-config/static';
 import { fileURLToPath } from 'node:url';
 
 export default async ({ mode: product }) => {
-  if (!['social-strip', 'output-stats'].includes(product)) throw Error('Unknown standalone widget');
+  if (product !== 'social-strip') throw Error('Unknown standalone widget');
   const root = fileURLToPath(new URL('./src/' + product, import.meta.url));
   const { renderPage, styleFile } = await prepareVuePages({
     root,
@@ -14,7 +14,6 @@ export default async ({ mode: product }) => {
     root,
     outDir: '../../dist/' + product,
     fileName: 'index.html',
-    nonce: product === 'output-stats' ? 'MgyZalLFWAZRipi5-O9bEdvvw-6jjJU5' : undefined,
   });
   config.plugins.push(vuePagePlugin({ root, renderPage, styleFile, pageName: 'index.html' }));
   config.plugins.push({
@@ -30,5 +29,5 @@ export default async ({ mode: product }) => {
       if (bytes > 35000) throw Error(`Widget JS budget exceeded: ${bytes} > 35000`);
     },
   });
-  return { ...config, publicDir: product === 'social-strip' ? 'public' : false };
+  return { ...config, publicDir: 'public' };
 };

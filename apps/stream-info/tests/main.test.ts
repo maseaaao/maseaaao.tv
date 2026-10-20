@@ -1142,6 +1142,40 @@ describe('Stream Info Vue interactions', () => {
     },
   );
 
+  it('times out a missing ACK after CodeEvent and isolates a late ACK from retry', async () => {
+    vi.useFakeTimers();
+    const pending = await controlActions('saveTemplates');
+    await boot();
+    await click('Настройки');
+    await setValue('Шаблон Twitch', 'First %subtitle%');
+    await click('Сохранить шаблоны');
+    const first = required(pending[0]);
+    const before = localStorage.getItem('change-info-streamer-bot.settings.v1');
+    first.respond(savedTemplateResponse('First %subtitle%'));
+    await vi.advanceTimersByTimeAsync(14_999);
+    expect(button('Сохранить шаблоны').disabled).toBe(true);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(button('Сохранить шаблоны').disabled).toBe(false);
+    expect(document.querySelector('[role="alert"]')?.textContent).toContain('15 секунд');
+    expect(localStorage.getItem('change-info-streamer-bot.settings.v1')).toBe(before);
+    await setValue('Шаблон Twitch', 'Retry %subtitle%');
+    await click('Сохранить шаблоны');
+    const retry = required(pending[1]);
+    first.acknowledge();
+    await flush();
+    expect(button('Сохранить шаблоны').disabled).toBe(true);
+    expect(localStorage.getItem('change-info-streamer-bot.settings.v1')).toBe(before);
+    retry.respond(savedTemplateResponse('Retry %subtitle%'));
+    retry.acknowledge();
+    await flush();
+    expect(button('Сохранить шаблоны').disabled).toBe(false);
+    expect(
+      parseRecord(required(localStorage.getItem('change-info-streamer-bot.settings.v1')))
+        .twitchTemplate,
+    ).toBe('Retry %subtitle%');
+    expect(field('Шаблон Twitch').value).toBe('Retry %subtitle%');
+  });
+
   async function startControlledOperation(
     command: 'saveTemplates' | 'updateTwitch' | 'runPreset',
   ): Promise<void> {
