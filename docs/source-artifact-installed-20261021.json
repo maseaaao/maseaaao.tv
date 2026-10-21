@@ -549,10 +549,7 @@
       "checkedAt": "2026-10-20T19:50:09.267Z",
       "metadataOnlyDifference": {
         "verified": true,
-        "fields": [
-          "PE TimeDateStamp",
-          "CLI Module MVID"
-        ],
+        "fields": ["PE TimeDateStamp", "CLI Module MVID"],
         "differingByteCount": 18,
         "note": "Exact-byte mismatch remains visible. Runtime helper was not replaced; source/IL bytes outside these metadata fields match."
       }
@@ -678,10 +675,7 @@
       "checkedAt": "2026-10-20T19:50:09.281Z",
       "metadataOnlyDifference": {
         "verified": true,
-        "fields": [
-          "PE TimeDateStamp",
-          "CLI Module MVID"
-        ],
+        "fields": ["PE TimeDateStamp", "CLI Module MVID"],
         "differingByteCount": 18,
         "note": "Exact-byte mismatch remains visible. Runtime helper was not replaced; source/IL bytes outside these metadata fields match."
       }
@@ -807,10 +801,7 @@
       "checkedAt": "2026-10-20T19:50:09.288Z",
       "metadataOnlyDifference": {
         "verified": true,
-        "fields": [
-          "PE TimeDateStamp",
-          "CLI Module MVID"
-        ],
+        "fields": ["PE TimeDateStamp", "CLI Module MVID"],
         "differingByteCount": 18,
         "note": "Exact-byte mismatch remains visible. Runtime helper was not replaced; source/IL bytes outside these metadata fields match."
       }

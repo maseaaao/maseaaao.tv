@@ -7,6 +7,18 @@ import { JSDOM } from 'jsdom';
 
 const root = resolve(import.meta.dirname, '..');
 const read = (name) => readFileSync(resolve(root, name), 'utf8');
+
+test('browser installation and UI tests use the same exact Playwright release', () => {
+  const manifest = JSON.parse(read('package.json'));
+  const catalog = JSON.parse(read('tooling/ui-catalog/package.json'));
+  const lock = JSON.parse(read('package-lock.json'));
+  const version = catalog.devDependencies.playwright;
+  assert.match(version, /^\d+\.\d+\.\d+$/);
+  assert.equal(manifest.devDependencies['playwright-core'], version);
+  assert.equal(lock.packages['node_modules/playwright-core'].version, version);
+  assert.equal(lock.packages['node_modules/playwright'].version, version);
+});
+
 const license = readFileSync(new URL(import.meta.resolve('@maseaaao/design/license')), 'utf8')
   .replaceAll('\r\n', '\n')
   .trim();

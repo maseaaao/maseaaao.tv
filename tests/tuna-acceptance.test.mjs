@@ -171,7 +171,11 @@ test('404 cover respects tries/retry cooldown and recovers at the same URL after
   const attempts = [];
   const f = await setup(t, {
     cover: (route, url) => {
-      attempts.push({ href: url.href, time: Date.now() });
+      // Preload and the two visible image slots may request the same URL.
+      // A retry is a new cache-busted URL, not another consumer of one attempt.
+      if (!attempts.some((attempt) => attempt.href === url.href)) {
+        attempts.push({ href: url.href, time: Date.now() });
+      }
       return available
         ? route.fulfill({ contentType: 'image/png', body: pixel })
         : route.fulfill({ status: 404, body: 'missing' });
@@ -219,13 +223,15 @@ test('static local cover gets verified on track change; signed remote query is p
   const f = await setup(t);
   f.setTrack({ title: 'A', playing: true, cover_url: '/cover.png?keep=1' });
   await coverReady(f.page, '/cover.png');
-  const first = f.requests.filter((url) => url.pathname === '/cover.png').length;
+  const attempts = () =>
+    new Set(f.requests.filter((url) => url.pathname === '/cover.png').map((url) => url.href));
+  const first = attempts().size;
   f.setTrack({ title: 'B', playing: true, cover_url: '/cover.png?keep=1' });
-  await f.page.waitForRequest(
-    (r) => new URL(r.url()).searchParams.get('_tuna')?.endsWith('-1') === true,
-  );
-  await coverReady(f.page, '/cover.png');
-  assert.equal(f.requests.filter((url) => url.pathname === '/cover.png').length, first + 2);
+  await f.page.waitForFunction(() => {
+    const image = document.querySelector('.cover-image.is-active');
+    return image?.naturalWidth > 0 && new URL(image.src).searchParams.get('_tuna')?.endsWith('-1');
+  });
+  assert.equal(attempts().size, first + 2);
   assert(
     f.requests
       .filter((url) => url.pathname === '/cover.png')

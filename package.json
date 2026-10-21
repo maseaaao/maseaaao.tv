@@ -65,7 +65,7 @@
     "globals": "17.13.0",
     "jsonc-parser": "3.3.1",
     "jsqr": "^1.4.0",
-    "playwright-core": "^1.58.2",
+    "playwright-core": "1.58.2",
     "png-to-ico": "3.0.2",
     "postcss": "8.5.31",
     "postcss-html": "2.0.0",
