@@ -210,13 +210,6 @@ button:focus-visible,
     background-color 160ms,
     border-color 160ms;
 }
-.collab__address {
-  margin: -4px 0 0;
-  color: var(--color-muted);
-  font-size: 14px;
-  overflow-wrap: anywhere;
-  user-select: all;
-}
 
 @media (hover: hover) {
   .tile:hover,

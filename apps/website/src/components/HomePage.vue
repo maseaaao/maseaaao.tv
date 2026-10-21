@@ -93,7 +93,6 @@ const avatarSizes = [64, 96, 128, 192, 288]
             Написать в Telegram
           </a>
         </div>
-        <p class="collab__address">collab@maseaaao.tv</p>
       </footer>
     </section>
   </main>

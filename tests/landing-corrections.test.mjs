@@ -138,7 +138,11 @@ test('text-only landing has explicit contact actions and bounded social controls
         await page.locator('a[href="mailto:collab@maseaaao.tv"]').innerText(),
         'Написать на почту',
       );
-      assert.equal(await page.locator('.collab__address').innerText(), 'collab@maseaaao.tv');
+      assert.equal(await page.locator('.collab__address').count(), 0);
+      assert.equal(
+        (await page.locator('#contacts').innerText()).includes('collab@maseaaao.tv'),
+        false,
+      );
       const controls = await page
         .locator('.tiles--secondary .tile, .collab__link')
         .evaluateAll((links) =>
