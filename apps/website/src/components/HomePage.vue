@@ -38,7 +38,6 @@ const avatarSizes = [64, 96, 128, 192, 288]
 
           <div class="identity__copy">
             <h1 id="profile-name">maseaaao</h1>
-            <p class="identity__description">Стример</p>
           </div>
         </div>
       </header>
@@ -54,7 +53,7 @@ const avatarSizes = [64, 96, 128, 192, 288]
           <WebsiteLink
             href="https://www.donationalerts.com/r/maseaaao"
             kind="donationalerts"
-            title="Поддержать"
+            title="Задонатить свое мнение"
           />
         </div>
         <div class="tiles tiles--secondary">
@@ -83,10 +82,7 @@ const avatarSizes = [64, 96, 128, 192, 288]
       <footer id="contacts" class="collab" tabindex="-1" aria-labelledby="contacts-title">
         <h2 id="contacts-title" class="collab__label">Сотрудничество</h2>
         <div class="collab__links">
-          <a class="collab__link" href="mailto:collab@maseaaao.tv">
-            <span class="collab__mail">collab@maseaaao.tv</span>
-            <span class="collab__arrow" aria-hidden="true">↗</span>
-          </a>
+          <a class="collab__link" href="mailto:collab@maseaaao.tv"> Написать на почту </a>
           <a
             class="collab__link"
             href="https://t.me/maseaaao?direct&text=%D0%9F%D1%80%D0%B8%D0%B2%D0%B5%D1%82!%20%D0%9F%D0%B8%D1%88%D1%83%20%D0%BF%D0%BE%20%D0%B2%D0%BE%D0%BF%D1%80%D0%BE%D1%81%D1%83%20%D1%81%D0%BE%D1%82%D1%80%D1%83%D0%B4%D0%BD%D0%B8%D1%87%D0%B5%D1%81%D1%82%D0%B2%D0%B0"
@@ -94,10 +90,10 @@ const avatarSizes = [64, 96, 128, 192, 288]
             aria-describedby="new-window-note"
             rel="noopener noreferrer"
           >
-            <span class="collab__mail">Написать в Telegram</span>
-            <span class="collab__arrow" aria-hidden="true">↗</span>
+            Написать в Telegram
           </a>
         </div>
+        <p class="collab__address">collab@maseaaao.tv</p>
       </footer>
     </section>
   </main>

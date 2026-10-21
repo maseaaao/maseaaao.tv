@@ -10,8 +10,6 @@ defineProps<{ href: string; title: string; kind: string; primary?: boolean; veri
     :rel="verified ? 'me noopener noreferrer' : 'noopener noreferrer'"
     class="tile"
     :class="[`tile--${kind}`, { 'tile--primary': primary }]"
-    ><span class="tile__copy"
-      ><span class="tile__title">{{ title }}</span></span
-    ><span class="tile__arrow" aria-hidden="true">↗</span></a
+    ><span class="tile__title">{{ title }}</span></a
   >
 </template>

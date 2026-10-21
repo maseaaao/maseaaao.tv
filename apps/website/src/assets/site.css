@@ -103,11 +103,7 @@ button:focus-visible,
   letter-spacing: -0.055em;
   overflow-wrap: anywhere;
 }
-.identity__description {
-  margin: 12px 0 0;
-  color: var(--color-muted);
-  font-size: 18px;
-}
+
 .actions {
   grid-area: actions;
   display: grid;
@@ -123,8 +119,9 @@ button:focus-visible,
 }
 .collab__label {
   margin: 0;
-  color: var(--color-muted);
-  font: 14px/1.5 var(--font-body);
+  color: var(--color-text);
+  font: 400 18px/1.4 var(--font-display);
+  overflow-wrap: anywhere;
 }
 .tiles {
   display: grid;
@@ -139,7 +136,7 @@ button:focus-visible,
   min-width: 0;
   min-height: 76px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 24px;
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   gap: 16px;
   padding: 18px 20px;
@@ -153,19 +150,12 @@ button:focus-visible,
     background-color 160ms,
     border-color 160ms;
 }
-.tile__copy {
-  min-width: 0;
-  display: grid;
-  gap: 5px;
-}
+
 .tile__title {
   font: 400 20px/1.35 var(--font-display);
   overflow-wrap: anywhere;
 }
-.tile__arrow {
-  font-size: 23px;
-  line-height: 1;
-}
+
 .tile--twitch {
   min-height: 80px;
   background: var(--color-brand);
@@ -177,16 +167,12 @@ button:focus-visible,
 }
 .tiles--secondary {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0 var(--space-5);
+  gap: 12px;
 }
 .tiles--secondary .tile {
-  grid-template-columns: minmax(0, 1fr) 20px;
-  gap: 8px;
-  min-height: 48px;
-  padding: 12px 0;
-  border: 0;
-  border-bottom: 1px solid var(--color-border);
-  border-radius: 0;
+  min-height: 56px;
+  padding: 14px 16px;
+  border-radius: 8px;
 }
 .tiles--secondary .tile__title {
   font: 15px/1.5 var(--font-body);
@@ -195,15 +181,15 @@ button:focus-visible,
   grid-area: collab;
   min-width: 0;
   display: grid;
-  grid-template-columns: minmax(0, 0.5fr) minmax(0, 1fr);
-  gap: 20px;
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
   padding-top: 28px;
   border-top: 1px solid var(--color-border);
 }
 .collab__links {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 240px));
   gap: 12px;
 }
 .collab__link {
@@ -211,36 +197,38 @@ button:focus-visible,
   min-width: 0;
   min-height: 48px;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px 0;
+  justify-content: center;
+  padding: 12px 16px;
+  border: 1px solid var(--color-border-control);
+  border-radius: 8px;
   color: var(--color-text);
   text-decoration: none;
-  font-size: 14px;
-  transition: color 160ms;
-}
-.collab__mail {
+  font-size: 15px;
   overflow-wrap: anywhere;
+  transition:
+    color 160ms,
+    background-color 160ms,
+    border-color 160ms;
 }
-.collab__arrow {
-  flex: none;
-  font-size: 22px;
+.collab__address {
+  margin: -4px 0 0;
+  color: var(--color-muted);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+  user-select: all;
 }
 
 @media (hover: hover) {
-  .tile:hover {
+  .tile:hover,
+  .collab__link:hover {
     border-color: var(--color-brand);
     color: var(--color-brand);
-    background: var(--color-accent-soft);
+    background: var(--color-field);
   }
   .tile--twitch:hover {
     background: var(--color-action-hover);
     border-color: var(--color-brand);
     color: var(--color-surface);
-  }
-  .collab__link:hover {
-    color: var(--color-brand);
-    text-decoration: underline;
   }
 }
 
@@ -444,7 +432,7 @@ button:focus-visible,
   }
   .collab {
     grid-template-columns: 1fr;
-    gap: 8px;
+    gap: 16px;
   }
   .tiles--primary .tile {
     padding: 16px;
@@ -474,10 +462,7 @@ button:focus-visible,
     font-size: clamp(28px, 8vw, 40px);
     letter-spacing: -0.06em;
   }
-  .identity__description {
-    margin-top: 8px;
-    font-size: 15px;
-  }
+
   .tiles--primary {
     grid-template-columns: 1fr;
   }
@@ -491,9 +476,13 @@ button:focus-visible,
   .tiles--secondary .tile__title {
     font-size: 15px;
   }
+  .tiles--secondary .tile--lobby,
+  .tiles--secondary .tile--archives {
+    grid-column: 1 / -1;
+  }
   .collab__links {
     grid-template-columns: 1fr;
-    gap: 0;
+    gap: 12px;
   }
   .checker {
     padding: 20px 12px;

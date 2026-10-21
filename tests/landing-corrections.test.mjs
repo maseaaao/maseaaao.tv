@@ -123,6 +123,68 @@ test('200 percent font scaling keeps the primary link visible without horizontal
   }
 });
 
+test('text-only landing has explicit contact actions and bounded social controls', async () => {
+  for (const width of [320, 390, 540, 768, 1440]) {
+    const { context, page } = await visit(width);
+    try {
+      assert.equal(await page.locator('.identity__description').count(), 0);
+      assert.equal(
+        await page
+          .locator('.actions svg, .actions .tile__arrow, .collab svg, .collab__arrow')
+          .count(),
+        0,
+      );
+      assert.equal(
+        await page.locator('a[href="mailto:collab@maseaaao.tv"]').innerText(),
+        'Написать на почту',
+      );
+      assert.equal(await page.locator('.collab__address').innerText(), 'collab@maseaaao.tv');
+      const controls = await page
+        .locator('.tiles--secondary .tile, .collab__link')
+        .evaluateAll((links) =>
+          links.map((link) => {
+            const style = getComputedStyle(link);
+            const box = link.getBoundingClientRect();
+            return {
+              width: box.width,
+              height: box.height,
+              border: style.borderTopStyle,
+              borderWidth: parseFloat(style.borderTopWidth),
+            };
+          }),
+        );
+      assert.equal(controls.length, 8);
+      for (const control of controls) {
+        assert(control.width >= 44 && control.height >= 44, JSON.stringify({ width, control }));
+        assert.equal(control.border, 'solid');
+        assert(control.borderWidth >= 1);
+      }
+      if (width <= 540) {
+        const group = await page.locator('.tiles--secondary').boundingBox();
+        for (const kind of ['lobby', 'archives']) {
+          const box = await page.locator('.tile--' + kind).boundingBox();
+          assert(Math.abs(box.width - group.width) < 1);
+        }
+      }
+    } finally {
+      await context.close();
+    }
+  }
+});
+
+test('donation action invites visitors to donate their opinion', async () => {
+  const { context, page } = await visit(390);
+  try {
+    assert.equal(await page.locator('.tile--donationalerts').innerText(), 'Задонатить свое мнение');
+    assert.equal(
+      await page.locator('.tile--donationalerts').getAttribute('href'),
+      'https://www.donationalerts.com/r/maseaaao',
+    );
+  } finally {
+    await context.close();
+  }
+});
+
 if (process.env.LANDING_DETAIL_OUT) {
   test('capture real assembled homepage screenshots without external backup helpers', async () => {
     const directory = resolve(process.env.LANDING_DETAIL_OUT);
