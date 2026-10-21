@@ -21,15 +21,16 @@ const native = `html,body{height:100%}.widget-stream-stats[data-v-318f5eb8]{disp
 const card = (id, name, subtitle, hidden = false) =>
   `<div id="${id}" class="stats-list-item" data-v-318f5eb8 ${hidden ? 'style="display:none"' : ''}><div class="stats-item-main-row" style="line-height:1;text-align:center">${name}</div>${subtitle ? '<div class="stats-item-additional-row">Топ за месяц · Спасибо за поддержку</div>' : ''}</div>`;
 
-test('donor panel stays fixed while text slides, including v-show, long names and reduced motion', async () => {
+test('donor panel stays fixed while text rolls, including v-show, long names and reduced motion', async () => {
   const browser = await launchBrowser();
   try {
     for (const mode of ['stats-slider', 'stats-list']) {
-      for (const [oldName, newName, subtitle, reduced] of [
+      for (const [oldName, newName, subtitle, reduced, forceMotion] of [
         ['Аноним — 1 USD', 'Следующий — 100 RUB', false, false],
         ['ОченьДлинноеИмяБезПробелов'.repeat(6), 'Короткий — 1 USD', false, false],
         ['Короткий — 1 USD', 'ОченьДлинноеИмяБезПробелов'.repeat(6), true, false],
         ['Первый — 1 USD', 'Второй — 2 USD', false, true],
+        ['Первый — 1 USD', 'Второй — 2 USD', false, true, true],
       ]) {
         const page = await browser.newPage({
           viewport: { width: 1000, height: 134 },
@@ -41,7 +42,7 @@ test('donor panel stays fixed while text slides, including v-show, long names an
             ? `<div class="stats-slider-wrapper" data-v-318f5eb8>${cards}</div>`
             : cards;
         await page.setContent(
-          `<meta charset="utf-8"><style>${native}\n${css}</style><div class="widget-stream-stats v-align-middle" data-v-318f5eb8><div class="${mode}" data-v-318f5eb8>${content}</div></div>`,
+          `<meta charset="utf-8"><style>${native}\n${css}\n${forceMotion ? ':root{--cm-roll-duration:.52s!important}' : ''}</style><div class="widget-stream-stats v-align-middle" data-v-318f5eb8><div class="${mode}" data-v-318f5eb8>${content}</div></div>`,
         );
         await page.evaluate(() => document.fonts.ready);
         const frames = await page.evaluate(async (mode) => {
@@ -94,8 +95,11 @@ test('donor panel stays fixed while text slides, including v-show, long names an
                 shell: rect(shell),
                 rows,
                 background: getComputedStyle(shell).backgroundColor,
+                angles: [old, next]
+                  .filter((e) => getComputedStyle(e).display !== 'none')
+                  .map((e) => getComputedStyle(e).rotate),
               });
-              if (performance.now() - started > 550) done();
+              if (performance.now() - started > 650) done();
               else requestAnimationFrame(tick);
             };
             requestAnimationFrame(tick);
@@ -106,6 +110,9 @@ test('donor panel stays fixed while text slides, including v-show, long names an
             oldHidden: getComputedStyle(old).display === 'none',
             final: rect(next),
             overflow: next.scrollHeight > next.clientHeight + 1,
+            finalRotate: getComputedStyle(next).rotate,
+            finalScale: getComputedStyle(next).scale,
+            duration: getComputedStyle(next).transitionDuration,
           };
         }, mode);
         assert(frames.samples.length > 5);
@@ -116,6 +123,20 @@ test('donor panel stays fixed while text slides, including v-show, long names an
           'Vue receives transitionend and hides the outgoing donor',
         );
         assert.equal(frames.overflow, false, 'Two lines fit without vertical clipping');
+        assert.equal(frames.finalRotate, 'x 0deg', 'Resting text is flat');
+        assert.equal(frames.finalScale, '1', 'Resting text retains its full size');
+        assert(
+          frames.duration
+            .split(',')
+            .every(
+              (value) => Number.parseFloat(value) === (reduced && !forceMotion ? 0.001 : 0.52),
+            ),
+        );
+        if (!reduced || forceMotion)
+          assert(
+            frames.samples.some((frame) => frame.angles.some((angle) => angle !== 'x 0deg')),
+            'The transition includes the proposed depth',
+          );
         for (const frame of frames.samples) {
           assert.deepEqual(frame.shell, frames.baseline, 'Panel must never jump or resize');
           assert.equal(frame.background, 'rgb(244, 243, 236)');
@@ -128,7 +149,7 @@ test('donor panel stays fixed while text slides, including v-show, long names an
           );
           for (const row of frame.rows) assert.equal(row.opacity, 1, 'No fading');
           if (frame.rows.length === 2)
-            assert(frame.rows[0].bottom <= frame.rows[1].top + 1, 'Names slide in separate rows');
+            assert(frame.rows[0].bottom <= frame.rows[1].top + 1, 'Names roll in separate rows');
         }
         assert.equal(frames.final.y, frames.baseline.y + 1);
         assert(frames.final.bottom <= 134);

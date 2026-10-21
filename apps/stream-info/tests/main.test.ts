@@ -218,13 +218,6 @@ describe('Stream Info Vue interactions', () => {
     else Reflect.deleteProperty(navigator, 'clipboard');
   });
 
-  async function togglePlatform(_platform: 'twitch'): Promise<void> {
-    required(
-      document.querySelector<HTMLInputElement>('[role="switch"][aria-label="Обновлять Twitch"]'),
-    ).click();
-    await nextTick();
-  }
-
   it('does not replace a healthy socket when connection settings are unchanged', async () => {
     await boot();
     const before = mockStreamerbot.instances.length;
@@ -814,7 +807,7 @@ describe('Stream Info Vue interactions', () => {
 
   it.each(['twitch'] as const)(
     'requires explicit selection for unresolved %s text while retaining current category',
-    async (platform) => {
+    async () => {
       await boot();
       const selector = 'Категория';
       await setValue(selector, 'Unresolved');
@@ -822,9 +815,7 @@ describe('Stream Info Vue interactions', () => {
       expect(button('Применить изменения').disabled).toBe(true);
       await click('Применить изменения');
       expect(commands()).not.toContain('saveTemplates');
-      await togglePlatform(platform);
       expect(button('Применить изменения').disabled).toBe(true);
-      await togglePlatform(platform);
       await setValue(selector, '');
       expect(button('Применить изменения').disabled).toBe(false);
     },
@@ -841,75 +832,40 @@ describe('Stream Info Vue interactions', () => {
     expect(queryField('Категория')?.value).toBe('PUBG');
   });
 
-  it.each(['twitch'] as const)(
-    'excludes disabled %s from subtitle validation and writes',
-    async (platform) => {
-      mockStreamerbot.state[platform].tags = ['invalid tag'];
-      await boot();
-      expect(button('Применить изменения').disabled).toBe(true);
-      await togglePlatform(platform);
-      expect(button('Применить изменения').disabled).toBe(true);
-      expect(document.querySelector('section[aria-label="Twitch"]')).toBeNull();
-      expect(queryField('Полное название')).toBeNull();
-      await setValue('Тема стрима', 'Selected platform only');
-      await click('Применить изменения');
-      await flush();
-      expect(commands()).not.toContain('updateTwitch');
-      expect(document.querySelector('.notices > [role]')?.textContent ?? '').not.toContain(
-        'Пропущено',
-      );
-    },
-  );
-
-  it.each(['twitch'] as const)(
-    'keeps disabled %s drafts and excludes title, category and tag writes in the combined editor',
-    async (platform) => {
-      await boot();
-      await setValue('Тема стрима', 'Combined change');
-      await setValue('Добавить тег', 'Draft');
-      await togglePlatform(platform);
-      expect(queryField('Добавить тег')).toBeNull();
-      expect(queryField('Категория')).toBeNull();
-      expect(document.querySelectorAll('.inline-editor')).toHaveLength(0);
-      expect(
-        document.querySelector<HTMLInputElement>('[role="switch"][aria-label="Обновлять Twitch"]')
-          ?.disabled,
-      ).toBe(false);
-      await togglePlatform(platform);
-      expect(queryField('Добавить тег')?.value).toBe('Draft');
-      await togglePlatform(platform);
-      await click('Применить изменения');
-      expect(button('Применить изменения').disabled).toBe(true);
-      await flush();
-      expect(commands()).not.toContain('updateTwitch');
-      await togglePlatform(platform);
-      expect(queryField('Добавить тег')?.value).toBe('Draft');
-    },
-  );
-
-  it('prevents any save with Twitch disabled and restores selection after reopening', async () => {
+  it('always shows Twitch even when an old setting disabled it', async () => {
+    localStorage.setItem(
+      'change-info-streamer-bot.settings.v1',
+      JSON.stringify({ twitchEnabled: false }),
+    );
     await boot();
-    await togglePlatform('twitch');
-    expect(button('Применить изменения').disabled).toBe(true);
-    expect(button('Применить изменения').disabled).toBe(true);
-    expect(document.querySelectorAll('.inline-editor')).toHaveLength(0);
-    expect(document.querySelectorAll('.platform-card')).toHaveLength(0);
-    const before = mockStreamerbot.actionCalls.length;
-    await click('Применить изменения');
+    expect(document.querySelector('[role="switch"]')).toBeNull();
+    expect(document.querySelector('.subtitle-panel, .mode-toggle')).toBeNull();
+    expect(queryField('Название')).not.toBeNull();
+    expect(queryField('Шаблон Twitch')).not.toBeNull();
+    expect(button('Применить изменения').disabled).toBe(false);
+    await setValue('Название', 'Updated');
+    await setValue('Шаблон Twitch', 'New %subtitle%');
     await click('Применить изменения');
     await flush();
-    expect(mockStreamerbot.actionCalls.length).toBe(before);
-    vi.resetModules();
-    document.body.innerHTML = '<div id="app"></div>';
+    await flush();
+    const update = mockStreamerbot.actionCalls.find((call) => call.args.command === 'updateTwitch');
+    expect(JSON.parse(textValue(update?.args.payloadJson))).toMatchObject({ title: 'New Updated' });
+    expect(mockStreamerbot.state.templates.twitchTemplate).toBe('New %subtitle%');
+  });
+
+  it('applies a template-only edit and rejects repeated title tokens', async () => {
     await boot();
-    expect(
-      document.querySelector<HTMLInputElement>('[role="switch"][aria-label="Обновлять Twitch"]')
-        ?.checked,
-    ).toBe(false);
+    await setValue('Шаблон Twitch', '%subtitle% / %subtitle%');
     expect(button('Применить изменения').disabled).toBe(true);
-    await togglePlatform('twitch');
+    await setValue('Шаблон Twitch', 'Only %subtitle%');
     expect(button('Применить изменения').disabled).toBe(false);
-    expect(document.querySelector('section[aria-label="Twitch"]')).not.toBeNull();
+    await click('Применить изменения');
+    await flush();
+    await flush();
+    const update = mockStreamerbot.actionCalls.find((call) => call.args.command === 'updateTwitch');
+    expect(JSON.parse(textValue(update?.args.payloadJson))).toMatchObject({ title: 'Only Старт' });
+    expect(mockStreamerbot.state.templates.twitchTemplate).toBe('Only %subtitle%');
+    expect(document.querySelector('.template-dirty')?.textContent).toBe('');
   });
 
   it('uses availability as well as selection and gives Twitch the correct unavailable reason', async () => {
@@ -927,19 +883,16 @@ describe('Stream Info Vue interactions', () => {
     expect(buttons('Изменить всё')[0] ?? null).toBeNull();
     expect(buttons('Изменить Twitch')[0] ?? null).toBeNull();
     expect(document.querySelectorAll('.inline-editor')).toHaveLength(1);
-    expect(
-      buttons('По шаблону').filter((button) => button.getAttribute('aria-pressed') === 'true'),
-    ).toHaveLength(1);
-    await click('Полное название');
-    await setValue('Полное название', 'Inline Twitch title');
+    expect(buttons('По шаблону')).toHaveLength(0);
+    await setValue('Название', 'Inline Twitch title');
     expect(document.querySelector('[role="dialog"]')).toBeNull();
-    expect(queryField('Полное название')?.value).toBe('Inline Twitch title');
+    expect(queryField('Название')?.value).toBe('Inline Twitch title');
     await click('Обновить данные');
     await flush();
-    expect(queryField('Полное название')?.value).toBe('Inline Twitch title');
+    expect(queryField('Название')?.value).toBe('Inline Twitch title');
     await click('Настройки');
     await click('Закрыть');
-    expect(queryField('Полное название')?.value).toBe('Inline Twitch title');
+    expect(queryField('Название')?.value).toBe('Inline Twitch title');
   });
 
   it('identifies connection saving and unsaved templates in Russian', async () => {
@@ -948,6 +901,7 @@ describe('Stream Info Vue interactions', () => {
     await boot();
     await click('Настройки');
     expect(button('Сохранить подключение').textContent).toBe(label);
+    await click('Закрыть');
     expect(document.querySelector('.template-dirty')?.textContent).toBe('');
     const original = mockStreamerbot.state.templates.twitchTemplate;
     await setValue('Шаблон Twitch', 'Draft %subtitle%');
@@ -958,8 +912,8 @@ describe('Stream Info Vue interactions', () => {
 
   it('saves connection independently while preserving unsaved templates', async () => {
     await boot();
-    await click('Настройки');
     await setValue('Шаблон Twitch', 'Draft %subtitle%');
+    await click('Настройки');
     await setValue('Хост', 'localhost');
     await click('Сохранить подключение');
     await flush();
@@ -967,16 +921,15 @@ describe('Stream Info Vue interactions', () => {
     await click('Настройки');
     expect(queryField('Шаблон Twitch')?.value).toBe('Draft %subtitle%');
     expect(document.querySelector('.template-dirty')?.textContent).toContain('несохранённые');
-    await click('Сохранить шаблоны');
+    if (document.querySelector('[role="dialog"]')) await click('Закрыть');
+    await click('Применить изменения');
     await flush();
     expect(document.querySelector('.template-dirty')?.textContent).toBe('');
   });
 
   it('recovers unsaved template edits from this browser tab after reload', async () => {
     await boot();
-    await click('Настройки');
     await setValue('Шаблон Twitch', 'Recovered %subtitle%');
-    await click('Закрыть');
     expect(sessionStorage.getItem('change-info-streamer-bot.template-draft.v1')).toContain(
       'Recovered %subtitle%',
     );
@@ -985,63 +938,13 @@ describe('Stream Info Vue interactions', () => {
     document.body.innerHTML = '<div id="app"></div>';
     await boot();
     await click('Настройки');
+    await click('Закрыть');
     expect(queryField('Шаблон Twitch')?.value).toBe('Recovered %subtitle%');
     expect(document.querySelector('.template-dirty')?.textContent).toContain('несохранённые');
-    await click('Сохранить шаблоны');
+    await click('Применить изменения');
     await flush();
     expect(sessionStorage.getItem('change-info-streamer-bot.template-draft.v1')).toBeNull();
   });
-
-  it('saves templates independently and does not revert them when saving connection', async () => {
-    await boot();
-    const connections = mockStreamerbot.connectCalls;
-    await click('Настройки');
-    await setValue('Хост', 'localhost');
-    await setValue('Шаблон Twitch', 'Saved %subtitle%');
-    await click('Сохранить шаблоны');
-    await flush();
-    expect(mockStreamerbot.connectCalls).toBe(connections);
-    expect(document.querySelector('[role="dialog"]')).not.toBeNull();
-    const persisted = () =>
-      parseRecord(required(localStorage.getItem('change-info-streamer-bot.settings.v1')));
-    expect(persisted().host).toBe('127.0.0.1');
-    expect(persisted().twitchTemplate).toBe('Saved %subtitle%');
-    await click('Сохранить подключение');
-    expect(persisted().host).toBe('localhost');
-    expect(persisted().twitchTemplate).toBe('Saved %subtitle%');
-    await flush();
-  });
-
-  it.each(['Newer %subtitle%', 'original'])(
-    'keeps newer template edit %s unsaved when an earlier save completes',
-    async (latestEdit) => {
-      await boot();
-      await click('Настройки');
-      await setValue('Шаблон Twitch', 'First %subtitle%');
-      const latest =
-        latestEdit === 'original' ? mockStreamerbot.state.templates.twitchTemplate : latestEdit;
-      const client = required(mockStreamerbot.instances[0]);
-      const original = client.doAction.bind(client);
-      let finish: () => void = () => {
-        throw new Error('Fixture callback was not installed');
-      };
-      vi.spyOn(client, 'doAction').mockImplementationOnce(async (action, args) => {
-        await new Promise<void>((resolve) => {
-          finish = resolve;
-        });
-        await original(action, args);
-      });
-      await click('Сохранить шаблоны');
-      await setValue('Шаблон Twitch', latest);
-      if (latestEdit === 'original')
-        expect(document.querySelector('.template-dirty')?.textContent).toBe('');
-      finish();
-      await flush();
-      expect(queryField('Шаблон Twitch')?.value).toBe(latest);
-      expect(document.querySelector('.template-dirty')?.textContent).toContain('несохранённые');
-      expect(mockStreamerbot.state.templates.twitchTemplate).toBe('First %subtitle%');
-    },
-  );
 
   it.each(['ack-first', 'event-first'] as const)(
     'requires both independent template-save completions (%s)',
@@ -1049,9 +952,8 @@ describe('Stream Info Vue interactions', () => {
       vi.useFakeTimers();
       const pending = await controlActions('saveTemplates');
       await boot();
-      await click('Настройки');
       await setValue('Шаблон Twitch', 'Saved %subtitle%');
-      await click('Сохранить шаблоны');
+      await click('Применить изменения');
       const request = required(pending[0]);
       expect(parseRecord(textValue(request.args.payloadJson))).toMatchObject({
         twitchTemplate: 'Saved %subtitle%',
@@ -1060,25 +962,22 @@ describe('Stream Info Vue interactions', () => {
       if (order === 'ack-first') request.acknowledge();
       else request.respond(savedTemplateResponse('Saved %subtitle%'));
       await flush();
-      expect(button('Сохранить шаблоны').disabled).toBe(true);
+      expect(button('Применить изменения').disabled).toBe(true);
       expect(roleText('status', 'Есть несохранённые изменения шаблонов')).not.toBeNull();
       expect(document.querySelector('.notices > [role]')).toBeNull();
       expect(localStorage.getItem('change-info-streamer-bot.settings.v1')).toBe(before);
+      mockStreamerbot.state.templates.twitchTemplate = 'Saved %subtitle%';
       if (order === 'ack-first') request.respond(savedTemplateResponse('Saved %subtitle%'));
       else request.acknowledge();
       await flush();
-      expect(button('Сохранить шаблоны').disabled).toBe(false);
+      expect(button('Применить изменения').disabled).toBe(false);
       expect(document.querySelector('.template-dirty')?.textContent).toBe('');
       expect(
         parseRecord(required(localStorage.getItem('change-info-streamer-bot.settings.v1')))
           .twitchTemplate,
       ).toBe('Saved %subtitle%');
-      expect(document.querySelector('.notices > [role="status"]')?.textContent).toContain(
-        'Шаблоны сохранены',
-      );
-      const notice = required(document.querySelector('.notices > [role="status"]'));
-      expect(notice.closest('[inert]')).toBeNull();
-      expect(document.querySelector('[role="dialog"]')?.contains(notice)).toBe(true);
+      await flush();
+      expect(document.querySelector('.save-status')?.textContent).toBe('Изменения применены');
     },
   );
 
@@ -1088,22 +987,21 @@ describe('Stream Info Vue interactions', () => {
       vi.useFakeTimers();
       const pending = await controlActions('saveTemplates');
       await boot();
-      await click('Настройки');
       await setValue('Шаблон Twitch', 'Rejected %subtitle%');
-      await click('Сохранить шаблоны');
+      await click('Применить изменения');
       const request = required(pending[0]);
       const before = localStorage.getItem('change-info-streamer-bot.settings.v1');
       if (eventFirst) request.respond(savedTemplateResponse('Rejected %subtitle%'));
       request.rejectAck(new Error('ACK rejected'));
       await flush();
-      expect(button('Сохранить шаблоны').disabled).toBe(false);
+      expect(button('Применить изменения').disabled).toBe(false);
       expect(roleText('status', 'Есть несохранённые изменения шаблонов')).not.toBeNull();
       expect(document.querySelector('.notices > [role="alert"]')?.textContent).toContain(
         'ACK rejected',
       );
       const notice = required(document.querySelector('.notices > [role="alert"]'));
       expect(notice.closest('[inert]')).toBeNull();
-      expect(document.querySelector('[role="dialog"]')?.contains(notice)).toBe(true);
+      expect(document.querySelector('.dock-scroll')?.contains(notice)).toBe(true);
       request.respond(savedTemplateResponse('Rejected %subtitle%'));
       await vi.advanceTimersByTimeAsync(15_000);
       expect(localStorage.getItem('change-info-streamer-bot.settings.v1')).toBe(before);
@@ -1118,16 +1016,15 @@ describe('Stream Info Vue interactions', () => {
       vi.useFakeTimers();
       const pending = await controlActions('saveTemplates');
       await boot();
-      await click('Настройки');
       await setValue('Шаблон Twitch', 'Timed out %subtitle%');
-      await click('Сохранить шаблоны');
+      await click('Применить изменения');
       const request = required(pending[0]);
       if (acknowledged) request.acknowledge();
       await vi.advanceTimersByTimeAsync(14_999);
-      expect(button('Сохранить шаблоны').disabled).toBe(true);
+      expect(button('Применить изменения').disabled).toBe(true);
       expect(document.querySelector('.notices > [role]')).toBeNull();
       await vi.advanceTimersByTimeAsync(1);
-      expect(button('Сохранить шаблоны').disabled).toBe(false);
+      expect(button('Применить изменения').disabled).toBe(false);
       expect(document.querySelector('.notices > [role="alert"]')?.textContent).toContain(
         '15 секунд',
       );
@@ -1146,29 +1043,29 @@ describe('Stream Info Vue interactions', () => {
     vi.useFakeTimers();
     const pending = await controlActions('saveTemplates');
     await boot();
-    await click('Настройки');
     await setValue('Шаблон Twitch', 'First %subtitle%');
-    await click('Сохранить шаблоны');
+    await click('Применить изменения');
     const first = required(pending[0]);
     const before = localStorage.getItem('change-info-streamer-bot.settings.v1');
     first.respond(savedTemplateResponse('First %subtitle%'));
     await vi.advanceTimersByTimeAsync(14_999);
-    expect(button('Сохранить шаблоны').disabled).toBe(true);
+    expect(button('Применить изменения').disabled).toBe(true);
     await vi.advanceTimersByTimeAsync(1);
-    expect(button('Сохранить шаблоны').disabled).toBe(false);
+    expect(button('Применить изменения').disabled).toBe(false);
     expect(document.querySelector('[role="alert"]')?.textContent).toContain('15 секунд');
     expect(localStorage.getItem('change-info-streamer-bot.settings.v1')).toBe(before);
     await setValue('Шаблон Twitch', 'Retry %subtitle%');
-    await click('Сохранить шаблоны');
+    await click('Применить изменения');
     const retry = required(pending[1]);
     first.acknowledge();
     await flush();
-    expect(button('Сохранить шаблоны').disabled).toBe(true);
+    expect(button('Применить изменения').disabled).toBe(true);
     expect(localStorage.getItem('change-info-streamer-bot.settings.v1')).toBe(before);
+    mockStreamerbot.state.templates.twitchTemplate = 'Retry %subtitle%';
     retry.respond(savedTemplateResponse('Retry %subtitle%'));
     retry.acknowledge();
     await flush();
-    expect(button('Сохранить шаблоны').disabled).toBe(false);
+    expect(button('Применить изменения').disabled).toBe(false);
     expect(
       parseRecord(required(localStorage.getItem('change-info-streamer-bot.settings.v1')))
         .twitchTemplate,
@@ -1180,12 +1077,11 @@ describe('Stream Info Vue interactions', () => {
     command: 'saveTemplates' | 'updateTwitch' | 'runPreset',
   ): Promise<void> {
     if (command === 'saveTemplates') {
-      if (!document.querySelector('[role="dialog"]')) await click('Настройки');
+      if (document.querySelector('[role="dialog"]')) await click('Закрыть');
       await setValue('Шаблон Twitch', 'Pending %subtitle%');
-      await click('Сохранить шаблоны');
+      await click('Применить изменения');
     } else if (command === 'updateTwitch') {
-      await click('Полное название');
-      await setValue('Полное название', 'Pending title');
+      await setValue('Название', 'Pending title');
       await click('Применить изменения');
     } else await click('PUBG');
     await flush();
@@ -1244,7 +1140,7 @@ describe('Stream Info Vue interactions', () => {
           expect(mockStreamerbot.actionCalls).toHaveLength(before.calls);
           expect(vi.getTimerCount()).toBe(before.timers);
           expect(
-            button(command === 'saveTemplates' ? 'Сохранить шаблоны' : 'Применить изменения')
+            button(command === 'saveTemplates' ? 'Применить изменения' : 'Применить изменения')
               .disabled,
           ).toBe(true);
           expect(document.querySelector('.notices > [role]')).toBeNull();
@@ -1277,12 +1173,12 @@ describe('Stream Info Vue interactions', () => {
 
   it('retains the unsaved template status when saving fails', async () => {
     await boot();
-    await click('Настройки');
     await setValue('Шаблон Twitch', 'Draft %subtitle%');
     vi.spyOn(required(mockStreamerbot.instances[0]), 'doAction').mockRejectedValueOnce(
       new Error('Save rejected'),
     );
-    await click('Сохранить шаблоны');
+    if (document.querySelector('[role="dialog"]')) await click('Закрыть');
+    await click('Применить изменения');
     await flush();
     expect(document.querySelector('.template-dirty')?.textContent).toContain('несохранённые');
     expect(document.querySelector('.notices > [role]')?.textContent).toContain('Save rejected');
@@ -1311,8 +1207,8 @@ describe('Stream Info Vue interactions', () => {
     await flush();
     expect(mockStreamerbot.actionCalls.some((call) => call.id === 'preset-pubg')).toBe(true);
 
-    expect(queryField('Шаблон Twitch')).toBeNull();
-    await setValue('Тема стрима', 'Тестовый подзаголовок');
+    expect(queryField('Шаблон Twitch')).not.toBeNull();
+    await setValue('Название', 'Тестовый подзаголовок');
     await click('Применить изменения');
     await flush();
     await flush();
@@ -1323,7 +1219,7 @@ describe('Stream Info Vue interactions', () => {
     await click('Настройки');
     expect(queryField('Шаблон Twitch')).not.toBeNull();
     await setValue('Шаблон Twitch', 'Переопределённый %subtitle%');
-    await click('Сбросить');
+    await setValue('Шаблон Twitch', '🔴 %subtitle%| !tg !yt !tw !donate');
     expect((queryField('Шаблон Twitch') as HTMLTextAreaElement).value).toContain('!tg');
 
     await setValue('Хост', 'localhost');
@@ -1376,7 +1272,7 @@ describe('Stream Info Vue interactions', () => {
     expect(button('Применить изменения').textContent).toBe('Применить изменения');
     const card = required(document.querySelector('section[aria-label="Twitch"]'));
     const savePanel = required(button('Применить изменения').closest('.save-panel'));
-    expect(savePanel.parentElement).toBe(card.parentElement);
+    expect(savePanel.parentElement).toBe(document.querySelector('.dock-shell'));
     expect(card.compareDocumentPosition(savePanel) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
   });
 
@@ -1385,7 +1281,7 @@ describe('Stream Info Vue interactions', () => {
     expect(
       document.querySelector('[aria-label="Изменить информацию"] [role="status"]')?.textContent,
     ).toBe('Данные загружены');
-    await setValue('Тема стрима', 'Новый эфир');
+    await setValue('Название', 'Новый эфир');
     expect(
       document.querySelector('[aria-label="Изменить информацию"] [role="status"]')?.textContent,
     ).toBe('Есть несохранённые изменения');
@@ -1420,7 +1316,7 @@ describe('Stream Info Vue interactions', () => {
       if (args?.command === 'updateTwitch') throw new Error('Update rejected');
       return original(action, args);
     });
-    await setValue('Тема стрима', 'Не сохранится');
+    await setValue('Название', 'Не сохранится');
     await click('Применить изменения');
     await flush();
     expect(
@@ -1442,8 +1338,8 @@ describe('Stream Info Vue interactions', () => {
   });
 
   it('renders unchanged as information', async () => {
+    mockStreamerbot.state.twitch.title = '🔴 Старт| !tg';
     await boot();
-    await click('Полное название');
     await click('Применить изменения');
     await flush();
     const info = document.querySelector('.notice--info');
@@ -1482,8 +1378,7 @@ describe('Stream Info Vue interactions', () => {
     expect(buttons(/^Удалить тег[: ]/)).toHaveLength(2);
     await click(/^Удалить тег[: ]/, 1);
     expect(buttons(/^Удалить тег[: ]/)).toHaveLength(1);
-    await click('Полное название');
-    await setValue('Полное название', 'Новое Twitch название');
+    await setValue('Название', 'Новое Twitch название');
     vi.useFakeTimers();
     await setValue('Категория', 'PUBG');
     await vi.advanceTimersByTimeAsync(250);
@@ -1496,14 +1391,14 @@ describe('Stream Info Vue interactions', () => {
     await flush();
     const twitch = mockStreamerbot.actionCalls.find((call) => call.args.command === 'updateTwitch');
     expect(JSON.parse(textValue(twitch?.args.payloadJson))).toMatchObject({
-      title: 'Новое Twitch название',
+      title: '🔴 Новое Twitch название| !tg',
     });
     expect(document.querySelector('[role="dialog"]')).toBeNull();
   });
 
   it('saves the combined form through mock Action replies and leaves no real side effects', async () => {
     await boot();
-    await setValue('Тема стрима', 'Рейтинг');
+    await setValue('Название', 'Рейтинг');
     await click('Применить изменения');
     await flush();
     await flush();
@@ -1530,7 +1425,11 @@ describe('Stream Info Vue interactions', () => {
     await flush();
     await click('Настройки');
     await setValue('Шаблон Twitch', 'Тест %subtitle%');
-    await click('Сохранить шаблоны');
+    await click('Закрыть');
+    vi.spyOn(required(mockStreamerbot.instances[0]), 'doAction').mockRejectedValueOnce(
+      new Error('Fixture save failure'),
+    );
+    await click('Применить изменения');
     await flush();
     expect(document.querySelector('.notices > [role]')).not.toBeNull();
     await click('Закрыть уведомление');
@@ -1557,9 +1456,8 @@ describe('Stream Info Vue interactions', () => {
   it('renders a single platform and sends only its metadata and template', async () => {
     await boot();
     expect(document.querySelectorAll('.platform-card')).toHaveLength(1);
-    await click('Полное название');
-    await setValue('Полное название', 'Twitch only');
-    await setValue('Тема стрима', 'Updated');
+    await setValue('Название', 'Twitch only');
+    await setValue('Название', 'Updated');
     await click('Применить изменения');
     await flush();
     const calls = mockStreamerbot.actionCalls.filter((call) => call.args.command !== 'getState');
@@ -1579,7 +1477,7 @@ describe('Stream Info Vue interactions', () => {
     expect(document.querySelector('section[aria-label="Twitch"]')?.textContent).toContain(
       'Maseaaao',
     );
-    expect(queryField('Тема стрима')).not.toBeNull();
+    expect(queryField('Название')).not.toBeNull();
   });
 
   it('shows the version opposite the last-updated time', async () => {
@@ -1678,7 +1576,7 @@ describe('Stream Info Vue interactions', () => {
       ok: false,
       data: { fields: { title: true, category: false, tags: true } },
     };
-    await setValue('Тема стрима', 'Partial title');
+    await setValue('Название', 'Partial title');
     await setValue('Добавить тег', 'Unsent');
     await click('Применить изменения');
     await flush();
@@ -1765,7 +1663,7 @@ describe('Stream Info Vue interactions', () => {
     await flush();
     await flush();
     expect(mockStreamerbot.connectCalls).toBe(0);
-    expect(field('Тема стрима').value).toBe('Ranked with chat');
+    expect(field('Название').value).toBe('Ranked with chat');
     await click('Настройки');
     await click('Сохранить подключение');
     await flush();

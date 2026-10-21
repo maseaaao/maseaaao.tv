@@ -117,7 +117,7 @@ test(
       page.on('pageerror', (error) => errors.push(error.message));
       await page.route(/^https?:/, (route) => route.abort());
       await page.goto(pathToFileURL(file).href);
-      const subtitle = page.getByLabel(/^(Подзаголовок|Тема стрима)$/);
+      const subtitle = page.getByLabel(/^(Подзаголовок|Название)$/);
       await subtitle.waitFor();
       await subtitle.fill('Проверка автономного Vue-дока');
       await page.getByRole('button', { name: 'Применить изменения', exact: true }).click();
@@ -137,9 +137,9 @@ test(
       await page.close();
       const reopened = await context.newPage();
       await reopened.goto(pathToFileURL(file).href);
-      await reopened.getByLabel(/^(Подзаголовок|Тема стрима)$/).waitFor();
+      await reopened.getByLabel(/^(Подзаголовок|Название)$/).waitFor();
       assert.equal(
-        await reopened.getByLabel(/^(Подзаголовок|Тема стрима)$/).inputValue(),
+        await reopened.getByLabel(/^(Подзаголовок|Название)$/).inputValue(),
         'Проверка автономного Vue-дока',
       );
       assert.deepEqual(errors, []);
@@ -179,7 +179,7 @@ for (const order of ['ack-first', 'event-first', 'ack-error', 'missing-event']) 
         page.on('pageerror', (error) => errors.push(error.message));
         await page.route(/^https?:/, (route) => route.abort());
         await page.goto(pathToFileURL(file).href);
-        await page.getByLabel('Тема стрима', { exact: true }).waitFor();
+        await page.getByLabel('Название', { exact: true }).waitFor();
         // Routed sockets are EventTargets, not network sockets exposed by CDP.
         // Observe delivery without replacing the real client's handlers.
         await page.evaluate(() => {
@@ -192,15 +192,14 @@ for (const order of ['ack-first', 'event-first', 'ack-error', 'missing-event']) 
           };
         });
         if (order === 'missing-event') await page.clock.install();
-        await page.getByRole('button', { name: 'Настройки', exact: true }).click();
         await page.getByLabel('Шаблон Twitch', { exact: true }).fill('Новый %subtitle%');
-        const save = page.getByRole('button', { name: 'Сохранить шаблоны', exact: true });
+        const save = page.getByRole('button', { name: 'Применить изменения', exact: true });
         await save.click();
         const held = await incoming;
         assert.equal(held.payload.twitchTemplate, 'Новый %subtitle%');
         const dirty = page.getByText('Есть несохранённые изменения шаблонов', { exact: true });
-        const dialog = page.getByRole('dialog');
-        const success = dialog.getByRole('status').filter({ hasText: 'Шаблоны сохранены' });
+        const dialog = page.locator('.dock-shell');
+        const success = dialog.locator('.save-status').filter({ hasText: 'Изменения применены' });
         const send = async (phase) => {
           if (phase === 'event') held.respond();
           else
@@ -228,7 +227,7 @@ for (const order of ['ack-first', 'event-first', 'ack-error', 'missing-event']) 
           }
           await dialog
             .getByRole('alert')
-            .filter({ hasText: 'Не удалось сохранить шаблоны' })
+            .filter({ hasText: 'Подзаголовок не сохранён в Streamer.bot' })
             .waitFor();
           assert(await dirty.isVisible());
           assert(await save.isEnabled());
@@ -258,13 +257,14 @@ for (const order of ['ack-first', 'event-first', 'ack-error', 'missing-event']) 
           assert(await save.isEnabled());
         }
         const failed = order === 'ack-error' || order === 'missing-event';
-        const feedback = dialog
-          .getByRole(failed ? 'alert' : 'status')
-          .filter({ hasText: failed ? 'Не удалось сохранить шаблоны' : 'Шаблоны сохранены' });
-        assert(await feedback.isVisible(), 'Save feedback must be inside the active dialog');
-        await feedback.getByRole('button', { name: 'Закрыть уведомление', exact: true }).click();
-        await feedback.waitFor({ state: 'detached' });
-        assert(await dialog.isVisible(), 'Dismissing feedback must keep settings open');
+        if (failed) {
+          const feedback = dialog
+            .getByRole('alert')
+            .filter({ hasText: 'Подзаголовок не сохранён в Streamer.bot' });
+          assert(await feedback.isVisible());
+          await feedback.getByRole('button', { name: 'Закрыть уведомление', exact: true }).click();
+          await feedback.waitFor({ state: 'detached' });
+        }
         assert.deepEqual(errors, []);
         await context.close();
       } finally {
@@ -276,7 +276,7 @@ for (const order of ['ack-first', 'event-first', 'ack-error', 'missing-event']) 
 }
 
 test(
-  'changing only full Twitch title does not send a redundant saveTemplates command',
+  'changing the title persists the template input before updating Twitch',
   { timeout: 60000 },
   async () => {
     const directory = await mkdtemp(join(tmpdir(), 'stream-info-title-'));
@@ -292,12 +292,11 @@ test(
       await mockTransport(context, commands);
       const page = await context.newPage();
       await page.goto(pathToFileURL(file).href);
-      await page.getByLabel('Тема стрима', { exact: true }).waitFor();
-      await page.getByRole('button', { name: 'Полное название', exact: true }).click();
-      await page.getByLabel('Полное название', { exact: true }).fill('Новое название стрима');
+      await page.getByLabel('Название', { exact: true }).waitFor();
+      await page.getByLabel('Название', { exact: true }).fill('Новое название стрима');
       await page.getByRole('button', { name: 'Применить изменения', exact: true }).click();
       await page.waitForFunction(() => document.body.textContent.includes('Изменения применены'));
-      assert.equal(commands.filter((entry) => entry.command === 'saveTemplates').length, 0);
+      assert.equal(commands.filter((entry) => entry.command === 'saveTemplates').length, 1);
       assert(
         commands.some(
           (entry) =>
@@ -340,7 +339,7 @@ for (const failure of ['ack-reject', 'backend-reject', 'timeout', 'disconnect'])
         });
         const page = await context.newPage();
         await page.goto(pathToFileURL(file).href);
-        const subtitle = page.getByLabel('Тема стрима', { exact: true });
+        const subtitle = page.getByLabel('Название', { exact: true });
         await subtitle.waitFor();
         await page.waitForFunction(
           () =>
@@ -384,7 +383,7 @@ test('reverted subtitle edit does not send any templates write', { timeout: 6000
     await mockTransport(context, commands);
     const page = await context.newPage();
     await page.goto(pathToFileURL(file).href);
-    const subtitle = page.getByLabel('Тема стрима', { exact: true });
+    const subtitle = page.getByLabel('Название', { exact: true });
     await subtitle.waitFor();
     await subtitle.fill('Временный черновик');
     await subtitle.fill('Исходное название');

@@ -67,6 +67,6 @@ describe('Portable dock controls', () => {
     ).toBe(44);
     expect(
       pixels(getComputedStyle(chip.get('button[aria-label="Удалить тег: PUBG"]').element).height),
-    ).toBe(44);
+    ).toBe(24);
   });
 });

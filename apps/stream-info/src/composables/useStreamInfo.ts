@@ -73,7 +73,6 @@ interface AppState {
   templateDraft: TemplateDraft;
   presetActions: PresetAction[];
   runningPresetId: string | null;
-  templatesSaving: boolean;
   templatesDirty: boolean;
   allSaving: boolean;
   subtitleDirty: boolean;
@@ -131,7 +130,7 @@ function loadSettings(): ConnectionSettings {
       twitchTemplate:
         typeof saved.twitchTemplate === 'string' ? saved.twitchTemplate : defaults.twitchTemplate,
       lastSubtitle: typeof saved.lastSubtitle === 'string' ? saved.lastSubtitle : '',
-      twitchEnabled: saved.twitchEnabled !== false,
+      twitchEnabled: true,
     };
   } catch {
     return { ...defaults };
@@ -192,7 +191,6 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
     },
     presetActions: [],
     runningPresetId: null,
-    templatesSaving: false,
     templatesDirty:
       recoveredDraft !== null && recoveredDraft.twitchTemplate !== settings.twitchTemplate,
     allSaving: false,
@@ -351,7 +349,7 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
   function inlineTitle(_platform: Platform, form: AllForm): string {
     const mode = form.twitchTitleMode;
     const title = form.twitchTitle;
-    const template = settings.twitchTemplate;
+    const template = state.templateDraft.twitchTemplate;
     return mode === 'subtitle' ? titleFromTemplate(template, form.subtitle) : title.trim();
   }
 
@@ -611,49 +609,25 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
     }
   }
 
-  async function saveTemplates(): Promise<void> {
-    const current = taskGuard();
-    const draft = { ...state.templateDraft };
-    if (!isTemplateValid(draft.twitchTemplate)) return;
-    state.templatesSaving = true;
-    try {
-      const response = await callAction('saveTemplates', {
-        twitchTemplate: draft.twitchTemplate,
-        subtitle: settings.lastSubtitle,
-      });
-      if (!current()) return;
-      if (!response.ok || !response.data)
-        throw new Error(response.error?.message ?? t('templateStateSaveFailed'));
-      const templates = normalizeTemplates(response.data.templates);
-      const editedWhileSaving = state.templateDraft.twitchTemplate !== draft.twitchTemplate;
-      syncTemplates({ ...templates, configured: true }, editedWhileSaving);
-      notify(t('templateSaved'), [t('templateSavedDescription')], 'success');
-    } catch (error) {
-      if (!current()) return;
-      notify(t('templateSaveFailed'), [error instanceof Error ? error.message : t('unknownError')]);
-    } finally {
-      if (current()) {
-        state.templatesSaving = false;
-      }
-    }
-  }
-
   async function persistSubtitle(subtitle: string): Promise<boolean> {
     const current = taskGuard();
     const value = subtitle.trim();
-    if (value === settings.lastSubtitle) {
+    const template = state.templateDraft.twitchTemplate;
+    if (value === settings.lastSubtitle && template === settings.twitchTemplate) {
       state.subtitleDirty = false;
       return true;
     }
     if (disposed || !client?.ready || !state.action) return false;
     try {
       const response = await callAction('saveTemplates', {
-        twitchTemplate: settings.twitchTemplate,
+        twitchTemplate: template,
         subtitle: value,
       });
       if (!current()) return false;
       if (!response.ok) throw new Error(response.error?.message ?? t('subtitleStateSaveFailed'));
       settings.lastSubtitle = value;
+      settings.twitchTemplate = template;
+      updateTemplatesDirty();
       saveSettings();
       // Do not overwrite newer editor input after a slow acknowledgement.
       if (state.templateDraft.subtitle.trim() === value) state.subtitleDirty = false;
@@ -767,6 +741,8 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
     const messages: string[] = [];
     if (platformAvailable('twitch') && form.twitchCategoryQuery.trim())
       messages.push(t('categorySelectionRequired', { platform: 'Twitch' }));
+    if (!isTemplateValid(state.templateDraft.twitchTemplate))
+      messages.push(t('templateValidation'));
     if (platformAvailable('twitch'))
       messages.push(...validateTwitch(inlineTitle('twitch', form), form.twitchTags));
     return messages;
@@ -848,7 +824,7 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
     }
     state.allSaving = true;
     try {
-      if (form.subtitle.trim() === settings.lastSubtitle) {
+      if (form.subtitle.trim() === settings.lastSubtitle && !state.templatesDirty) {
         state.subtitleDirty = false;
       } else if (!(await persistSubtitle(form.subtitle))) {
         return;
@@ -1044,7 +1020,6 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
   }
   function resetBusy(): void {
     state.allSaving = false;
-    state.templatesSaving = false;
     state.runningPresetId = null;
     state.loadingPlatforms.clear();
   }
@@ -1083,6 +1058,7 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
   function setTemplate(value: string): void {
     state.templateDraft.twitchTemplate = value;
     updateTemplatesDirty();
+    markDirty();
   }
   function resetTemplates(): void {
     setTemplate(DEFAULT_TWITCH_TEMPLATE);
@@ -1198,7 +1174,6 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
     verifyAction,
     connect,
     saveAll,
-    saveTemplates,
     runPreset,
     setSubtitle,
     setTitle,

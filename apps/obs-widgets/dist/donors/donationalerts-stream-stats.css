@@ -113,7 +113,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 }
 
 /* Blue / warm light · DonationAlerts stream stats / donors.
-   Provider owns data and rotation; the skin slides text inside a stationary panel. */
+   Provider owns data and rotation; text rolls inside a stationary panel. */
 :root {
   --cm-surface: var(--color-surface);
   --cm-raised: var(--color-field);
@@ -121,6 +121,36 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
   --cm-text: var(--color-text);
   --cm-muted: var(--color-muted);
   --cm-accent: var(--color-brand);
+  --cm-roll-duration: 0.52s;
+
+  /* Critically damped response sampled once; no overshoot or JS frame loop. */
+  --cm-roll-ease: linear(
+    0,
+    0.0448,
+    0.1447,
+    0.265,
+    0.3861,
+    0.4978,
+    0.5958,
+    0.6788,
+    0.7475,
+    0.8033,
+    0.848,
+    0.8834,
+    0.9112,
+    0.9328,
+    0.9496,
+    0.9625,
+    0.9724,
+    0.9799,
+    0.9856,
+    0.99,
+    0.9932,
+    0.9957,
+    0.9976,
+    0.999,
+    1
+  );
 }
 html,
 body {
@@ -224,6 +254,12 @@ body {
   position: relative;
   height: 100%;
 }
+.widget-stream-stats .stats-list,
+.widget-stream-stats .stats-slider-wrapper {
+  perspective: 1000px;
+  perspective-origin: 50% 50%;
+  clip-path: inset(0);
+}
 .widget-stream-stats .stats-list > .stats-list-item,
 .widget-stream-stats .stats-slider .stats-list-item {
   position: absolute;
@@ -235,14 +271,23 @@ body {
   overflow: hidden;
   opacity: 1 !important;
   translate: 0 0;
-  transition: translate 0.36s cubic-bezier(0.22, 0.61, 0.36, 1) !important;
+  rotate: x 0deg;
+  scale: 1;
+  transition:
+    translate var(--cm-roll-duration) var(--cm-roll-ease),
+    rotate var(--cm-roll-duration) var(--cm-roll-ease),
+    scale var(--cm-roll-duration) var(--cm-roll-ease) !important;
 }
 .widget-stream-stats .stats-list-item.fade-in-out-enter,
 .widget-stream-stats .stats-list-item.fade-in-out-enter-from {
   translate: 0 100%;
+  rotate: x 16deg;
+  scale: 0.985 0.94;
 }
 .widget-stream-stats .stats-list-item.fade-in-out-leave-to {
   translate: 0 -100%;
+  rotate: x -16deg;
+  scale: 0.985 0.94;
 }
 .widget-stream-stats .stats-list:not(:has(.stats-list-item)),
 .widget-stream-stats .stats-slider:not(:has(.stats-list-item)) {
@@ -251,8 +296,7 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .widget-stream-stats .stats-list > .stats-list-item,
-  .widget-stream-stats .stats-slider .stats-list-item {
-    transition-duration: 0.001s !important;
+  :root {
+    --cm-roll-duration: 0.001s;
   }
 }

@@ -2,23 +2,24 @@
 import { computed } from 'vue';
 import AppButton from '@maseaaao/ui/AppButton.vue';
 import FieldInput from '@maseaaao/ui/FieldInput.vue';
+import TemplateInput from './TemplateInput.vue';
 import ChipTag from './ChipTag.vue';
 import LiveStatusBadge from '@maseaaao/ui/LiveStatusBadge.vue';
 import AppIcon from './AppIcon.vue';
 import CategorySearch from './CategorySearch.vue';
 import TemplatePreview from './TemplatePreview.vue';
 import { t } from '../messages';
+import { isTemplateValid } from '../templates';
 import type { useStreamInfo } from '../composables/useStreamInfo';
 const props = defineProps<{ controller: ReturnType<typeof useStreamInfo> }>();
 const {
   state,
-  settings,
   search,
   busy,
   available,
   title,
-  setTitleMode,
-  setTitle,
+  setSubtitle,
+  setTemplate,
   setCategoryQuery,
   setTagDraft,
   removeTag,
@@ -29,6 +30,7 @@ const {
   resetCategorySearch,
   cardStatus,
 } = props.controller;
+const templateValid = computed(() => isTemplateValid(state.templateDraft.twitchTemplate));
 const disabled = computed(() => !available.value || busy.value);
 const status = computed(() => cardStatus('twitch'));
 const login = computed(() => state.stream?.twitch.login || '');
@@ -60,7 +62,7 @@ function tagKeydown(event: KeyboardEvent): void {
   >
     <header class="card-heading"
       ><div class="account-heading"
-        ><AppIcon name="twitch" /><div
+        ><AppIcon name="twitch" class="account-icon" /><div
           ><h2>Twitch</h2
           ><p>{{ state.stream?.twitch.accountName || t('accountNotConnected') }}</p></div
         ></div
@@ -73,40 +75,41 @@ function tagKeydown(event: KeyboardEvent): void {
     }}</p>
     <fieldset v-if="state.allForm" class="inline-editor" :disabled="disabled">
       <legend class="sr-only">{{ t('editInfo') }} Twitch</legend>
-      <div class="mode-toggle" role="group" aria-label="Режим названия Twitch"
-        ><button
-          type="button"
-          :aria-pressed="state.allForm.twitchTitleMode === 'subtitle'"
+      <div class="title-fields">
+        <FieldInput
+          label="Название"
+          name="title"
+          autocomplete="off"
+          :model-value="state.allForm.subtitle"
           :disabled="disabled"
-          @click="setTitleMode('subtitle')"
-          >{{ t('byTemplate') }}</button
-        ><button
-          type="button"
-          :aria-pressed="state.allForm.twitchTitleMode === 'full'"
+          :placeholder="t('subtitleExample')"
+          @update:model-value="setSubtitle"
+        />
+        <TemplateInput
+          :label="t('twitchTemplate')"
+          name="template"
+          autocomplete="off"
+          :model-value="state.templateDraft.twitchTemplate"
           :disabled="disabled"
-          @click="setTitleMode('full')"
-          >{{ t('fullTitle') }}</button
-        ></div
-      >
-      <div v-if="state.allForm.twitchTitleMode === 'subtitle'" class="title-preview"
-        ><span class="field-note">{{ t('finalTitle') }}</span
-        ><strong
+          :error="templateValid ? undefined : t('templateValidation')"
+          spellcheck="false"
+          @update:model-value="setTemplate"
+        />
+      </div>
+      <div class="title-preview">
+        <span class="field-note">{{ t('finalTitle') }}</span>
+        <strong
           ><TemplatePreview
-            :template="settings.twitchTemplate"
-            :subtitle="state.allForm.subtitle" /></strong
-        ><span class="counter" :class="{ invalid: title.length > 140 }"
+            :template="state.templateDraft.twitchTemplate"
+            :subtitle="state.allForm.subtitle"
+        /></strong>
+        <span class="counter" :class="{ invalid: title.length > 140 }"
           >{{ title.length }} / 140</span
-        ></div
-      >
-      <div v-else
-        ><FieldInput
-          label="Полное название"
-          :model-value="state.allForm.twitchTitle"
-          :disabled="disabled"
-          :error="title.length > 140 ? t('twitchTitleTooLong') : undefined"
-          @update:model-value="setTitle"
-        /><p class="counter">{{ state.allForm.twitchTitle.length }} / 140</p></div
-      >
+        >
+      </div>
+      <p class="template-dirty" role="status">{{
+        state.templatesDirty ? t('templatesUnsaved') : ''
+      }}</p>
       <CategorySearch
         :selected="state.allForm.twitchCategory"
         :query="state.allForm.twitchCategoryQuery"
@@ -199,26 +202,26 @@ function tagKeydown(event: KeyboardEvent): void {
   padding: 0;
   border: 0;
 }
-.mode-toggle {
-  display: flex;
-  padding: 3px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-field);
-  background: var(--color-field);
-}
-.mode-toggle button {
-  flex: 1;
-  min-height: 38px;
-  padding: var(--space-2);
-  border: 0;
-  border-radius: var(--radius-tag);
-  background: transparent;
-  color: var(--color-muted);
-  font-size: 13px;
-}
-.mode-toggle button[aria-pressed='true'] {
+.account-icon {
+  width: 36px;
+  height: 36px;
   color: var(--color-brand);
-  background: var(--color-accent-soft);
+}
+.account-heading > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.title-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: start;
+}
+
+@media (width < 390px) {
+  .title-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 .title-preview {
   display: grid;
@@ -229,6 +232,7 @@ function tagKeydown(event: KeyboardEvent): void {
 .title-preview strong {
   font-size: 14px;
   line-height: 1.6;
+  overflow-wrap: anywhere;
   font-weight: 400;
 }
 .tag-list {

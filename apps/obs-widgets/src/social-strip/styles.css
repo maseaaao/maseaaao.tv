@@ -1,6 +1,11 @@
 @import '@maseaaao/design/fonts-400.css';
 @import '@maseaaao/design/tokens.css';
 
+:root {
+  --social-animation: social-wave;
+  --social-rest-opacity: 0.82;
+}
+
 * {
   box-sizing: border-box;
   font-synthesis: none;
@@ -39,21 +44,21 @@ body {
   width: 28px;
   height: 28px;
   flex: none;
-  opacity: 0.8;
-  transform: scale(1);
-  animation: highlight 15s ease-in-out infinite;
+  opacity: var(--social-rest-opacity);
+  transform: translateY(0) scale(1);
+  animation: var(--social-animation) 30s ease-in-out 1.5s infinite;
 }
 .logo:nth-child(2) {
-  animation-delay: -12s;
+  animation-delay: 1.65s;
 }
 .logo:nth-child(3) {
-  animation-delay: -9s;
+  animation-delay: 1.8s;
 }
 .logo:nth-child(4) {
-  animation-delay: -6s;
+  animation-delay: 1.95s;
 }
 .logo:nth-child(5) {
-  animation-delay: -3s;
+  animation-delay: 2.1s;
 }
 .name {
   font:
@@ -75,25 +80,24 @@ body {
   fill: currentcolor;
 }
 
-/* All icons stay visible; a soft three-second emphasis passes along the row. */
-@keyframes highlight {
+/* A 1.56-second wave passes once per 30 seconds; the shell and handle stay still. */
+@keyframes social-wave {
   0%,
-  20%,
+  3.2%,
   100% {
-    opacity: 0.65;
-    transform: scale(1);
+    opacity: var(--social-rest-opacity);
+    transform: translateY(0) scale(1);
   }
-  8%,
-  12% {
+  1% {
     opacity: 1;
-    transform: scale(1.08);
+    transform: translateY(-2px) scale(1.06);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .logo {
-    animation: none;
-    opacity: 1;
+  :root {
+    --social-animation: none;
+    --social-rest-opacity: 1;
   }
 }
 

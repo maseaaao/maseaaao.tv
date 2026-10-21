@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import { launchBrowser } from '../tooling/artwork/browser.mjs';
 import sharp from 'sharp';
 
-test('social strip remains static, transparent and readable with all five timed logos', async () => {
+test('social strip keeps its shell still and readable during a rare wave of all five logos', async () => {
   const browser = await launchBrowser();
   try {
     const page = await browser.newPage({
@@ -38,12 +38,68 @@ test('social strip remains static, transparent and readable with all five timed 
         ]),
       );
     assert.deepEqual(timing, [
-      ['15s', '0s'],
-      ['15s', '-12s'],
-      ['15s', '-9s'],
-      ['15s', '-6s'],
-      ['15s', '-3s'],
+      ['30s', '1.5s'],
+      ['30s', '1.65s'],
+      ['30s', '1.8s'],
+      ['30s', '1.95s'],
+      ['30s', '2.1s'],
     ]);
+    const wave = await page.evaluate(async () => {
+      const rect = (selector) => document.querySelector(selector).getBoundingClientRect().toJSON();
+      const base = { name: rect('.name'), strip: rect('.strip'), divider: rect('.divider') };
+      const animations = document.getAnimations();
+      animations.forEach((animation) => animation.pause());
+      const samples = [];
+      for (const ms of [0, 1500, 1800, 2000, 2300, 2600, 3100, 4000, 15000, 29000, 31800, 34000]) {
+        animations.forEach((animation) => {
+          animation.currentTime = ms;
+        });
+        await new Promise(requestAnimationFrame);
+        const icons = [...document.querySelectorAll('.logo')].map((node) => {
+          const style = getComputedStyle(node),
+            pose = new DOMMatrixReadOnly(style.transform);
+          return { opacity: Number(style.opacity), scale: pose.a, y: pose.f };
+        });
+        samples.push({
+          ms,
+          name: rect('.name'),
+          strip: rect('.strip'),
+          divider: rect('.divider'),
+          icons,
+        });
+      }
+      return { base, samples };
+    });
+    for (const sample of wave.samples) {
+      assert.deepEqual(
+        { name: sample.name, strip: sample.strip, divider: sample.divider },
+        wave.base,
+      );
+      assert(
+        sample.icons.every(
+          (icon) =>
+            icon.opacity >= 0.819 &&
+            icon.opacity <= 1 &&
+            icon.scale >= 0.999 &&
+            icon.scale <= 1.061 &&
+            icon.y >= -2.01 &&
+            icon.y <= 0.01,
+        ),
+      );
+      if ([0, 4000, 15000, 29000, 34000].includes(sample.ms))
+        assert(
+          sample.icons.every((icon) => Math.abs(icon.y) < 0.01 && Math.abs(icon.scale - 1) < 0.001),
+          'Long quiet intervals are still',
+        );
+    }
+    assert(
+      wave.samples.some((sample) => sample.icons.some((icon) => icon.y < -1.5)),
+      'The wave is visible',
+    );
+    assert(
+      wave.samples.find((sample) => sample.ms === 31800).icons[0].y < -1.5,
+      'The wave repeats after 30 seconds',
+    );
     for (const width of [320, 390, 540, 1000]) {
       await page.setViewportSize({ width, height: 90 });
       assert(await page.locator('.logos').isVisible());
@@ -85,6 +141,22 @@ test('social strip remains static, transparent and readable with all five timed 
               getComputedStyle(element).opacity === '1',
           ),
         ),
+    );
+    await page.addStyleTag({
+      content:
+        ':root{--social-animation:social-wave!important;--social-rest-opacity:.82!important}',
+    });
+    assert(
+      await page
+        .locator('.logo')
+        .evaluateAll((elements) =>
+          elements.every(
+            (element) =>
+              getComputedStyle(element).animationName === 'social-wave' &&
+              getComputedStyle(element).animationDuration === '30s',
+          ),
+        ),
+      'Explicit OBS motion survives the desktop reduced-motion preference',
     );
     assert.deepEqual(network, []);
     if (process.env.WIDGET_SHOTS) {

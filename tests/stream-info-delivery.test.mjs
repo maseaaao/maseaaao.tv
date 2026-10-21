@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { cp, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 import { launchBrowser } from '../tooling/artwork/browser.mjs';
 
 // This is the built delivery, not Vite preview. Demo never reaches a live service.
@@ -65,6 +65,77 @@ test(
           document.documentElement.clientWidth,
         ]);
         assert(extent[0] <= extent[1], `${width}: horizontal overflow ${extent}`);
+        const apply = page.getByRole('button', { name: 'Применить изменения', exact: true });
+        const applyBefore = await apply.boundingBox();
+        assert(applyBefore && applyBefore.y >= 0 && applyBefore.y + applyBefore.height <= 900);
+        await page.locator('.dock-scroll').evaluate((element) => {
+          element.scrollTop = element.scrollHeight;
+        });
+        const applyAfter = await apply.boundingBox();
+        assert.equal(applyAfter.y, applyBefore.y, 'Apply stays fixed while the dock scrolls');
+        assert.equal(
+          await page.getByRole('button', { name: 'Сохранить шаблоны', exact: true }).count(),
+          0,
+        );
+        assert.equal(
+          await page.getByText('%subtitle% — название из соседнего поля', { exact: true }).count(),
+          0,
+        );
+        const template = page.getByLabel('Шаблон Twitch', { exact: true });
+        const inputHeight = await template.evaluate(
+          (element) => element.getBoundingClientRect().height,
+        );
+        const titleHeight = await page
+          .getByLabel('Название', { exact: true })
+          .evaluate((element) => element.getBoundingClientRect().height);
+        assert.equal(
+          inputHeight + 2,
+          titleHeight,
+          'Template has the same outer height as the title',
+        );
+        const originalTemplate = await template.inputValue();
+        await template.fill('Before %subtitle% after');
+        const token = page.locator('.template-input__highlight mark');
+        assert.equal(await token.textContent(), '%subtitle%');
+        assert(
+          await token.evaluate(
+            (element) => getComputedStyle(element).backgroundColor !== 'rgba(0, 0, 0, 0)',
+          ),
+        );
+        await template.fill(
+          '<script>plain text</script> ' + 'Long template '.repeat(25) + '%subtitle%',
+        );
+        assert.equal(
+          await page.locator('.template-input script').count(),
+          0,
+          'Template text is escaped',
+        );
+        await template.evaluate((element) => {
+          element.scrollLeft = element.scrollWidth;
+          element.dispatchEvent(new Event('scroll'));
+        });
+        const scroll = await page
+          .locator('.template-input')
+          .evaluate((element) => [
+            element.querySelector('input').scrollLeft,
+            element.querySelector('.template-input__highlight').scrollLeft,
+          ]);
+        assert(scroll[0] > 0);
+        assert.equal(scroll[0], scroll[1], 'Syntax layer follows input scrolling');
+        await template.fill(originalTemplate);
+        await page.locator('.dock-scroll').evaluate((element) => {
+          element.scrollTop = 0;
+        });
+        if (width === 540)
+          await page.screenshot({
+            path: fileURLToPath(
+              new URL(
+                '../../Streamer.bot/design-preview/stream-info-followup-20261021.png',
+                import.meta.url,
+              ),
+            ),
+            fullPage: true,
+          });
         const settings = page.getByRole('button', { name: 'Настройки', exact: true });
         await settings.focus();
         await page.keyboard.press('Enter');
@@ -81,7 +152,7 @@ test(
         assert(await saveConnection.evaluate((element) => element === document.activeElement));
         await page.keyboard.press('Tab');
         assert(await close.evaluate((element) => element === document.activeElement));
-        await dialog.getByRole('button', { name: 'Сохранить шаблоны' }).scrollIntoViewIfNeeded();
+        assert.equal(await dialog.getByLabel('Шаблон Twitch').count(), 0);
         assert(await dialog.evaluate((element) => element.scrollWidth <= element.clientWidth));
         await page.keyboard.press('Escape');
         await dialog.waitFor({ state: 'detached' });
