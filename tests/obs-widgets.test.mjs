@@ -68,7 +68,8 @@ test('social strip remains static, transparent and readable with all five timed 
       .ensureAlpha()
       .raw()
       .toBuffer({ resolveWithObject: true });
-    assert.equal(data[3], 0);
+    assert(data[3] > 0, 'Attached top edge has square, filled corners');
+    assert.equal(data[(info.height - 1) * info.width * 4 + 3], 0, 'Lower corners stay rounded');
     assert.equal(
       data[(Math.floor(info.height / 2) * info.width + Math.floor(info.width / 2)) * 4 + 3],
       255,

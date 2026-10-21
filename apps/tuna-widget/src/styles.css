@@ -35,7 +35,7 @@ body {
   font-synthesis: none;
 }
 
-/* Flat monolith; opacity is exclusively owned by the event controller. */
+/* The controller owns visibility: fade by default, opaque sliding for a shared slot. */
 #player {
   position: relative;
   display: grid;
@@ -52,6 +52,44 @@ body {
   opacity: 0;
   contain: layout paint style;
   will-change: opacity;
+}
+
+html[data-opaque='1'] #player {
+  opacity: 1;
+  border-radius: var(--radius-surface);
+  transform: translateY(100%);
+  will-change: transform;
+}
+
+#surface {
+  display: none;
+}
+
+/* Soft presence separates the material from its contents. The controller only
+   reveals text over an opaque backing, including when a transition reverses. */
+html[data-reveal='soft'] #player {
+  background: transparent;
+  border-color: transparent;
+  transform: translateY(0);
+  will-change: auto;
+}
+
+html[data-reveal='soft'] #surface {
+  position: absolute;
+  inset: -1px;
+  display: block;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: inherit;
+  opacity: 0;
+  transform: translateY(8px) scale(0.97, 0.9);
+  transform-origin: 50% 70%;
+}
+
+html[data-reveal='soft'] #cover-frame,
+html[data-reveal='soft'] #content {
+  opacity: 0;
+  transform: translateY(6px) scale(0.985);
 }
 
 /* Retain the two nodes for the existing artwork controller, never paint them. */
@@ -109,6 +147,14 @@ body {
   opacity: 1;
 }
 
+html[data-reveal='soft'] .cover-image.is-active {
+  z-index: 1;
+}
+
+html[data-reveal='soft'] .cover-image.is-outgoing {
+  opacity: 1;
+}
+
 #content {
   position: relative;
   display: flex;
@@ -117,7 +163,24 @@ body {
   min-width: 0;
 }
 
-#title {
+.track-text {
+  min-width: 0;
+}
+
+html[data-reveal='soft'] #content {
+  height: var(--cover);
+  overflow: hidden;
+}
+
+html[data-reveal='soft'] .track-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.track-title {
   min-width: 0;
   overflow: hidden;
   color: var(--color-text);
@@ -130,7 +193,7 @@ body {
   text-overflow: ellipsis;
 }
 
-#subtitle {
+.track-subtitle {
   min-width: 0;
   overflow: hidden;
   margin-top: calc(4px * var(--scale));

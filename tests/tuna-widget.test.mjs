@@ -8,6 +8,183 @@ import { pathToFileURL } from 'node:url';
 import { launchBrowser } from '../tooling/artwork/browser.mjs';
 import sharp from 'sharp';
 
+for (const reduced of [false, true])
+  test(`soft track changes keep the backing still and coalesce rapid metadata (reduced: ${reduced})`, async () => {
+    const browser = await launchBrowser();
+    const page = await browser.newPage({
+      viewport: { width: 1000, height: 200 },
+      reducedMotion: reduced ? 'reduce' : 'no-preference',
+    });
+    let track = { title: 'Первый трек', artist: 'Первый исполнитель', playing: true };
+    const errors = [];
+    try {
+      page.on('pageerror', (error) => errors.push(error.message));
+      await page.route('http://localhost:1608/**', (route) =>
+        route.fulfill({
+          contentType: 'application/json',
+          headers: { 'Access-Control-Allow-Origin': '*' },
+          body: JSON.stringify(track),
+        }),
+      );
+      await page.goto(
+        new URL('../apps/tuna-widget/dist/obs-tuna-widget.html', import.meta.url).href +
+          '?opaque=1&reveal=soft&poll=100&anim=420&start=600000&show=600000',
+      );
+      await page.waitForFunction(
+        () => getComputedStyle(document.querySelector('#content')).opacity === '1',
+      );
+      await page.waitForTimeout(450);
+      const frames = page.evaluate(async () => {
+        const result = [],
+          start = performance.now();
+        while (performance.now() - start < 1100) {
+          await new Promise(requestAnimationFrame);
+          const surface = getComputedStyle(document.querySelector('#surface'));
+          const texts = [...document.querySelectorAll('.track-text')].map((node) => ({
+            title: node.querySelector('.track-title').textContent,
+            opacity: Number(getComputedStyle(node).opacity),
+          }));
+          result.push({ opacity: surface.opacity, transform: surface.transform, texts });
+        }
+        return result;
+      });
+      track = { title: 'Второй трек', artist: '', playing: true };
+      await page.waitForFunction(
+        () => document.querySelector('#title').textContent === 'Второй трек',
+      );
+      track = { title: 'Третий трек', artist: 'Третий исполнитель', playing: true };
+      await page.waitForFunction(
+        () => document.querySelector('#title').textContent === 'Третий трек',
+      );
+      track = { title: 'Последний трек', artist: 'Последний исполнитель', playing: true };
+      const samples = await frames;
+      await page.waitForFunction(
+        () => document.querySelector('#title').textContent === 'Последний трек',
+      );
+      await page.waitForFunction(() => document.querySelectorAll('.track-text').length === 1);
+      assert(samples.every((f) => f.opacity === '1' && f.transform === 'matrix(1, 0, 0, 1, 0, 0)'));
+      assert(
+        samples.every(
+          (f) => f.texts.length <= 2 && f.texts.reduce((n, t) => n + t.opacity, 0) > 0.98,
+        ),
+        'No accumulating text layers or empty text frame',
+      );
+      assert.equal(
+        samples.some((f) => f.texts.some((t) => t.opacity > 0 && t.opacity < 1)),
+        !reduced,
+      );
+      assert.equal(
+        await page.locator('[id="title"]').count(),
+        1,
+        'Cloned text has no duplicate IDs',
+      );
+      assert.equal(await page.locator('#subtitle').textContent(), 'Последний исполнитель');
+      track = { title: 'Трек перед паузой', artist: '', playing: true };
+      await page.waitForFunction(
+        () => document.querySelector('#title').textContent === 'Трек перед паузой',
+      );
+      track = { ...track, playing: false };
+      await page.waitForFunction(() => document.querySelector('#player').dataset.play === '0');
+      await page.waitForTimeout(500);
+      assert.equal(await page.locator('.track-text').count(), 1);
+      assert.equal(await page.evaluate(() => document.getAnimations().length), 0);
+      assert.equal(await page.locator('#subtitle').isHidden(), true);
+      assert.deepEqual(errors, []);
+    } finally {
+      await browser.close();
+    }
+  });
+
+test('soft cover changes retain the loaded image, reject stale loads and fall back after bounded failures', async () => {
+  const browser = await launchBrowser();
+  const page = await browser.newPage({ viewport: { width: 1000, height: 200 } });
+  const cover = await sharp({
+    create: { width: 32, height: 32, channels: 3, background: '#1a12d3' },
+  })
+    .png()
+    .toBuffer();
+  let track = { title: 'A', cover_url: '/a.png', playing: true };
+  let releaseB, receivedB;
+  const blockedB = new Promise((resolve) => {
+    releaseB = resolve;
+  });
+  const requestedB = new Promise((resolve) => {
+    receivedB = resolve;
+  });
+  const failures = [];
+  try {
+    await page.route('http://localhost:1608/**', async (route) => {
+      const url = new URL(route.request().url());
+      if (url.pathname === '/')
+        return route.fulfill({
+          contentType: 'application/json',
+          headers: { 'Access-Control-Allow-Origin': '*' },
+          body: JSON.stringify(track),
+        });
+      if (url.pathname === '/b.png') {
+        receivedB();
+        await blockedB;
+      }
+      if (url.pathname === '/missing.png') {
+        failures.push(url.href);
+        return route.fulfill({ status: 404, body: '' });
+      }
+      return route.fulfill({ contentType: 'image/png', body: cover });
+    });
+    await page.goto(
+      new URL('../apps/tuna-widget/dist/obs-tuna-widget.html', import.meta.url).href +
+        '?opaque=1&reveal=soft&poll=100&anim=420&art=0&swap=280&tries=2&retry=100&start=600000&show=600000',
+    );
+    await page.waitForFunction(() =>
+      document.querySelector('.cover-image.is-active')?.src.includes('/a.png'),
+    );
+    await page.waitForTimeout(600);
+    track = { title: 'B', cover_url: '/b.png', playing: true };
+    await requestedB;
+    await page.waitForTimeout(150);
+    assert(
+      (await page.locator('.cover-image.is-active').getAttribute('src')).includes('/a.png'),
+      'A remains visible while B is delayed',
+    );
+    assert.equal(await page.locator('#player').getAttribute('data-cover'), '1');
+    track = { title: 'C', cover_url: '/c.png', playing: true };
+    await page.waitForFunction(() =>
+      document.querySelector('.cover-image.is-active')?.src.includes('/c.png'),
+    );
+    assert(
+      Number(
+        await page.locator('.cover-image.is-active').evaluate((e) => getComputedStyle(e).opacity),
+      ) < 1,
+      'A replacement cover crossfades',
+    );
+    releaseB();
+    await page.waitForTimeout(500);
+    assert(
+      (await page.locator('.cover-image.is-active').getAttribute('src')).includes('/c.png'),
+      'The late B image cannot overwrite C',
+    );
+    track = { title: 'D', cover_url: '/missing.png', playing: true };
+    await page.waitForFunction(() => document.querySelector('#player').dataset.cover === '0');
+    await page.waitForTimeout(700);
+    assert.equal(failures.length, 2, 'The attempt limit and cooldown still apply');
+    assert.notEqual(failures[0], failures[1]);
+    assert.equal(
+      await page.locator('.cover-image.is-active').count(),
+      0,
+      'No stale C artwork on D',
+    );
+    track = { title: 'E', cover_url: '/e.png', playing: true };
+    await page.waitForFunction(() =>
+      document.querySelector('.cover-image.is-active')?.src.includes('/e.png'),
+    );
+    track = { title: 'F', cover_url: '', playing: true };
+    await page.waitForFunction(() => document.querySelector('#player').dataset.cover === '0');
+  } finally {
+    releaseB();
+    await browser.close();
+  }
+});
+
 for (const [query, port] of [
   ['', 1608],
   ['?port=1688&poll=100&img=0.75&ui=1.25&anim=0&swap=0', 1688],
@@ -70,6 +247,117 @@ for (const [query, port] of [
     } finally {
       await browser.close();
       await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+for (const [reduced, forceMotion] of [
+  [false, false],
+  [true, false],
+  [true, true],
+])
+  test(`soft presence protects underlying donor text and handles reversals (reduced: ${reduced}, explicit: ${forceMotion})`, async () => {
+    const browser = await launchBrowser();
+    const page = await browser.newPage({
+      viewport: { width: 1000, height: 200 },
+      reducedMotion: reduced ? 'reduce' : 'no-preference',
+    });
+    let playing = false;
+    let title = 'Первый трек';
+    const animated = !reduced || forceMotion;
+    const sample = async (duration) =>
+      page.evaluate(async (duration) => {
+        const frames = [];
+        const start = performance.now();
+        await new Promise((resolve) => {
+          const tick = () => {
+            const surface = getComputedStyle(document.querySelector('#surface'));
+            const pose = new DOMMatrixReadOnly(surface.transform);
+            frames.push({
+              surface: Number(surface.opacity),
+              content: Number(getComputedStyle(document.querySelector('#content')).opacity),
+              cover: Number(getComputedStyle(document.querySelector('#cover-frame')).opacity),
+              scaleX: pose.a,
+              offset: pose.f,
+              rootBackground: getComputedStyle(document.querySelector('#player')).backgroundColor,
+            });
+            if (performance.now() - start >= duration) resolve();
+            else requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        });
+        return frames;
+      }, duration);
+    try {
+      await page.route('**/*', (route) => {
+        const url = route.request().url();
+        if (url.startsWith('file:')) return route.continue();
+        if (!url.startsWith('http://localhost:1608/')) return route.abort();
+        return route.fulfill({
+          contentType: 'application/json',
+          headers: { 'Access-Control-Allow-Origin': '*' },
+          body: JSON.stringify({ title, artist: 'Исполнитель', playing }),
+        });
+      });
+      await page.goto(
+        pathToFileURL(resolve(import.meta.dirname, '../apps/tuna-widget/dist/obs-tuna-widget.html'))
+          .href +
+          `?opaque=1&reveal=soft&poll=100&anim=420&start=600000&show=250&idle=0${forceMotion ? '&motion=1' : ''}`,
+      );
+      await page.evaluate(() => document.fonts.ready);
+      assert.equal(
+        await page.locator('#surface').evaluate((e) => getComputedStyle(e).opacity),
+        '0',
+      );
+      playing = true;
+      await page.waitForFunction(() => document.querySelector('#player').dataset.play === '1');
+      const entering = await sample(animated ? 500 : 120);
+      assert.equal(entering.at(-1).surface, 1);
+      assert.equal(entering.at(-1).content, 1);
+      assert.equal(entering.at(-1).scaleX, 1);
+      if (animated) {
+        assert(
+          entering.some((f) => f.surface > 0 && f.surface < 1),
+          'Material emerges gradually',
+        );
+        assert(
+          entering.some((f) => f.scaleX < 0.999),
+          'Material settles with a small scale change',
+        );
+      }
+      const visible = await sharp(await page.screenshot({ omitBackground: true }))
+        .ensureAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+      assert.equal(visible.data[(100 * visible.info.width + 4) * 4 + 3], 255);
+      assert.equal(visible.data[(5 * visible.info.width + 5) * 4 + 3], 0);
+      playing = false;
+      await page.waitForFunction(() => document.querySelector('#player').dataset.play === '0');
+      const leaving = await sample(animated ? 175 : 30);
+      playing = true;
+      title = 'Новый трек во время ухода';
+      await page.waitForFunction(
+        () => document.querySelector('#title').textContent === 'Новый трек во время ухода',
+      );
+      const returning = await sample(animated ? 500 : 120);
+      assert.equal(returning.at(-1).surface, 1);
+      assert.equal(returning.at(-1).content, 1);
+      const idling = await sample(700);
+      assert.equal(idling.at(-1).surface, 0, 'Idle returns the widget to transparent space');
+      assert.equal(idling.at(-1).content, 0);
+      for (const f of [...entering, ...leaving, ...returning, ...idling]) {
+        assert.equal(f.rootBackground, 'rgba(0, 0, 0, 0)');
+        assert(f.scaleX >= 0.969 && f.scaleX <= 1.001, 'No spring overshoot or full-card slide');
+        if (f.content > 0.001 || f.cover > 0.001)
+          assert(f.surface >= 0.999, 'Text/art only appear over an opaque backing');
+      }
+      const hidden = await sharp(await page.screenshot({ omitBackground: true }))
+        .ensureAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+      assert.equal(hidden.data[(100 * hidden.info.width + 500) * 4 + 3], 0);
+      assert.equal(await page.evaluate(() => document.getAnimations().length), 0);
+    } finally {
+      await browser.close();
     }
   });
 
@@ -210,3 +498,131 @@ test('Tuna exposes opt-in local debugging without changing the visual overlay', 
     await browser.close();
   }
 });
+
+for (const [reduced, forceMotion] of [
+  [false, false],
+  [true, false],
+  [true, true],
+])
+  test(`opaque shared-slot transitions never fade the panel (reduced: ${reduced}, explicit motion: ${forceMotion})`, async () => {
+    const browser = await launchBrowser();
+    const page = await browser.newPage({
+      viewport: { width: 1000, height: 200 },
+      reducedMotion: reduced ? 'reduce' : 'no-preference',
+    });
+    let playing = false;
+    let title = 'Первый трек';
+    try {
+      await page.route('**/*', (route) => {
+        const url = route.request().url();
+        if (url.startsWith('file:')) return route.continue();
+        if (!url.startsWith('http://localhost:1608/')) return route.abort();
+        return route.fulfill({
+          contentType: 'application/json',
+          headers: { 'Access-Control-Allow-Origin': '*' },
+          body: JSON.stringify({ title, artists: ['Исполнитель'], playing }),
+        });
+      });
+      await page.goto(
+        pathToFileURL(resolve(import.meta.dirname, '../apps/tuna-widget/dist/obs-tuna-widget.html'))
+          .href +
+          `?opaque=1&poll=100&anim=300&start=250&show=250&idle=0${forceMotion ? '&motion=1' : ''}`,
+      );
+      await page.evaluate(() => document.fonts.ready);
+      const hidden = await sharp(await page.screenshot({ omitBackground: true }))
+        .ensureAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+      assert.equal(hidden.data[(100 * hidden.info.width + 500) * 4 + 3], 0);
+      playing = true;
+      const frames = await page.evaluate(async () => {
+        const samples = [];
+        const start = performance.now();
+        await new Promise((done) => {
+          const tick = () => {
+            const s = getComputedStyle(document.querySelector('#player'));
+            samples.push({ opacity: s.opacity, offset: new DOMMatrixReadOnly(s.transform).m42 });
+            if (performance.now() - start > 1150) done();
+            else requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        });
+        return samples;
+      });
+      assert(
+        frames.every((f) => f.opacity === '1'),
+        'Music never blends with donors underneath',
+      );
+      assert(
+        frames.some((f) => Math.abs(f.offset) < 0.01),
+        'Panel fully opens',
+      );
+      assert(Math.abs(frames.at(-1).offset - 200) < 0.01, 'Idle conceals the panel');
+      if (!reduced || forceMotion)
+        assert(
+          frames.some((f) => {
+            return f.offset > 2 && f.offset < 198;
+          }),
+          'Normal motion reveals the panel gradually',
+        );
+      title = 'Второй трек';
+      await page.waitForFunction(
+        () => document.querySelector('#title').textContent === 'Второй трек',
+      );
+      await page.waitForFunction(
+        () =>
+          Math.abs(
+            new DOMMatrixReadOnly(getComputedStyle(document.querySelector('#player')).transform)
+              .m42,
+          ) < 0.01,
+      );
+      const visible = await sharp(await page.screenshot({ omitBackground: true }))
+        .ensureAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true });
+      assert.equal(
+        visible.data[(100 * visible.info.width + 4) * 4 + 3],
+        255,
+        'Visible panel is opaque',
+      );
+      assert.equal(
+        visible.data[(5 * visible.info.width + 5) * 4 + 3],
+        0,
+        'Surface corners remain rounded',
+      );
+      if (!reduced || forceMotion) {
+        await page.waitForFunction(() => {
+          const amount = new DOMMatrixReadOnly(
+            getComputedStyle(document.querySelector('#player')).transform,
+          ).m42;
+          return amount > 20 && amount < 180;
+        });
+        title = 'Трек во время сворачивания';
+        await page.waitForFunction(
+          () => document.querySelector('#title').textContent === 'Трек во время сворачивания',
+        );
+        await page.waitForFunction(
+          () =>
+            Math.abs(
+              new DOMMatrixReadOnly(getComputedStyle(document.querySelector('#player')).transform)
+                .m42,
+            ) < 0.01,
+        );
+        assert.equal(
+          await page.locator('#player').evaluate((e) => getComputedStyle(e).opacity),
+          '1',
+        );
+      }
+      playing = false;
+      await page.waitForFunction(() => document.querySelector('#player').dataset.play === '0');
+      await page.waitForFunction(
+        () =>
+          Math.abs(
+            new DOMMatrixReadOnly(getComputedStyle(document.querySelector('#player')).transform)
+              .m42 - 200,
+          ) < 0.01,
+      );
+    } finally {
+      await browser.close();
+    }
+  });

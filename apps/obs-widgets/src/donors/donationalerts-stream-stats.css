@@ -2,7 +2,7 @@
 @import '@maseaaao/design/tokens.css';
 
 /* Blue / warm light · DonationAlerts stream stats / donors.
-   Provider owns rotation, opacity, layout and event duration. */
+   Provider owns data and rotation; the skin slides text inside a stationary panel. */
 :root {
   --cm-surface: var(--color-surface);
   --cm-raised: var(--color-field);
@@ -32,18 +32,17 @@ body {
   transition-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 .widget-stream-stats .stats-list {
-  width: fit-content !important;
+  width: 100% !important;
   max-width: 100%;
 }
 .widget-stream-stats .stats-list-item {
   position: relative;
   box-sizing: border-box;
-  width: fit-content;
+  width: 100%;
   max-width: 100%;
   padding: 6px 12px;
-  background: var(--color-surface);
-  border: 1px solid var(--cm-line);
-  border-radius: var(--radius-field);
+  background: transparent;
+  border: 0;
 }
 .widget-stream-stats .stats-list-item::before {
   content: none;
@@ -51,10 +50,10 @@ body {
 .widget-stream-stats .stats-item-main-row,
 .widget-stream-stats > .stats-main-row {
   font-family: Unbounded, Arial, sans-serif !important;
-  font-size: clamp(32px, 3.6vw, 36px) !important;
+  font-size: clamp(36px, 4.4vw, 44px) !important;
   font-weight: 400 !important;
   letter-spacing: -0.025em;
-  line-height: 1.15;
+  line-height: 1.1;
   color: var(--cm-text) !important;
   background: none;
   -webkit-text-fill-color: currentcolor;
@@ -65,7 +64,7 @@ body {
 }
 .widget-stream-stats .stats-item-additional-row {
   font-family: Arial, sans-serif !important;
-  font-size: clamp(24px, 2.6vw, 26px) !important;
+  font-size: clamp(26px, 3.2vw, 32px) !important;
   font-weight: 400 !important;
   line-height: 1.2;
   margin-top: 4px;
@@ -94,21 +93,55 @@ body {
   text-overflow: ellipsis;
 }
 
-/* DonationAlerts Vue transition-group: fade out before the next name fades in.
-   Keep leaving cards outside normal flow; do not override the provider's move transform. */
-.widget-stream-stats .stats-list {
+/* Both provider modes keep the shell outside the Vue entry/exit lifecycle.
+   114 px reserves two larger lines inside the existing 134 px OBS source. Auto margin
+   keeps its lower edge stable even when every donor has a different text length. */
+.widget-stream-stats .stats-list,
+.widget-stream-stats .stats-slider {
   position: relative;
-  overflow: visible;
+  box-sizing: border-box;
+  width: 100%;
+  height: 114px;
+  flex-shrink: 0;
+  margin-top: auto;
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid var(--cm-line);
+  border-radius: var(--radius-surface);
+}
+.widget-stream-stats .stats-slider-wrapper {
+  position: relative;
+  height: 100%;
+}
+.widget-stream-stats .stats-list > .stats-list-item,
+.widget-stream-stats .stats-slider .stats-list-item {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  opacity: 1 !important;
+  translate: 0 0;
+  transition: translate 0.36s cubic-bezier(0.22, 0.61, 0.36, 1) !important;
+}
+.widget-stream-stats .stats-list-item.fade-in-out-enter,
+.widget-stream-stats .stats-list-item.fade-in-out-enter-from {
+  translate: 0 100%;
+}
+.widget-stream-stats .stats-list-item.fade-in-out-leave-to {
+  translate: 0 -100%;
+}
+.widget-stream-stats .stats-list:not(:has(.stats-list-item)),
+.widget-stream-stats .stats-slider:not(:has(.stats-list-item)) {
+  background: transparent;
+  border-color: transparent;
 }
 
-.widget-stream-stats .stats-list-item.fade-in-out-leave,
-.widget-stream-stats .stats-list-item.fade-in-out-leave-active,
-.widget-stream-stats .stats-list-item.fade-in-out-leave-to {
-  position: absolute;
-}
-.widget-stream-stats .stats-list-item.fade-in-out-leave-active {
-  transition: opacity 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-.widget-stream-stats .stats-list-item.fade-in-out-enter-active {
-  transition: opacity 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) 0.35s;
+@media (prefers-reduced-motion: reduce) {
+  .widget-stream-stats .stats-list > .stats-list-item,
+  .widget-stream-stats .stats-slider .stats-list-item {
+    transition-duration: 0.001s !important;
+  }
 }

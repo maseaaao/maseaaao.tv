@@ -8,6 +8,7 @@ withDefaults(defineProps<{ title?: string; artist?: string; playing?: boolean }>
 
 <template>
   <main id="player" :data-play="playing ? '1' : '0'" data-cover="0" aria-label="Музыкальный виджет">
+    <div id="surface" aria-hidden="true"></div>
     <img class="artwork-glow" alt="" aria-hidden="true" />
     <img class="artwork-glow" alt="" aria-hidden="true" />
     <div id="cover-frame" aria-hidden="true">
@@ -38,8 +39,10 @@ withDefaults(defineProps<{ title?: string; artist?: string; playing?: boolean }>
     </div>
 
     <section id="content">
-      <div id="title">{{ title }}</div>
-      <div id="subtitle" :hidden="!artist">{{ artist }}</div>
+      <div id="track-text" class="track-text">
+        <div id="title" class="track-title">{{ title }}</div>
+        <div id="subtitle" class="track-subtitle" :hidden="!artist">{{ artist }}</div>
+      </div>
     </section>
   </main>
 </template>

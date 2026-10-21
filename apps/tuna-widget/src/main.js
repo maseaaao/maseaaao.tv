@@ -32,6 +32,9 @@
    * show     full-opacity duration on track change, ms
    * anim     fade duration, ms
    * idle     opacity after show, 0 = fully hidden
+   * opaque   1 = opaque reveal/conceal for overlapping OBS widgets
+   * reveal   soft = layered material/content appearance (requires opaque=1)
+   * motion   1 = explicitly enable OBS overlay motion despite the desktop preference
    * art      delay before loading a new cover, ms
    * swap     cover crossfade duration, ms
    * retry    delay between cover retries, ms
@@ -50,6 +53,8 @@
     anim: num('anim', 1_000, 0, 60_000),
 
     idle: num('idle', 0, 0, 1),
+    opaque: query.get('opaque') === '1',
+    softReveal: query.get('opaque') === '1' && query.get('reveal') === 'soft',
 
     art: num('art', 700, 0, 10_000),
     swap: num('swap', 420, 0, 5_000),
@@ -70,6 +75,10 @@
   const el = {
     root: document.documentElement,
     player: document.querySelector('#player'),
+    surface: document.querySelector('#surface'),
+    coverFrame: document.querySelector('#cover-frame'),
+    content: document.querySelector('#content'),
+    trackText: document.querySelector('#track-text'),
     glows: [...document.querySelectorAll('.artwork-glow')],
     covers: [document.querySelector('#cover-a'), document.querySelector('#cover-b')],
     title: document.querySelector('#title'),
@@ -84,6 +93,8 @@
 
     idleTimer: 0,
     fadeAnimation: null,
+    presenceAnimations: [],
+    textSwap: null,
     errorCount: 0,
 
     artworkToken: 0,
@@ -96,14 +107,17 @@
     artworkStatus: 'idle',
     artworkRetryAt: 0,
     artworkSlot: -1,
+    artworkSwapUntil: 0,
     artworkObjectUrls: ['', ''],
   };
 
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  if (query.get('motion') !== '1' && matchMedia('(prefers-reduced-motion: reduce)').matches) {
     cfg.anim = 0;
     cfg.swap = 0;
   }
   el.root.style.setProperty('--art-swap', `${cfg.swap}ms`);
+  if (cfg.opaque) el.root.dataset.opaque = '1';
+  if (cfg.softReveal) el.root.dataset.reveal = 'soft';
 
   const sleep = (duration) =>
     new Promise((resolve) => {
@@ -119,13 +133,143 @@
     state.idleTimer = 0;
   };
 
+  // Sample a critically damped response once into native transform keyframes.
+  // No per-frame JS, overshoot, layout animation, backdrop filter or blur.
+  const springTransforms = (from, to) => {
+    const a = new DOMMatrixReadOnly(from);
+    const b = new DOMMatrixReadOnly(to);
+    const fields = ['a', 'b', 'c', 'd', 'e', 'f'];
+    const end = 1 - 9 * Math.exp(-8);
+    return Array.from({ length: 33 }, (_, index) => {
+      const t = index / 32;
+      const progress = (1 - (1 + 8 * t) * Math.exp(-8 * t)) / end;
+      const values = fields.map((key) => a[key] + (b[key] - a[key]) * progress);
+      return { offset: t, transform: `matrix(${values.join(',')})` };
+    });
+  };
+
+  const presenceProperty = (node, property, from, to, duration, delay = 0) => {
+    node.style[property] = to;
+    const resolved = getComputedStyle(node)[property];
+    if (duration === 0 || from === resolved) return;
+    const transforms = property === 'transform';
+    const frames = transforms
+      ? springTransforms(from, resolved)
+      : [{ opacity: from }, { opacity: resolved }];
+    const animation = node.animate(frames, {
+      duration,
+      delay,
+      easing: transforms ? 'linear' : 'ease-out',
+      fill: 'both',
+    });
+    state.presenceAnimations.push(animation);
+    void animation.finished
+      .then(() => {
+        if (!state.presenceAnimations.includes(animation)) return;
+        animation.cancel();
+        state.presenceAnimations = state.presenceAnimations.filter((item) => item !== animation);
+      })
+      .catch(() => {});
+  };
+
+  const softPresence = (target, duration) => {
+    const layers = [el.player, el.surface, el.coverFrame, el.content];
+    // Capture the presented pose before cancelling, so a new track or pause can
+    // reverse an unfinished transition without snapping back to an endpoint.
+    const current = layers.map((node) => {
+      const style = getComputedStyle(node);
+      return { opacity: style.opacity, transform: style.transform };
+    });
+    for (const animation of state.presenceAnimations) animation.cancel();
+    state.presenceAnimations = [];
+    const visible = target > 0;
+    const backdropDelay = visible ? 0 : duration * 0.24;
+    const backdropDuration = visible ? duration : duration * 0.76;
+    const contentDelay = visible && Number(current[1].opacity) < 0.999 ? duration * 0.24 : 0;
+    presenceProperty(
+      el.player,
+      'transform',
+      current[0].transform,
+      `translateY(${visible ? (1 - target) * 100 : 0}%)`,
+      duration,
+    );
+    presenceProperty(
+      el.surface,
+      'transform',
+      current[1].transform,
+      visible ? 'translateY(0) scale(1)' : 'translateY(8px) scale(0.97, 0.9)',
+      backdropDuration,
+      backdropDelay,
+    );
+    presenceProperty(
+      el.surface,
+      'opacity',
+      current[1].opacity,
+      visible ? '1' : '0',
+      visible ? duration * 0.2 : backdropDuration,
+      backdropDelay,
+    );
+    for (const [index, node] of layers.entries()) {
+      if (index < 2) continue;
+      presenceProperty(
+        node,
+        'transform',
+        current[index].transform,
+        visible ? 'translateY(0) scale(1)' : 'translateY(6px) scale(0.985)',
+        visible ? duration - contentDelay : duration * 0.24,
+        contentDelay,
+      );
+      presenceProperty(
+        node,
+        'opacity',
+        current[index].opacity,
+        visible ? '1' : '0',
+        duration * (visible ? 0.28 : 0.2),
+        contentDelay,
+      );
+    }
+  };
+
   const fade = (opacity, duration = cfg.anim) => {
     const target = Math.min(1, Math.max(0, opacity));
-    const current = Number.parseFloat(getComputedStyle(el.player).opacity);
+    if (cfg.softReveal) {
+      softPresence(target, duration);
+      return;
+    }
+    const style = getComputedStyle(el.player);
+    const current = Number.parseFloat(style.opacity);
+    const currentTransform = style.transform;
 
     if (state.fadeAnimation) {
       state.fadeAnimation.cancel();
       state.fadeAnimation = null;
+    }
+
+    // The optional shared-slot mode never blends music text with the widget
+    // underneath. Its idle value controls the revealed fraction instead.
+    if (cfg.opaque) {
+      const transform = `translateY(${(1 - target) * 100}%)`;
+      el.player.style.opacity = '1';
+      el.player.style.transform = transform;
+      const targetTransform = getComputedStyle(el.player).transform;
+      if (duration === 0 || currentTransform === targetTransform) return;
+      const animation = el.player.animate(
+        [{ transform: currentTransform }, { transform: targetTransform }],
+        {
+          duration,
+          easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+          fill: 'both',
+        },
+      );
+      state.fadeAnimation = animation;
+      void animation.finished
+        .then(() => {
+          if (state.fadeAnimation !== animation) return;
+          animation.cancel();
+          state.fadeAnimation = null;
+        })
+        .catch(() => {});
+      return;
     }
 
     el.player.style.opacity = String(target);
@@ -190,6 +334,7 @@
     }
 
     setPlaying(false);
+    state.textSwap?.finish();
     hide();
   };
 
@@ -284,24 +429,64 @@
 
   const renderText = (track) => {
     const title = track.title || 'Без названия';
-    const meta = [];
-
-    if (track.artist) {
-      meta.push(track.artist);
+    const subtitle = track.artist || track.album || '';
+    if (state.textSwap) {
+      // Coalesce rapid changes to the latest metadata. At most two text layers
+      // exist, and a running transition finishes without a positional jump.
+      state.textSwap.latest = track;
+      return;
     }
+    if (el.title.textContent === title && el.subtitle.textContent === subtitle) return;
 
-    if (
-      track.album &&
-      track.album.localeCompare(track.artist, undefined, {
-        sensitivity: 'accent',
-      }) !== 0
-    ) {
-      meta.push(track.album);
-    }
+    const animate =
+      cfg.softReveal &&
+      cfg.anim > 0 &&
+      state.playing &&
+      Number(getComputedStyle(el.content).opacity) > 0.999;
+    const outgoing = animate ? el.trackText.cloneNode(true) : null;
 
     setText(el.title, title);
-    setText(el.subtitle, track.artist || track.album);
+    setText(el.subtitle, subtitle);
     el.subtitle.hidden = !el.subtitle.textContent;
+    if (!outgoing) return;
+
+    outgoing.removeAttribute('id');
+    outgoing.querySelectorAll('[id]').forEach((node) => node.removeAttribute('id'));
+    outgoing.setAttribute('aria-hidden', 'true');
+    el.content.prepend(outgoing);
+    const duration = Math.min(cfg.anim, 280);
+    const shift = Math.min(12, el.coverFrame.clientHeight * 0.07);
+    const options = { duration, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'both' };
+    const animations = [
+      outgoing.animate(
+        [
+          { opacity: 1, transform: 'translateY(0)' },
+          { opacity: 0, transform: `translateY(${-shift}px)` },
+        ],
+        options,
+      ),
+      el.trackText.animate(
+        [
+          { opacity: 0, transform: `translateY(${shift}px)` },
+          { opacity: 1, transform: 'translateY(0)' },
+        ],
+        options,
+      ),
+    ];
+    const swap = {
+      latest: track,
+      finish: () => {
+        if (state.textSwap !== swap) return;
+        animations.forEach((animation) => animation.cancel());
+        outgoing.remove();
+        state.textSwap = null;
+        renderText(swap.latest);
+      },
+    };
+    state.textSwap = swap;
+    void Promise.all(animations.map((animation) => animation.finished))
+      .then(swap.finish)
+      .catch(() => {});
   };
 
   const releaseSlotLater = (slot) => {
@@ -313,6 +498,7 @@
       }
 
       cover.removeAttribute('src');
+      cover.classList.remove('is-outgoing');
       el.glows[slot].removeAttribute('src');
 
       const objectUrl = state.artworkObjectUrls[slot];
@@ -327,11 +513,13 @@
   const deactivateArtwork = () => {
     for (let slot = 0; slot < el.covers.length; slot += 1) {
       el.covers[slot].classList.remove('is-active');
+      el.covers[slot].classList.remove('is-outgoing');
       el.glows[slot].classList.remove('is-active');
       releaseSlotLater(slot);
     }
 
     state.artworkSlot = -1;
+    state.artworkSwapUntil = 0;
     el.player.dataset.cover = '0';
   };
 
@@ -417,7 +605,12 @@
     }
   };
 
-  const applyArtwork = (resource, rawSource, token) => {
+  const applyArtwork = async (resource, rawSource, token) => {
+    // Let the current two-image composite settle before reusing its backing
+    // slot. A newer token supersedes any replacement waiting here.
+    if (cfg.softReveal && performance.now() < state.artworkSwapUntil) {
+      await sleep(state.artworkSwapUntil - performance.now());
+    }
     if (token !== state.artworkToken) {
       releaseResource(resource);
       return;
@@ -430,6 +623,13 @@
     const oldObjectUrl = state.artworkObjectUrls[nextSlot];
 
     nextCover.classList.remove('is-active');
+    if (cfg.softReveal) {
+      nextCover.style.transition = 'none';
+      nextCover.classList.remove('is-outgoing');
+      // Commit the empty slot before starting its next opacity transition.
+      void nextCover.offsetWidth;
+      nextCover.style.transition = '';
+    }
 
     if (oldObjectUrl && oldObjectUrl !== resource.objectUrl) {
       URL.revokeObjectURL(oldObjectUrl);
@@ -446,12 +646,14 @@
     el.glows[nextSlot].classList.add('is-active');
 
     if (previousSlot !== -1) {
+      if (cfg.softReveal) el.covers[previousSlot].classList.add('is-outgoing');
       el.covers[previousSlot].classList.remove('is-active');
       el.glows[previousSlot].classList.remove('is-active');
       releaseSlotLater(previousSlot);
     }
 
     state.artworkSlot = nextSlot;
+    state.artworkSwapUntil = performance.now() + cfg.swap;
     state.lastAppliedArtworkSource = rawSource;
     state.artworkStatus = 'ready';
   };
@@ -486,7 +688,8 @@
           return;
         }
 
-        applyArtwork(resource, src, token);
+        await applyArtwork(resource, src, token);
+        if (token !== state.artworkToken) return;
         applied = true;
 
         /*
@@ -512,6 +715,7 @@
 
     state.artworkStatus = 'failed';
     state.artworkRetryAt = performance.now() + Math.max(5_000, cfg.retry * 3);
+    if (cfg.softReveal) deactivateArtwork();
   };
 
   const updateArtwork = (src, key, changed) => {
@@ -528,7 +732,9 @@
 
       const token = ++state.artworkToken;
 
-      deactivateArtwork();
+      // Keep the presented cover until its replacement has loaded. Missing or
+      // exhausted artwork falls back normally instead of retaining a wrong one.
+      if (!cfg.softReveal || !src) deactivateArtwork();
 
       if (!src) {
         state.artworkStatus = 'empty';
