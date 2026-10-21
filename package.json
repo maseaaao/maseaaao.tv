@@ -24,7 +24,7 @@
     "full": "npm run render:logo && npm run build:fonts && npm run render:scenes && npm run render:cyber-site && npm run build:all",
     "render:cyber-site": "node tooling/artwork/cyber-site-render.mjs",
     "render:wallpapers": "node tooling/artwork/cyber-site-render.mjs wallpapers",
-    "build:fonts": "python3 tooling/artwork/build-web-fonts.py",
+    "build:fonts": "python tooling/artwork/build-web-fonts.py",
     "prepare:companion-libs": "powershell -NoProfile -ExecutionPolicy Bypass -File tooling/prepare-companion-libs.ps1",
     "test:local": "node tooling/local/test-action-targets.mjs && python tooling/local/test-companion-storage.py",
     "build:widgets": "npm run build --workspace apps/obs-widgets",

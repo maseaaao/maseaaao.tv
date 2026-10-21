@@ -9,7 +9,8 @@ permissions:
   contents: read
 jobs:
   verify:
-    runs-on: ubuntu-24.04
+    # Committed raster exports use the Windows renderer; keep exact hash checks.
+    runs-on: windows-2025
     steps:
       - uses: actions/checkout@v4
         with:
@@ -21,9 +22,12 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - run: npm ci
       - run: npm run browser:install
-      - run: python3 -m pip install -r tooling/artwork/requirements-fonts.txt
+      - run: python -m pip install -r tooling/artwork/requirements-fonts.txt
       - run: npm run verify:ui-renewal
       - uses: actions/upload-artifact@v4
         if: always()

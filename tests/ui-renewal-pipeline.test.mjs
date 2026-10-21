@@ -34,6 +34,16 @@ test('acceptance builds artwork before standalone products, then verifies genera
     'git diff --check',
   ]);
 });
+test('CI uses a pinned Windows renderer for the byte-exact artifact baseline', () => {
+  const workflow = readFileSync(resolve(root, '.github/workflows/verify.yml'), 'utf8');
+  const verificationJob = workflow.split('  companion-build:')[0];
+  assert.match(verificationJob, /runs-on: windows-2025/);
+  assert.match(verificationJob, /uses: actions\/setup-python@v5/);
+  assert.match(verificationJob, /python-version: '3\.12'/);
+  assert.match(verificationJob, /run: python -m pip install/);
+  assert.equal(pkg.scripts['build:fonts'], 'python tooling/artwork/build-web-fonts.py');
+});
+
 test('CI uses the same acceptance script before artifact upload', () => {
   const workflow = readFileSync(resolve(root, '.github/workflows/verify.yml'), 'utf8');
   assert.match(workflow, /run: npm run verify:ui-renewal/);
