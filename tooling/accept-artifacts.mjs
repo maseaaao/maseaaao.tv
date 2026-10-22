@@ -14,9 +14,15 @@ import { execFileSync } from 'node:child_process';
 // The whole set is resolved before anything is written: a partial baseline must
 // not leave the tree half updated.
 const root = fileURLToPath(new URL('../', import.meta.url));
-const source = resolve(process.argv[2] ?? '');
-if (!existsSync(source)) {
+const argument = process.argv[2];
+if (!argument) {
   throw new Error('Usage: node tooling/accept-artifacts.mjs <extracted artifact directory>');
+}
+const source = resolve(argument);
+if (!existsSync(source)) {
+  throw new Error(
+    `Artifact directory does not exist: ${source}. Usage: node tooling/accept-artifacts.mjs <extracted artifact directory>`,
+  );
 }
 
 const targets = [

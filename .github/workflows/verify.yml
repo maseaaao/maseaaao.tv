@@ -53,6 +53,9 @@ jobs:
       # Browser contracts rebuild shared outputs: keep test groups serialized.
       - run: pnpm run verify:products
       - run: pnpm run check:repository
+      # The product outputs are compared byte for byte against the committed
+      # baseline here; the raster job covers the website and artwork renders.
+      - run: pnpm run check:artifacts
       - run: pnpm run test:ui
       - run: pnpm run test:ui-probe
       - run: pnpm run test:static

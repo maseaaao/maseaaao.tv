@@ -15,6 +15,12 @@
 *.py text eol=lf
 *.cs text eol=lf
 *.ps1 text eol=crlf
+# Files copied verbatim into the published dist/ must keep LF on every
+# operating system, otherwise the byte-for-byte artifact comparison differs
+# between a Windows and a Linux checkout.
+apps/website/public/_headers text eol=lf
+apps/website/public/sitemap.xml text eol=lf
+apps/website/public/.well-known/api-catalog text eol=lf
 *.png binary
 *.jpg binary
 *.jpeg binary

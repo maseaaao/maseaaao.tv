@@ -92,6 +92,27 @@ test('the published baseline covers every tracked artifact', () => {
     );
   }
 });
+test('the product outputs are compared byte for byte in the products job', () => {
+  // The raster job only builds the website and artwork renders. The standalone
+  // product outputs are verified here, so every tracked artifact is compared
+  // against the committed baseline in some job.
+  assert(commands('products').includes('pnpm run check:artifacts'));
+  assert(commands('raster').includes('pnpm run check:artifacts'));
+});
+
+test('the published text assets keep LF on every operating system', () => {
+  // The published files are copied verbatim into dist/. Without a fixed EOL a
+  // Windows checkout produces CRLF and the byte comparison fails there.
+  const attributes = read('.gitattributes');
+  for (const path of [
+    'apps/website/public/_headers',
+    'apps/website/public/sitemap.xml',
+    'apps/website/public/.well-known/api-catalog',
+  ]) {
+    assert.match(attributes, new RegExp(`${path.replace(/[/.]/g, '\\$&')} text eol=lf`));
+  }
+});
+
 test('CI runs on Linux except the Windows-only Companion job', () => {
   for (const job of ['plan', 'source', 'products', 'raster', 'verify'])
     assert.equal(workflow.jobs[job]['runs-on'], 'ubuntu-latest', job);
