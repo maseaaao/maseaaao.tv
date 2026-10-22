@@ -7,7 +7,7 @@ public class CPHInline
     public bool Execute()
     {
         const string command = "__COMMAND__";
-        const string script = @"__SCRIPT__";
+        string script = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "maseaaao.tv", "integrations", "streamerbot", "yandex-music", "control.ps1"));
         try
         {
             if (!File.Exists(script))
