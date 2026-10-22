@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -103,6 +103,86 @@ test('an identical artifact set reports no change', () => {
     });
     assert.equal(result.status, 0, result.stderr);
     assert.match(result.stdout, /0 updated/);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('a file the build no longer produces is removed from the tree', () => {
+  const directory = fixture();
+  try {
+    const git = (...args) => {
+      const result = spawnSync('git', args, { cwd: directory, encoding: 'utf8' });
+      assert.equal(result.status, 0, result.stderr);
+    };
+    writeFileSync(join(directory, 'dist', 'old-bundle.js'), 'obsolete');
+    git('add', 'dist');
+    git(
+      '-c',
+      'user.name=Fixture',
+      '-c',
+      'user.email=fixture@example.invalid',
+      'commit',
+      '--quiet',
+      '-m',
+      'obsolete bundle',
+    );
+    const incoming = join(directory, 'incoming');
+    mkdirSync(join(incoming, 'dist'), { recursive: true });
+    mkdirSync(join(incoming, '.build-cache', 'verify'), { recursive: true });
+    writeFileSync(join(incoming, 'dist', 'index.html'), 'committed');
+    // The canonical runner reports the file as no longer produced.
+    writeFileSync(
+      join(incoming, '.build-cache', 'verify', 'artifacts.sha256'),
+      '# MISSING  dist/old-bundle.js\n',
+    );
+    const result = spawnSync(process.execPath, [runner(directory), incoming], {
+      cwd: directory,
+      encoding: 'utf8',
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /removed dist\/old-bundle\.js/);
+    assert.equal(existsSync(join(directory, 'dist', 'old-bundle.js')), false);
+    assert.equal(readFileSync(join(directory, 'dist', 'index.html'), 'utf8'), 'committed');
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('a file missing from the bundle is refused even when the build kept it', () => {
+  const directory = fixture();
+  try {
+    const git = (...args) => {
+      const result = spawnSync('git', args, { cwd: directory, encoding: 'utf8' });
+      assert.equal(result.status, 0, result.stderr);
+    };
+    // A second tracked file that the build still produces.
+    writeFileSync(join(directory, 'dist', 'kept.html'), 'kept');
+    git('add', 'dist');
+    git(
+      '-c',
+      'user.name=Fixture',
+      '-c',
+      'user.email=fixture@example.invalid',
+      'commit',
+      '--quiet',
+      '-m',
+      'kept file',
+    );
+    const incoming = join(directory, 'incoming');
+    mkdirSync(join(incoming, 'dist'), { recursive: true });
+    mkdirSync(join(incoming, '.build-cache', 'verify'), { recursive: true });
+    writeFileSync(join(incoming, 'dist', 'index.html'), 'committed');
+    // The build still produces the file, so the manifest does not mark it
+    // missing: the bundle simply failed to carry it.
+    writeFileSync(join(incoming, '.build-cache', 'verify', 'artifacts.sha256'), '');
+    const result = spawnSync(process.execPath, [runner(directory), incoming], {
+      cwd: directory,
+      encoding: 'utf8',
+    });
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /missing/i);
+    assert.equal(readFileSync(join(directory, 'dist', 'index.html'), 'utf8'), 'committed');
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

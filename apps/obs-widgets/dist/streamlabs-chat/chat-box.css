@@ -108,9 +108,11 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
   --color-text: #20201e;
   --color-muted: #60605a;
   --color-border: #d2d1c9;
+
   /* Purpose, not platform imitation: immediate response, quiet settling. */
   --motion-ease-enter: cubic-bezier(0.22, 1, 0.36, 1);
 }
+
 /* Streamlabs owns message delivery, deletion and the configured hide delay.
    Keep {font_size} / {message_hide_delay} substitution in Streamlabs.
    The canvas is transparent; messages carry their own readable surfaces. */

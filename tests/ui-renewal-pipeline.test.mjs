@@ -58,8 +58,10 @@ test('the raster job publishes the re-rendered baseline for review', () => {
   assert(upload.with.name === 'website-and-artwork-preview');
   assert.match(upload.with.path, /artwork\/scenes\/rendered/);
   assert.equal(pkg.scripts['accept:artifacts'], 'node tooling/accept-artifacts.mjs');
-  // The acceptance tool must not weaken the exact comparison.
-  assert.doesNotMatch(read('tooling/accept-artifacts.mjs'), /unlink|rmSync|rm -rf/);
+  // The acceptance tool may remove a file the build no longer produces, but
+  // only when the canonical runner reports it as missing. The behaviour is
+  // covered by tests/accept-artifacts.test.mjs.
+  assert.doesNotMatch(read('tooling/accept-artifacts.mjs'), /rm -rf|execFileSync\('rm'/);
 });
 
 test('the published baseline covers every tracked artifact', () => {

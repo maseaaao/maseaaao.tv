@@ -109,8 +109,10 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
   --color-muted: #60605a;
   --color-border: #d2d1c9;
   --radius-field: 0.75rem;
+
   /* Purpose, not platform imitation: immediate response, quiet settling. */
 }
+
 /* Warm-light theme · DonationAlerts · no event/animation overrides.
    Remote-safe embedded fonts; provider owns visibility and alert duration. */
 :root {

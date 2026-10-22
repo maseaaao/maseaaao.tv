@@ -92,6 +92,9 @@ jobs:
         with:
           name: website-and-artwork-preview
           if-no-files-found: warn
+          # Hidden directories such as dist/.well-known are part of the
+          # published site and must be part of the reviewed baseline.
+          include-hidden-files: true
           path: |
             dist/**
             apps/stream-info/dist/**

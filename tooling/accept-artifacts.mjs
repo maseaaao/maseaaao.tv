@@ -1,4 +1,12 @@
-import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+} from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
@@ -13,6 +21,11 @@ import { execFileSync } from 'node:child_process';
 //
 // The whole set is resolved before anything is written: a partial baseline must
 // not leave the tree half updated.
+//
+// The CI manifest distinguishes two kinds of absence. A file the build no
+// longer produces is listed as "# MISSING" and must be deleted from the tree.
+// A file the artifact bundle failed to carry is a packaging gap and must stop
+// the acceptance: silently dropping it would weaken the byte comparison.
 const root = fileURLToPath(new URL('../', import.meta.url));
 const argument = process.argv[2];
 if (!argument) {
@@ -60,9 +73,20 @@ function resolveSource(relativePath) {
   return byName.get(relativePath.split('/').pop()) ?? null;
 }
 
+// The manifest of the canonical runner tells which files the build dropped.
+const manifestPath = join(source, '.build-cache/verify/artifacts.sha256');
+const dropped = new Set();
+if (existsSync(manifestPath)) {
+  for (const line of readFileSync(manifestPath, 'utf8').split('\n')) {
+    if (!line.startsWith('# MISSING')) continue;
+    dropped.add(line.replace('# MISSING', '').trim());
+  }
+}
+
 const plan = [];
 const missing = [];
 for (const file of tracked) {
+  if (dropped.has(file)) continue;
   const from = resolveSource(file);
   if (!from) {
     missing.push(file);
@@ -85,5 +109,12 @@ for (const { file, from, target } of plan) {
   copied++;
   console.log(`updated ${file}`);
 }
-console.log(`Accepted raster baseline: ${copied} updated.`);
+for (const file of dropped) {
+  const target = resolve(root, file);
+  if (existsSync(target)) {
+    rmSync(target, { force: true });
+    console.log(`removed ${file} (the build no longer produces it)`);
+  }
+}
+console.log(`Accepted raster baseline: ${copied} updated, ${dropped.size} removed.`);
 console.log('Review the diff and commit it; the canonical runner must match this OS.');
