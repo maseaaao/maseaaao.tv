@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { h } from 'vue';
 import StreamInfo from 'change-info-streamer-bot/App.vue';
 import styles from 'change-info-streamer-bot/ui.css?inline';
@@ -18,7 +18,7 @@ type Story = StoryObj<typeof StreamInfo>;
 export const Dock: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const input = await canvas.findByLabelText('Тема стрима');
+    const input = await canvas.findByLabelText('Название');
     await userEvent.clear(input);
     await userEvent.type(input, 'Проверка полного экрана');
     await expect(canvas.getByText('Есть несохранённые изменения')).toBeVisible();
@@ -30,7 +30,14 @@ export const Settings: Story = {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Настройки' }));
     const dialog = within(canvas.getByRole('dialog'));
-    await expect(dialog.getByLabelText('Шаблон Twitch')).toBeVisible();
+    // The dialog fades in over --motion-enter; wait for the transition to end
+    // before asserting visibility, otherwise the check races the animation.
+    const host = dialog.getByLabelText('Хост');
+    await waitFor(async () => {
+      await expect(host).toBeVisible();
+    });
     await expect(dialog.getByRole('button', { name: 'Сохранить подключение' })).toBeVisible();
+    // The Twitch template moved to the dock; the connection dialog must not repeat it.
+    await expect(dialog.queryByLabelText('Шаблон Twitch')).toBeNull();
   },
 };

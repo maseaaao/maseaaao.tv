@@ -4,17 +4,19 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@maseaaao/design": "1.0.0"
+    "@maseaaao/design": "workspace:*"
   },
   "devDependencies": {
-    "@maseaaao/build-config": "1.0.0",
+    "@maseaaao/build-config": "workspace:*",
     "vue": "3.5.44",
     "typescript": "5.8.3",
     "vue-tsc": "3.0.8",
-    "@maseaaao/website": "*"
+    "@maseaaao/website": "workspace:*"
   },
   "scripts": {
-    "check": "vue-tsc --noEmit"
+    "check": "vue-tsc --noEmit",
+    "build": "node ../tooling/build-artwork.mjs",
+    "source": "node ../tooling/source-task.mjs"
   },
   "exports": {
     "./SceneArtwork.vue": "./components/SceneArtwork.vue",

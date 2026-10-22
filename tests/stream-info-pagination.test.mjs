@@ -217,21 +217,30 @@ for (const target of ['elsewhere', 'disposed']) {
         const more = page.getByRole('button', { name: 'Показать ещё', exact: true });
         await more.click();
         await waitForSearch(searches, 2);
+        const category = page.getByRole('combobox', { name: 'Категория', exact: true });
         const destination =
-          target === 'disposed'
-            ? page.getByRole('switch', { name: 'Обновлять Twitch', exact: true })
-            : page.getByLabel('Тема стрима', { exact: true });
+          target === 'disposed' ? category : page.getByLabel('Название', { exact: true });
         if (target === 'disposed') {
+          // The platform switch was removed from the dock, so the surviving way
+          // to dispose a running search is to clear its query: the popover
+          // unmounts while the continuation request is still in flight.
           await destination.focus();
-          await page.keyboard.press('Space');
+          await category.fill('');
         }
         await destination.focus();
         searches[1].respond({ data: { results: [], cursor: null, hasMore: false } });
         if (target === 'elsewhere') await more.waitFor({ state: 'detached' });
         else {
-          await page.getByRole('combobox').waitFor({ state: 'detached' });
-          // Remount only after disposal; the final result must not refocus either input.
-          await page.keyboard.press('Space');
+          await page.getByRole('listbox').waitFor({ state: 'detached' });
+          // The retired response must not resurrect the removed pagination action.
+          assert.equal(
+            await page.getByRole('button', { name: 'Показать ещё', exact: true }).count(),
+            0,
+          );
+          // Remount only after disposal; the fresh search must work again.
+          await category.fill('Ad');
+          await waitForSearch(searches, 3);
+          searches[2].respond({ data: { results: [{ id: 'one', name: 'Adventure one' }] } });
           await page.getByRole('status').filter({ hasText: 'Результатов: 1' }).waitFor();
         }
         await assertFocused(destination, 'A retired/unfocused search must not take focus back');

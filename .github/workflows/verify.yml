@@ -5,30 +5,58 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: '17 3 * * 1'
 permissions:
   contents: read
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
-  verify:
-    # Committed raster exports use the Windows renderer; keep exact hash checks.
-    runs-on: windows-2025
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      products: ${{ steps.select.outputs.products }}
+      raster: ${{ steps.select.outputs.raster }}
+      companion: ${{ steps.select.outputs.companion }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .node-version
-          cache: npm
+      - uses: ./.github/actions/setup
+      - id: select
+        env:
+          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || '' }}
+        run: node tooling/affected.mjs
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm run check:source
+      - run: node --test tests/task-graph.test.mjs tests/task-graph-integrity.test.mjs tests/affected.test.mjs tests/source-only.test.mjs tests/ui-renewal-pipeline.test.mjs
+      - run: git diff --check
+  products:
+    needs: plan
+    if: needs.plan.outputs.products == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: npm ci
-      - run: npm run browser:install
-      - run: python -m pip install -r tooling/artwork/requirements-fonts.txt
-      - run: npm run verify:ui-renewal
+      - run: pnpm run browser:install --with-deps
+      # Browser contracts rebuild shared outputs: keep test groups serialized.
+      - run: pnpm run verify:products
+      - run: pnpm run check:repository
+      - run: pnpm run test:ui
+      - run: pnpm run test:ui-probe
+      - run: pnpm run test:static
+      - run: pnpm run test:checks
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -37,6 +65,25 @@ jobs:
             apps/stream-info/dist/*.html
             apps/tuna-widget/dist/*.html
             apps/obs-widgets/dist/**
+  raster:
+    needs: plan
+    if: needs.plan.outputs.raster == 'true'
+    # The committed raster baseline is rendered by the canonical Linux runner.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pnpm run browser:install --with-deps
+      - run: python -m pip install -r tooling/artwork/requirements-fonts.txt
+      - run: pnpm run verify:artwork
+      # Website consumes newly rendered images, never a pre-render cache entry.
+      - run: pnpm run build:all
+      - run: pnpm run check:repository
+      - run: pnpm run check:artifacts
+      - run: git diff --check
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -49,24 +96,44 @@ jobs:
             artwork/twitch-description/rendered/**
             artwork/brand/rendered/website/**
             artwork/wallpapers/rendered/**
-  companion-build:
-    runs-on: windows-latest
+            .build-cache/verify/artifacts.sha256
+  companion:
+    needs: plan
+    if: needs.plan.outputs.companion == 'true'
+    # The audio helpers are built with the installed .NET Framework compiler and
+    # are Windows-only by nature, so this job stays on Windows.
+    runs-on: windows-2025
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: ./.github/actions/setup
+      - uses: actions/setup-dotnet@v4
         with:
-          node-version-file: .node-version
-          cache: npm
-      - run: npm ci
+          dotnet-version: 8.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - run: node --test tests/companion-libs-preparation.test.mjs
-      - run: npm run prepare:companion-libs
-      - run: npm run build --workspace integrations/companion/system-microphone
-      - run: npm run build --workspace integrations/companion/voice-control
-      - run: npm run package --workspace integrations/companion/system-microphone
-      - run: npm run package --workspace integrations/companion/voice-control
+      - run: pnpm run test:companion
+      - run: pnpm run prepare:companion-libs
+      - run: pnpm --filter ./integrations/companion/system-microphone run build
+      - run: pnpm --filter ./integrations/companion/voice-control run build
+      - run: pnpm --filter ./integrations/companion/system-microphone run package
+      - run: pnpm --filter ./integrations/companion/voice-control run package
       - name: Verify Companion archive contents and install payloads
         run: python integrations/companion/shared/test-packages.py
       - uses: actions/upload-artifact@v4
         with:
           name: companion-modules
           path: integrations/companion/*/*.tgz
+  verify:
+    if: always()
+    needs: [plan, source, products, raster, companion]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - env:
+          CI_NEEDS: ${{ toJSON(needs) }}
+        run: node tooling/ci-result.mjs

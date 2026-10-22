@@ -38,7 +38,10 @@ export const Controls: Story = {
     await expect(notice).toHaveTextContent('Ошибка записи');
     await expect(notice.querySelector('svg')).not.toBeNull();
     const remove = canvas.getByRole('button', { name: 'Удалить: Русский' });
-    await expect(remove.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+    // The compact tag documents a 24x24 CSS px removal target; the compact
+    // chip itself stays around 32 px tall. Assert the documented contract.
+    await expect(remove.getBoundingClientRect().height).toBeGreaterThanOrEqual(24);
+    await expect(remove.getBoundingClientRect().width).toBeGreaterThanOrEqual(24);
     await userEvent.click(remove);
     await expect(canvas.getByRole('status', { name: 'Действия' })).toHaveTextContent('1');
     await userEvent.click(canvas.getByRole('button', { name: 'Загрузка' }));

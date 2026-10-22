@@ -2,6 +2,8 @@
 
 Stream Info и Tuna имеют собственные версии и теги `stream-info-vX.Y.Z` и `tuna-widget-vX.Y.Z`. Изменять версию продукта, CHANGELOG и корневой lockfile. Модули Companion также требуют согласованной версии package.json/manifest.json.
 
+Выпускаемые продукты объявлены в `tooling/release-products.json`: для каждого — префикс тега, каталог, состав артефактов, команды проверки и сборки, а также признак, нужен ли браузер. Workflow не знает о конкретных продуктах: тег разбирает `tooling/release-product.mjs`, а состав архива — `tooling/package-release.py`. Добавление нового продукта — это запись в манифесте, шаблон тега в workflow и контрактный тест `tests/release-products.test.mjs`, который требует их согласованности.
+
 После проверки исходников собрать продукт и выполнить `python tooling/package-release.py <тег>`. Артефакты — build/release: русский HTML и ZIP с лицензией. Stream Info сохраняет имя change-info-streamer-bot.ru.html, Tuna — obs-tuna-widget.html.
 
 После явного решения о выпуске отправить тег. Workflow сверяет версию, выполняет тесты и сборку, создаёт черновик релиза, скачивает его в build/downloaded и проверяет совпадение. Для Tuna устанавливается Chromium с системными зависимостями. Существующие выпуски не перезаписываются.

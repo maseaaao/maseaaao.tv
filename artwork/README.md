@@ -2,7 +2,7 @@
 
 `components/*.vue` — настоящие композиции сцен, баннеров, Twitch-панелей, brand, логотипа и обоев. `render.mjs` выбирает композицию; HTML-файлы — стабильные оболочки. Общая официальная Vue SSR → Vite/singlefile цепочка создаёт 26 автономных HTML в `.build-cache/artwork`. Vue нужен только при сборке. Стили используют одну семантическую палитру и Unbounded 400/Arial; BrandSurface и SceneZone переиспользуются в подтверждённых композициях.
 
-`npm run build:artwork` проверяет утверждённый QR и готовит HTML. Затем `npm run render:scenes`, `render:banners`, `render:twitch-description`, `render:wallpapers` и `brand:assets` создают нужные изображения общим `renderImage`. Каждая отдельная команда подготавливает HTML; если HTML уже подготовлен, можно вызвать соответствующий скрипт с `--prepared`. Рендер проверяет реальные начертания шрифта, загрузку локальных изображений и размеры, блокирует сеть. Источники при генерации не меняются.
+`pnpm run build:artwork` проверяет утверждённый QR и готовит HTML. Затем `pnpm run render:scenes`, `render:banners`, `render:twitch-description`, `render:wallpapers` и `brand:assets` создают нужные изображения общим `renderImage`. Каждая отдельная команда подготавливает HTML; если HTML уже подготовлен, можно вызвать соответствующий скрипт с `--prepared`. Рендер проверяет реальные начертания шрифта, загрузку локальных изображений и размеры, блокирует сеть. Источники при генерации не меняются.
 
 `scenes/layout.json` — геометрия 12 сцен: все live-зоны, камера, identity/header/title, canvas и путь каждого WEBP. Координаты сохранены; существующее наложение music/donors в vertical-camera не исправляется визуальной миграцией. `scenes/SETUP.md` описывает установку. OBS читает готовые изображения по прежним путям.
 

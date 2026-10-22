@@ -7,15 +7,15 @@
 Из корня репозитория, Node.js 22.20+ в ветке 22, Windows и Python:
 
 ```bash
-npm run test:companion
-npm run build --workspace integrations/companion/system-microphone
-npm run build --workspace integrations/companion/voice-control
-npm run package --workspace integrations/companion/system-microphone
-npm run package --workspace integrations/companion/voice-control
+pnpm run test:companion
+pnpm --filter ./integrations/companion/system-microphone run build
+pnpm --filter ./integrations/companion/voice-control run build
+pnpm --filter ./integrations/companion/system-microphone run package
+pnpm --filter ./integrations/companion/voice-control run package
 python integrations/companion/shared/test-packages.py
 ```
 
-При отсутствии библиотек сначала `npm run prepare:companion-libs`. Сборка компилирует помощники, но не запускает их. Тесты используют подставные обработчики и собственный локальный тестовый сервер; Actions, звук и эфир не затрагиваются. Упаковка создаёт tgz и локальные JSON-запросы; создание этих файлов не означает установку, отправлять JSON автоматически нельзя.
+При отсутствии библиотек сначала `pnpm run prepare:companion-libs`. Сборка компилирует помощники, но не запускает их. Тесты используют подставные обработчики и собственный локальный тестовый сервер; Actions, звук и эфир не затрагиваются. Упаковка создаёт tgz и локальные JSON-запросы; создание этих файлов не означает установку, отправлять JSON автоматически нельзя.
 
 Артефакты:
 

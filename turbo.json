@@ -1,0 +1,145 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "cacheDir": ".build-cache/turbo",
+  "globalEnv": ["MASEAAAO_TOOLCHAIN"],
+  "globalPassThroughEnv": ["TEMP", "TMP", "TMPDIR", "SystemRoot", "SYSTEMROOT"],
+  "globalDependencies": [
+    ".node-version",
+    "pnpm-workspace.yaml",
+    "tooling/*.mjs",
+    "tooling/artwork/**",
+    "tooling/lib/**"
+  ],
+  "tasks": {
+    "source": {
+      "dependsOn": ["^source"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!dist/**",
+        "!**/bin/**",
+        "!**/obj/**",
+        "!**/rendered/**",
+        "!.turbo/**",
+        "!streamerbot-import.txt"
+      ],
+      "outputs": []
+    },
+    "build": {
+      "dependsOn": ["^source"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!dist/**",
+        "!**/bin/**",
+        "!**/obj/**",
+        "!**/rendered/**",
+        "!.turbo/**",
+        "!streamerbot-import.txt"
+      ],
+      "outputs": ["dist/**"]
+    },
+    "check": {
+      "dependsOn": ["^source"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!dist/**",
+        "!**/bin/**",
+        "!**/obj/**",
+        "!**/rendered/**",
+        "!.turbo/**",
+        "!streamerbot-import.txt"
+      ],
+      "outputs": []
+    },
+    "test": {
+      "cache": false
+    },
+    "package": {
+      "cache": false
+    },
+    "@maseaaao/website#build": {
+      "dependsOn": ["^source"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!dist/**",
+        "!**/bin/**",
+        "!**/obj/**",
+        "!**/rendered/**",
+        "!.turbo/**",
+        "!streamerbot-import.txt",
+        "$TURBO_ROOT$/artwork/brand/rendered/website/**"
+      ],
+      "outputs": ["$TURBO_ROOT$/dist/**"]
+    },
+    "@maseaaao/artwork#build": {
+      "dependsOn": ["^source"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!dist/**",
+        "!**/bin/**",
+        "!**/obj/**",
+        "!**/rendered/**",
+        "!.turbo/**",
+        "!streamerbot-import.txt"
+      ],
+      "outputs": ["$TURBO_ROOT$/.build-cache/artwork/**"]
+    },
+    "@maseaaao/ui-catalog#build": {
+      "dependsOn": ["^source", "@maseaaao/obs-widgets#build", "change-info-streamer-bot#build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!dist/**",
+        "!**/bin/**",
+        "!**/obj/**",
+        "!**/rendered/**",
+        "!.turbo/**",
+        "!streamerbot-import.txt"
+      ],
+      "outputs": ["$TURBO_ROOT$/.build-cache/storybook/**"]
+    },
+    "@maseaaao/ui-portability#build": {
+      "dependsOn": ["^source"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!dist/**",
+        "!**/bin/**",
+        "!**/obj/**",
+        "!**/rendered/**",
+        "!.turbo/**",
+        "!streamerbot-import.txt"
+      ],
+      "outputs": ["$TURBO_ROOT$/.build-cache/ui-portability/**"]
+    },
+    "@maseaaao/static-fixtures#build": {
+      "dependsOn": ["^source"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!dist/**",
+        "!**/bin/**",
+        "!**/obj/**",
+        "!**/rendered/**",
+        "!.turbo/**",
+        "!streamerbot-import.txt"
+      ],
+      "outputs": ["$TURBO_ROOT$/.build-cache/static-fixtures/**"]
+    },
+    "change-info-streamer-bot#build": {
+      "dependsOn": ["^source"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!dist/**",
+        "!**/bin/**",
+        "!**/obj/**",
+        "!**/rendered/**",
+        "!.turbo/**",
+        "!streamerbot-import.txt"
+      ],
+      "outputs": ["dist/**", "streamerbot-import.txt"]
+    },
+    "companion-module-local-system-microphone#build": {
+      "cache": false
+    },
+    "companion-module-local-voice-control#build": {
+      "cache": false
+    }
+  }
+}

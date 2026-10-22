@@ -6,19 +6,21 @@
     "dev": "storybook dev -p 6006 --no-open --disable-telemetry",
     "build": "storybook build -o ../../.build-cache/storybook --disable-telemetry",
     "check": "vue-tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "source": "node ../../tooling/source-task.mjs"
   },
   "dependencies": {
-    "change-info-streamer-bot": "1.4.0",
-    "@maseaaao/design": "1.0.0",
-    "@maseaaao/ui": "1.0.0",
+    "change-info-streamer-bot": "workspace:*",
+    "@maseaaao/design": "workspace:*",
+    "@maseaaao/ui": "workspace:*",
     "vue": "3.5.44",
-    "@maseaaao/website": "*",
-    "@maseaaao/tuna-widget": "1.1.0",
-    "@maseaaao/obs-widgets": "1.0.0"
+    "@maseaaao/website": "workspace:*",
+    "@maseaaao/tuna-widget": "workspace:*",
+    "@maseaaao/obs-widgets": "workspace:*",
+    "@maseaaao/artwork": "workspace:*"
   },
   "devDependencies": {
-    "@maseaaao/build-config": "1.0.0",
+    "@maseaaao/build-config": "workspace:*",
     "@storybook/addon-a11y": "10.6.2",
     "@storybook/addon-vitest": "10.6.2",
     "@storybook/vue3-vite": "10.6.2",
@@ -29,6 +31,7 @@
     "vite": "6.4.3",
     "vitest": "5.0.5",
     "vue-tsc": "3.0.8",
-    "@vitejs/plugin-vue": "5.2.4"
+    "@vitejs/plugin-vue": "5.2.4",
+    "@types/node": "22.15.30"
   }
 }

@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { JSDOM } from 'jsdom';
+import { parseAllDocuments } from 'yaml';
 
 const root = resolve(import.meta.dirname, '..');
 const read = (name) => readFileSync(resolve(root, name), 'utf8');
@@ -11,12 +12,16 @@ const read = (name) => readFileSync(resolve(root, name), 'utf8');
 test('browser installation and UI tests use the same exact Playwright release', () => {
   const manifest = JSON.parse(read('package.json'));
   const catalog = JSON.parse(read('tooling/ui-catalog/package.json'));
-  const lock = JSON.parse(read('package-lock.json'));
+  const lock = parseAllDocuments(read('pnpm-lock.yaml'))
+    .map((doc) => doc.toJSON())
+    .find((doc) => doc.importers?.['tooling/ui-catalog']);
   const version = catalog.devDependencies.playwright;
   assert.match(version, /^\d+\.\d+\.\d+$/);
   assert.equal(manifest.devDependencies['playwright-core'], version);
-  assert.equal(lock.packages['node_modules/playwright-core'].version, version);
-  assert.equal(lock.packages['node_modules/playwright'].version, version);
+  assert(lock.packages[`playwright-core@${version}`]);
+  assert.equal(lock.importers['.'].devDependencies['playwright-core'].version, version);
+  assert(lock.packages[`playwright@${version}`]);
+  assert.equal(lock.importers['tooling/ui-catalog'].devDependencies.playwright.version, version);
 });
 
 const license = readFileSync(new URL(import.meta.resolve('@maseaaao/design/license')), 'utf8')

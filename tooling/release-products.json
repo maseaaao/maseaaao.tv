@@ -1,0 +1,22 @@
+{
+  "products": [
+    {
+      "id": "stream-info",
+      "tagPrefix": "stream-info-v",
+      "path": "apps/stream-info",
+      "artifacts": ["change-info-streamer-bot.ru.html"],
+      "test": "pnpm run test:stream-info",
+      "build": "pnpm run build:stream-info",
+      "browser": false
+    },
+    {
+      "id": "tuna-widget",
+      "tagPrefix": "tuna-widget-v",
+      "path": "apps/tuna-widget",
+      "artifacts": ["obs-tuna-widget.html"],
+      "test": "node --test tests/tuna-widget.test.mjs",
+      "build": "pnpm run build:tuna",
+      "browser": true
+    }
+  ]
+}

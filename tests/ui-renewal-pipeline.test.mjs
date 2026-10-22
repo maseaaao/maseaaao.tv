@@ -2,60 +2,101 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-
+import { parse } from 'yaml';
 const root = resolve(import.meta.dirname, '..');
-const pkg = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'));
-const tokens = (script) => pkg.scripts[script].split(' && ');
-test('acceptance builds artwork before standalone products, then verifies generated hashes', () => {
-  assert.deepEqual(tokens('verify:artwork'), [
-    'npm run build:fonts',
-    'npm run render:logo',
-    'npm run build:artwork',
-    'npm run render:scenes -- --prepared',
-    'npm run render:cyber-site -- all --prepared',
+const read = (name) => readFileSync(resolve(root, name), 'utf8');
+const pkg = JSON.parse(read('package.json'));
+const workflow = parse(read('.github/workflows/verify.yml'));
+const commands = (job) => workflow.jobs[job].steps.flatMap((step) => (step.run ? [step.run] : []));
+test('acceptance renders before website builds and checks source exactly once', () => {
+  assert.deepEqual(pkg.scripts['verify:artwork'].split(' && '), [
+    'pnpm run build:fonts',
+    'pnpm run render:logo',
+    'pnpm run build:artwork',
+    'pnpm run render:scenes --prepared',
+    'pnpm run render:cyber-site all --prepared',
   ]);
-  assert.deepEqual(tokens('verify:products'), [
-    'npm run build:ui',
-    'npm run build:tuna',
-    'npm run build:stream-info',
-    'npm run build:widgets',
-    'npm run build:website',
-  ]);
-  assert.deepEqual(tokens('verify:ui-renewal'), [
-    'npm run check:source',
-    'npm run verify:artwork',
-    'npm run verify:products',
-    'npm run check',
-    'npm run test:ui',
-    'npm run test:ui-probe',
-    'npm run test:static',
-    'npm run test:checks',
-    'npm run check:artifacts',
+  const steps = pkg.scripts['verify:ui-renewal'].split(' && ');
+  assert.deepEqual(steps, [
+    'pnpm run check:source',
+    'pnpm run verify:artwork',
+    'pnpm run verify:products',
+    'pnpm run check:repository',
+    'pnpm run test:ui',
+    'pnpm run test:ui-probe',
+    'pnpm run test:static',
+    'pnpm run test:checks',
+    'pnpm run check:artifacts',
     'git diff --check',
   ]);
+  assert.match(pkg.scripts['verify:products'], /run-tasks\.mjs build/);
+  assert.match(pkg.scripts['verify:products'], /--filter=\.\/apps\/\*/);
+  assert.match(pkg.scripts['verify:products'], /--filter=\.\/tooling\/\*/);
 });
-test('CI uses a pinned Windows renderer for the byte-exact artifact baseline', () => {
-  const workflow = readFileSync(resolve(root, '.github/workflows/verify.yml'), 'utf8');
-  const verificationJob = workflow.split('  companion-build:')[0];
-  assert.match(verificationJob, /runs-on: windows-2025/);
-  assert.match(verificationJob, /uses: actions\/setup-python@v5/);
-  assert.match(verificationJob, /python-version: '3\.12'/);
-  assert.match(verificationJob, /run: python -m pip install/);
-  assert.equal(pkg.scripts['build:fonts'], 'python tooling/artwork/build-web-fonts.py');
-});
-
-test('CI uses the same acceptance script before artifact upload', () => {
-  const workflow = readFileSync(resolve(root, '.github/workflows/verify.yml'), 'utf8');
-  assert.match(workflow, /run: npm run verify:ui-renewal/);
-  const windowsJob = workflow.split('  companion-build:')[1];
-  assert.ok(windowsJob, 'Windows build job is present');
-  assert.match(
-    windowsJob,
-    /run: node --test tests\/companion-libs-preparation\.test\.mjs/,
-    'Windows-only preparation regressions must execute in the Windows job',
+test('raster retains pinned Linux, Python and exact artifact verification after rebuilding website', () => {
+  const job = workflow.jobs.raster;
+  assert.equal(job['runs-on'], 'ubuntu-latest');
+  assert(
+    job.steps.some(
+      (step) => step.uses === 'actions/setup-python@v5' && step.with['python-version'] === '3.12',
+    ),
   );
-  const source = readFileSync(resolve(root, 'tooling/check-generated-artifacts.mjs'), 'utf8');
+  const runs = commands('raster');
+  assert(runs.includes('python -m pip install -r tooling/artwork/requirements-fonts.txt'));
+  assert(runs.indexOf('pnpm run verify:artwork') < runs.indexOf('pnpm run build:all'));
+  assert(runs.indexOf('pnpm run build:all') < runs.indexOf('pnpm run check:artifacts'));
+  assert.equal(pkg.scripts['build:fonts'], 'python tooling/artwork/build-web-fonts.py');
+  const source = read('tooling/check-generated-artifacts.mjs');
   assert.match(source, /'artwork\/scenes\/rendered'/);
   assert.match(source, /artifacts\.sha256/);
   assert.match(source, /'--untracked-files=all'/);
+});
+test('the raster job publishes the re-rendered baseline for review', () => {
+  const job = workflow.jobs.raster;
+  const upload = job.steps.find((step) => step.uses === 'actions/upload-artifact@v4');
+  assert(upload, 'the raster job must publish the rendered baseline');
+  assert(upload.with.name === 'website-and-artwork-preview');
+  assert.match(upload.with.path, /artwork\/scenes\/rendered/);
+  assert.equal(pkg.scripts['accept:artifacts'], 'node tooling/accept-artifacts.mjs');
+  // The acceptance tool must not weaken the exact comparison.
+  assert.doesNotMatch(read('tooling/accept-artifacts.mjs'), /unlink|rmSync|rm -rf/);
+});
+test('CI runs on Linux except the Windows-only Companion job', () => {
+  for (const job of ['plan', 'source', 'products', 'raster', 'verify'])
+    assert.equal(workflow.jobs[job]['runs-on'], 'ubuntu-latest', job);
+  // The audio helpers need the installed .NET Framework compiler and Windows audio.
+  assert.equal(workflow.jobs.companion['runs-on'], 'windows-2025');
+  // Browser rendering on Linux needs the system libraries of the runner.
+  for (const job of ['products', 'raster'])
+    assert(
+      commands(job).some((command) => command.includes('browser:install --with-deps')),
+      job,
+    );
+});
+test('split CI preserves all test groups and fails closed at its required aggregate', () => {
+  for (const command of [
+    'verify:products',
+    'check:repository',
+    'test:ui',
+    'test:ui-probe',
+    'test:static',
+    'test:checks',
+  ])
+    assert(commands('products').includes(`pnpm run ${command}`), command);
+  assert(commands('source').includes('pnpm run check:source'));
+  assert(!commands('products').includes('pnpm run check:source'));
+  assert(commands('companion').includes('node --test tests/companion-libs-preparation.test.mjs'));
+  assert(commands('companion').includes('python integrations/companion/shared/test-packages.py'));
+  assert.equal(workflow.concurrency['cancel-in-progress'], true);
+  assert(workflow.on.schedule.length);
+  assert.equal(workflow.jobs.verify.if, 'always()');
+  assert.deepEqual(workflow.jobs.verify.needs, [
+    'plan',
+    'source',
+    'products',
+    'raster',
+    'companion',
+  ]);
+  assert(commands('verify').includes('node tooling/ci-result.mjs'));
+  assert.match(read('.github/actions/setup/action.yml'), /pnpm install --frozen-lockfile/);
 });

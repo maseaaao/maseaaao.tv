@@ -4,13 +4,17 @@
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
-    "test": "node --test delivery.test.mjs"
+    "test": "node --test delivery.test.mjs",
+    "check": "vue-tsc --noEmit",
+    "source": "node ../../tooling/source-task.mjs"
   },
   "dependencies": {
-    "@maseaaao/design": "1.0.0",
+    "@maseaaao/design": "workspace:*",
     "vue": "3.5.44"
   },
   "devDependencies": {
-    "@maseaaao/build-config": "1.0.0"
+    "@maseaaao/build-config": "workspace:*",
+    "vue-tsc": "3.0.8",
+    "typescript": "5.8.3"
   }
 }

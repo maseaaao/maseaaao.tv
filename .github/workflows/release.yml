@@ -19,27 +19,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.tag || github.ref }}
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: npm
+      - uses: ./.github/actions/setup
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      - run: npm ci
       - name: Validate product and tag before building
         run: python tooling/package-release.py --validate "$RELEASE_TAG"
-      - name: Install Chromium for Tuna verification
-        if: startsWith(env.RELEASE_TAG, 'tuna-widget-v')
-        run: npm run browser:install -- --with-deps
       - name: Test and build the selected product
-        shell: bash
-        run: |
-          case "$RELEASE_TAG" in
-            stream-info-v*) npm run test:stream-info && npm run build:stream-info ;;
-            tuna-widget-v*) npm run build:tuna && node --test tests/tuna-widget.test.mjs ;;
-            *) exit 1 ;;
-          esac
+        run: node tooling/release-product.mjs "$RELEASE_TAG"
       - run: python tooling/package-release.py "$RELEASE_TAG"
       - name: Create immutable draft for download verification
         shell: bash

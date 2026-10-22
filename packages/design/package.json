@@ -13,5 +13,8 @@
   "version": "1.0.0",
   "sideEffects": [
     "**/*.css"
-  ]
+  ],
+  "scripts": {
+    "source": "node ../../tooling/source-task.mjs"
+  }
 }

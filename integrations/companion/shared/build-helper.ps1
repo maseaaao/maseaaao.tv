@@ -12,7 +12,7 @@ $netstandard=Join-Path $env:WINDIR 'Microsoft.NET\assembly\GAC_MSIL\netstandard\
 $arguments+=('/reference:'+$netstandard)
 foreach($library in $libraries){
   $source=Join-Path $libraryRoot $library
-  if (-not (Test-Path -LiteralPath $source)) { throw 'Run npm run prepare:companion-libs first' }
+  if (-not (Test-Path -LiteralPath $source)) { throw 'Run pnpm run prepare:companion-libs first' }
   Copy-Item -LiteralPath $source -Destination (Join-Path $moduleRoot $library) -Force
   $arguments+=('/reference:'+$source)
 }

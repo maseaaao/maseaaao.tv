@@ -6,7 +6,7 @@
 
 ## Vue-компоненты (этап 5)
 
-Все компоненты — `<script setup lang="ts">` SFC, стили `scoped`, используют только семантические токены `@maseaaao/design/tokens.css` (запрещены сырые hex/rgb/hsl — проверяется Stylelint). Компоненты не делают сетевых вызовов и не содержат бизнес-логики: обработчики, валидация и API-запросы остаются в продукте-потребителе. Stories и проверки: `tooling/ui-catalog` (`npm run test:ui`, `npm run build:storybook`).
+Все компоненты — `<script setup lang="ts">` SFC, стили `scoped`, используют только семантические токены `@maseaaao/design/tokens.css` (запрещены сырые hex/rgb/hsl — проверяется Stylelint). Компоненты не делают сетевых вызовов и не содержат бизнес-логики: обработчики, валидация и API-запросы остаются в продукте-потребителе. Stories и проверки: `tooling/ui-catalog` (`pnpm run test:ui`, `pnpm run build:storybook`).
 
 Инвентаризация и обоснование выбора — `docs/ui-renewal-plan.md`, этап 5 ("Инвентаризация кандидатов").
 

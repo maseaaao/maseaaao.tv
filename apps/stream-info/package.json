@@ -14,13 +14,14 @@
     "generate-import": "node scripts/generate-import.mjs && node scripts/verify-import.mjs",
     "check": "vue-tsc --noEmit",
     "test": "vitest run && dotnet run --project tests/csharp/StreamerbotTests.csproj --configuration Release",
-    "build": "npm run generate-import && npm run check && vite build && node scripts/verify-build.mjs",
-    "preview": "vite preview"
+    "build": "pnpm run generate-import && vite build && node scripts/verify-build.mjs",
+    "preview": "vite preview",
+    "source": "node ../../tooling/source-task.mjs"
   },
   "dependencies": {
     "@streamerbot/client": "2.0.1",
-    "@maseaaao/design": "1.0.0",
-    "@maseaaao/ui": "1.0.0",
+    "@maseaaao/design": "workspace:*",
+    "@maseaaao/ui": "workspace:*",
     "vue": "3.5.44"
   },
   "devDependencies": {
@@ -35,6 +36,7 @@
     "vite-plugin-singlefile": "2.3.4",
     "vitest": "^5.0.0",
     "vue-tsc": "3.0.8",
-    "@maseaaao/build-config": "1.0.0"
+    "@maseaaao/build-config": "workspace:*",
+    "yaml": "2.8.1"
   }
 }

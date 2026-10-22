@@ -1,4 +1,9 @@
-"""Prepare and verify independent immutable release assets without publishing."""
+"""Prepare and verify independent immutable release assets without publishing.
+
+The releasable products are declared in tooling/release-products.json, so a new
+product is added as data instead of a change to this script or to the release
+workflow.
+"""
 from pathlib import Path
 import json
 import re
@@ -7,16 +12,32 @@ import sys
 import zipfile
 
 root = Path(__file__).resolve().parents[1]
+manifest = json.loads((root / "tooling/release-products.json").read_text(encoding="utf-8"))
+products = {product["id"]: product for product in manifest["products"]}
 tag = sys.argv[-1]
-match = re.fullmatch(r"(stream-info|tuna-widget)-v(\d+\.\d+\.\d+)", tag)
-if not match:
+
+
+def find_product(candidate):
+    """Return the product whose tag prefix matches, or raise."""
+    for product in products.values():
+        if candidate.startswith(product["tagPrefix"]):
+            return product
     raise SystemExit("Expected a supported product-vX.Y.Z tag")
-product, version = match.groups()
-app = root / "apps" / product
+
+
+def product_version(product, tag):
+    match = re.fullmatch(re.escape(product["tagPrefix"]) + r"(\d+\.\d+\.\d+)", tag)
+    if not match:
+        raise SystemExit("Expected a supported product-vX.Y.Z tag")
+    return match.group(1)
+
+
+product = find_product(tag)
+version = product_version(product, tag)
+app = root / product["path"]
 if json.loads((app / "package.json").read_text(encoding="utf-8"))["version"] != version:
     raise SystemExit("Tag must match the selected product's version")
-names = (["change-info-streamer-bot.ru.html"]
-         if product == "stream-info" else ["obs-tuna-widget.html"])
+names = product["artifacts"]
 notes = (app / "CHANGELOG.md").read_text(encoding="utf-8")
 section = re.search(r"^## " + re.escape(version) + r"\s*\n(.*?)(?=^## |\Z)", notes, re.M | re.S)
 if not section:
@@ -25,7 +46,7 @@ if "--validate" in sys.argv:
     print(f"Validated {tag}")
     raise SystemExit()
 output = root / "build" / "release"
-archive_name = f"{product}-{version}.zip"
+archive_name = f"{product['id']}-{version}.zip"
 if "--verify-download" in sys.argv:
     downloaded = root / "build" / "downloaded"
     for name in names + [archive_name]:

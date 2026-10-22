@@ -7,7 +7,8 @@ import { checkMigrationContract, checkFontFamilies } from './migration-contract.
 import { generatedWebsiteImages } from './website-assets.mjs';
 
 const root = resolve(import.meta.dirname, '..');
-checkMigrationContract(root);
+const sourceOnly = process.argv.includes('--source');
+checkMigrationContract(root, { sourceOnly });
 const json = (file) => {
   const errors = [];
   const value = parse(readFileSync(resolve(root, file), 'utf8'), errors, {
@@ -33,6 +34,7 @@ for (const file of [
   assert(existsSync(resolve(root, file)), file);
 function files(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    if (sourceOnly && ['dist', 'rendered'].includes(entry.name)) return [];
     if (['node_modules', '.git', 'bin', 'obj', 'review', '.local'].includes(entry.name)) return [];
     return entry.isDirectory() ? files(resolve(dir, entry.name)) : [resolve(dir, entry.name)];
   });
@@ -47,30 +49,36 @@ for (const app of ['apps/website/src', 'apps/stream-info/src', 'apps/obs-widgets
     assert(!/^(?:<{7}|={7}|>{7})/m.test(text), `Conflict marker: ${file}`);
   }
 }
-// Public static files are copied exactly; source HTML/CSS/JS are transformed by Vite.
-for (const file of files(resolve(root, 'apps/website/public'))) {
-  const output = resolve(root, 'dist', file.slice(resolve(root, 'apps/website/public').length + 1));
-  assert(
-    existsSync(output) && readFileSync(output).equals(readFileSync(file)),
-    `Missing or stale public resource: ${output}`,
-  );
+if (!sourceOnly) {
+  // Public static files are copied exactly; source HTML/CSS/JS are transformed by Vite.
+  for (const file of files(resolve(root, 'apps/website/public'))) {
+    const output = resolve(
+      root,
+      'dist',
+      file.slice(resolve(root, 'apps/website/public').length + 1),
+    );
+    assert(
+      existsSync(output) && readFileSync(output).equals(readFileSync(file)),
+      `Missing or stale public resource: ${output}`,
+    );
+  }
+  for (const [name, bytes] of generatedWebsiteImages(root)) {
+    const output = resolve(root, 'dist', name);
+    assert(
+      existsSync(output) && readFileSync(output).equals(bytes),
+      `Missing or stale generated resource: ${output}`,
+    );
+  }
+  for (const name of [
+    'index.html',
+    'docs.html',
+    'check.html',
+    'tools/index.html',
+    'tools/stream-info.html',
+    'tools/tuna-widget.html',
+  ])
+    assert(existsSync(resolve(root, 'dist', name)), `Missing website route: ${name}`);
 }
-for (const [name, bytes] of generatedWebsiteImages(root)) {
-  const output = resolve(root, 'dist', name);
-  assert(
-    existsSync(output) && readFileSync(output).equals(bytes),
-    `Missing or stale generated resource: ${output}`,
-  );
-}
-for (const name of [
-  'index.html',
-  'docs.html',
-  'check.html',
-  'tools/index.html',
-  'tools/stream-info.html',
-  'tools/tuna-widget.html',
-])
-  assert(existsSync(resolve(root, 'dist', name)), `Missing website route: ${name}`);
 for (const file of files(resolve(root, 'artwork')).filter((file) => /\.(html|css)$/.test(file))) {
   const text = readFileSync(file, 'utf8');
   for (const match of text.matchAll(
@@ -90,7 +98,9 @@ for (const file of files(resolve(root, 'artwork')).filter((file) => /\.(html|css
   }
 }
 console.log(
-  'Repository structure, light appearance, static publication parity and artwork dependencies verified.',
+  sourceOnly
+    ? 'Repository source structure and design verified (no outputs required).'
+    : 'Repository structure, light appearance, static publication parity and artwork dependencies verified.',
 );
 
 // Both browser applications and exported widgets use only the two agreed families.

@@ -1,0 +1,20 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+  - 'integrations/companion/system-microphone'
+  - 'integrations/companion/voice-control'
+  - 'tooling/ui-portability'
+  - 'tooling/ui-catalog'
+  - 'tooling/static-fixtures'
+  - 'artwork'
+
+# Only native toolchains used by builds may execute dependency scripts.
+allowBuilds:
+  esbuild: true
+  sharp: true
+  core-js: false
+  unrs-resolver: false
+strictDepBuilds: true
+
+engineStrict: true
+verifyDepsBeforeRun: error

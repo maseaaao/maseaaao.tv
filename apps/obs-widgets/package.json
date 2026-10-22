@@ -4,18 +4,19 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@maseaaao/design": "1.0.0",
-    "@maseaaao/ui": "1.0.0"
+    "@maseaaao/design": "workspace:*",
+    "@maseaaao/ui": "workspace:*"
   },
   "devDependencies": {
-    "@maseaaao/build-config": "1.0.0",
+    "@maseaaao/build-config": "workspace:*",
     "vue": "3.5.44",
     "typescript": "5.8.3",
     "vue-tsc": "3.0.8"
   },
   "scripts": {
     "build": "node ../../tooling/build-widgets.mjs",
-    "check": "vue-tsc --noEmit"
+    "check": "vue-tsc --noEmit",
+    "source": "node ../../tooling/source-task.mjs"
   },
   "exports": {
     "./SocialStrip.vue": "./src/social-strip/SocialStrip.vue",

@@ -160,7 +160,7 @@ async function fixture(intercept = () => false) {
     page.on('pageerror', (error) => errors.push(error.message));
     await page.route(/^https?:/, (route) => route.abort());
     await page.goto(url);
-    await page.getByLabel('Тема стрима', { exact: true }).waitFor();
+    await page.getByLabel('Название', { exact: true }).waitFor();
     return page;
   };
   const page = await open();
@@ -198,10 +198,9 @@ test(
     try {
       const { page } = f;
       await page.clock.install();
-      await page.getByRole('button', { name: 'Настройки', exact: true }).click();
       const template = page.getByLabel('Шаблон Twitch', { exact: true });
       await template.fill('First %subtitle%');
-      const save = page.getByRole('button', { name: 'Сохранить шаблоны', exact: true });
+      const save = page.getByRole('button', { name: 'Применить изменения', exact: true });
       await save.click();
       assert.equal(held.length, 1);
       held[0].respond();
@@ -219,11 +218,10 @@ test(
       assert.equal((await settings(page)).twitchTemplate, '%subtitle%');
       held[1].ack();
       held[1].respond();
-      await page.getByRole('status').filter({ hasText: 'Шаблоны сохранены' }).waitFor();
+      await page.getByText('Изменения применены', { exact: true }).waitFor();
       assert.equal((await settings(page)).twitchTemplate, 'Retry %subtitle%');
       await page.close();
       const reopened = await f.open();
-      await reopened.getByRole('button', { name: 'Настройки', exact: true }).click();
       assert.equal(
         await reopened.getByLabel('Шаблон Twitch', { exact: true }).inputValue(),
         'Retry %subtitle%',
@@ -248,7 +246,7 @@ test(
     try {
       const { page } = f;
       await page.clock.install();
-      const subtitle = page.getByLabel('Тема стрима', { exact: true });
+      const subtitle = page.getByLabel('Название', { exact: true });
       await subtitle.fill('Uncertain subtitle');
       await apply(page);
       assert.equal(held.length, 1);
@@ -279,7 +277,7 @@ test(
       await page.close();
       const reopened = await f.open();
       assert.equal(
-        await reopened.getByLabel('Тема стрима', { exact: true }).inputValue(),
+        await reopened.getByLabel('Название', { exact: true }).inputValue(),
         'Retry subtitle',
       );
       assert.deepEqual(f.errors, []);
@@ -301,11 +299,13 @@ test(
     });
     try {
       const { page } = f;
-      await page.getByRole('button', { name: 'Настройки', exact: true }).click();
-      await page.getByLabel('Шаблон Twitch', { exact: true }).fill('Retired %subtitle%');
-      await page.getByRole('button', { name: 'Сохранить шаблоны', exact: true }).click();
+      const template = page.getByLabel('Шаблон Twitch', { exact: true });
+      await template.fill('Retired %subtitle%');
+      const save = page.getByRole('button', { name: 'Применить изменения', exact: true });
+      await save.click();
       assert.equal(held.length, 1);
-      await page.getByLabel('Шаблон Twitch', { exact: true }).fill('Fresh %subtitle%');
+      await template.fill('Fresh %subtitle%');
+      await page.getByRole('button', { name: 'Настройки', exact: true }).click();
       await page.getByLabel('Endpoint', { exact: true }).fill('/matrix');
       await page.getByRole('button', { name: 'Сохранить подключение', exact: true }).click();
       await page.getByText('Streamer.bot подключён', { exact: true }).waitFor();
@@ -314,7 +314,6 @@ test(
       held[0].respond();
       held[0].ack({ status: 'error', error: 'password retired fixture' });
       await tick(page);
-      await page.getByRole('button', { name: 'Настройки', exact: true }).click();
       assert.equal(
         await page.getByLabel('Шаблон Twitch', { exact: true }).inputValue(),
         'Fresh %subtitle%',
@@ -323,10 +322,10 @@ test(
       assert.equal((await settings(page)).twitchTemplate, '%subtitle%');
       assert.equal(await page.getByText('Шаблоны сохранены', { exact: true }).count(), 0);
       assert.equal(await page.locator('.auth-panel').count(), 0);
-      await page.getByRole('button', { name: 'Сохранить шаблоны', exact: true }).click();
+      await save.click();
       held[1].ack();
       held[1].respond();
-      await page.getByRole('status').filter({ hasText: 'Шаблоны сохранены' }).waitFor();
+      await page.getByText('Изменения применены', { exact: true }).waitFor();
       assert.equal((await settings(page)).twitchTemplate, 'Fresh %subtitle%');
       assert.deepEqual(f.errors, []);
     } finally {
@@ -350,7 +349,7 @@ test(
     });
     try {
       const { page } = f;
-      await page.getByLabel('Тема стрима', { exact: true }).fill('Confirmed subtitle');
+      await page.getByLabel('Название', { exact: true }).fill('Confirmed subtitle');
       await page.getByLabel('Добавить тег', { exact: true }).fill('Added');
       await page.getByLabel('Добавить тег', { exact: true }).press('Enter');
       await page.getByLabel('Добавить тег', { exact: true }).fill('Unsent');
@@ -371,8 +370,10 @@ test(
       assert.equal(f.commands.filter((request) => request.command === 'saveTemplates').length, 1);
       await page.clock.install();
       await page.clock.pauseAt(new Date());
-      await page.getByRole('button', { name: 'Полное название', exact: true }).click();
-      await page.getByLabel('Полное название', { exact: true }).fill('Local draft');
+      // The separate "Полное название" mode no longer exists: the title is
+      // always the template applied to the "Название" field.
+      const title = page.getByLabel('Название', { exact: true });
+      await title.fill('Local draft');
       f.state.twitch.title = 'Preset server title';
       f.state.templates = {
         twitchTemplate: 'Preset %subtitle%',
@@ -390,10 +391,7 @@ test(
           JSON.parse(localStorage.getItem('change-info-streamer-bot.settings.v1'))
             .twitchTemplate === 'Preset %subtitle%',
       );
-      assert.equal(
-        await page.getByLabel('Полное название', { exact: true }).inputValue(),
-        'Local draft',
-      );
+      assert.equal(await title.inputValue(), 'Local draft');
       assert.equal(await page.getByLabel('Добавить тег', { exact: true }).inputValue(), 'Unsent');
       assert.deepEqual(f.errors, []);
     } finally {

@@ -6,9 +6,9 @@
 
 ## Браузерные ресурсы
 
-Собрать сайт: `npm run build:website`, виджеты: `npm run build:widgets`, Stream Info: `npm run build:stream-info`, Tuna: `npm run build:tuna`.
+Собрать сайт: `pnpm run build:website`, виджеты: `pnpm run build:widgets`, Stream Info: `pnpm run build:stream-info`, Tuna: `pnpm run build:tuna`.
 
-Проверить план: `npm run sync:local -- --product stream-info`. Группы: `stream-info`, `tuna`, `widgets`. По умолчанию ожидается соседняя папка Streamer.bot; другую папку OBS указать через `--obs-root`.
+Проверить план: `pnpm run sync:local --product stream-info`. Группы: `stream-info`, `tuna`, `widgets`. По умолчанию ожидается соседняя папка Streamer.bot; другую папку OBS указать через `--obs-root`.
 
 Повторить команду с `--apply`: заменяемые файлы сохраняются в Streamer.bot/backup/monorepo-sync-*. Перезагрузить док и браузерные источники. Stream Info сохраняет имя `change-info-streamer-bot.ru.html`; языковых вариантов и дублирующего корневого HTML нет.
 
@@ -21,11 +21,11 @@ CSS чата и DonationAlerts размещается через интерфе�
 ## Companion
 
 ```powershell
-npm run prepare:companion-libs
-npm run build --workspace integrations/companion/system-microphone
-npm run build --workspace integrations/companion/voice-control
-npm run package --workspace integrations/companion/system-microphone
-npm run package --workspace integrations/companion/voice-control
+pnpm run prepare:companion-libs
+pnpm --filter ./integrations/companion/system-microphone run build
+pnpm --filter ./integrations/companion/voice-control run build
+pnpm --filter ./integrations/companion/system-microphone run package
+pnpm --filter ./integrations/companion/voice-control run package
 ```
 
 Перед установкой сохранить штатный экспорт. Импортировать tgz через менеджер модулей, проверить загруженную версию. SystemMicrophone требует явно выбранный тип входа/выхода; VoiceStream — ID Actions запуска и остановки. Не пересоздавать соединения, кнопки, базу и Junction.

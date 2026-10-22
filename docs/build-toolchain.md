@@ -37,26 +37,28 @@
 - `typecheck` проверяет src и tests Stream Info. Фикстуры используют явные проверки значений вместо non-null assertions.
 - `check:repository` проверяет предметные инварианты: структуру, единственный русский экспорт, обои, typography, наличие ресурсов и неизменяемую публичную статику.
 
-`check` объединяет проверки качества и инвариантов. Сгенерированные outputs, двоичные файлы, vendor-ресурсы и build cache исключены из форматирования/линтинга; их содержимое проверяется build/browser-тестами. `package-lock.json` управляется npm.
+`check` объединяет проверки качества и инвариантов. Сгенерированные outputs, двоичные файлы, vendor-ресурсы и build cache исключены из форматирования/линтинга; их содержимое проверяется build/browser-тестами. `pnpm-lock.yaml` управляется pnpm; единственный корневой lockfile.
 
 ## Проверки и воспроизводимость
 
-После `npm ci`:
+После `pnpm install --frozen-lockfile`:
 
 ```sh
-npm run browser:install
-npm run build:all
-npm run check
-npm run test:checks
+pnpm run browser:install
+pnpm run build:all
+pnpm run check
+pnpm run test:checks
 ```
 
-`npm test` дополнительно сам выполняет build:all. Для другого Chromium используется CHROME_BIN. C#-тестам нужен .NET SDK 8. Компиляция Windows helpers/упаковка Companion запускается отдельным Windows CI job.
+`pnpm test` дополнительно сам выполняет build:all. Для другого Chromium используется CHROME_BIN. C#-тестам нужен .NET SDK 8. Компиляция Windows helpers/упаковка Companion запускается отдельным Windows CI job.
 
 Тесты проверяют готовые outputs: точные байты встроенного WOFF2/OFL, отсутствие статических внешних зависимостей, provider placeholders, шрифты/DOM/CSP, responsive layout, клавиатуру, сценовую геометрию и QR. Проверки эфира, аудио и внешних провайдеров используют подставные обработчики.
 
 Playwright и Sharp используются через один renderImage; ICO кодирует png-to-ico. Проектными остаются layout.json, параметры экспортов, проверка QR с логотипом и render jobs. Воспроизводимость текстовых outputs проверяется чистой повторной сборкой. Для pixel diff закреплять ОС, Chromium и шрифтовую среду.
 
-Каноническая среда полной CI-приёмки и побайтового сравнения существующих растровых экспортов — `windows-2025`, Node из `.node-version`, единая закреплённая версия Playwright и Python 3.12 через `setup-python`. Экспорты утверждены в Windows: Linux Chromium использует другой текстовый растеризатор и меняет байты даже при совпадающих исходниках, шрифтах и геометрии. Поэтому полный граф выполняется в Windows без исключений для изображений и без ослабления `check:artifacts`. Локальный Python вызывается как `python`, без зависимости от Windows-алиаса `python3`. Исторические Linux-проверки ниже не являются каноническим побайтовым эталоном изображений.
+Каноническая среда полной CI-приёмки и побайтового сравнения растровых экспортов — `ubuntu-latest`, Node из `.node-version`, единая закреплённая версия Playwright и Python 3.12 через `setup-python`. Растровый эталон утверждён на Linux: Chromium там использует другой текстовый растеризатор, чем Windows, поэтому байты совпадают только внутри одной ОС. Пересчёт эталона на другой ОС — явное решение с пересборкой всех растровых экспортов, а не фоновая подмена. Шрифты воспроизводимы независимо от ОС: fonttools, brotli и zopfli закреплены версиями, а инстанцирование переменного шрифта не пересчитывает метку времени. Локальный Python вызывается как `python`, без зависимости от Windows-алиаса `python3`.
+
+Модули Companion остаются исключением: их аудиопомощники собираются установленным компилятором .NET Framework и обращаются к Windows-аудиоустройствам, поэтому сборка и упаковка модулей выполняются в отдельном Windows-job. Остальной граф — исходники, продукты, браузерные проверки и растровый эталон — выполняется на Linux.
 
 ## Отдельные последующие работы
 
@@ -85,10 +87,18 @@ Playwright и Sharp используются через один renderImage; IC
 
 ## Полный граф приёмки UI Renewal
 
-`npm run verify:ui-renewal` выполняет по порядку: source lint/typecheck, подготовку WOFF2/логотипа, однократную сборку artwork HTML, полный рендер 12 сцен и всех banners/panels/favicon/wallpapers/website art, сборку UI/stories и всех отдельных продуктов, сборку website **после** изображений, repository checks, браузерные/UI/C# тесты, и `check:artifacts` с `git diff --check`.
+`pnpm run verify:ui-renewal` выполняет по порядку: source lint/typecheck, подготовку WOFF2/логотипа, однократную сборку artwork HTML, полный рендер 12 сцен и всех banners/panels/favicon/wallpapers/website art, сборку UI/stories и всех отдельных продуктов, сборку website **после** изображений, repository checks, браузерные/UI/C# тесты, и `check:artifacts` с `git diff --check`.
 
-`npm run check:artifacts` сравнивает **все управляемые артефакты** с коммитом включая WEBP/PNG/JPEG/ICO, standalone HTML и import; отмечает новые или изменённые untracked файлы, формирует SHA-256 manifest в `.build-cache/verify/artifacts.sha256`. Если Chrome/Sharp/OS дают отличающиеся бинарные изображения, CI останавливается до явного принятия эталона. Не отключать проверку из-за недетерминизма. Рендеры не меняют исходники и живую установку OBS.
+`pnpm run check:artifacts` сравнивает **все управляемые артефакты** с коммитом включая WEBP/PNG/JPEG/ICO, standalone HTML и import; отмечает новые или изменённые untracked файлы, формирует SHA-256 manifest в `.build-cache/verify/artifacts.sha256`. Если Chrome/Sharp/OS дают отличающиеся бинарные изображения, CI останавливается до явного принятия эталона. Не отключать проверку из-за недетерминизма. Рендеры не меняют исходники и живую установку OBS.
 
-Команды доступны только после `npm ci`, установки Chromium и `python3 -m pip install -r tooling/artwork/requirements-fonts.txt`. Для полной приёмки C# нужен .NET 8, для Companion упаковки — Windows job. Отсутствие локальных инструментов — блокер запуска, а не зелёный результат.
+Команды доступны только после `pnpm install --frozen-lockfile`, установки Chromium и `python3 -m pip install -r tooling/artwork/requirements-fonts.txt`. Для полной приёмки C# нужен .NET 8, для Companion упаковки — Windows job. Отсутствие локальных инструментов — блокер запуска, а не зелёный результат.
+
+## Граф задач и CI после миграции на pnpm
+
+Планировщик — закреплённый Turbo (`turbo.json`), кеш только локальный и в пределах дерева (`.build-cache/turbo`). `build` и `check` кешируются, `test`, `package` и сборка Companion — нет: тесты могут пересобирать общие outputs, а живая установка не должна кешироваться. Файлы зависимостей и результаты: `tooling/run-tasks.mjs` запускает Turbo с `--cache=local:rw`, `tooling/affected.mjs` выбирает затронутые пакеты по изменениям, `tooling/ci-result.mjs` закрывает агрегат CI.
+
+CI разделён на контуры: `source` (форматирование, линтеры, типы, инварианты исходников), `products` (сборки и браузерные/UI/C# тесты), `raster` (Linux, побайтовое сравнение экспортов), `companion` (Windows, сборка и проверка архивов) и агрегат `verify`, который падает при любом неплановом пропуске. Полный прогон выполняется по расписанию и вручную.
+
+Проект собирается и проверяется на Windows и Linux. Растровый эталон привязан к одной ОС: Chromium растеризует текст по-разному, поэтому байты совпадают только внутри Linux. Порядок пересчёта эталона — [отдельный документ](raster-baseline.md).
 
 При неуспешном CI временные сборки можно изучить во вкладке Actions → Artifacts: `standalone-tools` и `website-and-artwork-preview`. Наличие прикреплённых файлов не означает, что проверки пройдены. В частности, `check:artifacts` вправе падать до принятия обновлённого tracked baseline.

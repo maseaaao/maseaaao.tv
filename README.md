@@ -15,12 +15,14 @@
 
 ## Разработка
 
-Нужны Node.js 22.20+ в ветке 22, npm, Python 3 и .NET SDK 8. Для пересборки Unbounded нужен `fonttools[woff]`. Один lockfile — в корне.
+Нужны Node.js 22.23.3 из `.node-version`, pnpm 12.15.0 из `packageManager`, Python 3 и .NET SDK 8. Для пересборки Unbounded нужен `fonttools[woff]`. Один lockfile — `pnpm-lock.yaml` в корне. Для установки менеджера: `npm install --global pnpm@12.15.0` (версию Node сначала выбрать по `.node-version`).
+
+Сборка и проверки идут на Windows и Linux. CI выполняется на Linux; модули Companion собираются отдельно в Windows-job, потому что их аудиопомощники используют компилятор .NET Framework и Windows-аудиоустройства. Растровый эталон привязан к одной ОС: Chromium растеризует текст по-разному, поэтому байты совпадают только внутри Linux.
 
 ```powershell
-npm ci
-npm run browser:install
-npm run verify:ui-renewal
+pnpm install --frozen-lockfile
+pnpm run browser:install
+pnpm run verify:ui-renewal
 ```
 
 Для установленного браузера можно задать `CHROME_BIN`. Временные тестовые каталоги создаются в системной временной папке и удаляются после тестов.
@@ -33,7 +35,7 @@ npm run verify:ui-renewal
 
 OBS читает изображения непосредственно из `artwork`; корневых совместимых `src/assets` нет. HTML для рабочих приложений обновляются через `sync:local` с предварительным просмотром и резервированием. Код C# и модули Companion устанавливаются отдельно с сохранением ID и настроек.
 
-Cloudflare использует корневой `wrangler.jsonc`, команду `npm run build:website` и каталог `dist`. Готовый dist хранится в Git и проверяется CI; его собирают из исходников, а не редактируют вручную.
+Cloudflare использует корневой `wrangler.jsonc`, команду `pnpm run build:website` и каталог `dist`. Готовый dist хранится в Git и проверяется CI; его собирают из исходников, а не редактируют вручную.
 
 [Архитектура](docs/architecture.md) · [Установка](docs/local-installation.md) · [Выпуски](docs/releasing.md)
 
@@ -41,9 +43,9 @@ Cloudflare использует корневой `wrangler.jsonc`, команд�
 
 ## Качество и общие пакеты
 
-`npm run check` запускает Prettier, ESLint (включая типизированные TS-проверки и HTML), Stylelint, typecheck и предметные проверки. Исправления: `npm run format` и `npm run lint:fix`. Публичные API и fixtures проверяются подставными обработчиками.
+`pnpm run check` запускает Prettier, ESLint (включая типизированные TS-проверки и HTML), Stylelint, typecheck и предметные проверки. Исправления: `pnpm run format` и `pnpm run lint:fix`. Публичные API и fixtures проверяются подставными обработчиками.
 
-`npm test` сначала собирает все браузерные продукты, затем выполняет `test:checks`. C#-проверки требуют .NET SDK 8; упаковка Companion — Windows. `test:website` готовит artwork HTML во временном build-каталоге и проверяет готовые публикации.
+`pnpm test` сначала собирает все браузерные продукты, затем выполняет `test:checks`. C#-проверки требуют .NET SDK 8; упаковка Companion — Windows. `test:repository` последовательно выполняет все корневые контракты и браузерные тесты; `test:website` оставлен совместимым alias, а не отдельным набором сайта.
 
 `@maseaaao/design` экспортирует шрифты/токены, `@maseaaao/ui` — AppButton, FieldInput, IconIndicator, LiveStatusBadge и доступные UI-примитивы, `@maseaaao/build-config` — preset автономного HTML и PostCSS. Runtime не импортирует build-конфигурацию. [Устройство сборок](docs/build-toolchain.md).
 
@@ -52,3 +54,5 @@ Cloudflare использует корневой `wrangler.jsonc`, команд�
 [Сверка переноса Streamer.bot/custom](docs/custom-migration.md).
 
 [Система анимаций: сайт, Stream Info и эфирные виджеты](docs/motion-system.md).
+
+Быстрая проверка исходников: `pnpm run check:source`. Сборка всех продуктов и UI по графу: `pnpm run verify:products`; повторный запуск восстанавливает outputs из локального кеша. Полная приёмка по-прежнему требует Windows и проверяет точные байты растров. [Граф, affected CI и ограничения миграции](docs/pnpm-migration.md).

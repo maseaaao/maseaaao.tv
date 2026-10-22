@@ -6,7 +6,7 @@ export function launchBrowser({ softwareRendering = false } = {}) {
   const executablePath = customExecutable || chromium.executablePath();
   if (!existsSync(executablePath)) {
     throw new Error(
-      `Chromium executable not found: ${executablePath}. Run "npm run browser:install" or set CHROME_BIN / CHROME_PATH.`,
+      `Chromium executable not found: ${executablePath}. Run "pnpm run browser:install" or set CHROME_BIN / CHROME_PATH.`,
     );
   }
   return chromium.launch({

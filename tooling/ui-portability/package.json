@@ -4,16 +4,17 @@
   "type": "module",
   "scripts": {
     "check": "vue-tsc --noEmit",
-    "build": "npm run check && vite build",
-    "test": "node --test probe.test.mjs"
+    "build": "vite build",
+    "test": "node --test probe.test.mjs",
+    "source": "node ../../tooling/source-task.mjs"
   },
   "dependencies": {
-    "@maseaaao/design": "1.0.0",
+    "@maseaaao/design": "workspace:*",
     "@streamerbot/client": "2.0.1",
     "vue": "3.5.44"
   },
   "devDependencies": {
-    "@maseaaao/build-config": "1.0.0",
+    "@maseaaao/build-config": "workspace:*",
     "@vitejs/plugin-vue": "5.2.4",
     "typescript": "5.8.3",
     "vite": "6.4.3",
