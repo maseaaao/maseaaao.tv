@@ -53,7 +53,7 @@ const avatarSizes = [64, 96, 128, 192, 288]
           <WebsiteLink
             href="https://www.donationalerts.com/r/maseaaao"
             kind="donationalerts"
-            title="Задонатить свое мнение"
+            title="Задонатить"
           />
         </div>
         <div class="tiles tiles--secondary">

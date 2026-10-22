@@ -179,7 +179,7 @@ test('text-only landing has explicit contact actions and bounded social controls
 test('donation action invites visitors to donate their opinion', async () => {
   const { context, page } = await visit(390);
   try {
-    assert.equal(await page.locator('.tile--donationalerts').innerText(), 'Задонатить свое мнение');
+    assert.equal(await page.locator('.tile--donationalerts').innerText(), 'Задонатить');
     assert.equal(
       await page.locator('.tile--donationalerts').getAttribute('href'),
       'https://www.donationalerts.com/r/maseaaao',
