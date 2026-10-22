@@ -10,7 +10,7 @@
   --cover: max(1px, min(calc(64px * var(--scale) * var(--img)), calc(100vh - 2 * var(--pad))));
   --title: calc(20px * var(--scale));
   --meta: calc(16px * var(--scale));
-  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease: var(--motion-ease-enter);
 }
 
 *,

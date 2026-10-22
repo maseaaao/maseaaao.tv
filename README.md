@@ -50,3 +50,5 @@ Cloudflare использует корневой `wrangler.jsonc`, команд�
 Сайт предварительно рендерится из Vue SFC при сборке: готовые страницы работают без Vue runtime и гидрации. Главная — статическая страница ссылок без Twitch iframe, чата и клиентского SDK; интерактивные плееры есть только у самостоятельного диагностического Stream Checker. [Разработка сайта](apps/website/README.md).
 
 [Сверка переноса Streamer.bot/custom](docs/custom-migration.md).
+
+[Система анимаций: сайт, Stream Info и эфирные виджеты](docs/motion-system.md).

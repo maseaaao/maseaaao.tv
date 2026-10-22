@@ -53,6 +53,7 @@ defineEmits<{ remove: [] }>();
   color: var(--color-text);
   font-size: 13px;
   overflow-wrap: anywhere;
+  animation: dock-arrival var(--motion-enter) var(--motion-ease-enter);
 }
 .chip-tag__label {
   min-width: 0;

@@ -156,6 +156,8 @@ test(
         assert(await dialog.evaluate((element) => element.scrollWidth <= element.clientWidth));
         await page.keyboard.press('Escape');
         await dialog.waitFor({ state: 'detached' });
+        // The accessible dialog disappears immediately; its inert visual exit ends later.
+        await page.locator('.modal-backdrop').waitFor({ state: 'detached' });
         assert(
           await settings.evaluate((element) => element === document.activeElement),
           'focus returns to settings trigger',

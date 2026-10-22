@@ -204,6 +204,7 @@ async function keydown(event: KeyboardEvent, option?: string): Promise<void> {
   border-radius: var(--radius-field);
   overflow: hidden;
   background: var(--color-field);
+  animation: dock-arrival var(--motion-enter) var(--motion-ease-enter);
 }
 .autocomplete-list {
   max-height: 290px;
@@ -220,6 +221,7 @@ async function keydown(event: KeyboardEvent, option?: string): Promise<void> {
   border-bottom: 1px solid var(--color-border);
   background: transparent;
   color: var(--color-text);
+  transition: background-color var(--motion-feedback) var(--motion-ease-state);
 }
 .category-option:hover,
 .category-option[aria-selected='true'] {

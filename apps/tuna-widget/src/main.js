@@ -111,11 +111,23 @@
     artworkObjectUrls: ['', ''],
   };
 
-  if (query.get('motion') !== '1' && matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    cfg.anim = 0;
-    cfg.swap = 0;
-  }
-  el.root.style.setProperty('--art-swap', `${cfg.swap}ms`);
+  const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
+  const configuredMotion = { anim: cfg.anim, swap: cfg.swap };
+  const updateMotion = () => {
+    const reduced = query.get('motion') !== '1' && motionPreference.matches;
+    cfg.anim = reduced ? 0 : configuredMotion.anim;
+    cfg.swap = reduced ? 0 : configuredMotion.swap;
+    el.root.style.setProperty('--art-swap', `${cfg.swap}ms`);
+    if (!reduced) return;
+    // End at the already committed target, never replay a reveal or reset its timer.
+    state.fadeAnimation?.cancel();
+    state.fadeAnimation = null;
+    state.presenceAnimations.forEach((animation) => animation.cancel());
+    state.presenceAnimations = [];
+    state.textSwap?.finish();
+  };
+  updateMotion();
+  motionPreference.addEventListener('change', updateMotion);
   if (cfg.opaque) el.root.dataset.opaque = '1';
   if (cfg.softReveal) el.root.dataset.reveal = 'soft';
 

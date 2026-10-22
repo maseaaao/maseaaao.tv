@@ -146,9 +146,10 @@ button:focus-visible,
   background: transparent;
   text-decoration: none;
   transition:
-    color 160ms,
-    background-color 160ms,
-    border-color 160ms;
+    color var(--motion-feedback),
+    background-color var(--motion-feedback),
+    border-color var(--motion-feedback),
+    transform var(--motion-enter) var(--motion-ease-enter);
 }
 
 .tile__title {
@@ -206,9 +207,44 @@ button:focus-visible,
   font-size: 15px;
   overflow-wrap: anywhere;
   transition:
-    color 160ms,
-    background-color 160ms,
-    border-color 160ms;
+    color var(--motion-feedback),
+    background-color var(--motion-feedback),
+    border-color var(--motion-feedback),
+    transform var(--motion-enter) var(--motion-ease-enter);
+}
+
+/* Three reading groups arrive together; links never wait for a JS reveal. */
+@media (prefers-reduced-motion: no-preference) {
+  .shell > .identity,
+  .shell > .actions,
+  .shell > .collab {
+    animation: reading-arrival var(--motion-scene) var(--motion-ease-enter) backwards;
+  }
+  .shell > .actions {
+    animation-delay: 30ms;
+  }
+  .shell > .collab {
+    animation-delay: 60ms;
+  }
+  .shell:focus-within > * {
+    animation: none;
+  }
+  .tile:active,
+  .collab__link:active {
+    transform: translateY(1px);
+    transition-duration: var(--motion-press);
+  }
+}
+
+@keyframes reading-arrival {
+  from {
+    opacity: 0.65;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @media (hover: hover) {

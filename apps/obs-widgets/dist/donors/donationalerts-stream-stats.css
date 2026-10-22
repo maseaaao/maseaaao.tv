@@ -110,8 +110,8 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
   --color-border: #d2d1c9;
   --radius-field: 0.75rem;
   --radius-surface: 1.5rem;
+  /* Purpose, not platform imitation: immediate response, quiet settling. */
 }
-
 /* Blue / warm light · DonationAlerts stream stats / donors.
    Provider owns data and rotation; text rolls inside a stationary panel. */
 :root {

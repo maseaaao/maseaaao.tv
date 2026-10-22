@@ -285,6 +285,23 @@ textarea::placeholder {
 .notice-line {
   display: block;
 }
+.notices > * {
+  animation: dock-arrival var(--motion-enter) var(--motion-ease-enter);
+}
+.save-status {
+  transition: color var(--motion-feedback) var(--motion-ease-state);
+}
+
+@keyframes dock-arrival {
+  from {
+    opacity: 0.6;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
 
 @keyframes spin {
   to {

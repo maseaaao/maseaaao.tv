@@ -108,8 +108,9 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
   --color-text: #20201e;
   --color-muted: #60605a;
   --color-border: #d2d1c9;
+  /* Purpose, not platform imitation: immediate response, quiet settling. */
+  --motion-ease-enter: cubic-bezier(0.22, 1, 0.36, 1);
 }
-
 /* Streamlabs owns message delivery, deletion and the configured hide delay.
    Keep {font_size} / {message_hide_delay} substitution in Streamlabs.
    The canvas is transparent; messages carry their own readable surfaces. */
@@ -165,7 +166,7 @@ body {
   box-shadow: none;
   text-shadow: none;
   animation:
-    slideInSoft 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) forwards,
+    slideInSoft 0.3s var(--motion-ease-enter) forwards,
     fadeAway 0.5s ease {message_hide_delay} forwards;
 }
 
@@ -276,7 +277,7 @@ body {
 @keyframes slideInSoft {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -296,6 +297,7 @@ body {
 @media (prefers-reduced-motion: reduce) {
   #log > div {
     animation-name: appearStill, fadeAway;
+    animation-duration: 0.001s, 0.5s;
   }
 }
 

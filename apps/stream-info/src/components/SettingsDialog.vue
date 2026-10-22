@@ -82,6 +82,31 @@ onBeforeUnmount(() => {
   background: var(--color-surface);
   box-shadow: 0 12px 60px color-mix(in srgb, var(--color-text) 20%, transparent);
 }
+.settings-enter-active,
+.settings-leave-active {
+  transition: opacity var(--motion-enter) var(--motion-ease-enter);
+}
+.settings-enter-active .settings-modal,
+.settings-leave-active .settings-modal {
+  transition: transform var(--motion-enter) var(--motion-ease-enter);
+  transform-origin: 50% 40%;
+}
+.settings-leave-active,
+.settings-leave-active .settings-modal {
+  transition-duration: var(--motion-exit);
+  transition-timing-function: var(--motion-ease-exit);
+  pointer-events: none;
+}
+.settings-enter-from,
+.settings-leave-to {
+  opacity: 0;
+}
+.settings-enter-from .settings-modal {
+  transform: translateY(8px) scale(0.99);
+}
+.settings-leave-to .settings-modal {
+  transform: translateY(4px) scale(0.995);
+}
 .modal-header {
   display: flex;
   align-items: center;

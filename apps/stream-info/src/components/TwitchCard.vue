@@ -137,7 +137,7 @@ function tagKeydown(event: KeyboardEvent): void {
           @keydown="tagKeydown" /><div class="tag-list" aria-label="Выбранные теги"
           ><ChipTag
             v-for="(tag, index) in state.allForm.twitchTags"
-            :key="`${index}-${tag}`"
+            :key="tag"
             :label="tag"
             variant="neutral"
             :removable="!disabled"

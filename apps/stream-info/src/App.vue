@@ -66,6 +66,11 @@ function remember(event: Event): void {
   if (event.target instanceof HTMLInputElement)
     state.settingsDraft.rememberPassword = event.target.checked;
 }
+function retireDialog(element: Element): void {
+  // The visual exit must not keep an obsolete dialog in keyboard/accessibility navigation.
+  element.setAttribute('inert', '');
+  element.setAttribute('aria-hidden', 'true');
+}
 async function copyImport(): Promise<void> {
   let copied = false;
   try {
@@ -204,33 +209,35 @@ async function copyImport(): Promise<void> {
       ></section
     >
   </div>
-  <SettingsDialog v-if="state.modal === 'settings'" @close="closeSettings"
-    ><section class="settings-section"
-      ><h3>{{ t('connectionToStreamerbot') }}</h3
-      ><div class="settings-grid"
-        ><FieldInput v-model="state.settingsDraft.host" label="Хост" /><FieldInput
-          label="Порт"
-          :model-value="String(state.settingsDraft.port)"
-          type="number"
-          :min="1"
-          :max="65535"
-          @update:model-value="state.settingsDraft.port = Number($event)" /></div
-      ><FieldInput v-model="state.settingsDraft.endpoint" label="Endpoint" /><FieldInput
-        v-model="state.settingsDraft.password"
-        :label="t('password')"
-        type="password"
-        autocomplete="current-password"
-      /><label class="check-row"
-        ><input
-          type="checkbox"
-          :checked="state.settingsDraft.rememberPassword"
-          @change="remember"
-        />{{ t('rememberPassword') }}</label
-      ></section
-    ><StreamNotices :notices="state.notices" @dismiss="closeNotice" /><template #footer
-      ><AppButton variant="primary" @click="saveConnection">{{
-        t('saveConnection')
-      }}</AppButton></template
-    ></SettingsDialog
-  >
+  <Transition name="settings" @before-leave="retireDialog">
+    <SettingsDialog v-if="state.modal === 'settings'" @close="closeSettings"
+      ><section class="settings-section"
+        ><h3>{{ t('connectionToStreamerbot') }}</h3
+        ><div class="settings-grid"
+          ><FieldInput v-model="state.settingsDraft.host" label="Хост" /><FieldInput
+            label="Порт"
+            :model-value="String(state.settingsDraft.port)"
+            type="number"
+            :min="1"
+            :max="65535"
+            @update:model-value="state.settingsDraft.port = Number($event)" /></div
+        ><FieldInput v-model="state.settingsDraft.endpoint" label="Endpoint" /><FieldInput
+          v-model="state.settingsDraft.password"
+          :label="t('password')"
+          type="password"
+          autocomplete="current-password"
+        /><label class="check-row"
+          ><input
+            type="checkbox"
+            :checked="state.settingsDraft.rememberPassword"
+            @change="remember"
+          />{{ t('rememberPassword') }}</label
+        ></section
+      ><StreamNotices :notices="state.notices" @dismiss="closeNotice" /><template #footer
+        ><AppButton variant="primary" @click="saveConnection">{{
+          t('saveConnection')
+        }}</AppButton></template
+      ></SettingsDialog
+    >
+  </Transition>
 </template>

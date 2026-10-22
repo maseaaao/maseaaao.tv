@@ -31,4 +31,14 @@
   --control-height: 2.75rem;
   --font-display: 'Unbounded', Arial, sans-serif;
   --font-body: Arial, sans-serif;
+
+  /* Purpose, not platform imitation: immediate response, quiet settling. */
+  --motion-press: 90ms;
+  --motion-feedback: 160ms;
+  --motion-enter: 240ms;
+  --motion-exit: 140ms;
+  --motion-scene: 360ms;
+  --motion-ease-enter: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --motion-ease-state: cubic-bezier(0.2, 0, 0, 1);
 }

@@ -25,7 +25,7 @@ withDefaults(
     loading?: boolean;
     /** Светлое действие на фирменном синем фоне, не отдельная тёмная тема. */
     inverted?: boolean;
-    /** Необязательная обратная связь нажатия; отключена при reduced-motion. */
+    /** Обратная связь нажатия по умолчанию; false и reduced-motion отключают её. */
     pressEffect?: boolean;
     target?: string;
     rel?: string;
@@ -36,7 +36,7 @@ withDefaults(
     as: 'button',
     type: 'button',
     inverted: false,
-    pressEffect: false,
+    pressEffect: true,
     href: undefined,
     target: undefined,
     rel: undefined,
@@ -123,9 +123,10 @@ defineSlots<{
   text-align: center;
   overflow-wrap: anywhere;
   transition:
-    color 160ms,
-    background-color 160ms,
-    border-color 160ms;
+    color var(--motion-feedback, 160ms),
+    background-color var(--motion-feedback, 160ms),
+    border-color var(--motion-feedback, 160ms),
+    transform var(--motion-enter, 240ms) var(--motion-ease-enter, ease-out);
 }
 .app-button__label {
   min-width: 0;
@@ -172,7 +173,8 @@ defineSlots<{
   outline-color: var(--color-surface);
 }
 .app-button--press:active:not(:disabled, [aria-disabled='true']) {
-  transform: scale(0.98);
+  transform: translateY(1px);
+  transition-duration: var(--motion-press, 90ms);
 }
 
 @media (prefers-reduced-motion: reduce) {
