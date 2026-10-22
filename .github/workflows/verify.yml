@@ -91,10 +91,15 @@ jobs:
           if-no-files-found: warn
           path: |
             dist/**
+            apps/stream-info/dist/**
+            apps/stream-info/streamerbot-import.txt
+            apps/tuna-widget/dist/**
+            apps/obs-widgets/dist/**
             artwork/scenes/rendered/**
             artwork/banners/rendered/**
             artwork/twitch-description/rendered/**
             artwork/brand/rendered/website/**
+            artwork/logo/rendered/**
             artwork/wallpapers/rendered/**
             .build-cache/verify/artifacts.sha256
   companion:

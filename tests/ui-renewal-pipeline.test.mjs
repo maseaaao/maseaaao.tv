@@ -61,6 +61,37 @@ test('the raster job publishes the re-rendered baseline for review', () => {
   // The acceptance tool must not weaken the exact comparison.
   assert.doesNotMatch(read('tooling/accept-artifacts.mjs'), /unlink|rmSync|rm -rf/);
 });
+
+test('the published baseline covers every tracked artifact', () => {
+  // The acceptance tool resolves files by name, so a published path that misses
+  // a tracked artifact would make the baseline incomplete and unreviewable.
+  const upload = workflow.jobs.raster.steps.find(
+    (step) => step.uses === 'actions/upload-artifact@v4',
+  );
+  const published = upload.with.path
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const required = [
+    'dist/**',
+    'apps/stream-info/dist/**',
+    'apps/stream-info/streamerbot-import.txt',
+    'apps/tuna-widget/dist/**',
+    'apps/obs-widgets/dist/**',
+    'artwork/scenes/rendered/**',
+    'artwork/banners/rendered/**',
+    'artwork/twitch-description/rendered/**',
+    'artwork/brand/rendered/website/**',
+    'artwork/logo/rendered/**',
+    'artwork/wallpapers/rendered/**',
+  ];
+  for (const path of required) {
+    assert(
+      published.includes(path),
+      `the published baseline must include ${path} so the whole set can be accepted`,
+    );
+  }
+});
 test('CI runs on Linux except the Windows-only Companion job', () => {
   for (const job of ['plan', 'source', 'products', 'raster', 'verify'])
     assert.equal(workflow.jobs[job]['runs-on'], 'ubuntu-latest', job);
