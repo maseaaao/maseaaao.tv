@@ -2,6 +2,7 @@ import { createSSRApp, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import SceneArtwork from './components/SceneArtwork.vue';
 import BannerArtwork from './components/BannerArtwork.vue';
+import OfflineBannerArtwork from './components/OfflineBannerArtwork.vue';
 import TwitchPanel from './components/TwitchPanel.vue';
 import BrandArtwork from './components/BrandArtwork.vue';
 import WallpaperArtwork from './components/WallpaperArtwork.vue';
@@ -22,6 +23,7 @@ export function renderPage(name) {
   if (scene) node = h(SceneArtwork, { name: scene.name });
   for (const platform of ['twitch', 'youtube'])
     if (name === `banners/${platform}.html`) node = h(BannerArtwork, { platform });
+  if (name === 'banners/offline.html') node = h(OfflineBannerArtwork);
   for (const [file, kind, title] of panels)
     if (name === `twitch-description/${file}.html`) node = h(TwitchPanel, { kind, title });
   for (const kind of ['og', 'subscribe', 'background', 'icon'])

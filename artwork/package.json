@@ -21,6 +21,7 @@
   "exports": {
     "./SceneArtwork.vue": "./components/SceneArtwork.vue",
     "./BannerArtwork.vue": "./components/BannerArtwork.vue",
+    "./OfflineBannerArtwork.vue": "./components/OfflineBannerArtwork.vue",
     "./TwitchPanel.vue": "./components/TwitchPanel.vue",
     "./BrandArtwork.vue": "./components/BrandArtwork.vue",
     "./WallpaperArtwork.vue": "./components/WallpaperArtwork.vue",

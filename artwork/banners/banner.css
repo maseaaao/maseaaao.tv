@@ -16,6 +16,39 @@
   --safe-width: 1000px;
   --safe-height: 280px;
 }
+.offline-banner {
+  --banner-width: 1920px;
+  --banner-height: 1080px;
+  --safe-width: 1400px;
+  --safe-height: 620px;
+}
+.offline-card {
+  flex-direction: column;
+  gap: 24px;
+  padding: 72px 96px;
+  border: 2px solid var(--color-border);
+  border-radius: 48px;
+}
+.offline-card h1 {
+  font-size: 116px;
+  line-height: 1.05;
+}
+.offline-mark {
+  width: 120px;
+  height: 120px;
+  border-radius: 24px;
+}
+.offline-note {
+  margin: 0;
+  color: var(--color-muted);
+  font: 400 40px/1.4 var(--font-body);
+}
+.offline-link {
+  margin: 0;
+  color: var(--color-brand);
+  font: 400 44px/1.4 var(--font-body);
+  letter-spacing: -0.02em;
+}
 .banner-stage {
   position: relative;
   width: calc(var(--banner-width) * var(--banner-scale));

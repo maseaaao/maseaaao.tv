@@ -38,6 +38,13 @@ try {
       1440,
       'jpeg',
     );
+    await render(
+      'artwork/banners/offline.html',
+      'artwork/banners/rendered/offline.jpeg',
+      1920,
+      1080,
+      'jpeg',
+    );
   }
   if (requested === 'all' || requested === 'panels') {
     for (const name of (await fs.readdir(path.join(root, 'artwork/twitch-description'))).filter(
