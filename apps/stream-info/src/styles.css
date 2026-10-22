@@ -286,6 +286,29 @@ textarea::placeholder {
   display: block;
 }
 
+/* The backdrop owns the full duration, including its child's settling time. */
+.settings-enter-active {
+  transition: opacity var(--motion-enter) var(--motion-ease-out);
+}
+.settings-leave-active {
+  transition: opacity var(--motion-exit) var(--motion-ease-in);
+  pointer-events: none;
+}
+.settings-enter-active .settings-modal {
+  transition: transform var(--motion-enter) var(--motion-ease-out);
+}
+.settings-leave-active .settings-modal {
+  transition: transform var(--motion-exit) var(--motion-ease-in);
+}
+.settings-enter-from,
+.settings-leave-to {
+  opacity: 0;
+}
+.settings-enter-from .settings-modal,
+.settings-leave-to .settings-modal {
+  transform: translateY(8px) scale(0.985);
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -324,6 +347,14 @@ textarea::placeholder {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .settings-enter-from,
+  .settings-leave-to {
+    opacity: 1;
+  }
+  .settings-enter-from .settings-modal,
+  .settings-leave-to .settings-modal {
+    transform: none;
+  }
   *,
   *::before,
   *::after {

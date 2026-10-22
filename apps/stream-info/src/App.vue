@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onScopeDispose } from 'vue';
+import { computed, nextTick, onScopeDispose, ref } from 'vue';
 import AppButton from '@maseaaao/ui/AppButton.vue';
 import FieldInput from '@maseaaao/ui/FieldInput.vue';
 import IconIndicator from '@maseaaao/ui/IconIndicator.vue';
@@ -13,6 +13,25 @@ import { t } from './messages';
 import STREAMERBOT_IMPORT from '../streamerbot-import.txt?raw';
 const props = withDefaults(defineProps<{ demo?: boolean }>(), { demo: undefined });
 const controller = useStreamInfo({ demo: props.demo });
+const settingsPresent = ref(false);
+let settingsTrigger: HTMLElement | null = null;
+function beforeSettingsEnter(): void {
+  if (!settingsPresent.value)
+    settingsTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  settingsPresent.value = true;
+}
+function afterSettingsLeave(): void {
+  if (controller.state.modal === 'settings') return;
+  settingsPresent.value = false;
+  const target = settingsTrigger;
+  void nextTick(() => {
+    if (!settingsPresent.value && target?.isConnected) target.focus();
+  });
+}
+function beforeSettingsLeave(element: Element): void {
+  element.setAttribute('inert', '');
+  element.setAttribute('aria-hidden', 'true');
+}
 const {
   state,
   settings,
@@ -99,7 +118,7 @@ async function copyImport(): Promise<void> {
 </script>
 
 <template>
-  <div class="dock-shell" :inert="state.modal !== null || undefined">
+  <div class="dock-shell" :inert="state.modal !== null || settingsPresent || undefined">
     <div class="dock-scroll">
       <header class="dock-header"
         ><div
@@ -204,33 +223,40 @@ async function copyImport(): Promise<void> {
       ></section
     >
   </div>
-  <SettingsDialog v-if="state.modal === 'settings'" @close="closeSettings"
-    ><section class="settings-section"
-      ><h3>{{ t('connectionToStreamerbot') }}</h3
-      ><div class="settings-grid"
-        ><FieldInput v-model="state.settingsDraft.host" label="Хост" /><FieldInput
-          label="Порт"
-          :model-value="String(state.settingsDraft.port)"
-          type="number"
-          :min="1"
-          :max="65535"
-          @update:model-value="state.settingsDraft.port = Number($event)" /></div
-      ><FieldInput v-model="state.settingsDraft.endpoint" label="Endpoint" /><FieldInput
-        v-model="state.settingsDraft.password"
-        :label="t('password')"
-        type="password"
-        autocomplete="current-password"
-      /><label class="check-row"
-        ><input
-          type="checkbox"
-          :checked="state.settingsDraft.rememberPassword"
-          @change="remember"
-        />{{ t('rememberPassword') }}</label
-      ></section
-    ><StreamNotices :notices="state.notices" @dismiss="closeNotice" /><template #footer
-      ><AppButton variant="primary" @click="saveConnection">{{
-        t('saveConnection')
-      }}</AppButton></template
-    ></SettingsDialog
+  <Transition
+    name="settings"
+    @before-enter="beforeSettingsEnter"
+    @before-leave="beforeSettingsLeave"
+    @after-leave="afterSettingsLeave"
   >
+    <SettingsDialog v-if="state.modal === 'settings'" @close="closeSettings"
+      ><section class="settings-section"
+        ><h3>{{ t('connectionToStreamerbot') }}</h3
+        ><div class="settings-grid"
+          ><FieldInput v-model="state.settingsDraft.host" label="Хост" /><FieldInput
+            label="Порт"
+            :model-value="String(state.settingsDraft.port)"
+            type="number"
+            :min="1"
+            :max="65535"
+            @update:model-value="state.settingsDraft.port = Number($event)" /></div
+        ><FieldInput v-model="state.settingsDraft.endpoint" label="Endpoint" /><FieldInput
+          v-model="state.settingsDraft.password"
+          :label="t('password')"
+          type="password"
+          autocomplete="current-password"
+        /><label class="check-row"
+          ><input
+            type="checkbox"
+            :checked="state.settingsDraft.rememberPassword"
+            @change="remember"
+          />{{ t('rememberPassword') }}</label
+        ></section
+      ><StreamNotices :notices="state.notices" @dismiss="closeNotice" /><template #footer
+        ><AppButton variant="primary" @click="saveConnection">{{
+          t('saveConnection')
+        }}</AppButton></template
+      ></SettingsDialog
+    >
+  </Transition>
 </template>

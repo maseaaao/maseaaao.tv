@@ -36,7 +36,7 @@ withDefaults(
     as: 'button',
     type: 'button',
     inverted: false,
-    pressEffect: false,
+    pressEffect: true,
     href: undefined,
     target: undefined,
     rel: undefined,
@@ -123,9 +123,10 @@ defineSlots<{
   text-align: center;
   overflow-wrap: anywhere;
   transition:
-    color 160ms,
-    background-color 160ms,
-    border-color 160ms;
+    color var(--motion-state) var(--motion-ease-state),
+    background-color var(--motion-state) var(--motion-ease-state),
+    border-color var(--motion-state) var(--motion-ease-state),
+    transform var(--motion-state) var(--motion-ease-out);
 }
 .app-button__label {
   min-width: 0;
@@ -172,7 +173,8 @@ defineSlots<{
   outline-color: var(--color-surface);
 }
 .app-button--press:active:not(:disabled, [aria-disabled='true']) {
-  transform: scale(0.98);
+  transform: translateY(1px);
+  transition-duration: var(--motion-press);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -155,7 +155,7 @@ test(
         assert.equal(await dialog.getByLabel('Шаблон Twitch').count(), 0);
         assert(await dialog.evaluate((element) => element.scrollWidth <= element.clientWidth));
         await page.keyboard.press('Escape');
-        await dialog.waitFor({ state: 'detached' });
+        await page.locator('.modal-backdrop').waitFor({ state: 'detached' });
         assert(
           await settings.evaluate((element) => element === document.activeElement),
           'focus returns to settings trigger',

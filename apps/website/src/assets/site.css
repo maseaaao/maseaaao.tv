@@ -146,9 +146,10 @@ button:focus-visible,
   background: transparent;
   text-decoration: none;
   transition:
-    color 160ms,
-    background-color 160ms,
-    border-color 160ms;
+    color var(--motion-state) var(--motion-ease-state),
+    background-color var(--motion-state) var(--motion-ease-state),
+    border-color var(--motion-state) var(--motion-ease-state),
+    transform var(--motion-state) var(--motion-ease-out);
 }
 
 .tile__title {
@@ -206,9 +207,49 @@ button:focus-visible,
   font-size: 15px;
   overflow-wrap: anywhere;
   transition:
-    color 160ms,
-    background-color 160ms,
-    border-color 160ms;
+    color var(--motion-state) var(--motion-ease-state),
+    background-color var(--motion-state) var(--motion-ease-state),
+    border-color var(--motion-state) var(--motion-ease-state),
+    transform var(--motion-state) var(--motion-ease-out);
+}
+
+.tile:active,
+.collab__link:active {
+  transform: translateY(1px);
+  transition-duration: var(--motion-press);
+}
+
+/* Three groups, never individual links. Content stays readable and actionable. */
+@media (prefers-reduced-motion: no-preference) {
+  .shell > .identity,
+  .shell > .actions,
+  .shell > .collab {
+    animation: landing-arrive var(--motion-intro) var(--motion-ease-out) backwards;
+  }
+  .shell > .actions {
+    animation-delay: var(--motion-step);
+  }
+  .shell > .collab {
+    animation-delay: calc(var(--motion-step) * 2);
+  }
+}
+
+@keyframes landing-arrive {
+  from {
+    opacity: 0.65;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Keyboard navigation takes precedence over an unfinished introduction. */
+.shell:focus-within .identity,
+.shell:focus-within .actions,
+.shell:focus-within .collab {
+  animation: none;
 }
 
 @media (hover: hover) {
@@ -493,6 +534,10 @@ button:focus-visible,
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .tile:active,
+  .collab__link:active {
+    transform: none;
+  }
   *,
   *::before,
   *::after {

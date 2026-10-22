@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, ref, useId } from 'vue';
+import { onMounted, ref, useId } from 'vue';
 import AppButton from '@maseaaao/ui/AppButton.vue';
 import AppIcon from './AppIcon.vue';
 import { t } from '../messages';
 const emit = defineEmits<{ close: [] }>();
 const id = useId();
 const dialog = ref<HTMLElement | null>(null);
-let returnFocus: HTMLElement | null = null;
 function keydown(event: KeyboardEvent): void {
   if (event.isComposing) return;
   if (event.key === 'Escape') {
@@ -32,14 +31,7 @@ function keydown(event: KeyboardEvent): void {
   }
 }
 onMounted(() => {
-  returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   dialog.value?.querySelector<HTMLElement>('button, input, textarea')?.focus();
-});
-onBeforeUnmount(() => {
-  const target = returnFocus;
-  void nextTick(() => {
-    if (target?.isConnected) target.focus();
-  });
 });
 </script>
 

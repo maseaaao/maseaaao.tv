@@ -204,6 +204,7 @@ async function keydown(event: KeyboardEvent, option?: string): Promise<void> {
   border-radius: var(--radius-field);
   overflow: hidden;
   background: var(--color-field);
+  animation: category-arrive var(--motion-state) var(--motion-ease-out);
 }
 .autocomplete-list {
   max-height: 290px;
@@ -238,5 +239,16 @@ async function keydown(event: KeyboardEvent, option?: string): Promise<void> {
   flex-wrap: wrap;
   gap: var(--space-2);
   padding: var(--space-2);
+}
+
+@keyframes category-arrive {
+  from {
+    opacity: 0.65;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 </style>

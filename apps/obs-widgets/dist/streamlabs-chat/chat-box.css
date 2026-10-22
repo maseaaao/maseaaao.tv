@@ -99,6 +99,31 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
   font-style: normal;
   font-display: swap;
 }
+
+/* Interface motion. Broadcast choreography keeps its own functional timings. */
+:root {
+  --motion-press: 80ms;
+  --motion-state: 160ms;
+  --motion-exit: 160ms;
+  --motion-enter: 280ms;
+  --motion-intro: 360ms;
+  --motion-step: 35ms;
+  --motion-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --motion-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --motion-ease-state: cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-press: 0ms;
+    --motion-state: 0ms;
+    --motion-exit: 0ms;
+    --motion-enter: 0ms;
+    --motion-intro: 0ms;
+    --motion-step: 0ms;
+  }
+}
+
 :root {
   color-scheme: light;
 

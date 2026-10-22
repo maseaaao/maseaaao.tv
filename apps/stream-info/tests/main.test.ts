@@ -86,12 +86,17 @@ async function setValue(name: string | RegExp, value: string): Promise<Field> {
   await nextTick();
   return input;
 }
-async function boot(): Promise<void> {
+async function boot({
+  realTransitions = false,
+}: { realTransitions?: boolean } = {}): Promise<void> {
   wrapper?.unmount();
   wrapper = undefined;
   document.body.innerHTML = '<div id="app"></div>';
   const { default: App } = await import('../src/App.vue');
-  wrapper = mount(App, { attachTo: required(document.querySelector('#app')) });
+  wrapper = mount(App, {
+    attachTo: required(document.querySelector('#app')),
+    global: { stubs: { transition: !realTransitions } },
+  });
   await flush();
   await flush();
 }
@@ -605,7 +610,7 @@ describe('Stream Info Vue interactions', () => {
   });
 
   it('transfers, traps and returns settings focus with an inert background', async () => {
-    await boot();
+    await boot({ realTransitions: true });
     const opener = button('Настройки');
     opener.focus();
     await click('Настройки');
@@ -627,10 +632,11 @@ describe('Stream Info Vue interactions', () => {
       new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
     );
     await nextTick();
-    // Dialog focus restoration is scheduled after its unmount patch.
-    await nextTick();
-    expect(document.querySelector('[role="dialog"]')).toBeNull();
-    expect(document.activeElement).toBe(button('Настройки'));
+    // The real Transition owns removal and focus restoration after the exit.
+    await vi.waitFor(() => {
+      expect(document.querySelector('[role="dialog"]')).toBeNull();
+      expect(document.activeElement).toBe(button('Настройки'));
+    });
     expect(Boolean(document.querySelector('main')?.closest('[inert]'))).toBe(false);
   });
 
