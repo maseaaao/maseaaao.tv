@@ -95,7 +95,7 @@ onBeforeUnmount(() => {
 }
 .settings-leave-active,
 .settings-leave-active .settings-modal {
-  transition-duration: var(--motion-exit);
+  transition-duration: var(--motion-exit), var(--motion-focus);
   transition-timing-function: var(--motion-ease-exit);
   pointer-events: none;
 }

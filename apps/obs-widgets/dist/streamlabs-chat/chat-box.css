@@ -309,8 +309,9 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   #log > div {
-    animation-name: appearStill, fadeAway;
-    animation-duration: 0.001s, 0.5s;
+    /* Keep fadeAway in slot three, including the provider-owned delay. */
+    animation-name: appearStill, none, fadeAway;
+    animation-duration: 0.001s, 0s, 0.5s;
   }
 }
 

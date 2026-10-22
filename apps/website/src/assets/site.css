@@ -238,6 +238,22 @@ button:focus-visible,
   }
 }
 
+/* Newly created players settle into the existing slot; removal remains immediate. */
+@media (prefers-reduced-motion: no-preference) {
+  .checker:not(.is-tv-mode) .slot > * {
+    animation: player-arrival var(--motion-feedback) var(--motion-ease-enter);
+  }
+}
+
+@keyframes player-arrival {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @keyframes reading-focus {
   from {
     filter: blur(2px);

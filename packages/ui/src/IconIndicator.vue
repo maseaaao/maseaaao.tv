@@ -42,7 +42,8 @@ defineProps<{
   background: var(--color-border-control);
 }
 .icon-indicator__dot[data-status='connected'] {
-  animation: connection-settle var(--motion-scene) var(--motion-ease-spring);
+  animation: var(--connection-motion, connection-settle) var(--motion-scene)
+    var(--motion-ease-spring);
   background: var(--color-success);
   border-color: var(--color-success);
 }
@@ -66,7 +67,8 @@ defineProps<{
   border-color: var(--color-surface);
 }
 .icon-indicator--inverted .icon-indicator__dot[data-status='connected'] {
-  animation: connection-settle var(--motion-scene) var(--motion-ease-spring);
+  animation: var(--connection-motion, connection-settle) var(--motion-scene)
+    var(--motion-ease-spring);
   background: color-mix(in srgb, var(--color-success) 25%, var(--color-surface));
 }
 .icon-indicator--inverted .icon-indicator__dot[data-status='connecting'] {
@@ -87,7 +89,7 @@ defineProps<{
 
 @media (prefers-reduced-motion: reduce) {
   .icon-indicator__dot {
-    animation: none;
+    --connection-motion: none;
   }
 }
 </style>

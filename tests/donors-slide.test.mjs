@@ -73,9 +73,13 @@ test('donor panel stays fixed while text rolls, including v-show, long names and
             },
             { once: true },
           );
+          let incomingEnd = null;
           next.addEventListener(
             'transitionend',
-            () => next.classList.remove('fade-in-out-enter-active'),
+            (event) => {
+              incomingEnd = { property: event.propertyName, elapsed: event.elapsedTime };
+              next.classList.remove('fade-in-out-enter-active');
+            },
             { once: true },
           );
           old.classList.remove('fade-in-out-leave');
@@ -106,6 +110,7 @@ test('donor panel stays fixed while text rolls, including v-show, long names and
           });
           return {
             baseline,
+            incomingEnd,
             samples,
             oldHidden: getComputedStyle(old).display === 'none',
             final: rect(next),
@@ -116,6 +121,15 @@ test('donor panel stays fixed while text rolls, including v-show, long names and
           };
         }, mode);
         assert(frames.samples.length > 5);
+        assert(frames.incomingEnd, 'Provider receives the incoming transition completion');
+        assert.notEqual(
+          frames.incomingEnd.property,
+          'filter',
+          'Focus must not end the provider transition',
+        );
+        assert(
+          Math.abs(frames.incomingEnd.elapsed - (reduced && !forceMotion ? 0.001 : 0.52)) < 0.01,
+        );
         assert.equal(frames.baseline.height, 114);
         assert.equal(
           frames.oldHidden,

@@ -199,7 +199,7 @@ defineSlots<{
 }
 .app-button--press:active:not(:disabled, [aria-disabled='true']) {
   transform: translateY(1px) scale(0.985);
-  transition-duration: var(--motion-press, 90ms);
+  transition-duration: var(--motion-press, 80ms);
 }
 
 @media (prefers-reduced-motion: reduce) {

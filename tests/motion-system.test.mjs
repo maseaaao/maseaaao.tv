@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
+import { parse } from 'vue/compiler-sfc';
 import { launchBrowser } from '../tooling/artwork/browser.mjs';
 
 const delivery = (path) => new URL(`../${path}`, import.meta.url).href;
@@ -161,6 +162,75 @@ test('Tuna focus resolves quickly even when the spatial entrance is deliberately
       await page.locator('#content').evaluate((node) => getComputedStyle(node).filter),
       'blur(0px)',
     );
+  } finally {
+    await browser.close();
+  }
+});
+
+test('standalone connection indicators respect reduced motion in both color variants', async () => {
+  const browser = await launchBrowser();
+  try {
+    const tokens = await readFile(
+      new URL('../packages/design/tokens.css', import.meta.url),
+      'utf8',
+    );
+    const source = await readFile(
+      new URL('../packages/ui/src/IconIndicator.vue', import.meta.url),
+      'utf8',
+    );
+    const { descriptor } = parse(source);
+    for (const inverted of [false, true]) {
+      const page = await browser.newPage({ reducedMotion: 'no-preference' });
+      await page.setContent(`<style>${tokens}${descriptor.styles[0].content}</style>
+        <p class="icon-indicator ${inverted ? 'icon-indicator--inverted' : ''}">
+          <span class="icon-indicator__dot" data-status="connected"></span><span>Подключено</span>
+        </p>`);
+      const dot = page.locator('.icon-indicator__dot');
+      assert.notEqual(await dot.evaluate((node) => getComputedStyle(node).animationName), 'none');
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      assert.equal(await dot.evaluate((node) => getComputedStyle(node).animationName), 'none');
+      assert.equal(await dot.evaluate((node) => getComputedStyle(node).transform), 'none');
+      await dot.evaluate((node) => {
+        node.dataset.status = 'connecting';
+      });
+      await dot.evaluate((node) => {
+        node.dataset.status = 'connected';
+      });
+      assert.equal(await dot.evaluate((node) => node.getAnimations().length), 0);
+      await page.close();
+    }
+  } finally {
+    await browser.close();
+  }
+});
+
+test('settings can reopen during their exit and settle without a stale backdrop', async () => {
+  const browser = await launchBrowser();
+  try {
+    const page = await browser.newPage({ reducedMotion: 'no-preference' });
+    await page.route(/^https?:/, (route) => route.abort());
+    await page.routeWebSocket(/.*/, (socket) => void socket.close());
+    await page.goto(delivery('apps/stream-info/dist/change-info-streamer-bot.ru.html') + '?demo');
+    const settings = page.getByRole('button', { name: 'Настройки', exact: true });
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await settings.evaluate((node) => node.click());
+      await page.getByRole('dialog').waitFor();
+      await page.keyboard.press('Escape');
+      await settings.evaluate((node) => node.click());
+      await page.waitForFunction(() => {
+        const dialog = document.querySelector('[role="dialog"]');
+        return (
+          document.querySelectorAll('.modal-backdrop').length === 1 &&
+          dialog?.contains(document.activeElement) &&
+          document.getAnimations().length === 0
+        );
+      });
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await page.keyboard.press('Escape');
+      await page.waitForFunction(() => !document.querySelector('.modal-backdrop'));
+      assert(await settings.evaluate((node) => node === document.activeElement));
+      await page.emulateMedia({ reducedMotion: 'no-preference' });
+    }
   } finally {
     await browser.close();
   }
