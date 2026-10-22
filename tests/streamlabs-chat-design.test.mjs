@@ -74,15 +74,32 @@ test('chat keeps the brand hierarchy, wrapping and transparent canvas over a leg
       assert.equal(result.noShadow, 'none');
       assert.equal(result.overflow, false, `No clipped message at ${width}px`);
       assert.equal(result.canvas, 'rgba(0, 0, 0, 0)');
-      assert.equal(result.delay, '0s, 600s');
+      assert.equal(result.delay, '0s, 0s, 600s');
       await page.emulateMedia({ reducedMotion: 'reduce' });
       assert.equal(
         await page
           .locator('#log > div')
           .first()
           .evaluate((el) => getComputedStyle(el).animationName),
-        'appearStill, fadeAway',
+        'appearStill, none, fadeAway',
       );
+      const reduced = await page
+        .locator('#log > div')
+        .first()
+        .evaluate((el) => {
+          const fade = el
+            .getAnimations()
+            .find((animation) => animation.animationName === 'fadeAway');
+          const delay = fade.effect.getTiming().delay;
+          fade.pause();
+          fade.currentTime = delay - 1;
+          const before = getComputedStyle(el).opacity;
+          fade.currentTime = delay + 500;
+          return { delay, before, after: getComputedStyle(el).opacity };
+        });
+      assert.equal(reduced.delay, 600000, 'Reduced motion preserves the provider hide delay');
+      assert.equal(reduced.before, '1');
+      assert.equal(reduced.after, '0');
       await page.close();
     }
   } finally {

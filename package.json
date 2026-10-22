@@ -54,7 +54,8 @@
     "check:artifacts": "node tooling/check-generated-artifacts.mjs",
     "accept:artifacts": "node tooling/accept-artifacts.mjs",
     "verify:ui-renewal": "pnpm run check:source && pnpm run verify:artwork && pnpm run verify:products && pnpm run check:repository && pnpm run test:ui && pnpm run test:ui-probe && pnpm run test:static && pnpm run test:checks && pnpm run check:artifacts && git diff --check",
-    "test:repository": "node tooling/artwork/cyber-site-test.mjs"
+    "test:repository": "node tooling/artwork/cyber-site-test.mjs",
+    "render:scene-motion": "node tooling/artwork/render-scene-motion.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

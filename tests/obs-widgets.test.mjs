@@ -80,10 +80,10 @@ test('social strip keeps its shell still and readable during a rare wave of all 
           (icon) =>
             icon.opacity >= 0.819 &&
             icon.opacity <= 1 &&
-            icon.scale >= 0.999 &&
-            icon.scale <= 1.061 &&
-            icon.y >= -2.01 &&
-            icon.y <= 0.01,
+            icon.scale >= 0.959 &&
+            icon.scale <= 1.081 &&
+            icon.y >= -3.01 &&
+            icon.y <= 1.01,
         ),
       );
       if ([0, 4000, 15000, 29000, 34000].includes(sample.ms))

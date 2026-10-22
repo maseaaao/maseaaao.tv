@@ -146,7 +146,7 @@ test('real Chromium provider-shaped text stress fixtures load fonts and retain l
     assert.equal(metrics.name, 'ellipsis');
     assert.equal(metrics.emote, 'contain');
     assert.ok(metrics.badge > 0);
-    assert.equal(metrics.delay, '0s, 600s');
+    assert.equal(metrics.delay, '0s, 0s, 600s');
     if (process.env.WIDGET_SHOTS)
       await page.screenshot({ path: resolve(process.env.WIDGET_SHOTS, 'chat-stress.png') });
     await page.close();

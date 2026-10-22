@@ -88,12 +88,14 @@ onBeforeUnmount(() => {
 }
 .settings-enter-active .settings-modal,
 .settings-leave-active .settings-modal {
-  transition: transform var(--motion-enter) var(--motion-ease-enter);
+  transition:
+    transform var(--motion-enter) var(--motion-ease-spring),
+    filter var(--motion-focus) ease-out;
   transform-origin: 50% 40%;
 }
 .settings-leave-active,
 .settings-leave-active .settings-modal {
-  transition-duration: var(--motion-exit);
+  transition-duration: var(--motion-exit), var(--motion-focus);
   transition-timing-function: var(--motion-ease-exit);
   pointer-events: none;
 }
@@ -102,10 +104,12 @@ onBeforeUnmount(() => {
   opacity: 0;
 }
 .settings-enter-from .settings-modal {
-  transform: translateY(8px) scale(0.99);
+  transform: translateY(10px) scale(0.975);
+  filter: blur(2px);
 }
 .settings-leave-to .settings-modal {
-  transform: translateY(4px) scale(0.995);
+  transform: translateY(4px) scale(0.985);
+  filter: blur(1px);
 }
 .modal-header {
   display: flex;

@@ -286,7 +286,7 @@ textarea::placeholder {
   display: block;
 }
 .notices > * {
-  animation: dock-arrival var(--motion-enter) var(--motion-ease-enter);
+  animation: dock-arrival var(--motion-enter) var(--motion-ease-spring);
 }
 .save-status {
   transition: color var(--motion-feedback) var(--motion-ease-state);
