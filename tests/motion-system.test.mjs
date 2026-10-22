@@ -117,3 +117,51 @@ test('Tuna responds to motion preference changes in flight, preserving the expli
     await browser.close();
   }
 });
+
+test('Tuna focus resolves quickly even when the spatial entrance is deliberately slow', async () => {
+  const browser = await launchBrowser();
+  try {
+    const page = await browser.newPage({ reducedMotion: 'no-preference' });
+    await page.route('http://localhost:1608/**', (route) =>
+      route.fulfill({
+        contentType: 'application/json',
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        body: JSON.stringify({ title: 'Чёткий текст', artist: 'Исполнитель', playing: true }),
+      }),
+    );
+    await page.goto(
+      delivery('apps/tuna-widget/dist/obs-tuna-widget.html') +
+        '?opaque=1&reveal=soft&anim=2000&start=600000',
+    );
+    await page.waitForFunction(() =>
+      document
+        .getAnimations()
+        .some((animation) => animation.effect.getKeyframes().some((frame) => 'filter' in frame)),
+    );
+    const focus = await page.evaluate(() => {
+      const animations = document.getAnimations();
+      const filters = animations.filter((animation) =>
+        animation.effect.getKeyframes().some((frame) => 'filter' in frame),
+      );
+      animations.forEach((animation) => {
+        animation.pause();
+        animation.currentTime = 601;
+      });
+      return {
+        durations: filters.map((animation) => animation.effect.getTiming().duration),
+        filter: getComputedStyle(document.querySelector('#content')).filter,
+      };
+    });
+    assert(focus.durations.length >= 2);
+    assert(focus.durations.every((duration) => duration <= 120));
+    assert.equal(focus.filter, 'blur(0px)');
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.waitForFunction(() => document.getAnimations().length === 0);
+    assert.equal(
+      await page.locator('#content').evaluate((node) => getComputedStyle(node).filter),
+      'blur(0px)',
+    );
+  } finally {
+    await browser.close();
+  }
+});

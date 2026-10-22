@@ -80,17 +80,25 @@ body {
   fill: currentcolor;
 }
 
-/* A 1.56-second wave passes once per 30 seconds; the shell and handle stay still. */
+/* A 2.1-second gesture passes once per 30 seconds; the shell and handle stay still. */
 @keyframes social-wave {
   0%,
-  3.2%,
+  5%,
   100% {
     opacity: var(--social-rest-opacity);
     transform: translateY(0) scale(1);
   }
-  1% {
+  0.5% {
+    opacity: 0.9;
+    transform: translateY(1px) scale(0.96);
+  }
+  1.4% {
     opacity: 1;
-    transform: translateY(-2px) scale(1.06);
+    transform: translateY(-3px) scale(1.08);
+  }
+  2.5% {
+    opacity: 1;
+    transform: translateY(0.5px) scale(0.995);
   }
 }
 

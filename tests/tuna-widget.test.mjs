@@ -346,7 +346,10 @@ for (const [reduced, forceMotion] of [
       assert.equal(idling.at(-1).content, 0);
       for (const f of [...entering, ...leaving, ...returning, ...idling]) {
         assert.equal(f.rootBackground, 'rgba(0, 0, 0, 0)');
-        assert(f.scaleX >= 0.969 && f.scaleX <= 1.001, 'No spring overshoot or full-card slide');
+        assert(
+          f.scaleX >= 0.967 && f.scaleX <= 1.003,
+          'Spring stays within 0.3% overshoot; no full-card slide',
+        );
         if (f.content > 0.001 || f.cover > 0.001)
           assert(f.surface >= 0.999, 'Text/art only appear over an opaque backing');
       }

@@ -33,7 +33,9 @@
   --font-body: Arial, sans-serif;
 
   /* Purpose, not platform imitation: immediate response, quiet settling. */
-  --motion-press: 90ms;
+  --motion-press: 80ms;
+  --motion-focus: 120ms;
+  --motion-ease-spring: cubic-bezier(0.2, 1.22, 0.36, 1);
   --motion-feedback: 160ms;
   --motion-enter: 240ms;
   --motion-exit: 140ms;

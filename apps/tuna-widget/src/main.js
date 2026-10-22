@@ -145,16 +145,17 @@
     state.idleTimer = 0;
   };
 
-  // Sample a critically damped response once into native transform keyframes.
-  // No per-frame JS, overshoot, layout animation, backdrop filter or blur.
+  // Sample a gently underdamped response once; no continuous JS frame loop.
+  // Opacity and focus resolve separately, before the spatial settling finishes.
   const springTransforms = (from, to) => {
     const a = new DOMMatrixReadOnly(from);
     const b = new DOMMatrixReadOnly(to);
     const fields = ['a', 'b', 'c', 'd', 'e', 'f'];
-    const end = 1 - 9 * Math.exp(-8);
+    const response = (t) => 1 - Math.exp(-8 * t) * (Math.cos(10 * t) + 0.8 * Math.sin(10 * t));
+    const end = response(1);
     return Array.from({ length: 33 }, (_, index) => {
       const t = index / 32;
-      const progress = (1 - (1 + 8 * t) * Math.exp(-8 * t)) / end;
+      const progress = response(t) / end;
       const values = fields.map((key) => a[key] + (b[key] - a[key]) * progress);
       return { offset: t, transform: `matrix(${values.join(',')})` };
     });
@@ -167,7 +168,7 @@
     const transforms = property === 'transform';
     const frames = transforms
       ? springTransforms(from, resolved)
-      : [{ opacity: from }, { opacity: resolved }];
+      : [{ [property]: from }, { [property]: resolved }];
     const animation = node.animate(frames, {
       duration,
       delay,
@@ -190,7 +191,7 @@
     // reverse an unfinished transition without snapping back to an endpoint.
     const current = layers.map((node) => {
       const style = getComputedStyle(node);
-      return { opacity: style.opacity, transform: style.transform };
+      return { opacity: style.opacity, transform: style.transform, filter: style.filter };
     });
     for (const animation of state.presenceAnimations) animation.cancel();
     state.presenceAnimations = [];
@@ -223,6 +224,14 @@
     );
     for (const [index, node] of layers.entries()) {
       if (index < 2) continue;
+      presenceProperty(
+        node,
+        'filter',
+        current[index].filter,
+        visible ? 'blur(0px)' : 'blur(3px)',
+        Math.min(duration * 0.28, 120),
+        contentDelay,
+      );
       presenceProperty(
         node,
         'transform',
@@ -485,6 +494,16 @@
         options,
       ),
     ];
+    animations.push(
+      outgoing.animate([{ filter: 'blur(0px)' }, { filter: 'blur(2px)' }], {
+        duration: Math.min(duration, 90),
+        fill: 'both',
+      }),
+      el.trackText.animate([{ filter: 'blur(3px)' }, { filter: 'blur(0px)' }], {
+        duration: Math.min(duration, 120),
+        fill: 'both',
+      }),
+    );
     const swap = {
       latest: track,
       finish: () => {

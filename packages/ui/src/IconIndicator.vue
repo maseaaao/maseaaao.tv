@@ -42,6 +42,7 @@ defineProps<{
   background: var(--color-border-control);
 }
 .icon-indicator__dot[data-status='connected'] {
+  animation: connection-settle var(--motion-scene) var(--motion-ease-spring);
   background: var(--color-success);
   border-color: var(--color-success);
 }
@@ -65,6 +66,7 @@ defineProps<{
   border-color: var(--color-surface);
 }
 .icon-indicator--inverted .icon-indicator__dot[data-status='connected'] {
+  animation: connection-settle var(--motion-scene) var(--motion-ease-spring);
   background: color-mix(in srgb, var(--color-success) 25%, var(--color-surface));
 }
 .icon-indicator--inverted .icon-indicator__dot[data-status='connecting'] {
@@ -72,5 +74,20 @@ defineProps<{
 }
 .icon-indicator--inverted .icon-indicator__dot[data-status='error'] {
   background: color-mix(in srgb, var(--color-danger) 25%, var(--color-surface));
+}
+
+@keyframes connection-settle {
+  from {
+    transform: scale(0.65);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon-indicator__dot {
+    animation: none;
+  }
 }
 </style>

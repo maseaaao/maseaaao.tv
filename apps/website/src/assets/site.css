@@ -149,7 +149,7 @@ button:focus-visible,
     color var(--motion-feedback),
     background-color var(--motion-feedback),
     border-color var(--motion-feedback),
-    transform var(--motion-enter) var(--motion-ease-enter);
+    transform var(--motion-enter) var(--motion-ease-spring);
 }
 
 .tile__title {
@@ -210,7 +210,7 @@ button:focus-visible,
     color var(--motion-feedback),
     background-color var(--motion-feedback),
     border-color var(--motion-feedback),
-    transform var(--motion-enter) var(--motion-ease-enter);
+    transform var(--motion-enter) var(--motion-ease-spring);
 }
 
 /* Three reading groups arrive together; links never wait for a JS reveal. */
@@ -218,21 +218,32 @@ button:focus-visible,
   .shell > .identity,
   .shell > .actions,
   .shell > .collab {
-    animation: reading-arrival var(--motion-scene) var(--motion-ease-enter) backwards;
+    animation:
+      reading-arrival var(--motion-scene) var(--motion-ease-enter) backwards,
+      reading-focus var(--motion-focus) ease-out backwards;
   }
   .shell > .actions {
-    animation-delay: 30ms;
+    animation-delay: 30ms, 30ms;
   }
   .shell > .collab {
-    animation-delay: 60ms;
+    animation-delay: 60ms, 60ms;
   }
   .shell:focus-within > * {
     animation: none;
   }
   .tile:active,
   .collab__link:active {
-    transform: translateY(1px);
+    transform: translateY(1px) scale(0.985);
     transition-duration: var(--motion-press);
+  }
+}
+
+@keyframes reading-focus {
+  from {
+    filter: blur(2px);
+  }
+  to {
+    filter: blur(0);
   }
 }
 

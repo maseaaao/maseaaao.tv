@@ -56,7 +56,8 @@ body {
   box-shadow: none;
   text-shadow: none;
   animation:
-    slideInSoft 0.3s var(--motion-ease-enter) forwards,
+    slideInSoft 0.3s var(--motion-ease-spring) forwards,
+    chatFocus var(--motion-focus) ease-out,
     fadeAway 0.5s ease var(--provider-hide-delay) forwards;
 }
 
@@ -162,6 +163,15 @@ body {
   height: 1.25em;
   max-width: 100%;
   opacity: 0;
+}
+
+@keyframes chatFocus {
+  from {
+    filter: blur(1.5px);
+  }
+  to {
+    filter: blur(0);
+  }
 }
 
 @keyframes slideInSoft {

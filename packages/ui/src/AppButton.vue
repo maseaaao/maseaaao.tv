@@ -101,6 +101,8 @@ defineSlots<{
 
 <style scoped>
 .app-button {
+  position: relative;
+  isolation: isolate;
   display: inline-flex;
   box-sizing: border-box;
   cursor: pointer;
@@ -126,7 +128,7 @@ defineSlots<{
     color var(--motion-feedback, 160ms),
     background-color var(--motion-feedback, 160ms),
     border-color var(--motion-feedback, 160ms),
-    transform var(--motion-enter, 240ms) var(--motion-ease-enter, ease-out);
+    transform var(--motion-enter, 240ms) var(--motion-ease-spring, ease-out);
 }
 .app-button__label {
   min-width: 0;
@@ -142,6 +144,29 @@ defineSlots<{
 }
 .app-button--loading {
   cursor: progress;
+}
+.app-button--loading::after {
+  content: '';
+  position: absolute;
+  inset: auto 16% 4px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentcolor;
+  transform-origin: left;
+  animation: action-progress 1.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes action-progress {
+  0%,
+  100% {
+    transform: scaleX(0.2);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scaleX(1);
+    opacity: 0.8;
+  }
 }
 .app-button:disabled,
 .app-button[aria-disabled='true'] {
@@ -173,11 +198,14 @@ defineSlots<{
   outline-color: var(--color-surface);
 }
 .app-button--press:active:not(:disabled, [aria-disabled='true']) {
-  transform: translateY(1px);
+  transform: translateY(1px) scale(0.985);
   transition-duration: var(--motion-press, 90ms);
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .app-button--loading::after {
+    animation: none;
+  }
   .app-button {
     transition: none;
   }

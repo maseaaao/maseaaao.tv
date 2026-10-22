@@ -275,13 +275,16 @@ body {
   translate: 0 0;
   rotate: x 0deg;
   scale: 1;
+  filter: blur(0);
   transition:
     translate var(--cm-roll-duration) var(--cm-roll-ease),
     rotate var(--cm-roll-duration) var(--cm-roll-ease),
-    scale var(--cm-roll-duration) var(--cm-roll-ease) !important;
+    scale var(--cm-roll-duration) var(--cm-roll-ease),
+    filter min(var(--cm-roll-duration), 120ms) ease-out !important;
 }
 .widget-stream-stats .stats-list-item.fade-in-out-enter,
 .widget-stream-stats .stats-list-item.fade-in-out-enter-from {
+  filter: blur(2px);
   translate: 0 100%;
   rotate: x 16deg;
   scale: 0.985 0.94;

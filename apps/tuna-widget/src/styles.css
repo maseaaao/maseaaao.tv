@@ -90,6 +90,7 @@ html[data-reveal='soft'] #cover-frame,
 html[data-reveal='soft'] #content {
   opacity: 0;
   transform: translateY(6px) scale(0.985);
+  filter: blur(3px);
 }
 
 /* Retain the two nodes for the existing artwork controller, never paint them. */
