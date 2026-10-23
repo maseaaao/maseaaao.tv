@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
-import { mount, type VueWrapper } from '@vue/test-utils';
 import AppButton from '@maseaaao/ui/AppButton.vue';
+import { mount, type VueWrapper } from '@vue/test-utils';
+import { afterEach, describe, expect, it } from 'vitest';
 import ChipTag from '../src/components/ChipTag.vue';
 
 const styles = readFileSync(resolve('src/styles.css'), 'utf8');
@@ -34,7 +34,9 @@ function pixels(value: string): number {
 }
 
 afterEach(() => {
-  wrappers.splice(0).forEach((wrapper) => wrapper.unmount());
+  wrappers.splice(0).forEach((wrapper) => {
+    wrapper.unmount();
+  });
   sheet?.remove();
   sheet = undefined;
   document.body.replaceChildren();

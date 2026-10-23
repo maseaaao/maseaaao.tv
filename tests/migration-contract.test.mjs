@@ -1,10 +1,10 @@
-import test from 'node:test';
 import assert from 'node:assert/strict';
-import { copyFileSync, readdirSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import test from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { checkMigrationContract, checkFontFamilies } from '../tooling/migration-contract.mjs';
+import { checkFontFamilies, checkMigrationContract } from '../tooling/migration-contract.mjs';
 
 const root = new URL('../', import.meta.url);
 function fixture(run) {

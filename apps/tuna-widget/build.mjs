@@ -1,5 +1,5 @@
-import { buildVuePages } from '@maseaaao/build-config/static';
 import { fileURLToPath } from 'node:url';
+import { buildVuePages } from '@maseaaao/build-config/static';
 
 const local = (name) => fileURLToPath(new URL(name, import.meta.url));
 await buildVuePages({

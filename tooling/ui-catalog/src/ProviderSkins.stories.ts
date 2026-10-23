@@ -1,10 +1,10 @@
+import alertsCss from '@maseaaao/obs-widgets/delivery/alerts.css?raw';
+import chatCss from '@maseaaao/obs-widgets/delivery/chat.css?raw';
+import chatTemplate from '@maseaaao/obs-widgets/delivery/chat.html?raw';
+import donorsCss from '@maseaaao/obs-widgets/delivery/donors.css?raw';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, waitFor, within } from 'storybook/test';
 import { h } from 'vue';
-import chatCss from '@maseaaao/obs-widgets/delivery/chat.css?raw';
-import chatTemplate from '@maseaaao/obs-widgets/delivery/chat.html?raw';
-import alertsCss from '@maseaaao/obs-widgets/delivery/alerts.css?raw';
-import donorsCss from '@maseaaao/obs-widgets/delivery/donors.css?raw';
 
 const meta: Meta = { title: 'Форматы/Провайдеры', parameters: { layout: 'fullscreen' } };
 export default meta;

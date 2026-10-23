@@ -1,12 +1,12 @@
+import BannerArtwork from '@maseaaao/artwork/BannerArtwork.vue';
+import BrandArtwork from '@maseaaao/artwork/BrandArtwork.vue';
+import SceneArtwork from '@maseaaao/artwork/SceneArtwork.vue';
+import TwitchPanel from '@maseaaao/artwork/TwitchPanel.vue';
+import WallpaperArtwork from '@maseaaao/artwork/WallpaperArtwork.vue';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, within } from 'storybook/test';
-import { h } from 'vue';
 import type { VNode } from 'vue';
-import SceneArtwork from '@maseaaao/artwork/SceneArtwork.vue';
-import BannerArtwork from '@maseaaao/artwork/BannerArtwork.vue';
-import TwitchPanel from '@maseaaao/artwork/TwitchPanel.vue';
-import BrandArtwork from '@maseaaao/artwork/BrandArtwork.vue';
-import WallpaperArtwork from '@maseaaao/artwork/WallpaperArtwork.vue';
+import { h } from 'vue';
 import '@maseaaao/artwork/styles.css';
 
 const meta: Meta = { title: 'Композиции/Artwork', parameters: { layout: 'fullscreen' } };

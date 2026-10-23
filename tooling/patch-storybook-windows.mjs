@@ -1,6 +1,7 @@
-import { readFileSync, writeFileSync, rmSync, renameSync } from 'node:fs';
-import { dirname, resolve, sep } from 'node:path';
+import { readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { dirname, resolve, sep } from 'node:path';
+
 const catalogRequire = createRequire(new URL('./ui-catalog/package.json', import.meta.url));
 function replaceLocal(file, contents) {
   const temporary = file + '.maseaaao-patch';

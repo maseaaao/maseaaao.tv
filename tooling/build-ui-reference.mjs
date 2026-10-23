@@ -1,7 +1,7 @@
-import { build } from 'vite';
-import { mkdir, cp } from 'node:fs/promises';
+import { cp, mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { standaloneConfig } from '@maseaaao/build-config';
+import { build } from 'vite';
 
 for (const name of ['index', 'dock', 'scene']) {
   const config = standaloneConfig({

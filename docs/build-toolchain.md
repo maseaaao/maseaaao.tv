@@ -31,9 +31,8 @@
 
 ## Инструменты качества
 
-- Prettier: JS/MJS/CJS/TS/CSS/HTML/JSON/Markdown; `format`, `format:check`.
-- ESLint flat config: recommended JS, type-aware TS в приложении и тестах; HTML semantics/accessibility. Browser и Node globals заданы по контексту; Playwright callbacks имеют оба окружения, поскольку сериализуются в страницу.
-- Stylelint standard: CSS и CSS в HTML. Форматирование принадлежит Prettier. Повторные CSS-селекторы и порядок специфичности допускаются для каскадных component/state overrides; duplicate declarations, неизвестные свойства и неверные значения по-прежнему проверяются.
+- Biome 2.6.2: единый formatter/linter/import organizer для JS/TS, Vue SFC, HTML, CSS, JSON/JSONC, YAML и Markdown; `check:biome` в CI не пишет файлы и запрещает предупреждения. Настройка — `biome.json`, редактор — расширение `biomejs.biome`.
+- Запрет приведений типов и литеральных цветов в Vue сохранён GritQL-плагинами; регрессионные тесты проверяют их на настоящем Biome. Document-level HTML-контракты проверяет `tooling/source-markup.mjs`, остальные проверки разметки выполняет Biome. [Правила и ограничения](biome.md).
 - `typecheck` проверяет src и tests Stream Info. Фикстуры используют явные проверки значений вместо non-null assertions.
 - `check:repository` проверяет предметные инварианты: структуру, единственный русский экспорт, обои, typography, наличие ресурсов и неизменяемую публичную статику.
 

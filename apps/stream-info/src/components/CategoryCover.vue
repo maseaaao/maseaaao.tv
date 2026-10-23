@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import AppIcon from './AppIcon.vue';
+
 const props = defineProps<{ src?: string }>();
 const failed = ref(false);
 const image = ref<HTMLImageElement | null>(null);
@@ -32,7 +33,7 @@ function fail(event: Event): void {
       width="48"
       height="64"
       @error="fail"
-    />
+    >
     <AppIcon v-else name="defaultCategory" />
   </span>
 </template>

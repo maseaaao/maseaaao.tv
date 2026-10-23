@@ -1,8 +1,8 @@
-import { build } from 'vite';
-import vue from '@vitejs/plugin-vue';
-import { mkdir, cp, access } from 'node:fs/promises';
-import { resolve, relative, join, basename, dirname, sep, isAbsolute } from 'node:path';
+import { access, cp, mkdir } from 'node:fs/promises';
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import vue from '@vitejs/plugin-vue';
+import { build } from 'vite';
 import { vueStandaloneConfig } from './vue.mjs';
 
 function outsideSource(source, output) {

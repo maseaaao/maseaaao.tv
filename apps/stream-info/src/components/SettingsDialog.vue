@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, ref, useId } from 'vue';
 import AppButton from '@maseaaao/ui/AppButton.vue';
-import AppIcon from './AppIcon.vue';
+import { nextTick, onBeforeUnmount, onMounted, ref, useId } from 'vue';
 import { t } from '../messages';
+import AppIcon from './AppIcon.vue';
+
 const emit = defineEmits<{ close: [] }>();
 const id = useId();
 const dialog = ref<HTMLElement | null>(null);
@@ -56,10 +57,12 @@ onBeforeUnmount(() => {
           ><span class="eyebrow">{{ t('connection') }}</span
           ><h2 :id="`${id}-title`">{{ t('settings') }}</h2></div
         ><AppButton variant="icon" :aria-label="t('close')" @click="emit('close')"
-          ><template #icon><AppIcon name="close" /></template></AppButton></header
+          ><template #icon><AppIcon name="close" /></template></AppButton
+        ></header
       ><div class="modal-body"><slot /></div
       ><footer class="modal-footer"><slot name="footer" /></footer></section
-  ></div>
+    ></div
+  >
 </template>
 
 <style scoped>

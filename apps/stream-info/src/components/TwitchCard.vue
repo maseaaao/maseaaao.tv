@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import AppButton from '@maseaaao/ui/AppButton.vue';
 import FieldInput from '@maseaaao/ui/FieldInput.vue';
-import TemplateInput from './TemplateInput.vue';
-import ChipTag from './ChipTag.vue';
 import LiveStatusBadge from '@maseaaao/ui/LiveStatusBadge.vue';
-import AppIcon from './AppIcon.vue';
-import CategorySearch from './CategorySearch.vue';
-import TemplatePreview from './TemplatePreview.vue';
+import { computed } from 'vue';
+import type { useStreamInfo } from '../composables/useStreamInfo';
 import { t } from '../messages';
 import { isTemplateValid } from '../templates';
-import type { useStreamInfo } from '../composables/useStreamInfo';
+import AppIcon from './AppIcon.vue';
+import CategorySearch from './CategorySearch.vue';
+import ChipTag from './ChipTag.vue';
+import TemplateInput from './TemplateInput.vue';
+import TemplatePreview from './TemplatePreview.vue';
+
 const props = defineProps<{ controller: ReturnType<typeof useStreamInfo> }>();
 const {
   state,
@@ -62,14 +63,16 @@ function tagKeydown(event: KeyboardEvent): void {
   >
     <header class="card-heading"
       ><div class="account-heading"
-        ><AppIcon name="twitch" class="account-icon" /><div
+        ><AppIcon name="twitch" class="account-icon" />
+        <div
           ><h2>Twitch</h2
           ><p>{{ state.stream?.twitch.accountName || t('accountNotConnected') }}</p></div
         ></div
       ><LiveStatusBadge
         :status="status"
         :label="t(status === 'live' ? 'live' : status === 'offline' ? 'offline' : 'notConnected')"
-    /></header>
+      /></header
+    >
     <p v-if="state.loadingPlatforms.has('twitch')" class="field-note" role="status">{{
       t('updating')
     }}</p>
@@ -102,9 +105,11 @@ function tagKeydown(event: KeyboardEvent): void {
           ><TemplatePreview
             :template="state.templateDraft.twitchTemplate"
             :subtitle="state.allForm.subtitle"
-        /></strong>
+          /></strong
+        >
         <span class="counter" :class="{ invalid: title.length > 140 }"
-          >{{ title.length }} / 140</span
+          >{{ title.length }}
+          / 140</span
         >
       </div>
       <p class="template-dirty" role="status">{{
@@ -134,7 +139,11 @@ function tagKeydown(event: KeyboardEvent): void {
           :disabled="disabled"
           placeholder="Например, Русский"
           @update:model-value="setTagDraft"
-          @keydown="tagKeydown" /><div class="tag-list" aria-label="Выбранные теги"
+          @keydown="tagKeydown"
+        /><!-- biome-ignore lint/a11y/useSemanticElements: Tags form a named non-form group; fieldset would add unrelated form semantics. --><div
+          class="tag-list"
+          role="group"
+          aria-label="Выбранные теги"
           ><ChipTag
             v-for="(tag, index) in state.allForm.twitchTags"
             :key="tag"
@@ -142,8 +151,10 @@ function tagKeydown(event: KeyboardEvent): void {
             variant="neutral"
             :removable="!disabled"
             remove-label="Удалить тег"
-            @remove="removeTag(index)" /></div
-      ></div>
+            @remove="removeTag(index)"
+          /></div
+        ></div
+      >
       <p v-if="!available" class="account-warning">{{ t('accountNotConnected') }}</p>
     </fieldset>
     <footer class="card-footer"
@@ -169,7 +180,8 @@ function tagKeydown(event: KeyboardEvent): void {
         :disabled="!login"
         :aria-label="t('openDashboard')"
         ><template #icon><AppIcon name="dashboard" /></template></AppButton
-    ></footer>
+      ></footer
+    >
   </section>
 </template>
 

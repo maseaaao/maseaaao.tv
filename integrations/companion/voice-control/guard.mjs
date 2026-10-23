@@ -31,7 +31,8 @@ export class StreamGuard {
     const active = this.active;
     this.holdStart = Date.now();
     this.holdMs = active ? this.stopMs : this.startMs;
-    const generation = (this.generation = (this.generation || 0) + 1);
+    this.generation = (this.generation || 0) + 1;
+    const generation = this.generation;
     this.timer = setTimeout(
       async () => {
         if (!this.held || this.busy || !this.online) return;

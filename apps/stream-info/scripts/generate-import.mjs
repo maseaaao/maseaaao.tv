@@ -1,6 +1,6 @@
-import { gzipSync } from 'node:zlib';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { gzipSync } from 'node:zlib';
 
 const project = resolve(import.meta.dirname, '..');
 const packageMetadata = JSON.parse(readFileSync(resolve(project, 'package.json'), 'utf8'));

@@ -1,6 +1,6 @@
-import { gunzipSync } from 'node:zlib';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { gunzipSync } from 'node:zlib';
 import { parseAllDocuments } from 'yaml';
 
 const project = resolve(import.meta.dirname, '..');

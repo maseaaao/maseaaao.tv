@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
-import { defineConfig } from 'vite';
-import { generatedWebsiteImages } from '../../tooling/website-assets.mjs';
 import { fileURLToPath } from 'node:url';
 import { prepareVuePages, vuePagePlugin } from '@maseaaao/build-config/static';
+import { defineConfig } from 'vite';
+import { generatedWebsiteImages } from '../../tooling/website-assets.mjs';
 
 export default defineConfig(async () => {
   const generated = generatedWebsiteImages(fileURLToPath(new URL('../../', import.meta.url)));

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import { expect, userEvent, within } from 'storybook/test';
 import ChipTag from 'change-info-streamer-bot/ChipTag.vue';
+import { expect, userEvent, within } from 'storybook/test';
 
 const meta: Meta<typeof ChipTag> = {
   title: 'Stream Info/ChipTag',

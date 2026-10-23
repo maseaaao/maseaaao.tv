@@ -1,0 +1,8 @@
+language js
+
+or {
+  TsAsExpression(),
+  TsTypeAssertionExpression()
+} as $assertion where {
+  register_diagnostic(span=$assertion, message="Validate the boundary or narrow the type instead of asserting it.", severity="error")
+}

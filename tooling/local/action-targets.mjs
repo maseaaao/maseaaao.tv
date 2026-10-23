@@ -14,7 +14,7 @@ export function validateActionTargets(actions, sceneNames, inputNames) {
       if (step.enabled === false || disabled.has(step.parentId)) continue;
       if (step.actionId) {
         const target = byId.get(step.actionId);
-        if (!target || !target.enabled)
+        if (!target?.enabled)
           issues.push(`Action ${action.name} calls a missing or disabled Action.`);
       }
       if (step.connectionId && step.connectionId !== '00000000-0000-0000-0000-000000000000') {

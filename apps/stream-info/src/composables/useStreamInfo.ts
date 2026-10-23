@@ -1,9 +1,9 @@
-import { reactive, computed, onMounted, onScopeDispose } from 'vue';
 import { StreamerbotClient } from '@streamerbot/client';
+import { computed, onMounted, onScopeDispose, reactive } from 'vue';
 import packageJson from '../../package.json';
 import { rankCategories } from '../category-search';
-import { DEFAULT_TWITCH_TEMPLATE, isTemplateValid, titleFromTemplate } from '../templates';
 import { t } from '../messages';
+import { DEFAULT_TWITCH_TEMPLATE, isTemplateValid, titleFromTemplate } from '../templates';
 import type {
   ActionResponse,
   ActionSummary,

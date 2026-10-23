@@ -1,9 +1,10 @@
-import { parse, printParseErrorCode } from 'jsonc-parser';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { checkMigrationContract, checkFontFamilies } from './migration-contract.mjs';
+import { parse, printParseErrorCode } from 'jsonc-parser';
+import { checkFontFamilies, checkMigrationContract } from './migration-contract.mjs';
+import { checkSourceMarkup } from './source-markup.mjs';
 import { generatedWebsiteImages } from './website-assets.mjs';
 
 const root = resolve(import.meta.dirname, '..');
@@ -21,6 +22,19 @@ const json = (file) => {
   );
   return value;
 };
+for (const directory of ['apps', 'artwork', 'packages', 'tooling', 'docs']) {
+  for (const file of files(resolve(root, directory))) {
+    const name = file.slice(root.length + 1).replaceAll('\\', '/');
+    if (
+      !name.endsWith('.html') ||
+      name.split('/').some((part) => ['dist', 'rendered', 'bin', 'obj'].includes(part))
+    )
+      continue;
+    checkSourceMarkup(readFileSync(file, 'utf8'), name, {
+      fragment: name.startsWith('apps/obs-widgets/src/streamlabs-chat/'),
+    });
+  }
+}
 const pkg = json('package.json');
 assert(pkg.private && !pkg.version, 'Root package must not have a product version');
 assert.equal(json('wrangler.jsonc').assets.directory, './dist');

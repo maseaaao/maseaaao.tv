@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import NoticeBanner from './NoticeBanner.vue';
-import AppIcon from './AppIcon.vue';
 import type { Notice } from '../composables/useStreamInfo';
 import { t } from '../messages';
+import AppIcon from './AppIcon.vue';
+import NoticeBanner from './NoticeBanner.vue';
 
 defineProps<{ notices: Notice[] }>();
 const emit = defineEmits<{ dismiss: [id: string] }>();
@@ -28,7 +28,8 @@ const emit = defineEmits<{ dismiss: [id: string] }>();
                 : notice.kind === 'success'
                   ? 'check'
                   : 'info'
-          " /></template
+          "
+        /></template
       ><span v-for="line in notice.lines" :key="line" class="notice-line">{{
         line
       }}</span></NoticeBanner

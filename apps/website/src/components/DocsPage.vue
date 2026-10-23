@@ -21,9 +21,9 @@ import WebsiteNav from './WebsiteNav.vue';
     <section>
       <h2>Каталог для агентов (RFC 9727)</h2>
       <p>
-        <code>GET /.well-known/api-catalog</code> — каталог ресурсов в формате Linkset JSON (RFC
-        9264). Главная страница ссылается на него через HTTP-заголовок <code>Link</code> с
-        отношением <code>rel="api-catalog"</code>.
+        <code>GET /.well-known/api-catalog</code>
+        — каталог ресурсов в формате Linkset JSON (RFC 9264). Главная страница ссылается на него
+        через HTTP-заголовок <code>Link</code> с отношением <code>rel="api-catalog"</code>.
       </p>
     </section>
 
@@ -43,7 +43,8 @@ import WebsiteNav from './WebsiteNav.vue';
 
     <p class="muted">
       Заголовки обнаружения (RFC 8288 / RFC 9727) отдаются на главной:
-      <code>api-catalog</code> и <code>describedby</code>.
+      <code>api-catalog</code>
+      и <code>describedby</code>.
     </p>
   </main>
 </template>

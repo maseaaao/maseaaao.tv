@@ -1,7 +1,7 @@
-import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdir, readFile } from 'node:fs/promises';
-import { resolve, join } from 'node:path';
+import { join, resolve } from 'node:path';
+import test from 'node:test';
 import { parse } from 'vue/compiler-sfc';
 import { launchBrowser } from '../tooling/artwork/browser.mjs';
 

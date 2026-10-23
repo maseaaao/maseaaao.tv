@@ -43,7 +43,7 @@ Cloudflare использует корневой `wrangler.jsonc`, команд�
 
 ## Качество и общие пакеты
 
-`pnpm run check` запускает Prettier, ESLint (включая типизированные TS-проверки и HTML), Stylelint, typecheck и предметные проверки. Исправления: `pnpm run format` и `pnpm run lint:fix`. Публичные API и fixtures проверяются подставными обработчиками.
+`pnpm run check` запускает Biome 2.6.2 (форматирование, импорты, JS/TS, Vue/HTML и CSS, без предупреждений), проверки политики исходников, vue-tsc и предметные проверки. Безопасные исправления: `pnpm run check:fix`; отдельно доступны `format`, `format:check`, `lint` и `lint:fix`. Правила и ограничения миграции описаны в [docs/biome.md](docs/biome.md). Публичные API и fixtures проверяются подставными обработчиками.
 
 `pnpm test` сначала собирает все браузерные продукты, затем выполняет `test:checks`. C#-проверки требуют .NET SDK 8; упаковка Companion — Windows. `test:repository` последовательно выполняет все корневые контракты и браузерные тесты; `test:website` оставлен совместимым alias, а не отдельным набором сайта.
 

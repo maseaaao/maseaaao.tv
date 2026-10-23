@@ -5,7 +5,6 @@
 # Яндекс Музыка — управление из Streamer.bot
 
 Установлены четыре Actions в группе `YANDEX MUSIC CONTROL`:
-
 - `Yandex Music Control | play` — начать/продолжить воспроизведение.
 - `Yandex Music Control | pause` — поставить на паузу.
 - `Yandex Music Control | next` — следующий трек.

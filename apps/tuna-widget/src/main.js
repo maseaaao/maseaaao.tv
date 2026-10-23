@@ -1,6 +1,4 @@
 (() => {
-  'use strict';
-
   const query = new URLSearchParams(location.search);
   const debug = query.get('debug') === '1';
   const trace = (event, error) => {
@@ -122,7 +120,9 @@
     // End at the already committed target, never replay a reveal or reset its timer.
     state.fadeAnimation?.cancel();
     state.fadeAnimation = null;
-    state.presenceAnimations.forEach((animation) => animation.cancel());
+    state.presenceAnimations.forEach((animation) => {
+      animation.cancel();
+    });
     state.presenceAnimations = [];
     state.textSwap?.finish();
   };
@@ -472,7 +472,9 @@
     if (!outgoing) return;
 
     outgoing.removeAttribute('id');
-    outgoing.querySelectorAll('[id]').forEach((node) => node.removeAttribute('id'));
+    outgoing.querySelectorAll('[id]').forEach((node) => {
+      node.removeAttribute('id');
+    });
     outgoing.setAttribute('aria-hidden', 'true');
     el.content.prepend(outgoing);
     const duration = Math.min(cfg.anim, 280);
@@ -508,7 +510,9 @@
       latest: track,
       finish: () => {
         if (state.textSwap !== swap) return;
-        animations.forEach((animation) => animation.cancel());
+        animations.forEach((animation) => {
+          animation.cancel();
+        });
         outgoing.remove();
         state.textSwap = null;
         renderText(swap.latest);

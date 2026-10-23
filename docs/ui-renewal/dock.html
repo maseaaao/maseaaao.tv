@@ -1,11 +1,9 @@
 <!doctype html>
 <html lang="ru">
   <head
-    ><meta charset="utf-8" /><meta
-      name="viewport"
-      content="width=device-width,initial-scale=1" /><title>Эталон Stream Info</title
-    ><link rel="stylesheet" href="reference.css"
-  /></head>
+    ><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Эталон Stream Info</title><link rel="stylesheet" href="reference.css"></head
+  >
   <body class="dock-page"
     ><main class="dock-shell">
       <header class="dock-header"
@@ -18,7 +16,7 @@
       >
       <section class="dock-section"
         ><h2>Название трансляции</h2
-        ><label class="field">Тема стрима<input readonly value="Проходим новую игру" /></label
+        ><label class="field">Тема стрима<input readonly value="Проходим новую игру"></label
         ><p class="preview-title">🔴 Проходим новую игру | !tg !yt !tw !donate</p></section
       >
       <section class="dock-section"
@@ -30,10 +28,14 @@
             alt=""
             width="48"
             height="64"
-          /><div class="category-name"><strong>Just Chatting</strong></div
+          ><div class="category-name"><strong>Just Chatting</strong></div
           ><button class="text-action" type="button" aria-disabled="true">Изменить</button></div
-        ><label class="field">Добавить тег<input readonly placeholder="Например, Русский" /></label
-        ><div class="tag-list" aria-label="Выбранные теги"
+        ><label class="field"
+          >Добавить тег<input readonly placeholder="Например, Русский"></label
+        ><!-- biome-ignore lint/a11y/useSemanticElements: Tags form a named non-form group; fieldset would add unrelated form semantics. --><div
+          class="tag-list"
+          role="group"
+          aria-label="Выбранные теги"
           ><span class="tag">Русский <span aria-hidden="true">×</span></span
           ><span class="tag">Общение <span aria-hidden="true">×</span></span></div
         ></section

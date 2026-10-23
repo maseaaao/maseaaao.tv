@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import { computed, onScopeDispose } from 'vue';
 import AppButton from '@maseaaao/ui/AppButton.vue';
 import FieldInput from '@maseaaao/ui/FieldInput.vue';
 import IconIndicator from '@maseaaao/ui/IconIndicator.vue';
-import NoticeBanner from './components/NoticeBanner.vue';
+import { computed, onScopeDispose } from 'vue';
+import STREAMERBOT_IMPORT from '../streamerbot-import.txt?raw';
 import AppIcon from './components/AppIcon.vue';
-import TwitchCard from './components/TwitchCard.vue';
+import NoticeBanner from './components/NoticeBanner.vue';
 import SettingsDialog from './components/SettingsDialog.vue';
 import StreamNotices from './components/StreamNotices.vue';
+import TwitchCard from './components/TwitchCard.vue';
 import { useStreamInfo } from './composables/useStreamInfo';
 import { t } from './messages';
-import STREAMERBOT_IMPORT from '../streamerbot-import.txt?raw';
+
 const props = withDefaults(defineProps<{ demo?: boolean }>(), { demo: undefined });
 const controller = useStreamInfo({ demo: props.demo });
 const {
@@ -108,8 +109,8 @@ async function copyImport(): Promise<void> {
     <div class="dock-scroll">
       <header class="dock-header"
         ><div
-          ><h1>Stream Info</h1
-          ><IconIndicator :status="state.connection" :label="connectionText()" /></div
+          ><h1>Stream Info</h1>
+          <IconIndicator :status="state.connection" :label="connectionText()" /></div
         ><div class="header-actions"
           ><AppButton
             variant="icon"
@@ -118,12 +119,14 @@ async function copyImport(): Promise<void> {
             @click="refreshState()"
             ><template #icon><AppIcon name="refresh" /></template></AppButton
           ><AppButton variant="icon" :aria-label="t('settings')" @click="openSettings"
-            ><template #icon><AppIcon name="settings" /></template></AppButton></div
-      ></header>
+            ><template #icon><AppIcon name="settings" /></template></AppButton
+          ></div
+        ></header
+      >
       <section v-if="state.authNeeded" class="auth-panel" :aria-label="t('authLabel')"
         ><NoticeBanner variant="error" :title="t('authFailed')"
-          ><template #icon><AppIcon name="warning" /></template
-          >{{ state.connectionError || t('authHint') }}</NoticeBanner
+          ><template #icon><AppIcon name="warning" /></template>
+          {{ state.connectionError || t('authHint') }}</NoticeBanner
         ><FieldInput
           v-model="settings.password"
           :label="t('password')"
@@ -135,25 +138,23 @@ async function copyImport(): Promise<void> {
         ><h2>{{ setupTitle }}</h2
         ><p v-if="state.actionStatus === 'disabled'">{{ t('importEnable') }}</p
         ><ol v-else
-          ><li>Откройте Streamer.bot.</li
-          ><li>Нажмите Import.</li
-          ><li>Вставьте строку ниже.</li
+          ><li>Откройте Streamer.bot.</li><li>Нажмите Import.</li><li>Вставьте строку ниже.</li
           ><li>Завершите импорт.</li></ol
         ><div class="setup-actions"
           ><AppButton variant="primary" @click="copyImport"
-            ><template #icon><AppIcon name="copy" /></template
-            >{{ state.importCopied ? t('copied') : t('copyImport') }}</AppButton
+            ><template #icon><AppIcon name="copy" /></template>
+            {{ state.importCopied ? t('copied') : t('copyImport') }}</AppButton
           ><AppButton @click="state.showImport = !state.showImport">{{
             state.showImport ? t('hideImport') : t('showImport')
-          }}</AppButton
-          ><AppButton @click="verifyAction">{{ t('checkAgain') }}</AppButton></div
+          }}</AppButton><AppButton @click="verifyAction">{{ t('checkAgain') }}</AppButton></div
         ><FieldInput
           v-if="state.showImport"
           :label="t('importAria')"
           :model-value="STREAMERBOT_IMPORT"
           multiline
           readonly
-      /></main>
+        /></main
+      >
       <main v-else-if="state.stream" class="content">
         <TwitchCard :controller="controller" />
         <section class="preset-panel dock-section" aria-labelledby="presets-title"
@@ -179,8 +180,7 @@ async function copyImport(): Promise<void> {
         ><div class="loader" aria-hidden="true"></div
         ><p role="status">{{
           state.connection === 'disconnected' ? connectionText() : t('loading')
-        }}</p
-        ><p v-if="state.connectionError">{{ state.connectionError }}</p></main
+        }}</p><p v-if="state.connectionError">{{ state.connectionError }}</p></main
       >
       <footer class="dock-footer"
         ><span>Stream Info {{ version }}</span
@@ -197,13 +197,17 @@ async function copyImport(): Promise<void> {
         }"
         role="status"
         aria-live="polite"
-        >{{ saveStatus }}</p
+        >{{
+          saveStatus
+        }}</p
       ><AppButton
         variant="primary"
         :disabled="errors.length > 0 || busy || !available"
         :loading="state.allSaving"
         @click="saveAll"
-        >{{ t('applyChanges') }}</AppButton
+        >{{
+          t('applyChanges')
+        }}</AppButton
       ><div v-if="errors.length" class="form-errors" role="status"
         ><p v-for="error in errors" :key="error">{{ error }}</p></div
       ></section
@@ -214,14 +218,17 @@ async function copyImport(): Promise<void> {
       ><section class="settings-section"
         ><h3>{{ t('connectionToStreamerbot') }}</h3
         ><div class="settings-grid"
-          ><FieldInput v-model="state.settingsDraft.host" label="Хост" /><FieldInput
+          ><FieldInput v-model="state.settingsDraft.host" label="Хост" />
+          <FieldInput
             label="Порт"
             :model-value="String(state.settingsDraft.port)"
             type="number"
             :min="1"
             :max="65535"
-            @update:model-value="state.settingsDraft.port = Number($event)" /></div
-        ><FieldInput v-model="state.settingsDraft.endpoint" label="Endpoint" /><FieldInput
+            @update:model-value="state.settingsDraft.port = Number($event)"
+          /></div
+        ><FieldInput v-model="state.settingsDraft.endpoint" label="Endpoint" />
+        <FieldInput
           v-model="state.settingsDraft.password"
           :label="t('password')"
           type="password"
@@ -231,9 +238,10 @@ async function copyImport(): Promise<void> {
             type="checkbox"
             :checked="state.settingsDraft.rememberPassword"
             @change="remember"
-          />{{ t('rememberPassword') }}</label
+          >{{ t('rememberPassword') }}</label
         ></section
-      ><StreamNotices :notices="state.notices" @dismiss="closeNotice" /><template #footer
+      ><StreamNotices :notices="state.notices" @dismiss="closeNotice" />
+      <template #footer
         ><AppButton variant="primary" @click="saveConnection">{{
           t('saveConnection')
         }}</AppButton></template

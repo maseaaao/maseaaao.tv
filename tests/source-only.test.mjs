@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
-import { renameSync, mkdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
+import { mkdirSync, renameSync } from 'node:fs';
 import { resolve } from 'node:path';
 import test from 'node:test';
+
 const root = resolve(import.meta.dirname, '..');
 test('source repository checks work without generated product/raster directories', () => {
   const folders = [

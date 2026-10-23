@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { validateActionTargets as check } from './action-targets.mjs';
+
 const a = {
   id: 'a',
   name: 'test',

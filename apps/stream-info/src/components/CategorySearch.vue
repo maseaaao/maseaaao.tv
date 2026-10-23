@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, nextTick, onScopeDispose, ref, useId, watch } from 'vue';
 import AppButton from '@maseaaao/ui/AppButton.vue';
-import CategoryCover from './CategoryCover.vue';
+import { computed, nextTick, onScopeDispose, ref, useId, watch } from 'vue';
 import { rankCategories } from '../category-search';
 import { t } from '../messages';
 import type { TwitchCategory } from '../types';
+import CategoryCover from './CategoryCover.vue';
+
 const props = defineProps<{
   selected: TwitchCategory | null;
   query: string;
@@ -133,7 +134,7 @@ async function keydown(event: KeyboardEvent, option?: string): Promise<void> {
         emit('composition');
       "
       @compositionend="compositionEnd"
-    />
+    >
     <div v-if="expanded" class="category-popover">
       <div :id="`${id}-list`" class="autocomplete-list" role="listbox" :aria-label="t('category')">
         <button

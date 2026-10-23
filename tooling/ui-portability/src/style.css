@@ -17,7 +17,7 @@ main {
 h1 {
   overflow-wrap: anywhere;
   font:
-    400 24px/1.4 Unbounded,
+    400 24px / 1.4 Unbounded,
     Arial,
     sans-serif;
 }

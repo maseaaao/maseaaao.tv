@@ -1,10 +1,10 @@
-import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
-import { cp } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
-import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cp } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import test from 'node:test';
 import { JSDOM } from 'jsdom';
 import { generatedWebsiteImages } from '../tooling/website-assets.mjs';
 
@@ -62,7 +62,8 @@ test('all artwork envelopes use official SSR output with embedded local resource
       pages++;
     }
   }
-  assert.equal(pages, 26);
+  // The committed source set already contains 27 envelopes.
+  assert.equal(pages, 27);
 });
 test('generated website resources have exactly one owner and collisions fail before publication', async () => {
   const directory = mkdtempSync(join(tmpdir(), 'website-assets-'));

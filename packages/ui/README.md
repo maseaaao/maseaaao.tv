@@ -13,7 +13,6 @@
 ### AppButton (`AppButton.vue`)
 
 Кнопка-действие или ссылка-действие. Потребители: Stream Info (`.button`/`.icon-button`), сайт (`.tile`/кнопки чекера).
-
 - Props: `variant?: 'primary' | 'secondary' | 'icon'` (по умолчанию `secondary`), `as?: 'button' | 'a'` (по умолчанию `button`), `href?: string`, `type?: 'button' | 'submit'`, `disabled?: boolean`, `loading?: boolean`, `target?: string`, `rel?: string`, `ariaLabel?: string`.
 - Events: `click: [MouseEvent]` (не эмитится при `disabled`/`loading`).
 - Slots: `default` — текст действия; `icon` — иконка (обязателен для `variant="icon"`, брендовые SVG остаются в продукте).
@@ -25,7 +24,6 @@
 ### IconIndicator (`IconIndicator.vue`)
 
 Точка-индикатор статуса с обязательным текстом рядом (design-rules.md: "Статусы включают текст, не только цвет/точку"). Потребители: Stream Info (`.connection i`).
-
 - Props: `status: 'connected' | 'connecting' | 'disconnected' | 'error'` (обязателен), `label: string` (обязателен, без встроенных строк).
 - Events/slots: нет.
 - Ограничение: не заменяет `LiveStatusBadge` — разная разметка (точка+текст рядом vs пилюля), объединять без третьего подтверждённого потребителя не следует.
@@ -37,7 +35,6 @@
 ### FieldInput (`FieldInput.vue`)
 
 Поле ввода (`input`/`textarea`) с лейблом, описанием и ошибкой. Потребители: Stream Info (`input`/`textarea` + `label`).
-
 - Props: `label: string`, `modelValue: string` (оба обязательны), `type?: 'text' | 'password' | 'url' | 'search'` (по умолчанию `text`), `multiline?: boolean`, `placeholder?: string`, `disabled?: boolean`, `readonly?: boolean`, `error?: string`, `description?: string`, `autocomplete?: string`.
 - Events: `update:modelValue: [string]`.
 - Состояния: `disabled` (opacity), `error` (красная рамка + текст ошибки вместо `description`).
@@ -48,7 +45,6 @@
 ### LiveStatusBadge (`LiveStatusBadge.vue`)
 
 Бейдж-пилюля состояния трансляции с текстом. Потребители — сайт (состояние эфира) и карточка Twitch в Stream Info.
-
 - Props: `status: 'live' | 'offline' | 'disconnected'` (обязателен), `label: string` (обязателен).
 - Events/slots: нет.
 - Ограничение: не объединяется с `IconIndicator` — разная разметка и контекст использования; решение по объединению возможно только при третьем подтверждённом потребителе.

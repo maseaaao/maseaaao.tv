@@ -1,8 +1,8 @@
-import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { resolve, join } from 'node:path';
+import { join, resolve } from 'node:path';
+import test, { after, before } from 'node:test';
 import { pathToFileURL } from 'node:url';
 import { buildVuePages } from '../packages/build-config/static.mjs';
 import { launchBrowser } from '../tooling/artwork/browser.mjs';

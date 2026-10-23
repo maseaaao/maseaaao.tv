@@ -1,9 +1,9 @@
-import { cp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
+import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { build } from 'vite';
-import postcss from 'postcss';
+import { fileURLToPath } from 'node:url';
 import { providerPlugins } from '@maseaaao/build-config/postcss';
+import postcss from 'postcss';
+import { build } from 'vite';
 
 const root = fileURLToPath(new URL('../apps/obs-widgets/', import.meta.url));
 const source = path.join(root, 'src');

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, useId } from 'vue';
+
 defineOptions({ inheritAttrs: false });
 /**
  * Поле ввода с лейблом для Stream Info (input/textarea + label) —
@@ -80,7 +81,7 @@ function updateValue(event: Event): void {
       :aria-invalid="Boolean(error) || undefined"
       :aria-describedby="hasHelp ? descriptionId : undefined"
       @input="updateValue"
-    />
+    >
     <p
       v-if="hasHelp"
       :id="descriptionId"

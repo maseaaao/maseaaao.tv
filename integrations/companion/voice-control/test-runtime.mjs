@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
-import VoiceStream from './index.js';
 import { createServer } from 'node:http';
-import SystemMicrophone from '../system-microphone/index.js';
 import { InstanceStatus } from '@companion-module/base';
+import SystemMicrophone from '../system-microphone/index.js';
+import VoiceStream from './index.js';
 
 function moduleStub() {
   const events = [];

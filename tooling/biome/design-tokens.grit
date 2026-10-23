@@ -1,0 +1,6 @@
+language css
+
+`$property: $value` where {
+  $value <: r".*(?:#[0-9a-fA-F]{3,8}\b|[rR][gG][bB][aA]?\(|[hH][sS][lL][aA]?\().*",
+  register_diagnostic(span=$value, message="Use semantic design tokens instead of literal hex/rgb/hsl colors in Vue components.", severity="error")
+}

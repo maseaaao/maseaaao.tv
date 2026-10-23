@@ -1,9 +1,9 @@
-import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
-import { resolve, extname, sep, join } from 'node:path';
 import http from 'node:http';
+import { extname, join, resolve, sep } from 'node:path';
+import test, { after, before } from 'node:test';
 import { launchBrowser } from '../tooling/artwork/browser.mjs';
 
 const root = resolve(import.meta.dirname, '..');

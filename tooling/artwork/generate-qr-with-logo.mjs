@@ -1,7 +1,7 @@
 import { pathToFileURL } from 'node:url';
+import jsQR from 'jsqr';
 import QRCode from 'qrcode';
 import sharp from 'sharp';
-import jsQR from 'jsqr';
 
 const svg = (width, height, content) =>
   Buffer.from(`

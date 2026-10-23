@@ -1,13 +1,13 @@
+import CheckerPage from '@maseaaao/website/CheckerPage.vue';
+import DocsPage from '@maseaaao/website/DocsPage.vue';
+import HomePage from '@maseaaao/website/HomePage.vue';
+import StreamInfoPage from '@maseaaao/website/StreamInfoPage.vue';
+import ToolsPage from '@maseaaao/website/ToolsPage.vue';
+import TunaPage from '@maseaaao/website/TunaPage.vue';
+import styles from '@maseaaao/website/ui.css?inline';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, within } from 'storybook/test';
 import { h } from 'vue';
-import HomePage from '@maseaaao/website/HomePage.vue';
-import CheckerPage from '@maseaaao/website/CheckerPage.vue';
-import DocsPage from '@maseaaao/website/DocsPage.vue';
-import ToolsPage from '@maseaaao/website/ToolsPage.vue';
-import StreamInfoPage from '@maseaaao/website/StreamInfoPage.vue';
-import TunaPage from '@maseaaao/website/TunaPage.vue';
-import styles from '@maseaaao/website/ui.css?inline';
 
 const meta: Meta<typeof HomePage> = {
   title: 'Экраны/Сайт',

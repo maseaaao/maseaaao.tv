@@ -1,12 +1,12 @@
 import { createSSRApp, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
-import SceneArtwork from './components/SceneArtwork.vue';
 import BannerArtwork from './components/BannerArtwork.vue';
-import OfflineBannerArtwork from './components/OfflineBannerArtwork.vue';
-import TwitchPanel from './components/TwitchPanel.vue';
 import BrandArtwork from './components/BrandArtwork.vue';
-import WallpaperArtwork from './components/WallpaperArtwork.vue';
 import LogoArtwork from './components/LogoArtwork.vue';
+import OfflineBannerArtwork from './components/OfflineBannerArtwork.vue';
+import SceneArtwork from './components/SceneArtwork.vue';
+import TwitchPanel from './components/TwitchPanel.vue';
+import WallpaperArtwork from './components/WallpaperArtwork.vue';
 import layout from './scenes/layout.json';
 import './styles.css';
 

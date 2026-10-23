@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { StreamGuard } from './guard.mjs';
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let state = false,
   calls = [];

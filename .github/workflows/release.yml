@@ -1,11 +1,11 @@
 name: Release independent tool
 on:
   push:
-    tags: ['stream-info-v*', 'tuna-widget-v*']
+    tags: ["stream-info-v*", "tuna-widget-v*"]
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Existing product tag, e.g. stream-info-v1.3.3'
+        description: "Existing product tag, e.g. stream-info-v1.3.3"
         required: true
 permissions:
   contents: write

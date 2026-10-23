@@ -1,6 +1,7 @@
-import { build } from 'esbuild';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { build } from 'esbuild';
+
 const dir = fileURLToPath(new URL('.', import.meta.url));
 execFileSync(
   'powershell.exe',

@@ -1,9 +1,10 @@
-import postcss from 'postcss';
-import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import test from 'node:test';
+import postcss from 'postcss';
 import { launchBrowser } from '../tooling/artwork/browser.mjs';
+
 const root = resolve(import.meta.dirname, '..');
 const read = (p) => readFileSync(resolve(root, p), 'utf8');
 

@@ -8,7 +8,9 @@
     "pnpm-workspace.yaml",
     "tooling/*.mjs",
     "tooling/artwork/**",
-    "tooling/lib/**"
+    "tooling/lib/**",
+    "biome.json",
+    "tooling/biome/**"
   ],
   "tasks": {
     "source": {

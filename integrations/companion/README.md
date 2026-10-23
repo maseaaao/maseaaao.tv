@@ -18,7 +18,6 @@ python integrations/companion/shared/test-packages.py
 При отсутствии библиотек сначала `pnpm run prepare:companion-libs`. Сборка компилирует помощники, но не запускает их. Тесты используют подставные обработчики и собственный локальный тестовый сервер; Actions, звук и эфир не затрагиваются. Упаковка создаёт tgz и локальные JSON-запросы; создание этих файлов не означает установку, отправлять JSON автоматически нельзя.
 
 Артефакты:
-
 - `system-microphone/local-system-microphone-1.3.1.tgz`
 - `voice-control/local-voice-stream-1.1.1.tgz`
 

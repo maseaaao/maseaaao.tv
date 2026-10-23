@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+
 test('affected selection follows transitive workspace consumers', async () => {
   const { selectAffected, readWorkspaces } = await import('../tooling/affected.mjs');
   const plan = selectAffected(['packages/design/brand.css'], readWorkspaces());

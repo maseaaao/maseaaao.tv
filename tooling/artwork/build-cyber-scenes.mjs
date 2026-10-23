@@ -1,8 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { buildArtwork } from '../build-artwork.mjs';
 import { launchBrowser } from './browser.mjs';
 import { renderImage } from './render-image.mjs';
-import { buildArtwork } from '../build-artwork.mjs';
 
 const root = path.resolve(import.meta.dirname, '../..');
 const layout = JSON.parse(await fs.readFile(path.join(root, 'artwork/scenes/layout.json'), 'utf8'));

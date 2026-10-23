@@ -1,8 +1,8 @@
-import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
-import path from 'node:path';
 import http from 'node:http';
+import path from 'node:path';
+import test, { after, before } from 'node:test';
 import { launchBrowser } from '../tooling/artwork/browser.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');

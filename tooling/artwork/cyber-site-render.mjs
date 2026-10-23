@@ -1,10 +1,10 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { renderImage } from './render-image.mjs';
-import { buildArtwork } from '../build-artwork.mjs';
 import pngToIco from 'png-to-ico';
 import sharp from 'sharp';
+import { buildArtwork } from '../build-artwork.mjs';
 import { launchBrowser } from './browser.mjs';
+import { renderImage } from './render-image.mjs';
 
 const root = path.resolve(import.meta.dirname, '../..');
 const requested = process.argv[2] || 'all';

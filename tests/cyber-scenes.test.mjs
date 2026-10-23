@@ -1,11 +1,11 @@
-import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import test, { after, before } from 'node:test';
 import { pathToFileURL } from 'node:url';
-import { launchBrowser } from '../tooling/artwork/browser.mjs';
-import sharp from 'sharp';
 import jsQR from 'jsqr';
+import sharp from 'sharp';
+import { launchBrowser } from '../tooling/artwork/browser.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const scenes = path.join(root, '.build-cache/artwork/scenes');

@@ -1,8 +1,8 @@
-import test from 'node:test';
 import assert from 'node:assert/strict';
 import { cp, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import test from 'node:test';
 import { pathToFileURL } from 'node:url';
 import { launchBrowser } from '../tooling/artwork/browser.mjs';
 
@@ -129,126 +129,120 @@ async function assertFocused(locator, message) {
   );
 }
 
-test(
-  'built file:// pagination retains focus while loading, blocks repeats and supports retry',
-  { timeout: 30000 },
-  async () => {
-    await withPagination(async ({ page, input, searches }) => {
+test('built file:// pagination retains focus while loading, blocks repeats and supports retry', {
+  timeout: 30000,
+}, async () => {
+  await withPagination(async ({ page, input, searches }) => {
+    const more = page.getByRole('button', { name: 'Показать ещё', exact: true });
+    await more.focus();
+    await page.keyboard.press('Enter');
+    await waitForSearch(searches, 2);
+    await page.getByRole('status').filter({ hasText: 'Ищем категории…' }).waitFor();
+    await assertFocused(more, `Loading pagination lost focus to ${await focusedTag(page)}`);
+    assert.equal(await more.getAttribute('aria-disabled'), 'true');
+    assert.equal(await more.evaluate((element) => element.disabled), false);
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Space');
+    await more.evaluate((element) => element.click());
+    assert.equal(searches.length, 2, 'Repeat activation must not queue another page');
+    searches[1].respond({
+      data: { results: [{ id: 'two', name: 'Adventure two' }], cursor: 'last', hasMore: true },
+    });
+    await page.getByRole('option', { name: 'Adventure two', exact: true }).waitFor();
+    await assertFocused(more, 'Successful continuation must retain the same action focus');
+    assert.notEqual(await more.getAttribute('aria-disabled'), 'true');
+    assert.equal(searches.length, 2);
+    assert.deepEqual(searches[1].payload, { query: 'Adventure', cursor: 'next' });
+
+    await page.keyboard.press('Enter');
+    await waitForSearch(searches, 3);
+    searches[2].respond({ ok: false, data: null, error: { message: 'Page failed' } });
+    await page.getByRole('alert').filter({ hasText: 'Page failed' }).waitFor();
+    await assertFocused(more, 'Failure must retain the focused pagination action');
+    assert.equal(await page.getByRole('option').count(), 2);
+    await page.getByRole('button', { name: 'Повторить поиск', exact: true }).click();
+    await waitForSearch(searches, 4);
+    assert.deepEqual(searches[3].payload, searches[2].payload);
+    assert.deepEqual(searches[3].payload, { query: 'Adventure', cursor: 'last' });
+    // Restore focus to the pagination action before its final-page removal.
+    await more.focus();
+    searches[3].respond({
+      data: { results: [{ id: 'three', name: 'Adventure three' }], cursor: null, hasMore: false },
+    });
+    await more.waitFor({ state: 'detached' });
+    assert.equal(await page.getByRole('option').count(), 3);
+    await assertFocused(input, 'Final-page removal must return focus to the category input');
+    assert.equal(searches.length, 4);
+  });
+});
+
+test('built file:// final local batch returns pagination focus without another request', {
+  timeout: 30000,
+}, async () => {
+  await withPagination(
+    async ({ page, input, searches }) => {
+      assert.equal(await page.getByRole('option').count(), 20);
       const more = page.getByRole('button', { name: 'Показать ещё', exact: true });
       await more.focus();
       await page.keyboard.press('Enter');
-      await waitForSearch(searches, 2);
-      await page.getByRole('status').filter({ hasText: 'Ищем категории…' }).waitFor();
-      await assertFocused(more, `Loading pagination lost focus to ${await focusedTag(page)}`);
-      assert.equal(await more.getAttribute('aria-disabled'), 'true');
-      assert.equal(await more.evaluate((element) => element.disabled), false);
-      await page.keyboard.press('Enter');
-      await page.keyboard.press('Space');
-      await more.evaluate((element) => element.click());
-      assert.equal(searches.length, 2, 'Repeat activation must not queue another page');
-      searches[1].respond({
-        data: { results: [{ id: 'two', name: 'Adventure two' }], cursor: 'last', hasMore: true },
-      });
-      await page.getByRole('option', { name: 'Adventure two', exact: true }).waitFor();
-      await assertFocused(more, 'Successful continuation must retain the same action focus');
-      assert.notEqual(await more.getAttribute('aria-disabled'), 'true');
-      assert.equal(searches.length, 2);
-      assert.deepEqual(searches[1].payload, { query: 'Adventure', cursor: 'next' });
-
-      await page.keyboard.press('Enter');
-      await waitForSearch(searches, 3);
-      searches[2].respond({ ok: false, data: null, error: { message: 'Page failed' } });
-      await page.getByRole('alert').filter({ hasText: 'Page failed' }).waitFor();
-      await assertFocused(more, 'Failure must retain the focused pagination action');
-      assert.equal(await page.getByRole('option').count(), 2);
-      await page.getByRole('button', { name: 'Повторить поиск', exact: true }).click();
-      await waitForSearch(searches, 4);
-      assert.deepEqual(searches[3].payload, searches[2].payload);
-      assert.deepEqual(searches[3].payload, { query: 'Adventure', cursor: 'last' });
-      // Restore focus to the pagination action before its final-page removal.
-      await more.focus();
-      searches[3].respond({
-        data: { results: [{ id: 'three', name: 'Adventure three' }], cursor: null, hasMore: false },
-      });
       await more.waitFor({ state: 'detached' });
-      assert.equal(await page.getByRole('option').count(), 3);
-      await assertFocused(input, 'Final-page removal must return focus to the category input');
-      assert.equal(searches.length, 4);
-    });
-  },
-);
-
-test(
-  'built file:// final local batch returns pagination focus without another request',
-  { timeout: 30000 },
-  async () => {
-    await withPagination(
-      async ({ page, input, searches }) => {
-        assert.equal(await page.getByRole('option').count(), 20);
-        const more = page.getByRole('button', { name: 'Показать ещё', exact: true });
-        await more.focus();
-        await page.keyboard.press('Enter');
-        await more.waitFor({ state: 'detached' });
-        assert.equal(await page.getByRole('option').count(), 21);
-        await assertFocused(input, 'Exhausting a local batch must also return focus to the input');
-        assert.equal(searches.length, 1);
-      },
-      {
-        results: [
-          { id: 'one', name: 'Adventure one' },
-          ...Array.from({ length: 20 }, (_, index) => ({
-            id: `local-${index}`,
-            name: `Adventure ${index}`,
-          })),
-        ],
-        cursor: null,
-        hasMore: false,
-      },
-    );
-  },
-);
+      assert.equal(await page.getByRole('option').count(), 21);
+      await assertFocused(input, 'Exhausting a local batch must also return focus to the input');
+      assert.equal(searches.length, 1);
+    },
+    {
+      results: [
+        { id: 'one', name: 'Adventure one' },
+        ...Array.from({ length: 20 }, (_, index) => ({
+          id: `local-${index}`,
+          name: `Adventure ${index}`,
+        })),
+      ],
+      cursor: null,
+      hasMore: false,
+    },
+  );
+});
 
 for (const target of ['elsewhere', 'disposed']) {
-  test(
-    `built file:// final pagination does not steal focus when ${target}`,
-    { timeout: 30000 },
-    async () => {
-      await withPagination(async ({ page, searches }) => {
-        const more = page.getByRole('button', { name: 'Показать ещё', exact: true });
-        await more.click();
-        await waitForSearch(searches, 2);
-        const category = page.getByRole('combobox', { name: 'Категория', exact: true });
-        const destination =
-          target === 'disposed' ? category : page.getByLabel('Название', { exact: true });
-        if (target === 'disposed') {
-          // The platform switch was removed from the dock, so the surviving way
-          // to dispose a running search is to clear its query: the popover
-          // unmounts while the continuation request is still in flight.
-          await destination.focus();
-          await category.fill('');
-        }
+  test(`built file:// final pagination does not steal focus when ${target}`, {
+    timeout: 30000,
+  }, async () => {
+    await withPagination(async ({ page, searches }) => {
+      const more = page.getByRole('button', { name: 'Показать ещё', exact: true });
+      await more.click();
+      await waitForSearch(searches, 2);
+      const category = page.getByRole('combobox', { name: 'Категория', exact: true });
+      const destination =
+        target === 'disposed' ? category : page.getByLabel('Название', { exact: true });
+      if (target === 'disposed') {
+        // The platform switch was removed from the dock, so the surviving way
+        // to dispose a running search is to clear its query: the popover
+        // unmounts while the continuation request is still in flight.
         await destination.focus();
-        searches[1].respond({ data: { results: [], cursor: null, hasMore: false } });
-        if (target === 'elsewhere') await more.waitFor({ state: 'detached' });
-        else {
-          await page.getByRole('listbox').waitFor({ state: 'detached' });
-          // The retired response must not resurrect the removed pagination action.
-          assert.equal(
-            await page.getByRole('button', { name: 'Показать ещё', exact: true }).count(),
-            0,
-          );
-          // Remount only after disposal; the fresh search must work again.
-          await category.fill('Ad');
-          await waitForSearch(searches, 3);
-          searches[2].respond({ data: { results: [{ id: 'one', name: 'Adventure one' }] } });
-          await page.getByRole('status').filter({ hasText: 'Результатов: 1' }).waitFor();
-        }
-        await assertFocused(destination, 'A retired/unfocused search must not take focus back');
+        await category.fill('');
+      }
+      await destination.focus();
+      searches[1].respond({ data: { results: [], cursor: null, hasMore: false } });
+      if (target === 'elsewhere') await more.waitFor({ state: 'detached' });
+      else {
+        await page.getByRole('listbox').waitFor({ state: 'detached' });
+        // The retired response must not resurrect the removed pagination action.
         assert.equal(
           await page.getByRole('button', { name: 'Показать ещё', exact: true }).count(),
           0,
         );
-      });
-    },
-  );
+        // Remount only after disposal; the fresh search must work again.
+        await category.fill('Ad');
+        await waitForSearch(searches, 3);
+        searches[2].respond({ data: { results: [{ id: 'one', name: 'Adventure one' }] } });
+        await page.getByRole('status').filter({ hasText: 'Результатов: 1' }).waitFor();
+      }
+      await assertFocused(destination, 'A retired/unfocused search must not take focus back');
+      assert.equal(
+        await page.getByRole('button', { name: 'Показать ещё', exact: true }).count(),
+        0,
+      );
+    });
+  });
 }

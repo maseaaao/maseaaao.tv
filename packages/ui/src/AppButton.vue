@@ -117,7 +117,7 @@ defineSlots<{
   background: transparent;
   color: var(--color-text);
   font:
-    400 16px/1.4 Unbounded,
+    400 16px / 1.4 Unbounded,
     Arial,
     sans-serif;
   text-decoration: none;

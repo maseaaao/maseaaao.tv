@@ -116,7 +116,7 @@ h3,
   border: 1px solid var(--color-border);
   border-radius: 14px;
   font:
-    400 20px/1.35 Unbounded,
+    400 20px / 1.35 Unbounded,
     Arial,
     sans-serif;
   text-decoration: none;
@@ -129,7 +129,7 @@ h3,
   display: block;
   margin-top: 5px;
   font:
-    14px/1.4 Arial,
+    14px / 1.4 Arial,
     sans-serif;
 }
 .link-primary {
@@ -145,7 +145,7 @@ h3,
 }
 .arrow {
   font:
-    400 30px/1 Arial,
+    400 30px / 1 Arial,
     sans-serif;
   flex: none;
 }
@@ -221,7 +221,7 @@ h3,
 }
 .chat-placeholder h3 {
   font:
-    700 14px/1.5 Arial,
+    700 14px / 1.5 Arial,
     sans-serif;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--color-border);
@@ -303,7 +303,7 @@ h3,
 }
 .dock-section h2 {
   font:
-    400 19px/1.4 Unbounded,
+    400 19px / 1.4 Unbounded,
     Arial,
     sans-serif;
   margin-bottom: 18px;
@@ -423,7 +423,7 @@ h3,
   border-radius: 8px;
   text-decoration: none;
   font:
-    400 16px/1.4 Unbounded,
+    400 16px / 1.4 Unbounded,
     Arial,
     sans-serif;
 }
@@ -470,7 +470,7 @@ h3,
   align-items: center;
   gap: 24px;
   font:
-    400 46px/1.2 Unbounded,
+    400 46px / 1.2 Unbounded,
     Arial,
     sans-serif;
   letter-spacing: -0.04em;
@@ -494,7 +494,7 @@ h3,
 .scene-copy p {
   margin-top: 44px;
   font:
-    400 38px/1.4 Unbounded,
+    400 38px / 1.4 Unbounded,
     Arial,
     sans-serif;
   color: var(--color-brand);
@@ -520,7 +520,7 @@ h3,
   left: 96px;
   bottom: 64px;
   font:
-    400 32px/1.4 Unbounded,
+    400 32px / 1.4 Unbounded,
     Arial,
     sans-serif;
 }

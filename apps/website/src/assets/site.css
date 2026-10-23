@@ -8,7 +8,7 @@ body {
   margin: 0;
   color: var(--color-text);
   background: var(--color-canvas);
-  font: 16px/1.5 var(--font-body);
+  font: 16px / 1.5 var(--font-body);
   -webkit-font-smoothing: antialiased;
   font-synthesis: none;
 }
@@ -46,6 +46,7 @@ button:focus-visible,
   background: var(--color-surface);
   display: grid;
   grid-template-columns: minmax(0, 1fr);
+  /* biome-ignore lint/correctness/noInvalidGridAreas: Three valid one-column grid rows; Biome 2.6.2 miscounts consecutive strings on a single line. */
   grid-template-areas: 'identity' 'actions' 'collab';
   gap: 32px 40px;
   align-items: start;
@@ -120,7 +121,7 @@ button:focus-visible,
 .collab__label {
   margin: 0;
   color: var(--color-text);
-  font: 400 18px/1.4 var(--font-display);
+  font: 400 18px / 1.4 var(--font-display);
   overflow-wrap: anywhere;
 }
 .tiles {
@@ -153,7 +154,7 @@ button:focus-visible,
 }
 
 .tile__title {
-  font: 400 20px/1.35 var(--font-display);
+  font: 400 20px / 1.35 var(--font-display);
   overflow-wrap: anywhere;
 }
 
@@ -176,7 +177,7 @@ button:focus-visible,
   border-radius: 8px;
 }
 .tiles--secondary .tile__title {
-  font: 15px/1.5 var(--font-body);
+  font: 15px / 1.5 var(--font-body);
 }
 .collab {
   grid-area: collab;
@@ -336,7 +337,7 @@ button:focus-visible,
 }
 .checker .title {
   margin: 0;
-  font: 400 18px/1.5 var(--font-display);
+  font: 400 18px / 1.5 var(--font-display);
 }
 .checker .status,
 .checker .note {

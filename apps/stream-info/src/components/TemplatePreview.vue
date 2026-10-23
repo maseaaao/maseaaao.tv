@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+
 const props = defineProps<{ template: string; subtitle?: string; source?: boolean }>();
 const parts = computed(() => props.template.split('%subtitle%'));
 </script>
@@ -11,7 +12,9 @@ const parts = computed(() => props.template.split('%subtitle%'));
       }}<mark
         v-if="index < parts.length - 1"
         :class="subtitle?.trim() && !source ? 'template-value' : 'template-token'"
-        >{{ source ? '%subtitle%' : subtitle?.trim() || '%subtitle%' }}</mark
+        >{{
+          source ? '%subtitle%' : subtitle?.trim() || '%subtitle%'
+        }}</mark
       ></template
     ></span
   >

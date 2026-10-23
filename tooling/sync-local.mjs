@@ -1,14 +1,14 @@
-import {
-  existsSync,
-  readFileSync,
-  readdirSync,
-  mkdirSync,
-  copyFileSync,
-  writeFileSync,
-  lstatSync,
-} from 'node:fs';
-import { resolve, relative, sep, dirname } from 'node:path';
 import { createHash } from 'node:crypto';
+import {
+  copyFileSync,
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from 'node:fs';
+import { dirname, relative, resolve, sep } from 'node:path';
 
 const repo = resolve(import.meta.dirname, '..');
 const args = process.argv.slice(2);

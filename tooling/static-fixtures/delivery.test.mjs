@@ -1,8 +1,8 @@
-import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, cp, readFile, rm, mkdir } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import test from 'node:test';
 import { pathToFileURL } from 'node:url';
 import { launchBrowser } from '../artwork/browser.mjs';
 

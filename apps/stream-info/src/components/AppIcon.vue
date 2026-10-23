@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, createStaticVNode } from 'vue';
-import { brandIcon, uiIcon } from '../icons';
 import type { UiIcon } from '../icons';
+import { brandIcon, uiIcon } from '../icons';
+
 const props = defineProps<{ name: UiIcon | 'twitch' }>();
 // Static SVG from bundled imports only: never API data or user input.
 const svg = computed(() => (props.name === 'twitch' ? brandIcon('twitch') : uiIcon(props.name)));

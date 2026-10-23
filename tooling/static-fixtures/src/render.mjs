@@ -1,9 +1,10 @@
 import { createSSRApp, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
-import StaticCard from './StaticCard.vue';
-import CounterCard from './CounterCard.vue';
 import ArtworkCard from './ArtworkCard.vue';
+import CounterCard from './CounterCard.vue';
+import StaticCard from './StaticCard.vue';
 import './style.css';
+
 const pages = {
   'index.html': StaticCard,
   'interactive.html': CounterCard,

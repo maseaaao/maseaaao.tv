@@ -31,7 +31,7 @@ const avatarSizes = [64, 96, 128, 192, 288]
                 decoding="async"
                 width="96"
                 height="96"
-              />
+              >
               <div class="avatar-fallback" aria-hidden="true">m</div>
             </div>
           </div>
@@ -79,7 +79,7 @@ const avatarSizes = [64, 96, 128, 192, 288]
           />
         </div>
       </nav>
-      <footer id="contacts" class="collab" tabindex="-1" aria-labelledby="contacts-title">
+      <section id="contacts" class="collab" tabindex="-1" aria-labelledby="contacts-title">
         <h2 id="contacts-title" class="collab__label">Сотрудничество</h2>
         <div class="collab__links">
           <a class="collab__link" href="mailto:collab@maseaaao.tv"> Написать на почту </a>
@@ -93,7 +93,7 @@ const avatarSizes = [64, 96, 128, 192, 288]
             Написать в Telegram
           </a>
         </div>
-      </footer>
+      </section>
     </section>
   </main>
 </template>

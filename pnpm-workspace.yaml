@@ -1,12 +1,12 @@
 packages:
-  - 'apps/*'
-  - 'packages/*'
-  - 'integrations/companion/system-microphone'
-  - 'integrations/companion/voice-control'
-  - 'tooling/ui-portability'
-  - 'tooling/ui-catalog'
-  - 'tooling/static-fixtures'
-  - 'artwork'
+  - "apps/*"
+  - "packages/*"
+  - "integrations/companion/system-microphone"
+  - "integrations/companion/voice-control"
+  - "tooling/ui-portability"
+  - "tooling/ui-catalog"
+  - "tooling/static-fixtures"
+  - "artwork"
 
 # Only native toolchains used by builds may execute dependency scripts.
 allowBuilds:

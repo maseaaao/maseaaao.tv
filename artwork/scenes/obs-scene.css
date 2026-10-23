@@ -18,7 +18,7 @@
   display: flex;
   align-items: center;
   gap: 24px;
-  font: 400 32px/1.5 var(--font-display);
+  font: 400 32px / 1.5 var(--font-display);
   letter-spacing: -0.035em;
   background: var(--color-surface);
 }

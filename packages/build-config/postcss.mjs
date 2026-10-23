@@ -1,6 +1,6 @@
+import { fileURLToPath } from 'node:url';
 import atImport from 'postcss-import';
 import url from 'postcss-url';
-import { fileURLToPath } from 'node:url';
 
 const designTokens = fileURLToPath(import.meta.resolve('@maseaaao/design/tokens.css'));
 

@@ -1,8 +1,9 @@
-import { appendFileSync, readFileSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
+import { appendFileSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
+
 const root = fileURLToPath(new URL('../', import.meta.url));
 export function readWorkspaces() {
   const { packages } = parse(readFileSync(resolve(root, 'pnpm-workspace.yaml'), 'utf8'));

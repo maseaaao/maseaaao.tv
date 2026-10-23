@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { resolve, relative, isAbsolute, sep, basename } from 'node:path';
+import { basename, isAbsolute, relative, resolve, sep } from 'node:path';
 import { defineConfig } from 'vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 

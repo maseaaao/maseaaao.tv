@@ -9,8 +9,8 @@ withDefaults(defineProps<{ title?: string; artist?: string; playing?: boolean }>
 <template>
   <main id="player" :data-play="playing ? '1' : '0'" data-cover="0" aria-label="Музыкальный виджет">
     <div id="surface" aria-hidden="true"></div>
-    <img class="artwork-glow" alt="" aria-hidden="true" />
-    <img class="artwork-glow" alt="" aria-hidden="true" />
+    <img class="artwork-glow" alt="" aria-hidden="true">
+    <img class="artwork-glow" alt="" aria-hidden="true">
     <div id="cover-frame" aria-hidden="true">
       <div id="cover-fallback">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -34,8 +34,8 @@ withDefaults(defineProps<{ title?: string; artist?: string; playing?: boolean }>
         </svg>
       </div>
 
-      <img id="cover-a" class="cover-image" alt="" />
-      <img id="cover-b" class="cover-image" alt="" />
+      <img id="cover-a" class="cover-image" alt="">
+      <img id="cover-b" class="cover-image" alt="">
     </div>
 
     <section id="content">

@@ -7,7 +7,7 @@ function initChatBrand() {
   if (!log || initChatBrand.done) return;
   initChatBrand.done = true;
 
-  new MutationObserver(function (mutations) {
+  new MutationObserver((mutations) => {
     for (const m of mutations) {
       for (const node of m.addedNodes) {
         if (node.nodeType !== 1) continue;

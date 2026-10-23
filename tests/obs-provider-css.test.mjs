@@ -1,6 +1,6 @@
-import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import test from 'node:test';
 import { prepareObsChatCss } from '../tooling/local/obs-provider-css.mjs';
 
 test('OBS chat override embeds the generated skin while retaining the installed size and provider lifecycle', () => {

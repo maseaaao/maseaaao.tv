@@ -1,4 +1,5 @@
 import { parseRecord, textValue } from '../assertions';
+
 type CodeEventHandler = (payload: unknown) => void;
 
 interface ActionShape {
@@ -64,36 +65,36 @@ declare global {
 }
 const globalMocks = globalThis;
 
-export const mockStreamerbot: MockStreamerbot =
-  globalMocks[mockKey] ??
-  (globalMocks[mockKey] = {
-    actions: [apiAction, presetAction],
-    state: defaultState(),
-    actionCalls: [],
-    instances: [],
-    connectCalls: 0,
-    failConnect: false,
-    searchDelay: 0,
-    searchReply: null,
-    actionReplies: {},
-    deferSearch: false,
-    pendingSearches: [],
-    disconnectHook: null,
-    reset(): void {
-      this.actions = [apiAction, presetAction];
-      this.state = defaultState();
-      this.actionCalls = [];
-      this.instances = [];
-      this.connectCalls = 0;
-      this.failConnect = false;
-      this.searchDelay = 0;
-      this.searchReply = null;
-      this.actionReplies = {};
-      this.deferSearch = false;
-      this.pendingSearches = [];
-      this.disconnectHook = null;
-    },
-  });
+globalMocks[mockKey] ??= {
+  actions: [apiAction, presetAction],
+  state: defaultState(),
+  actionCalls: [],
+  instances: [],
+  connectCalls: 0,
+  failConnect: false,
+  searchDelay: 0,
+  searchReply: null,
+  actionReplies: {},
+  deferSearch: false,
+  pendingSearches: [],
+  disconnectHook: null,
+  reset(): void {
+    this.actions = [apiAction, presetAction];
+    this.state = defaultState();
+    this.actionCalls = [];
+    this.instances = [];
+    this.connectCalls = 0;
+    this.failConnect = false;
+    this.searchDelay = 0;
+    this.searchReply = null;
+    this.actionReplies = {};
+    this.deferSearch = false;
+    this.pendingSearches = [];
+    this.disconnectHook = null;
+  },
+};
+
+export const mockStreamerbot: MockStreamerbot = globalMocks[mockKey];
 
 export class StreamerbotClient {
   ready = true;

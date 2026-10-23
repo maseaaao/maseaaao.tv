@@ -1,5 +1,5 @@
-import { randomUUID } from 'node:crypto';
 import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
 import { StreamerbotClient } from '@streamerbot/client';
 
 // Read-only search acceptance checks: never calls update/apply/preset commands.

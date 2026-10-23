@@ -1,17 +1,17 @@
-import test from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  mkdtempSync,
-  mkdirSync,
-  writeFileSync,
-  readFileSync,
-  readdirSync,
-  existsSync,
-  rmSync,
-} from 'node:fs';
-import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
+import { resolve } from 'node:path';
+import test from 'node:test';
 
 test('local update previews changes, preserves unrelated data and backs up replaced resources', () => {
   const root = resolve(import.meta.dirname, '..');

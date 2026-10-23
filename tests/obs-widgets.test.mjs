@@ -1,9 +1,9 @@
-import test from 'node:test';
 import assert from 'node:assert/strict';
-import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
-import { launchBrowser } from '../tooling/artwork/browser.mjs';
+import test from 'node:test';
+import { pathToFileURL } from 'node:url';
 import sharp from 'sharp';
+import { launchBrowser } from '../tooling/artwork/browser.mjs';
 
 test('social strip keeps its shell still and readable during a rare wave of all five logos', async () => {
   const browser = await launchBrowser();
@@ -48,7 +48,9 @@ test('social strip keeps its shell still and readable during a rare wave of all 
       const rect = (selector) => document.querySelector(selector).getBoundingClientRect().toJSON();
       const base = { name: rect('.name'), strip: rect('.strip'), divider: rect('.divider') };
       const animations = document.getAnimations();
-      animations.forEach((animation) => animation.pause());
+      animations.forEach((animation) => {
+        animation.pause();
+      });
       const samples = [];
       for (const ms of [0, 1500, 1800, 2000, 2300, 2600, 3100, 4000, 15000, 29000, 31800, 34000]) {
         animations.forEach((animation) => {

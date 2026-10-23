@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import layout from '../scenes/layout.json';
-import logo from '../logo/logo.png';
 import qr from '@maseaaao/website/qr.png';
+import { computed } from 'vue';
+import logo from '../logo/logo.png';
+import layout from '../scenes/layout.json';
 import SceneZone from './SceneZone.vue';
+
 const props = defineProps<{ name: string }>();
 const scene = computed(() => layout.files.find((file) => file.name === props.name));
 const map = computed(() =>
@@ -35,7 +36,7 @@ function at(box: number[]) {
           :src="logo"
           alt=""
           :style="{ width: `${statusMap.identity[2]}px`, height: `${statusMap.identity[3]}px` }"
-        />maseaaao</div
+        >maseaaao</div
       >
       <div class="header-rule" aria-hidden="true" :style="at(statusMap.header)"></div>
       <div class="title-field" aria-hidden="true" :style="at(statusMap.titleField)"></div>
@@ -45,7 +46,9 @@ function at(box: number[]) {
           top: `${statusMap.title[1]}px`,
           fontSize: `${statusMap.titleSize}px`,
         }"
-        >{{ scene.copy }}</h1
+        >{{
+          scene.copy
+        }}</h1
       >
     </template>
     <template v-if="scene.kind === 'camera'">
@@ -64,10 +67,8 @@ function at(box: number[]) {
     </template>
     <template v-if="scene.kind === 'status' || scene.kind === 'camera'">
       <SceneZone name="chat" :box="map.chat" :panel="scene.kind === 'status' || vertical" />
-      <SceneZone name="music" :box="map.music" /><SceneZone
-        name="donors"
-        :box="map.donors"
-      /><SceneZone name="alerts" :box="map.alerts" />
+      <SceneZone name="music" :box="map.music" /><SceneZone name="donors" :box="map.donors" />
+      <SceneZone name="alerts" :box="map.alerts" />
       <SceneZone v-if="vertical" name="social" :box="map.social" />
       <img
         v-if="scene.kind === 'status' || !vertical"
@@ -76,7 +77,7 @@ function at(box: number[]) {
         :style="at(statusMap.qr)"
         :src="qr"
         alt="QR: maseaaao.tv"
-      />
+      >
     </template>
   </main>
 </template>

@@ -1,6 +1,6 @@
-import vue from '@vitejs/plugin-vue';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import vue from '@vitejs/plugin-vue';
 import { standaloneConfig } from './index.mjs';
 
 /**

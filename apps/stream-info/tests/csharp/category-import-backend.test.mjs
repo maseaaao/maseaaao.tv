@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { resolve, dirname } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { gzipSync, gunzipSync } from 'node:zlib';
+import { gunzipSync, gzipSync } from 'node:zlib';
+
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 let captured;
 const generator = readFileSync(resolve(root, 'scripts/generate-import.mjs'), 'utf8')

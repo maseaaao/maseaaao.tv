@@ -1,7 +1,7 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { InstanceBase, InstanceStatus } from '@companion-module/base';
 import { HelperProcess } from '../shared/helper-process.mjs';
-import { fileURLToPath } from 'node:url';
-import path from 'node:path';
 
 export default class SystemMicrophone extends InstanceBase {
   async init(config) {

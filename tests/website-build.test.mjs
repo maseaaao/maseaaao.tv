@@ -1,8 +1,8 @@
-import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { resolve } from 'node:path';
 import { readFileSync, statSync } from 'node:fs';
+import { resolve } from 'node:path';
+import test from 'node:test';
 import { JSDOM } from 'jsdom';
 
 test('website can be rebuilt repeatedly while retaining traversable nested directories', () => {

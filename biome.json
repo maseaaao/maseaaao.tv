@@ -1,0 +1,247 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.2/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": [
+      "**",
+      "!!**/dist",
+      "!!.build-cache",
+      "!!build",
+      "!!**/rendered",
+      "!!**/bin",
+      "!!**/obj",
+      "!pnpm-lock.yaml",
+      "!apps/stream-info/streamerbot-import.txt",
+      "!integrations/companion/*/main.js",
+      "!**/*.svg"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "lineEnding": "lf"
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "trailingCommas": "all",
+      "semicolons": "always",
+      "arrowParentheses": "always"
+    }
+  },
+  "html": {
+    "experimentalFullSupportEnabled": true,
+    "formatter": {
+      "enabled": true,
+      "whitespaceSensitivity": "strict"
+    }
+  },
+  "markdown": {
+    "formatter": {
+      "enabled": true,
+      "formatEmbeds": false
+    },
+    "linter": {
+      "enabled": false
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "domains": {
+      "vue": "recommended"
+    },
+    "rules": {
+      "preset": "recommended",
+      "correctness": {
+        "noUnusedImports": "error",
+        "noUnusedVariables": "error",
+        "noUnusedFunctionParameters": "error",
+        "noUndeclaredVariables": "error",
+        "noUnknownProperty": "error",
+        "noUnknownFunction": "error",
+        "useUniqueElementIds": "error"
+      },
+      "suspicious": {
+        "noExplicitAny": "error",
+        "noDoubleEquals": "error",
+        "noTsIgnore": "error",
+        "noDebugger": "error",
+        "noFocusedTests": "error",
+        "noDuplicateSelectors": "off",
+        "noUndeclaredEnvVars": "off"
+      },
+      "style": {
+        "noNonNullAssertion": "error",
+        "useImportType": "error",
+        "useConst": "error",
+        "noDescendingSpecificity": "off",
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "patterns": [
+              {
+                "group": ["@maseaaao/*/src/**", "**/packages/*/src/**", "**/apps/*/src/**"],
+                "message": "Use workspace exports instead of another product internals."
+              }
+            ]
+          }
+        },
+        "useTemplate": "off",
+        "useVueNextTickPromise": "off"
+      },
+      "nursery": {
+        "noFloatingPromises": "error",
+        "noMisusedPromises": "error"
+      },
+      "complexity": {
+        "noImportantStyles": "off"
+      }
+    }
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["apps/obs-widgets/src/streamlabs-chat/*.html"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useHtmlLang": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["tests/**/*.mjs"],
+      "linter": {
+        "rules": {
+          "performance": {
+            "useDomNodeTextContent": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.mjs", "**/*.cjs", "integrations/**/*.js", "*.js", "packages/**/*.js"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedGlobals": {
+              "level": "error",
+              "options": {
+                "deniedGlobals": {
+                  "window": "Use the globals provided by this file runtime.",
+                  "document": "Use the globals provided by this file runtime.",
+                  "navigator": "Use the globals provided by this file runtime.",
+                  "localStorage": "Use the globals provided by this file runtime.",
+                  "sessionStorage": "Use the globals provided by this file runtime.",
+                  "location": "Use the globals provided by this file runtime.",
+                  "alert": "Use the globals provided by this file runtime.",
+                  "confirm": "Use the globals provided by this file runtime.",
+                  "prompt": "Use the globals provided by this file runtime.",
+                  "requestAnimationFrame": "Use the globals provided by this file runtime.",
+                  "cancelAnimationFrame": "Use the globals provided by this file runtime."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "tests/**/*.mjs",
+        "tooling/ui-portability/*.test.mjs",
+        "tooling/static-fixtures/*.test.mjs",
+        "apps/stream-info/scripts/verify*-live.mjs",
+        "tooling/artwork/*.mjs"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedGlobals": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/**/src/**/*.js"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedGlobals": {
+              "level": "error",
+              "options": {
+                "deniedGlobals": {
+                  "process": "Use the globals provided by this file runtime.",
+                  "Buffer": "Use the globals provided by this file runtime.",
+                  "require": "Use the globals provided by this file runtime.",
+                  "module": "Use the globals provided by this file runtime.",
+                  "exports": "Use the globals provided by this file runtime.",
+                  "__dirname": "Use the globals provided by this file runtime.",
+                  "__filename": "Use the globals provided by this file runtime.",
+                  "global": "Use the globals provided by this file runtime.",
+                  "setImmediate": "Use the globals provided by this file runtime.",
+                  "clearImmediate": "Use the globals provided by this file runtime."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/stream-info/src/components/SettingsDialog.vue"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noStaticElementInteractions": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["packages/ui/src/AppButton.vue"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useAnchorContent": "off"
+          }
+        }
+      }
+    }
+  ],
+  "plugins": [
+    {
+      "path": "./tooling/biome/no-type-assertions.grit",
+      "includes": [
+        "**/*.vue",
+        "tooling/ui-portability/src/**/*.ts",
+        "tooling/static-fixtures/src/**/*.ts",
+        "tooling/ui-catalog/**/*.ts",
+        "packages/ui/**/*.ts"
+      ]
+    },
+    {
+      "path": "./tooling/biome/design-tokens.grit",
+      "includes": ["**/*.vue"]
+    }
+  ],
+  "css": {
+    "formatter": {
+      "quoteStyle": "single"
+    }
+  }
+}

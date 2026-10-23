@@ -1,6 +1,6 @@
+import { fileURLToPath } from 'node:url';
 import { standaloneConfig } from '@maseaaao/build-config';
 import { prepareVuePages, vuePagePlugin } from '@maseaaao/build-config/static';
-import { fileURLToPath } from 'node:url';
 
 export default async ({ mode: product }) => {
   if (product !== 'social-strip') throw Error('Unknown standalone widget');

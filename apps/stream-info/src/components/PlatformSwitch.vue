@@ -13,9 +13,10 @@ function change(event: Event): void {
       role="switch"
       aria-label="Обновлять Twitch"
       :checked="modelValue"
+      :aria-checked="modelValue"
       :disabled="disabled"
       @change="change"
-    /><span class="switch-track" aria-hidden="true"></span
+    ><span class="switch-track" aria-hidden="true"></span
     ><span>Twitch · {{ modelValue ? 'Включено' : 'Отключено' }}</span></label
   >
 </template>

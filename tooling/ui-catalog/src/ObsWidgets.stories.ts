@@ -1,9 +1,8 @@
+import SocialStrip from '@maseaaao/obs-widgets/SocialStrip.vue';
+import social from '@maseaaao/obs-widgets/social.css?inline';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, within } from 'storybook/test';
 import { h } from 'vue';
-import SocialStrip from '@maseaaao/obs-widgets/SocialStrip.vue';
-
-import social from '@maseaaao/obs-widgets/social.css?inline';
 
 const meta: Meta<typeof SocialStrip> = {
   title: 'Экраны/OBS',

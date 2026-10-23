@@ -1,11 +1,12 @@
 // Read-only live checks. Never invokes Actions, changes scenes, mute, or playback.
-import fs from 'node:fs/promises';
-import { validateActionTargets } from './action-targets.mjs';
-import path from 'node:path';
+
+import { spawn } from 'node:child_process';
 import crypto from 'node:crypto';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { fileURLToPath, fileURLToPath as fromFileURL } from 'node:url';
 import { gunzipSync } from 'node:zlib';
-import { spawn } from 'node:child_process';
+import { validateActionTargets } from './action-targets.mjs';
 
 if (!process.env.STREAMERBOT_ROOT)
   throw Error('Set STREAMERBOT_ROOT to the installed Streamer.bot folder');
@@ -90,7 +91,10 @@ const exists = async (p) => {
   }
 };
 function walk(value, visit, location = '') {
-  if (Array.isArray(value)) value.forEach((v, i) => walk(v, visit, `${location}/${i}`));
+  if (Array.isArray(value))
+    value.forEach((v, i) => {
+      walk(v, visit, `${location}/${i}`);
+    });
   else if (value && typeof value === 'object') {
     visit(value, location);
     for (const [k, v] of Object.entries(value)) walk(v, visit, `${location}/${k}`);

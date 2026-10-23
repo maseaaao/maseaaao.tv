@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
-import { h } from 'vue';
 import StreamInfo from 'change-info-streamer-bot/App.vue';
 import styles from 'change-info-streamer-bot/ui.css?inline';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { h } from 'vue';
 
 const meta: Meta<typeof StreamInfo> = {
   title: 'Экраны/Stream Info',

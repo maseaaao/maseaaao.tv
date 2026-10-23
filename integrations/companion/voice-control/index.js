@@ -1,9 +1,9 @@
-import { InstanceBase, InstanceStatus } from '@companion-module/base';
-import { HelperProcess } from '../shared/helper-process.mjs';
+import crypto from 'node:crypto';
 import net from 'node:net';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import crypto from 'node:crypto';
+import { InstanceBase, InstanceStatus } from '@companion-module/base';
+import { HelperProcess } from '../shared/helper-process.mjs';
 import { StreamGuard } from './guard.mjs';
 
 const keys = ['discord', 'steam'];
@@ -127,9 +127,7 @@ export default class VoiceStream extends InstanceBase {
       options: [],
       callback: () => ({
         bgcolor:
-          this.discord &&
-          this.discord.connected &&
-          (this.discord.mute === true || this.discord.deaf === true)
+          this.discord?.connected && (this.discord.mute === true || this.discord.deaf === true)
             ? YELLOW
             : PURPLE,
       }),
@@ -139,8 +137,7 @@ export default class VoiceStream extends InstanceBase {
       name: 'Фон кнопки собеседников Discord',
       options: [],
       callback: () => ({
-        bgcolor:
-          this.discord && this.discord.connected && this.discord.deaf === true ? YELLOW : PURPLE,
+        bgcolor: this.discord?.connected && this.discord.deaf === true ? YELLOW : PURPLE,
       }),
     };
     this.setFeedbackDefinitions(feedbacks);
@@ -340,7 +337,8 @@ export default class VoiceStream extends InstanceBase {
         this.audio = {};
         this.publish();
       }
-      this.pollObs();
+      // pollObs handles request failures and disconnects internally.
+      void this.pollObs();
     }, 5000);
   }
   pollObs() {
@@ -407,7 +405,7 @@ export default class VoiceStream extends InstanceBase {
     }
     if (g.held && !this.holdTick)
       this.holdTick = setInterval(() => {
-        if (this.guard && this.guard.held) this.publish();
+        if (this.guard?.held) this.publish();
         else {
           clearInterval(this.holdTick);
           this.holdTick = null;
@@ -590,7 +588,8 @@ export default class VoiceStream extends InstanceBase {
         port: this.config.obsPort || 4455,
         password: this.config.obsPassword || '',
       };
-      const ws = (this.ws = new WebSocket(`ws://${c.host}:${c.port}`));
+      const ws = new WebSocket(`ws://${c.host}:${c.port}`);
+      this.ws = ws;
       ws.onopen = () => {
         if (this.ws !== ws || this.stopped) {
           ws.close();

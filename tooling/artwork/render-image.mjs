@@ -54,12 +54,11 @@ export async function renderImage(
     });
     if (errors.length) throw Error(errors.join('\n'));
     const image = sharp(await page.screenshot({ omitBackground: true, animations: 'disabled' }));
-    const bytes = await (
-      format === 'jpeg'
-        ? image.flatten({ background: '#f4f3ec' }).jpeg({ quality: 92, chromaSubsampling: '4:4:4' })
-        : format === 'webp'
-          ? image.webp({ lossless: true, effort: 6 })
-          : image.png()
+    const bytes = await (format === 'jpeg'
+      ? image.flatten({ background: '#f4f3ec' }).jpeg({ quality: 92, chromaSubsampling: '4:4:4' })
+      : format === 'webp'
+        ? image.webp({ lossless: true, effort: 6 })
+        : image.png()
     ).toBuffer();
     const metadata = await sharp(bytes).metadata();
     if (metadata.width !== width * scale || metadata.height !== height * scale)

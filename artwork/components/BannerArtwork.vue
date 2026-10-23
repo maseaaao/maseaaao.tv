@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import BrandSurface from './BrandSurface.vue';
+
 defineProps<{ platform: 'twitch' | 'youtube' }>();
 </script>
 <template>

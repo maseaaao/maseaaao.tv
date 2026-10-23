@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from 'vue';
 import { StreamerbotClient } from '@streamerbot/client';
+import { computed, onUnmounted, ref } from 'vue';
 
 const storageKey = 'maseaaao.ui-portability.v1';
 function readSettings(): { port: number; title: string } {
@@ -163,10 +163,10 @@ onUnmounted(() => {
     <p>Технический образец. Подключается только к подставному источнику на этой машине.</p>
     <form @submit.prevent="submit">
       <label for="port">Порт тестового источника</label>
-      <input id="port" v-model.number="port" type="number" min="1" max="65535" />
+      <input id="port" v-model.number="port" type="number" min="1" max="65535">
       <button type="button" @click="connect">Подключиться</button>
       <label for="title">Название трансляции</label>
-      <input id="title" v-model="title" maxlength="140" />
+      <input id="title" v-model="title" maxlength="140">
       <button type="submit" :disabled="!canSubmit">Отправить</button>
       <button type="button" @click="save">Сохранить настройки</button>
     </form>

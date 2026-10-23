@@ -1,5 +1,6 @@
-import { buildVuePages } from '@maseaaao/build-config/static';
 import { fileURLToPath } from 'node:url';
+import { buildVuePages } from '@maseaaao/build-config/static';
+
 const relative = (value) => fileURLToPath(new URL(value, import.meta.url));
 await buildVuePages({
   root: relative('./src/'),

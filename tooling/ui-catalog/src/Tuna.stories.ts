@@ -1,8 +1,8 @@
+import TunaFrame from '@maseaaao/tuna-widget/TunaFrame.vue';
+import styles from '@maseaaao/tuna-widget/ui.css?inline';
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
 import { expect, within } from 'storybook/test';
 import { h } from 'vue';
-import TunaFrame from '@maseaaao/tuna-widget/TunaFrame.vue';
-import styles from '@maseaaao/tuna-widget/ui.css?inline';
 
 const meta: Meta<typeof TunaFrame> = {
   title: 'Экраны/Tuna',

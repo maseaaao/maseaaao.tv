@@ -5,7 +5,6 @@ ChipTag и NoticeBanner не получили второго продуктов�
 ### ChipTag (`ChipTag.vue`)
 
 Тег/chip с опциональным удалением. Продуктовый компонент Stream Info: тег-инпут Twitch.
-
 - Props: `label: string` (обязателен), `removable?: boolean` (по умолчанию `false`), `removeLabel?: string` (по умолчанию `'Удалить'`, доступное имя кнопки удаления).
 - Events: `remove: []`.
 - Ограничение: валидация тега (длина/пробелы/дубли) — бизнес-правило продукта, не компонента.
@@ -15,7 +14,6 @@ ChipTag и NoticeBanner не получили второго продуктов�
 ### NoticeBanner (`NoticeBanner.vue`)
 
 Уведомление info/warning/error/success с заголовком и опциональным описанием/закрытием. Продуктовый компонент Stream Info: очередь уведомлений и ошибки форм.
-
 - Props: `variant?: 'info' | 'warning' | 'error' | 'success'` (по умолчанию `info`), `title: string` (обязателен), `dismissible?: boolean`, `dismissLabel?: string` (по умолчанию `'Скрыть'`).
 - Events: `dismiss: []`.
 - Slots: `default` — описание под заголовком.

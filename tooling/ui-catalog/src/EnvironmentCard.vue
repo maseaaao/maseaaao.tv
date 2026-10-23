@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+
 defineProps<{ title: string }>();
 const count = ref(0);
 </script>
@@ -25,7 +26,7 @@ const count = ref(0);
 h1 {
   overflow-wrap: anywhere;
   font:
-    400 1.5rem/1.4 Unbounded,
+    400 1.5rem / 1.4 Unbounded,
     Arial,
     sans-serif;
 }

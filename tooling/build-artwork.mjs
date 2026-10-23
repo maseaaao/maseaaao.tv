@@ -1,9 +1,9 @@
-import { readdir, rm, readFile } from 'node:fs/promises';
+import { readdir, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import sharp from 'sharp';
-import jsQR from 'jsqr';
 import { buildVuePages } from '@maseaaao/build-config/static';
+import jsQR from 'jsqr';
+import sharp from 'sharp';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 export async function buildArtwork() {

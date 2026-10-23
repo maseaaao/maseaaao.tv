@@ -1,10 +1,10 @@
-import { required, textValue, parseRecord } from './assertions';
 import { mount, type VueWrapper } from '@vue/test-utils';
-import { nextTick } from 'vue';
 import type { MockInstance } from 'vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { mockStreamerbot } from './mocks/streamerbot-client';
+import { nextTick } from 'vue';
 import packageJson from '../package.json';
+import { parseRecord, required, textValue } from './assertions';
+import { mockStreamerbot } from './mocks/streamerbot-client';
 
 const clientMock = vi.hoisted(
   (): { current?: typeof import('./mocks/streamerbot-client') } => ({}),
@@ -118,7 +118,6 @@ async function controlActions(
   type Handler = Parameters<Client['on']>[1];
   const handlers = new WeakMap<Client, Handler>();
   // The original is deliberately rebound with .call(this), not invoked unbound.
-  // eslint-disable-next-line @typescript-eslint/unbound-method
   const originalOn = StreamerbotClient.prototype.on;
   vi.spyOn(StreamerbotClient.prototype, 'on').mockImplementation(function (
     this: Client,
@@ -128,7 +127,6 @@ async function controlActions(
     if (event === 'Custom.CodeEvent') handlers.set(this, handler);
     return originalOn.call(this, event, handler);
   });
-  // eslint-disable-next-line @typescript-eslint/unbound-method -- Rebound via .call(this).
   const originalAction = StreamerbotClient.prototype.doAction;
   const pending: ControlledAction[] = [];
   vi.spyOn(StreamerbotClient.prototype, 'doAction').mockImplementation(function (

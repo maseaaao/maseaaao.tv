@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, useId } from 'vue';
+
 const props = defineProps<{
   label: string;
   modelValue: string;
@@ -42,7 +43,7 @@ function input(event: Event): void {
         :aria-describedby="error ? `${id}-error` : undefined"
         @input="input"
         @scroll="syncScroll"
-      />
+      >
     </div>
     <p v-if="error" :id="`${id}-error`" class="template-input__error">{{ error }}</p>
   </div>

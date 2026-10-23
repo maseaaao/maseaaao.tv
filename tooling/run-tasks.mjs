@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+
 const root = fileURLToPath(new URL('../', import.meta.url));
 const pinned = readFileSync(new URL('../.node-version', import.meta.url), 'utf8').trim();
 if (process.versions.node !== pinned)

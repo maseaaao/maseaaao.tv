@@ -1,5 +1,5 @@
-import { vueStandaloneConfig } from '@maseaaao/build-config/vue';
 import { fileURLToPath } from 'node:url';
+import { vueStandaloneConfig } from '@maseaaao/build-config/vue';
 export default vueStandaloneConfig({
   root: fileURLToPath(new URL('./src', import.meta.url)),
   outDir: '../dist',

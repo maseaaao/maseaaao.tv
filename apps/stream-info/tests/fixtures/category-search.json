@@ -54,10 +54,7 @@
   {
     "name": "stable fuzzy ties",
     "query": "unmatched",
-    "results": [
-      { "id": "9", "name": "Zulu" },
-      { "id": "2", "name": "Alpha" }
-    ],
+    "results": [{ "id": "9", "name": "Zulu" }, { "id": "2", "name": "Alpha" }],
     "expected": ["9", "2"]
   },
   {
@@ -93,10 +90,7 @@
   {
     "name": "unicode word separators",
     "query": "game",
-    "results": [
-      { "id": "1", "name": "Endgame" },
-      { "id": "2", "name": "New—Game" }
-    ],
+    "results": [{ "id": "1", "name": "Endgame" }, { "id": "2", "name": "New—Game" }],
     "expected": ["2", "1"]
   }
 ]

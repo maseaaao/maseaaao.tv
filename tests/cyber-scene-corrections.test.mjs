@@ -1,7 +1,7 @@
-import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import test from 'node:test';
 import sharp from 'sharp';
 
 // OBS 32.2.2 libobs/obs-scene.c calculate_bounds_data + add_alignment:

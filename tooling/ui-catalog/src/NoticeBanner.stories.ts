@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/vue3-vite';
-import { expect, userEvent, within } from 'storybook/test';
 import NoticeBanner from 'change-info-streamer-bot/NoticeBanner.vue';
+import { expect, userEvent, within } from 'storybook/test';
 
 const meta: Meta<typeof NoticeBanner> = {
   title: 'Stream Info/NoticeBanner',
