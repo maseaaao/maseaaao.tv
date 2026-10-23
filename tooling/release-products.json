@@ -19,6 +19,7 @@
       "test": "bun run test:stream-info",
       "build": "bun run build:stream-info",
       "browser": false,
+      "dotnet": true,
       "activation": "Reload INFO. Import changed C# separately into existing Actions.",
       "requires": {},
       "looseFiles": ["change-info-streamer-bot.ru.html"]
@@ -36,6 +37,7 @@
       "test": "node --test tests/tuna-widget.test.mjs",
       "build": "bun run build:tuna",
       "browser": true,
+      "dotnet": false,
       "activation": "Reload OBS browser source, preserving URL parameters.",
       "requires": {},
       "looseFiles": ["obs-tuna-widget.html"]
@@ -53,6 +55,7 @@
       "test": "bun run --filter ./apps/obs-widgets check",
       "build": "bun run build:widgets",
       "browser": false,
+      "dotnet": false,
       "activation": "Reload local sources. Apply provider CSS separately.",
       "requires": {}
     },
@@ -89,6 +92,7 @@
       "test": "bun run --filter ./artwork check",
       "build": "bun run verify:artwork",
       "browser": true,
+      "dotnet": false,
       "activation": "Images ready. OBS source paths must point into this product directory.",
       "requires": {},
       "extensions": [".png", ".webp", ".jpg", ".jpeg", ".ico", ".svg"],
@@ -107,6 +111,7 @@
       "test": "bun run test:companion && node --test tests/companion-build.test.mjs",
       "build": "bun run --filter ./integrations/companion/system-microphone build && bun run --filter ./integrations/companion/system-microphone package",
       "browser": false,
+      "dotnet": true,
       "activation": "Package downloaded only. Export Companion settings, import TGZ and select the version in existing connections.",
       "requires": {}
     },
@@ -123,6 +128,7 @@
       "test": "bun run test:companion && node --test tests/companion-build.test.mjs",
       "build": "bun run --filter ./integrations/companion/voice-control build && bun run --filter ./integrations/companion/voice-control package",
       "browser": false,
+      "dotnet": true,
       "activation": "Package downloaded only. Export Companion settings, import TGZ and select the version in existing connections.",
       "requires": {}
     },
@@ -215,6 +221,7 @@
       "test": "python -m unittest discover -s tests -p \"test_release*.py\"",
       "build": "python tooling/package-release.py --validate-catalog",
       "browser": false,
+      "dotnet": false,
       "activation": "Set STREAMERBOT_ROOT explicitly. Update launcher and Action paths once; no automatic application reconfiguration.",
       "requires": {},
       "versionFile": "tooling/windows/version.json"
@@ -232,6 +239,7 @@
       "test": "bun run --filter ./apps/website check",
       "build": "bun run build:website",
       "browser": false,
+      "dotnet": false,
       "activation": "Static website only; no Cloudflare publication.",
       "requires": {},
       "versionFile": "apps/website/release-version.json"
