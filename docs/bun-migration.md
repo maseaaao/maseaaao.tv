@@ -22,9 +22,9 @@ bun run --filter ./integrations/companion/system-microphone build
 
 ## CI и границы кеша
 
-Composite setup устанавливает точный Node через `actions/setup-node` с `.node-version` и Bun через `oven-sh/setup-bun@v2` с `bun-version-file: .bun-version`, затем выполняет frozen install. Ключ локального task cache включает `.node-version`, `.bun-version`, `bun.lock`, `turbo.json` и launcher; кеш `.build-cache/turbo` ограничен деревом. Remote cache не используется.
+Актуальная декомпозиция jobs и правила владения кешами: [CI/CD](ci-pipelines.md). Composite setup устанавливает точный Node через `actions/setup-node` с `.node-version` и Bun через `oven-sh/setup-bun@v2` с `bun-version-file: .bun-version`, затем выполняет frozen install. Ключ локального task cache включает `.node-version`, `.bun-version`, `bun.lock`, `turbo.json` и launcher; кеш `.build-cache/turbo` ограничен деревом. Remote cache не используется.
 
-Сохранены все Linux-контуры `plan`, `source`, `products`, `raster`, `companion` и агрегат `verify`; проверки, условия отбора и состав артефактов не сокращаются. Companion кросс-компилируется .NET SDK 8 с NuGet reference assemblies. Побайтовая сверка продуктов и Linux-растров обязательна, тесты общих outputs запускаются последовательно. Релизный workflow сохраняет проверки, упаковку, immutable draft и проверку скачанного архива.
+Сохранены все Linux-контуры `plan`, `source`, `products`, `raster`, `companion` и агрегат `verify`; тесты продуктов вынесены в `ui-tests`, три `repository-tests` shards и `stream-info-tests`; проверки, условия отбора и состав артефактов не сокращаются. Companion кросс-компилируется .NET SDK 8 с NuGet reference assemblies. Побайтовая сверка продуктов и Linux-растров обязательна, тесты общих outputs запускаются последовательно. Релизный workflow сохраняет проверки, упаковку, immutable draft и проверку скачанного архива.
 
 ## Приёмка и ограничения
 

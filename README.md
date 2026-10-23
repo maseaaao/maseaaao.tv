@@ -60,3 +60,5 @@ Bun устанавливает зависимости с `linker = "isolated"` �
 [Система анимаций: сайт, Stream Info и эфирные виджеты](docs/motion-system.md).
 
 Быстрая проверка исходников: `bun run check:source`. Сборка всех продуктов и UI по графу: `bun run verify:products`; повторный запуск восстанавливает outputs из локального кеша. Полная приёмка выполняется в Linux/WSL2 и проверяет точные байты растров. [Граф, affected CI и ограничения миграции](docs/bun-migration.md).
+
+[CI/CD: stages, кеши, артефакты и релизы](docs/ci-pipelines.md).
