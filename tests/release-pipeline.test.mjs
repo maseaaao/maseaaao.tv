@@ -187,7 +187,16 @@ if (args[0] === 'api') {
     emit({ object: { type: 'commit', sha: state.sha } });
   } else if (endpoint.includes('/releases?')) {
     if (state.scenario.listError) fail();
-    emit([[], state.scenario.existing ? [{ id: 9, tag_name: 'demo-v1.2.3', draft: true }] : (state.release ? [state.release] : [])]);
+    let releases = state.scenario.existing ? [{ id: 9, tag_name: 'demo-v1.2.3', draft: true }] : (state.release ? [state.release] : []);
+    if (state.release) {
+      state.postCreateLists = (state.postCreateLists ?? 0) + 1;
+      const outcome = state.scenario.postCreateLists?.[state.postCreateLists - 1];
+      if (outcome === 'error') fail();
+      if (outcome === 'absent') releases = [];
+      if (outcome === 'duplicate') releases = [state.release, { ...state.release, id: 43 }];
+      if (outcome === 'invalid') releases = [{}];
+    }
+    emit([[], releases]);
   } else if (endpoint.includes('/releases/tags/')) {
     // GitHub's tag endpoint is for published releases, not draft discovery.
     fail();
@@ -246,6 +255,63 @@ test('draft validates transferred package, checks remote tag, creates once and v
   );
   assert.equal(receipt.id, 42);
   assert.equal(receipt.sha, f.sha);
+});
+
+test('draft retries a post-create listing that misses the draft and still fails closed', (t) => {
+  const f = fixture(t);
+  stage(f);
+  const state = githubFixture(f, { annotated: true, postCreateLists: ['absent', 'absent'] });
+  const result = f.cli('--draft', 'demo-v1.2.3', '--sha', f.sha);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(state().calls.filter((a) => a[0] === 'api' && a.includes('--paginate')).length, 4);
+  const receipt = JSON.parse(
+    readFileSync(resolve(f.root, 'build/release-receipts/demo-v1.2.3.json'), 'utf8'),
+  );
+  assert.equal(receipt.id, 42);
+});
+
+test('draft fails closed when the post-create listing never catches up', (t) => {
+  const f = fixture(t);
+  stage(f);
+  const state = githubFixture(f, {
+    annotated: true,
+    postCreateLists: ['absent', 'absent', 'absent'],
+  });
+  const result = f.cli('--draft', 'demo-v1.2.3', '--sha', f.sha);
+  assert.notEqual(result.status, 0);
+  assert.equal(state().calls.filter((a) => a[0] === 'api' && a.includes('--paginate')).length, 4);
+  assert.equal(
+    state().calls.some((a) => a[1] === 'edit'),
+    false,
+  );
+  assert.throws(() => readFileSync(resolve(f.root, 'build/release-receipts/demo-v1.2.3.json')));
+});
+
+test('draft retries a transient listing error and still verifies the run', (t) => {
+  const f = fixture(t);
+  stage(f);
+  const state = githubFixture(f, { annotated: true, postCreateLists: ['error', 'absent'] });
+  const result = f.cli('--draft', 'demo-v1.2.3', '--sha', f.sha);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(state().calls.filter((a) => a[0] === 'api' && a.includes('--paginate')).length, 4);
+  const receipt = JSON.parse(
+    readFileSync(resolve(f.root, 'build/release-receipts/demo-v1.2.3.json'), 'utf8'),
+  );
+  assert.equal(receipt.id, 42);
+});
+
+test('draft rejects a duplicated post-create listing without retrying', (t) => {
+  const f = fixture(t);
+  stage(f);
+  const state = githubFixture(f, { annotated: true, postCreateLists: ['duplicate'] });
+  const result = f.cli('--draft', 'demo-v1.2.3', '--sha', f.sha);
+  assert.notEqual(result.status, 0);
+  assert.equal(state().calls.filter((a) => a[0] === 'api' && a.includes('--paginate')).length, 2);
+  assert.equal(
+    state().calls.some((a) => a[1] === 'edit'),
+    false,
+  );
+  assert.throws(() => readFileSync(resolve(f.root, 'build/release-receipts/demo-v1.2.3.json')));
 });
 
 test('plan refuses missing or unsafe prerequisite declarations', (t) => {

@@ -112,11 +112,38 @@ function releasesForTag(tag) {
   return pages.flat().filter((release) => release.tag_name === tag);
 }
 
+function sleep(timeout) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, timeout);
+}
+
+// A listing immediately after creating a draft can miss it (read-after-write
+// gap under concurrent release runs): retry briefly. A duplicate can only mean
+// a real conflict beyond this run's creation, so it fails without retrying.
+function draftReadbackId(tag) {
+  const delays = [2000, 5000];
+  for (let attempt = 0; ; attempt++) {
+    let matches = null;
+    let error = null;
+    try {
+      matches = releasesForTag(tag);
+    } catch (caught) {
+      error = caught;
+    }
+    if (error === null) {
+      if (matches.length === 1) return matches[0].id;
+      if (matches.length > 1) throw new Error('Expected exactly one release for this tag');
+    }
+    if (attempt >= delays.length) {
+      if (error !== null) throw error;
+      throw new Error('Expected exactly one release for this tag');
+    }
+    sleep(delays[attempt]);
+  }
+}
+
 function readRelease(tag, expectedDraft, id) {
   if (id === undefined) {
-    const matches = releasesForTag(tag);
-    if (matches.length !== 1) throw new Error('Expected exactly one release for this tag');
-    id = matches[0].id;
+    id = draftReadbackId(tag);
   }
   if (!Number.isSafeInteger(id) || id <= 0) throw new Error('Invalid release ID');
   // Read by ID: the by-tag REST endpoint does not discover drafts.
