@@ -1,7 +1,17 @@
 name: Release independent tool
 on:
   push:
-    tags: ["stream-info-v*", "tuna-widget-v*"]
+    tags:
+      [
+        "stream-info-v*",
+        "tuna-widget-v*",
+        "obs-widgets-v*",
+        "artwork-v*",
+        "system-microphone-v*",
+        "voice-stream-v*",
+        "windows-integrations-v*",
+        "website-v*",
+      ]
   workflow_dispatch:
     inputs:
       tag:
@@ -9,6 +19,9 @@ on:
         required: true
 permissions:
   contents: write
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -23,8 +36,12 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - name: Validate product and tag before building
         run: python tooling/package-release.py --validate "$RELEASE_TAG"
+      - run: pnpm run test:releases
       - name: Test and build the selected product
         run: node tooling/release-product.mjs "$RELEASE_TAG"
       - run: python tooling/package-release.py "$RELEASE_TAG"
@@ -35,6 +52,11 @@ jobs:
             echo "Release already exists; refusing to overwrite artifacts."
             exit 1
           fi
-          gh release create "$RELEASE_TAG" build/release/*.html build/release/*.zip --draft --title "$RELEASE_TAG" --notes-file build/release/notes.md
-          gh release download "$RELEASE_TAG" --dir build/downloaded
+          release_dir="build/release/$RELEASE_TAG"
+          assets=()
+          for file in "$release_dir"/*; do
+            if [[ "$(basename "$file")" != "notes.md" ]]; then assets+=("$file"); fi
+          done
+          gh release create "$RELEASE_TAG" "${assets[@]}" --draft --title "$RELEASE_TAG" --notes-file "$release_dir/notes.md"
+          gh release download "$RELEASE_TAG" --dir "build/downloaded/$RELEASE_TAG"
           python tooling/package-release.py --verify-download "$RELEASE_TAG"

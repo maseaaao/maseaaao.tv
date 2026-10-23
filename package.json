@@ -12,6 +12,7 @@
     "test": "pnpm run build:all && pnpm run test:checks",
     "check": "pnpm run check:source && pnpm run check:repository",
     "sync:local": "node tooling/sync-local.mjs",
+    "test:releases": "node --test tests/release-products.test.mjs && python -m unittest discover -s tests -p \"test_release*.py\"",
     "build:tuna": "pnpm --filter ./apps/tuna-widget run build",
     "browser:install": "playwright-core install chromium",
     "render:banners": "node tooling/artwork/cyber-site-render.mjs banners",

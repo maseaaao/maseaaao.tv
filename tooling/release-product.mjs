@@ -16,10 +16,12 @@ const pattern = new RegExp(
 );
 if (!pattern.test(tag)) throw new Error('Expected a supported product-vX.Y.Z tag');
 
-if (product.browser)
-  spawnSync('pnpm run browser:install --with-deps', { cwd: root, stdio: 'inherit' });
-
-for (const command of [product.test, product.build]) {
+const commands = [];
+if (product.browser) commands.push('pnpm run browser:install --with-deps');
+if (product.pythonRequirements)
+  commands.push(`python -m pip install -r ${product.pythonRequirements}`);
+commands.push(product.test, product.build);
+for (const command of commands) {
   console.log(`==> ${command}`);
   const result = spawnSync(command, { cwd: root, stdio: 'inherit', shell: true });
   if (result.status !== 0) process.exit(result.status ?? 1);
