@@ -1,5 +1,9 @@
 name: Pinned workspace toolchain
-description: Node, Bun, frozen dependencies and isolated local task cache
+description: Pinned Node, Bun and frozen isolated dependencies with a download-only cache
+inputs:
+  cache-write:
+    description: Allow this caller to save the Bun download cache after installation
+    default: "false"
 runs:
   using: composite
   steps:
@@ -9,11 +13,15 @@ runs:
     - uses: oven-sh/setup-bun@v2
       with:
         bun-version-file: .bun-version
+    - uses: actions/cache/restore@v4
+      id: bun-cache
+      with:
+        path: ~/.bun/install/cache
+        key: bun-downloads-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.node-version', '.bun-version', 'bun.lock') }}
     - shell: bash
       run: bun install --frozen-lockfile
-    - uses: actions/cache@v4
+    - uses: actions/cache/save@v4
+      if: inputs.cache-write == 'true' && steps.bun-cache.outputs.cache-hit != 'true'
       with:
-        path: .build-cache/turbo
-        key: tasks-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.node-version', '.bun-version', 'bun.lock', 'turbo.json', 'tooling/run-tasks.mjs') }}-${{ github.sha }}
-        restore-keys: |
-          tasks-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.node-version', '.bun-version', 'bun.lock', 'turbo.json', 'tooling/run-tasks.mjs') }}-
+        path: ~/.bun/install/cache
+        key: bun-downloads-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.node-version', '.bun-version', 'bun.lock') }}

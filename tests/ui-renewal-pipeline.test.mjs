@@ -61,6 +61,10 @@ test('the raster job publishes the re-rendered baseline for review', () => {
   assert(upload, 'the raster job must publish the rendered baseline');
   assert(upload.with.name === 'website-and-artwork-preview');
   assert.match(upload.with.path, /artwork\/scenes\/rendered/);
+  assert.equal(upload.if, 'always()');
+  assert.equal(upload.with['include-hidden-files'], true);
+  assert.equal(upload.with['retention-days'], 7);
+  assert.match(upload.with.path, /\.build-cache\/verify\/artifacts\.sha256/);
   assert.equal(pkg.scripts['accept:artifacts'], 'node tooling/accept-artifacts.mjs');
   // The acceptance tool may remove a file the build no longer produces, but
   // only when the canonical runner reports it as missing. The behaviour is
@@ -99,9 +103,8 @@ test('the published baseline covers every tracked artifact', () => {
   }
 });
 test('the product outputs are compared byte for byte in the products job', () => {
-  // The raster job only builds the website and artwork renders. The standalone
-  // product outputs are verified here, so every tracked artifact is compared
-  // against the committed baseline in some job.
+  // Raster keeps a complete acceptance bundle, but product-only selections
+  // must compare their rebuilt standalone outputs even when raster is skipped.
   assert(commands('products').includes('bun run check:artifacts'));
   assert(commands('raster').includes('bun run check:artifacts'));
 });
@@ -120,25 +123,40 @@ test('the published text assets keep LF on every operating system', () => {
 });
 
 test('all CI jobs run on Linux', () => {
-  for (const job of ['plan', 'source', 'products', 'raster', 'companion', 'verify'])
+  for (const job of [
+    'plan',
+    'source',
+    'products',
+    'ui-tests',
+    'repository-tests',
+    'stream-info-tests',
+    'raster',
+    'companion',
+    'verify',
+  ])
     assert.equal(workflow.jobs[job]['runs-on'], 'ubuntu-latest', job);
   // Browser rendering on Linux needs the system libraries of the runner.
-  for (const job of ['products', 'raster'])
+  for (const job of ['ui-tests', 'repository-tests', 'raster'])
     assert(
       commands(job).some((command) => command.includes('browser:install --with-deps')),
       job,
     );
 });
 test('split CI preserves all test groups and fails closed at its required aggregate', () => {
-  for (const command of [
-    'verify:products',
-    'check:repository',
-    'test:ui',
-    'test:ui-probe',
-    'test:static',
-    'test:checks',
-  ])
+  for (const command of ['verify:products', 'check:repository'])
     assert(commands('products').includes(`bun run ${command}`), command);
+  for (const command of ['test:ui', 'test:ui-probe', 'test:static'])
+    assert(commands('ui-tests').includes(`bun run ${command}`), command);
+  assert(commands('stream-info-tests').includes('bun run test:stream-info'));
+  assert(commands('source').includes('bun run test:local'));
+  assert(
+    commands('repository-tests').some((command) =>
+      command.includes('node tooling/ci-tests.mjs --shard'),
+    ),
+  );
+  assert(commands('repository-tests').includes('bun run test:companion'));
+  // test:checks is decomposed, not discarded: root contracts, Stream Info
+  // Vitest+C#, Companion mocks and local contracts each retain an owner.
   assert(commands('source').includes('bun run check:source'));
   assert(!commands('products').includes('bun run check:source'));
   assert(commands('companion').includes('node --test tests/companion-build.test.mjs'));
@@ -150,6 +168,9 @@ test('split CI preserves all test groups and fails closed at its required aggreg
     'plan',
     'source',
     'products',
+    'ui-tests',
+    'repository-tests',
+    'stream-info-tests',
     'raster',
     'companion',
   ]);

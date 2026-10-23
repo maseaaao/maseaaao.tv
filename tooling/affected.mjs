@@ -49,18 +49,25 @@ export function selectAffected(files, workspaces, full = false) {
     packages: [...selected].sort(),
   };
 }
+// A push's before SHA can be on a different branch after a force push. Compare
+// endpoints there; PRs deliberately compare from the common ancestor.
+export function changedFiles(base, event, cwd = root) {
+  if (!/^[a-f0-9]{40}$/.test(base) || /^0+$/.test(base))
+    throw new Error('Missing or invalid base SHA');
+  const range = `${base}${event === 'pull_request' ? '...' : '..'}HEAD`;
+  return execFileSync('git', ['diff', '--name-only', '--no-renames', '-z', range], {
+    cwd,
+    encoding: 'utf8',
+  })
+    .split('\0')
+    .filter(Boolean);
+}
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   let files = [],
     full = process.argv.includes('--full') || !process.env.BASE_SHA;
   if (!full) {
     try {
-      files = execFileSync(
-        'git',
-        ['diff', '--name-only', '--no-renames', '-z', `${process.env.BASE_SHA}...HEAD`],
-        { cwd: root, encoding: 'utf8' },
-      )
-        .split('\0')
-        .filter(Boolean);
+      files = changedFiles(process.env.BASE_SHA, process.env.GITHUB_EVENT_NAME);
     } catch (error) {
       console.error(`Cannot establish change base; selecting all checks: ${error.message}`);
       full = true;

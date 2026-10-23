@@ -1,0 +1,32 @@
+name: Lane-owned local task cache
+description: Explicit restore or successful-phase save without cross-lane cache claims
+inputs:
+  lane:
+    description: Task owner (source, products, or raster)
+    required: true
+  mode:
+    description: Explicit restore or save phase
+    required: true
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        CACHE_LANE: ${{ inputs.lane }}
+        CACHE_MODE: ${{ inputs.mode }}
+      run: |
+        case "$CACHE_LANE" in source|products|raster) ;; *) exit 1 ;; esac
+        case "$CACHE_MODE" in restore|save) ;; *) exit 1 ;; esac
+    - uses: actions/cache/restore@v4
+      if: inputs.mode == 'restore'
+      with:
+        path: .build-cache/turbo
+        key: tasks-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.node-version', '.bun-version', 'bun.lock', 'turbo.json', 'tooling/run-tasks.mjs') }}-${{ inputs.lane }}-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+        restore-keys: |
+          tasks-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.node-version', '.bun-version', 'bun.lock', 'turbo.json', 'tooling/run-tasks.mjs') }}-${{ inputs.lane }}-${{ github.sha }}-
+          tasks-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.node-version', '.bun-version', 'bun.lock', 'turbo.json', 'tooling/run-tasks.mjs') }}-${{ inputs.lane }}-
+    - uses: actions/cache/save@v4
+      if: inputs.mode == 'save'
+      with:
+        path: .build-cache/turbo
+        key: tasks-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.node-version', '.bun-version', 'bun.lock', 'turbo.json', 'tooling/run-tasks.mjs') }}-${{ inputs.lane }}-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
