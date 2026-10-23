@@ -86,15 +86,23 @@ test('chat keeps the brand hierarchy, wrapping and transparent canvas over a leg
       const reduced = await page
         .locator('#log > div')
         .first()
-        .evaluate((el) => {
-          const fade = el
-            .getAnimations()
-            .find((animation) => animation.animationName === 'fadeAway');
+        .evaluate(async (el) => {
+          const animations = el.getAnimations();
+          const fade = animations.find((animation) => animation.animationName === 'fadeAway');
           const delay = fade.effect.getTiming().delay;
-          fade.pause();
-          fade.currentTime = delay - 1;
+          // Reduced motion creates appearStill at time zero. Seek the entire
+          // message timeline so its entrance cannot mask the delayed fade.
+          animations.forEach((animation) => {
+            animation.pause();
+          });
+          await Promise.all(animations.map((animation) => animation.ready));
+          animations.forEach((animation) => {
+            animation.currentTime = delay - 1;
+          });
           const before = getComputedStyle(el).opacity;
-          fade.currentTime = delay + 500;
+          animations.forEach((animation) => {
+            animation.currentTime = delay + 500;
+          });
           return { delay, before, after: getComputedStyle(el).opacity };
         });
       assert.equal(reduced.delay, 600000, 'Reduced motion preserves the provider hide delay');

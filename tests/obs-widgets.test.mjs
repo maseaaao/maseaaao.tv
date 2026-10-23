@@ -52,7 +52,10 @@ test('social strip keeps its shell still and readable during a rare wave of all 
         animation.pause();
       });
       const samples = [];
-      for (const ms of [0, 1500, 1800, 2000, 2300, 2600, 3100, 4000, 15000, 29000, 31800, 34000]) {
+      // Peak: 1500ms initial delay + 1.4% of the 30000ms cycle.
+      for (const ms of [
+        0, 1500, 1800, 1920, 2000, 2300, 2600, 3100, 4000, 15000, 29000, 31800, 31920, 34000,
+      ]) {
         animations.forEach((animation) => {
           animation.currentTime = ms;
         });
@@ -99,9 +102,22 @@ test('social strip keeps its shell still and readable during a rare wave of all 
       'The wave is visible',
     );
     assert(
-      wave.samples.find((sample) => sample.ms === 31800).icons[0].y < -1.5,
+      wave.samples.find((sample) => sample.ms === 31920).icons[0].y < -1.5,
       'The wave repeats after 30 seconds',
     );
+    // Compare both cycles, including every staggered icon, not just visibility.
+    for (const ms of [1800, 1920]) {
+      const first = wave.samples.find((sample) => sample.ms === ms).icons;
+      const repeated = wave.samples.find((sample) => sample.ms === ms + 30000).icons;
+      for (let index = 0; index < first.length; index++) {
+        for (const property of ['opacity', 'scale', 'y']) {
+          assert(
+            Math.abs(first[index][property] - repeated[index][property]) < 0.0001,
+            `${ms}ms: logo ${index + 1} ${property} repeats after 30 seconds`,
+          );
+        }
+      }
+    }
     for (const width of [320, 390, 540, 1000]) {
       await page.setViewportSize({ width, height: 90 });
       assert(await page.locator('.logos').isVisible());

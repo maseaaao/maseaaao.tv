@@ -212,6 +212,10 @@ test('settings can reopen during their exit and settle without a stale backdrop'
     await page.routeWebSocket(/.*/, (socket) => void socket.close());
     await page.goto(delivery('apps/stream-info/dist/change-info-streamer-bot.ru.html') + '?demo');
     const settings = page.getByRole('button', { name: 'Настройки', exact: true });
+    // DOM click bypasses actionability for the exit interruption, but unlike a
+    // pointer/keyboard activation it does not first focus the opener.
+    await settings.focus();
+    assert(await settings.evaluate((node) => node === document.activeElement));
     for (let attempt = 0; attempt < 3; attempt++) {
       await settings.evaluate((node) => node.click());
       await page.getByRole('dialog').waitFor();

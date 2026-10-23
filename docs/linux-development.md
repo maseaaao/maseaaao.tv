@@ -39,7 +39,14 @@ bun run check
 bun run verify:ui-renewal
 ```
 
-В дистрибутиве должен быть доступен `python` с Python 3, как в CI.
+Python-команды корневого `package.json` запускаются через `tooling/run-python.mjs`:
+если существует `.runtime/venv/bin/python`, используется он без ручной активации;
+иначе — `python` из PATH (в том числе Python, выбранный `setup-python` в CI).
+Аргументы и ненулевой код завершения передаются без изменений. Поэтому после
+однократной установки requirements в `.runtime/venv` команды `build:fonts`, `full`
+и `verify:ui-renewal` работают и в новом терминале. Launcher не устанавливает
+зависимости автоматически. В окружении без venv должен быть доступен `python`
+с Python 3, как в CI.
 
 ### Ubuntu 26.04
 

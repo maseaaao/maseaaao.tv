@@ -46,7 +46,10 @@ test('raster retains pinned Linux, Python and exact artifact verification after 
   assert(runs.includes('python -m pip install -r tooling/artwork/requirements-fonts.txt'));
   assert(runs.indexOf('bun run verify:artwork') < runs.indexOf('bun run build:all'));
   assert(runs.indexOf('bun run build:all') < runs.indexOf('bun run check:artifacts'));
-  assert.equal(pkg.scripts['build:fonts'], 'python tooling/artwork/build-web-fonts.py');
+  assert.equal(
+    pkg.scripts['build:fonts'],
+    'node tooling/run-python.mjs tooling/artwork/build-web-fonts.py',
+  );
   const source = read('tooling/check-generated-artifacts.mjs');
   assert.match(source, /'artwork\/scenes\/rendered'/);
   assert.match(source, /artifacts\.sha256/);
