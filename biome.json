@@ -16,6 +16,7 @@
       "!!**/bin",
       "!!**/obj",
       "!pnpm-lock.yaml",
+      "!**/packages.lock.json",
       "!apps/stream-info/streamerbot-import.txt",
       "!integrations/companion/*/main.js",
       "!**/*.svg"

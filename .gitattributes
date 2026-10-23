@@ -14,6 +14,7 @@
 *.txt text eol=lf
 *.py text eol=lf
 *.cs text eol=lf
+*.csproj text eol=lf
 *.ps1 text eol=crlf
 # Files copied verbatim into the published dist/ must keep LF on every
 # operating system, otherwise the byte-for-byte artifact comparison differs

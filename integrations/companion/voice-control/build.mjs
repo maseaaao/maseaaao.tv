@@ -3,20 +3,16 @@ import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
 
 execFileSync(
-  'powershell.exe',
+  'dotnet',
   [
-    '-NoProfile',
-    '-NonInteractive',
-    '-ExecutionPolicy',
-    'Bypass',
-    '-File',
-    fileURLToPath(new URL('../shared/build-helper.ps1', import.meta.url)),
-    '-ModuleDirectory',
+    'build',
+    fileURLToPath(new URL('./AudioHelper.csproj', import.meta.url)),
+    '--configuration',
+    'Release',
+    '--output',
     fileURLToPath(new URL('.', import.meta.url)),
-    '-Name',
-    'AudioHelper',
   ],
-  { windowsHide: true, stdio: 'inherit' },
+  { stdio: 'inherit' },
 );
 await build({
   entryPoints: [fileURLToPath(new URL('./index.js', import.meta.url))],

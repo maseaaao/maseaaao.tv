@@ -4,7 +4,7 @@
 
 ## Проверки без действий приложений
 
-Из корня репозитория, Node.js 22.20+ в ветке 22, Windows и Python:
+Сборка и проверки: Linux/WSL2, Node.js из `.node-version`, pnpm из `packageManager`, .NET SDK 8 и Python 3. Готовые модули и аудиопомощники предназначены для Companion в Windows. Из корня репозитория:
 
 ```bash
 pnpm run test:companion
@@ -15,7 +15,7 @@ pnpm --filter ./integrations/companion/voice-control run package
 python integrations/companion/shared/test-packages.py
 ```
 
-При отсутствии библиотек сначала `pnpm run prepare:companion-libs`. Сборка компилирует помощники, но не запускает их. Тесты используют подставные обработчики и собственный локальный тестовый сервер; Actions, звук и эфир не затрагиваются. Упаковка создаёт tgz и локальные JSON-запросы; создание этих файлов не означает установку, отправлять JSON автоматически нельзя.
+Зависимости NAudio/Newtonsoft.Json и reference assemblies .NET Framework 4.8.1 восстанавливаются через NuGet; версии и хеши закреплены в `packages.lock.json`, CI использует locked mode. Windows SDK, PowerShell и установленный Streamer.bot для сборки не нужны. Сборка компилирует помощники, но не запускает их. Тесты используют подставные обработчики и собственный локальный тестовый сервер; Actions, звук и эфир не затрагиваются. Упаковка создаёт tgz и локальные JSON-запросы; создание этих файлов не означает установку, отправлять JSON автоматически нельзя.
 
 Артефакты:
 - `system-microphone/local-system-microphone-1.3.1.tgz`

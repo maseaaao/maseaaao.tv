@@ -8,7 +8,6 @@ node_modules/
 **/.playwright-cli/
 artwork/scenes/rendered/review/
 artwork/scenes/rendered/*-report.json
-integrations/companion/shared/lib/
 integrations/companion/*/main.js
 integrations/companion/*/*.exe
 integrations/companion/*/*.dll
@@ -16,3 +15,6 @@ integrations/companion/*/*.tgz
 integrations/companion/*/install.json
 integrations/companion/*/request.json
 build/
+integrations/companion/*/*.exe.config
+integrations/companion/*/*.pdb
+integrations/companion/shared/lib/

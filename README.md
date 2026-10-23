@@ -17,9 +17,9 @@
 
 Нужны Node.js 22.23.3 из `.node-version`, pnpm 12.15.0 из `packageManager`, Python 3 и .NET SDK 8. Для пересборки Unbounded нужен `fonttools[woff]`. Один lockfile — `pnpm-lock.yaml` в корне. Для установки менеджера: `npm install --global pnpm@12.15.0` (версию Node сначала выбрать по `.node-version`).
 
-Сборка и проверки идут на Windows и Linux. CI выполняется на Linux; модули Companion собираются отдельно в Windows-job, потому что их аудиопомощники используют компилятор .NET Framework и Windows-аудиоустройства. Растровый эталон привязан к одной ОС: Chromium растеризует текст по-разному, поэтому байты совпадают только внутри Linux.
+Разработка и все задачи CI выполняются в Linux; на Windows используйте WSL2. Аудиопомощники Companion кросс-компилируются через .NET SDK и NuGet reference assemblies в Windows EXE. Streamer.bot, Companion, OBS, их запускатели и управление Windows-аудиоустройствами продолжают работать непосредственно в Windows. Растровый эталон привязан к Linux. Подробнее: [разработка в Linux/WSL2](docs/linux-development.md).
 
-```powershell
+```bash
 pnpm install --frozen-lockfile
 pnpm run browser:install
 pnpm run verify:ui-renewal
@@ -45,7 +45,7 @@ Cloudflare использует корневой `wrangler.jsonc`, команд�
 
 `pnpm run check` запускает Biome 2.6.2 (форматирование, импорты, JS/TS, Vue/HTML и CSS, без предупреждений), проверки политики исходников, vue-tsc и предметные проверки. Безопасные исправления: `pnpm run check:fix`; отдельно доступны `format`, `format:check`, `lint` и `lint:fix`. Правила и ограничения миграции описаны в [docs/biome.md](docs/biome.md). Публичные API и fixtures проверяются подставными обработчиками.
 
-`pnpm test` сначала собирает все браузерные продукты, затем выполняет `test:checks`. C#-проверки требуют .NET SDK 8; упаковка Companion — Windows. `test:repository` последовательно выполняет все корневые контракты и браузерные тесты; `test:website` оставлен совместимым alias, а не отдельным набором сайта.
+`pnpm test` сначала собирает все браузерные продукты, затем выполняет `test:checks`. C#-проверки требуют .NET SDK 8; сборка и упаковка Companion выполняются в Linux/WSL2. `test:repository` последовательно выполняет все корневые контракты и браузерные тесты; `test:website` оставлен совместимым alias, а не отдельным набором сайта.
 
 `@maseaaao/design` экспортирует шрифты/токены, `@maseaaao/ui` — AppButton, FieldInput, IconIndicator, LiveStatusBadge и доступные UI-примитивы, `@maseaaao/build-config` — preset автономного HTML и PostCSS. Runtime не импортирует build-конфигурацию. [Устройство сборок](docs/build-toolchain.md).
 
@@ -55,4 +55,4 @@ Cloudflare использует корневой `wrangler.jsonc`, команд�
 
 [Система анимаций: сайт, Stream Info и эфирные виджеты](docs/motion-system.md).
 
-Быстрая проверка исходников: `pnpm run check:source`. Сборка всех продуктов и UI по графу: `pnpm run verify:products`; повторный запуск восстанавливает outputs из локального кеша. Полная приёмка по-прежнему требует Windows и проверяет точные байты растров. [Граф, affected CI и ограничения миграции](docs/pnpm-migration.md).
+Быстрая проверка исходников: `pnpm run check:source`. Сборка всех продуктов и UI по графу: `pnpm run verify:products`; повторный запуск восстанавливает outputs из локального кеша. Полная приёмка выполняется в Linux/WSL2 и проверяет точные байты растров. [Граф, affected CI и ограничения миграции](docs/pnpm-migration.md).

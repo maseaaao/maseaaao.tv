@@ -111,9 +111,8 @@ jobs:
   companion:
     needs: plan
     if: needs.plan.outputs.companion == 'true'
-    # The audio helpers are built with the installed .NET Framework compiler and
-    # are Windows-only by nature, so this job stays on Windows.
-    runs-on: windows-2025
+    # Cross-compile Windows audio helpers using NuGet reference assemblies.
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
@@ -123,9 +122,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: node --test tests/companion-libs-preparation.test.mjs
+      - run: node --test tests/companion-build.test.mjs
       - run: pnpm run test:companion
-      - run: pnpm run prepare:companion-libs
       - run: pnpm --filter ./integrations/companion/system-microphone run build
       - run: pnpm --filter ./integrations/companion/voice-control run build
       - run: pnpm --filter ./integrations/companion/system-microphone run package

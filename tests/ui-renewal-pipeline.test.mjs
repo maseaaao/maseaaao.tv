@@ -116,11 +116,9 @@ test('the published text assets keep LF on every operating system', () => {
   }
 });
 
-test('CI runs on Linux except the Windows-only Companion job', () => {
-  for (const job of ['plan', 'source', 'products', 'raster', 'verify'])
+test('all CI jobs run on Linux', () => {
+  for (const job of ['plan', 'source', 'products', 'raster', 'companion', 'verify'])
     assert.equal(workflow.jobs[job]['runs-on'], 'ubuntu-latest', job);
-  // The audio helpers need the installed .NET Framework compiler and Windows audio.
-  assert.equal(workflow.jobs.companion['runs-on'], 'windows-2025');
   // Browser rendering on Linux needs the system libraries of the runner.
   for (const job of ['products', 'raster'])
     assert(
@@ -140,7 +138,7 @@ test('split CI preserves all test groups and fails closed at its required aggreg
     assert(commands('products').includes(`pnpm run ${command}`), command);
   assert(commands('source').includes('pnpm run check:source'));
   assert(!commands('products').includes('pnpm run check:source'));
-  assert(commands('companion').includes('node --test tests/companion-libs-preparation.test.mjs'));
+  assert(commands('companion').includes('node --test tests/companion-build.test.mjs'));
   assert(commands('companion').includes('python integrations/companion/shared/test-packages.py'));
   assert.equal(workflow.concurrency['cancel-in-progress'], true);
   assert(workflow.on.schedule.length);

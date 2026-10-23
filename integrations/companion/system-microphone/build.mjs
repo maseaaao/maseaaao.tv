@@ -2,23 +2,17 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
 
-const dir = fileURLToPath(new URL('.', import.meta.url));
 execFileSync(
-  'powershell.exe',
+  'dotnet',
   [
-    '-NoProfile',
-    '-NonInteractive',
-    '-ExecutionPolicy',
-    'Bypass',
-    '-File',
-    fileURLToPath(new URL('../shared/build-helper.ps1', import.meta.url)),
-    '-ModuleDirectory',
-    dir,
-    '-Name',
-    'SystemAudioHelper',
-    '-Json',
+    'build',
+    fileURLToPath(new URL('./SystemAudioHelper.csproj', import.meta.url)),
+    '--configuration',
+    'Release',
+    '--output',
+    fileURLToPath(new URL('.', import.meta.url)),
   ],
-  { windowsHide: true, stdio: 'inherit' },
+  { stdio: 'inherit' },
 );
 await build({
   entryPoints: [fileURLToPath(new URL('./index.js', import.meta.url))],
