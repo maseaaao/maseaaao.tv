@@ -2,11 +2,10 @@ import { execFileSync } from 'node:child_process';
 import { appendFileSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parse } from 'yaml';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 export function readWorkspaces() {
-  const { packages } = parse(readFileSync(resolve(root, 'pnpm-workspace.yaml'), 'utf8'));
+  const { workspaces: packages } = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8'));
   return packages
     .flatMap((pattern) =>
       pattern.endsWith('/*')

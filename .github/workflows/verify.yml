@@ -33,11 +33,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - run: pnpm run check:source
+      - run: bun run check:source
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pnpm run test:releases
+      - run: bun run test:releases
       - run: node --test tests/task-graph.test.mjs tests/task-graph-integrity.test.mjs tests/affected.test.mjs tests/source-only.test.mjs tests/ui-renewal-pipeline.test.mjs
       - run: git diff --check
   products:
@@ -53,17 +53,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pnpm run browser:install --with-deps
+      - run: bun run browser:install --with-deps
       # Browser contracts rebuild shared outputs: keep test groups serialized.
-      - run: pnpm run verify:products
-      - run: pnpm run check:repository
+      - run: bun run verify:products
+      - run: bun run check:repository
       # The product outputs are compared byte for byte against the committed
       # baseline here; the raster job covers the website and artwork renders.
-      - run: pnpm run check:artifacts
-      - run: pnpm run test:ui
-      - run: pnpm run test:ui-probe
-      - run: pnpm run test:static
-      - run: pnpm run test:checks
+      - run: bun run check:artifacts
+      - run: bun run test:ui
+      - run: bun run test:ui-probe
+      - run: bun run test:static
+      - run: bun run test:checks
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -83,13 +83,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pnpm run browser:install --with-deps
+      - run: bun run browser:install --with-deps
       - run: python -m pip install -r tooling/artwork/requirements-fonts.txt
-      - run: pnpm run verify:artwork
+      - run: bun run verify:artwork
       # Website consumes newly rendered images, never a pre-render cache entry.
-      - run: pnpm run build:all
-      - run: pnpm run check:repository
-      - run: pnpm run check:artifacts
+      - run: bun run build:all
+      - run: bun run check:repository
+      - run: bun run check:artifacts
       - run: git diff --check
       - uses: actions/upload-artifact@v4
         if: always()
@@ -127,11 +127,11 @@ jobs:
         with:
           python-version: "3.12"
       - run: node --test tests/companion-build.test.mjs
-      - run: pnpm run test:companion
-      - run: pnpm --filter ./integrations/companion/system-microphone run build
-      - run: pnpm --filter ./integrations/companion/voice-control run build
-      - run: pnpm --filter ./integrations/companion/system-microphone run package
-      - run: pnpm --filter ./integrations/companion/voice-control run package
+      - run: bun run test:companion
+      - run: bun run --filter ./integrations/companion/system-microphone build
+      - run: bun run --filter ./integrations/companion/voice-control build
+      - run: bun run --filter ./integrations/companion/system-microphone package
+      - run: bun run --filter ./integrations/companion/voice-control package
       - name: Verify Companion archive contents and install payloads
         run: python integrations/companion/shared/test-packages.py
       - uses: actions/upload-artifact@v4

@@ -41,7 +41,7 @@ jobs:
           python-version: "3.12"
       - name: Validate product and tag before building
         run: python tooling/package-release.py --validate "$RELEASE_TAG"
-      - run: pnpm run test:releases
+      - run: bun run test:releases
       - name: Test and build the selected product
         run: node tooling/release-product.mjs "$RELEASE_TAG"
       - run: python tooling/package-release.py "$RELEASE_TAG"

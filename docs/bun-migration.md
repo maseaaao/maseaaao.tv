@@ -1,4 +1,65 @@
-# Миграция инфраструктуры: pnpm, граф задач, affected CI
+# Миграция инфраструктуры на Bun
+
+## Текущий контракт
+
+- Разработка и все CI jobs выполняются в Linux/WSL2. Windows runtime OBS/Streamer.bot/Companion и запускатели сохраняются.
+- Bun 1.4.4 закреплён в `.bun-version`; зависимости устанавливаются командой `bun install --frozen-lockfile` по единственному JavaScript-lockfile `bun.lock`. NuGet lockfiles не меняют назначения.
+- Bun workspaces используют isolated linker, явно настроенный в `bunfig.toml`. Внутренние зависимости остаются `workspace:*`, исходники пакетов доступны через workspace exports.
+- `trustedDependencies` корневого `package.json` ограничены `esbuild` и `sharp`. Не разрешать все install-скрипты транзитивных пакетов.
+- Node.js 22.23.3 из `.node-version` остаётся для `node:test`, CLI и инструментов сборки. `bun run` запускает package scripts, а не переводит все процессы на Bun runtime. Python 3 и .NET SDK 8 остаются обязательными для своих задач.
+
+```bash
+bun install --frozen-lockfile
+bun run check:source
+bun run verify:products
+bun run test:checks
+bun run check:repository
+bun run check:artifacts
+bun run --filter ./integrations/companion/system-microphone build
+```
+
+Используйте `bun run test`, а не `bun test`: корневой script сохраняет подготовку сборок и существующие Node/Vitest/браузерные проверки. Для фильтрованных script-команд порядок аргументов: `bun run --filter PATH SCRIPT`. Установка окружения, Chromium, Python-зависимостей и полная приёмка описаны в [Linux/WSL2](linux-development.md) и [графе сборки](build-toolchain.md).
+
+## CI и границы кеша
+
+Composite setup устанавливает точный Node через `actions/setup-node` с `.node-version` и Bun через `oven-sh/setup-bun@v2` с `bun-version-file: .bun-version`, затем выполняет frozen install. Ключ локального task cache включает `.node-version`, `.bun-version`, `bun.lock`, `turbo.json` и launcher; кеш `.build-cache/turbo` ограничен деревом. Remote cache не используется.
+
+Сохранены все Linux-контуры `plan`, `source`, `products`, `raster`, `companion` и агрегат `verify`; проверки, условия отбора и состав артефактов не сокращаются. Companion кросс-компилируется .NET SDK 8 с NuGet reference assemblies. Побайтовая сверка продуктов и Linux-растров обязательна, тесты общих outputs запускаются последовательно. Релизный workflow сохраняет проверки, упаковку, immutable draft и проверку скачанного архива.
+
+## Приёмка и ограничения
+
+Исторические времена и результаты ниже относятся к переходу npm → pnpm, а не к Bun. Они не доказывают ускорение или успешную приёмку Bun. Для текущей миграции нужны свежие frozen install, source checks, продукты, тесты и сверка артефактов; отсутствие инструмента считается блокером. Локальные проверки не означают успешный запуск GitHub Actions. Этот документ не утверждает, что такие проверки уже пройдены.
+
+## Локальная проверка Bun в WSL2
+
+Свежий checkout предложенных изменений проверен отдельно от рабочего дерева;
+Node 22.23.3, Bun 1.4.4, Ubuntu 26.04 WSL2, Chromium 145.0.7632.6,
+.NET SDK 8.0.426. Это не результат GitHub Actions.
+- Чистый `bun install --frozen-lockfile`, `check:source`, `verify:products`,
+  `check:repository`, `git diff --check` — успешно.
+- После сборки продуктов `check:artifacts` сверил 93 отслеживаемых файла без изменений.
+- Storybook: 62/62; Stream Info Vitest: 97/97 и C# policy/ranking suites успешно;
+  UI portability, static fixtures, Companion mock tests, local mock tests и release contracts прошли.
+- Оба Companion helper собраны и упакованы; проверки состава, PE и install payload прошли.
+  Модули не устанавливались в живой Companion.
+- Корневые контракты: 167/170. Падают три существующих браузерных теста:
+  восстановление фокуса настроек (`motion-system`), повтор волны логотипов
+  (`obs-widgets`), opacity чата (`streamlabs-chat-design`). Все три воспроизведены
+  на неизменённом HEAD с отдельным `pnpm install --frozen-lockfile`, без Bun.
+  Поэтому `test:checks` и полный `verify:ui-renewal` не считаются зелёными.
+- Полный `verify:artwork` выполнен в отдельном дереве, затем `build:all`.
+  Побайтовая сверка выявила расхождения только трёх JPEG-баннеров относительно
+  закоммиченного Linux-эталона. Перерендер тех же баннеров на исходном HEAD с pnpm
+  дал точно те же SHA-256, что Bun: расхождение воспроизводится без миграции.
+  Эталон не принимался; отслеживаемые результаты основного дерева не заменялись.
+
+Исходный Windows checkout и работающие OBS/Streamer.bot/Companion не изменены.
+
+## Исторический отчёт npm → pnpm (22.10.2026)
+
+Ниже сохранён прежний отчёт без подмены замеров, команд и ограничений. Упоминания pnpm, Windows jobs, старого линтера и прежнего baseline — история; текущие требования заданы выше.
+
+# История: pnpm, граф задач, affected CI
 
 > С 23.10.2026 разработка и весь CI переведены на Linux/WSL2, включая кросс-компиляцию Companion. Упоминания Windows-сборки ниже — история прежних проверок и планов. Windows runtime и запускатели сохранены. Актуально: [Linux/WSL2](linux-development.md).
 

@@ -5,7 +5,8 @@
   "globalPassThroughEnv": ["TEMP", "TMP", "TMPDIR", "SystemRoot", "SYSTEMROOT"],
   "globalDependencies": [
     ".node-version",
-    "pnpm-workspace.yaml",
+    ".bun-version",
+    "bunfig.toml",
     "tooling/*.mjs",
     "tooling/artwork/**",
     "tooling/lib/**",

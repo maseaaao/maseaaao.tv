@@ -1,20 +1,19 @@
 name: Pinned workspace toolchain
-description: Node, pnpm, frozen dependencies and isolated local task cache
+description: Node, Bun, frozen dependencies and isolated local task cache
 runs:
   using: composite
   steps:
-    - uses: pnpm/action-setup@v4
-      with:
-        run_install: false
     - uses: actions/setup-node@v4
       with:
         node-version-file: .node-version
-        cache: pnpm
+    - uses: oven-sh/setup-bun@v2
+      with:
+        bun-version-file: .bun-version
     - shell: bash
-      run: pnpm install --frozen-lockfile
+      run: bun install --frozen-lockfile
     - uses: actions/cache@v4
       with:
         path: .build-cache/turbo
-        key: tasks-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.node-version', 'pnpm-lock.yaml', 'turbo.json', 'tooling/run-tasks.mjs') }}-${{ github.sha }}
+        key: tasks-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.node-version', '.bun-version', 'bun.lock', 'turbo.json', 'tooling/run-tasks.mjs') }}-${{ github.sha }}
         restore-keys: |
-          tasks-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.node-version', 'pnpm-lock.yaml', 'turbo.json', 'tooling/run-tasks.mjs') }}-
+          tasks-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.node-version', '.bun-version', 'bun.lock', 'turbo.json', 'tooling/run-tasks.mjs') }}-

@@ -17,7 +17,7 @@ const pattern = new RegExp(
 if (!pattern.test(tag)) throw new Error('Expected a supported product-vX.Y.Z tag');
 
 const commands = [];
-if (product.browser) commands.push('pnpm run browser:install --with-deps');
+if (product.browser) commands.push('bun run browser:install --with-deps');
 if (product.pythonRequirements)
   commands.push(`python -m pip install -r ${product.pythonRequirements}`);
 commands.push(product.test, product.build);

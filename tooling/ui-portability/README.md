@@ -2,11 +2,11 @@
 
 Технический образец этапа 2, не продукт и не установка в OBS. Цель — проверить Vue SFC + TypeScript + текущие Vite/singlefile на настоящем `file://` с внешним подставным WebSocket. Полного общего окружения компонентов/Storybook пока нет — это этап 4.
 
-Из корня с Node 22.20+ в ветке 22:
+Из корня в Linux/WSL2 с Bun из `.bun-version` и Node строго из `.node-version`:
 
 ```sh
-pnpm install --frozen-lockfile
-pnpm run test:ui-probe
+bun install --frozen-lockfile
+bun run test:ui-probe
 ```
 
 Для установленного Chrome задать `CHROME_BIN`. Итоговый файл: `.build-cache/ui-portability/ui-portability.html`. Его можно скопировать в пустой каталог: CSS, JS, Unbounded 400 и OFL встроены. Файл не требует сервера UI. Тестовый endpoint существует только на loopback во время теста; рабочие Streamer.bot/OBS не используются.

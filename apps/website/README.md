@@ -2,7 +2,7 @@
 
 Шесть маршрутов: главная, документация, Stream Checker и три страницы инструментов. Исходники страниц — `src/components/*.vue`; сборка сохраняет SEO, canonical и JSON-LD.
 
-`pnpm run build:website` из корня готовит Vue SSR в `.build-cache/website/ssr`, затем Vite собирает корневой `dist`. Используется `prepareVuePages` из `@maseaaao/build-config`. Публичные ресурсы из `apps/website/public` копируются без изменений, а изображения бренда поступают из `artwork/brand/rendered/website`.
+`bun run build:website` из корня готовит Vue SSR в `.build-cache/website/ssr`, затем Vite собирает корневой `dist`. Используется `prepareVuePages` из `@maseaaao/build-config`. Публичные ресурсы из `apps/website/public` копируются без изменений, а изображения бренда поступают из `artwork/brand/rendered/website`.
 
 **Главная намеренно не содержит Twitch iframe, чата, Twitch Embed SDK и autoplay.** Кнопка ведёт непосредственно на Twitch, записи доступны отдельной ссылкой. LIVE-индикатор по умолчанию **отключён**, поскольку статическая публикация не располагает авторизованным публичным источником достоверного статуса эфира. При недоступности backend нельзя подставлять условный LIVE или считать ошибку offline. `LiveStatusBadge` остаётся общим компонентом Stream Info и может использоваться здесь лишь после безопасного server-side источника.
 
@@ -10,7 +10,7 @@
 
 Vue используется только при сборке: на главной нет Vue runtime и гидрации. Шрифт — Unbounded 400 с content hash и preload, основной текст — Arial. OFL публикуется отдельно. Budgets: суммарный клиентский JS ≤12000 байт, HTML каждой страницы ≤25000 байт (без gzip).
 
-Проверки: `pnpm run build:website`, `pnpm run check:ui`, `pnpm run test:website`; новые сценарии `tests/landing-corrections.test.mjs`, `tests/landing-sync.test.mjs`, `tests/website-build.test.mjs` проверяют отсутствие remote media и доступность ссылок. Для запуска браузерных тестов нужны Playwright Chromium либо `CHROME_BIN`. Изменения исходников до сборки не означают обновление tracked `dist`.
+Проверки: `bun run build:website`, `bun run check:ui`, `bun run test:website`; новые сценарии `tests/landing-corrections.test.mjs`, `tests/landing-sync.test.mjs`, `tests/website-build.test.mjs` проверяют отсутствие remote media и доступность ссылок. Для запуска браузерных тестов нужны Playwright Chromium либо `CHROME_BIN`. Изменения исходников до сборки не означают обновление tracked `dist`.
 
 Сайт поставляется как HTTPS-публикация Cloudflare, не как автономный HTML для OBS. Композиция использует синюю внешнюю область, светлую поверхность, крупное имя и две главные кнопки: «Зайди на стрим» и «Задонатить». Соцсети оформлены текстовыми вторичными кнопками без иконок и повторяющихся стрелок; на мобильном длинные пункты занимают всю строку. В блоке сотрудничества заголовок расположен над кнопками почты и Telegram. Адрес почты используется только в `mailto:` кнопки, отдельной подписи с адресом нет. Подпись «Стример» не используется. Финальный дизайн проверять по снимкам собранных страниц при ширинах 320/390/540/768/900/1024/1440/1920 и увеличенном тексте.
 

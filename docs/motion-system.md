@@ -39,10 +39,10 @@
 системное reduced-motion его не меняет; для неподвижной сцены использовать WebP.
 Никаких дополнительных blur-подложек на весь экран или непрерывного JS-цикла.
 
-Генерация видео: `pnpm run render:scene-motion` (нужен FFmpeg с libvpx-vp9).
-Одна сцена: `pnpm run render:scene-motion --scene=01-start`.
+Генерация видео: `bun run render:scene-motion` (нужен FFmpeg с libvpx-vp9).
+Одна сцена: `bun run render:scene-motion --scene=01-start`.
 Источник — утверждённый `artwork/scenes/rendered/*.webp` и геометрия layout.json.
-После изменения статичных сцен сначала выполнить `pnpm run render:scenes`.
+После изменения статичных сцен сначала выполнить `bun run render:scenes`.
 WebM создаются рядом с WebP; ничего не устанавливается в OBS автоматически.
 
 Статус проверок и переносимый контекст: [expressive-motion.md](expressive-motion.md).

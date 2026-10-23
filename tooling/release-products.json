@@ -16,8 +16,8 @@
           "target": "streamerbot-import.txt"
         }
       ],
-      "test": "pnpm run test:stream-info",
-      "build": "pnpm run build:stream-info",
+      "test": "bun run test:stream-info",
+      "build": "bun run build:stream-info",
       "browser": false,
       "activation": "Reload INFO. Import changed C# separately into existing Actions.",
       "requires": {},
@@ -34,7 +34,7 @@
         }
       ],
       "test": "node --test tests/tuna-widget.test.mjs",
-      "build": "pnpm run build:tuna",
+      "build": "bun run build:tuna",
       "browser": true,
       "activation": "Reload OBS browser source, preserving URL parameters.",
       "requires": {},
@@ -50,8 +50,8 @@
           "target": "."
         }
       ],
-      "test": "pnpm --filter ./apps/obs-widgets run check",
-      "build": "pnpm run build:widgets",
+      "test": "bun run --filter ./apps/obs-widgets check",
+      "build": "bun run build:widgets",
       "browser": false,
       "activation": "Reload local sources. Apply provider CSS separately.",
       "requires": {}
@@ -86,8 +86,8 @@
           "target": "brand"
         }
       ],
-      "test": "pnpm --filter ./artwork run check",
-      "build": "pnpm run verify:artwork",
+      "test": "bun run --filter ./artwork check",
+      "build": "bun run verify:artwork",
       "browser": true,
       "activation": "Images ready. OBS source paths must point into this product directory.",
       "requires": {},
@@ -104,8 +104,8 @@
           "target": "local-system-microphone-{version}.tgz"
         }
       ],
-      "test": "pnpm run test:companion && node --test tests/companion-build.test.mjs",
-      "build": "pnpm --filter ./integrations/companion/system-microphone run build && pnpm --filter ./integrations/companion/system-microphone run package",
+      "test": "bun run test:companion && node --test tests/companion-build.test.mjs",
+      "build": "bun run --filter ./integrations/companion/system-microphone build && bun run --filter ./integrations/companion/system-microphone package",
       "browser": false,
       "activation": "Package downloaded only. Export Companion settings, import TGZ and select the version in existing connections.",
       "requires": {}
@@ -120,8 +120,8 @@
           "target": "local-voice-stream-{version}.tgz"
         }
       ],
-      "test": "pnpm run test:companion && node --test tests/companion-build.test.mjs",
-      "build": "pnpm --filter ./integrations/companion/voice-control run build && pnpm --filter ./integrations/companion/voice-control run package",
+      "test": "bun run test:companion && node --test tests/companion-build.test.mjs",
+      "build": "bun run --filter ./integrations/companion/voice-control build && bun run --filter ./integrations/companion/voice-control package",
       "browser": false,
       "activation": "Package downloaded only. Export Companion settings, import TGZ and select the version in existing connections.",
       "requires": {}
@@ -229,8 +229,8 @@
           "target": "."
         }
       ],
-      "test": "pnpm --filter ./apps/website run check",
-      "build": "pnpm run build:website",
+      "test": "bun run --filter ./apps/website check",
+      "build": "bun run build:website",
       "browser": false,
       "activation": "Static website only; no Cloudflare publication.",
       "requires": {},

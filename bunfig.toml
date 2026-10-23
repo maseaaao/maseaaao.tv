@@ -1,0 +1,3 @@
+[install]
+# Keep workspace dependency isolation; never hoist undeclared dependencies.
+linker = "isolated"

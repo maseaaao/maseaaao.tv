@@ -6,7 +6,7 @@ import { resolve } from 'node:path';
  * Source snapshots for build-isolation checks.
  *
  * Package managers lay dependencies out differently: npm hoists a single root
- * node_modules, pnpm links one into every package that declares dependencies.
+ * node_modules, Bun isolated installs link one into every package that declares dependencies.
  * Both are installation artifacts, never sources, so they never belong in a
  * source snapshot. Symlinks are skipped for the same reason: they point at
  * shared store content outside the source tree.

@@ -4,14 +4,14 @@
 
 ## Проверки без действий приложений
 
-Сборка и проверки: Linux/WSL2, Node.js из `.node-version`, pnpm из `packageManager`, .NET SDK 8 и Python 3. Готовые модули и аудиопомощники предназначены для Companion в Windows. Из корня репозитория:
+Сборка и проверки: Linux/WSL2, Node.js из `.node-version`, Bun из `.bun-version`, .NET SDK 8 и Python 3. Готовые модули и аудиопомощники предназначены для Companion в Windows. Из корня репозитория:
 
 ```bash
-pnpm run test:companion
-pnpm --filter ./integrations/companion/system-microphone run build
-pnpm --filter ./integrations/companion/voice-control run build
-pnpm --filter ./integrations/companion/system-microphone run package
-pnpm --filter ./integrations/companion/voice-control run package
+bun run test:companion
+bun run --filter ./integrations/companion/system-microphone build
+bun run --filter ./integrations/companion/voice-control build
+bun run --filter ./integrations/companion/system-microphone package
+bun run --filter ./integrations/companion/voice-control package
 python integrations/companion/shared/test-packages.py
 ```
 

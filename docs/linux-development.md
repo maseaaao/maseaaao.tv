@@ -3,24 +3,58 @@
 Готовые продукты можно получать в Windows независимо от checkout WSL: [релизы и обновлятор](windows-releases.md). `Update-All.ps1` выбирает последние стабильные выпуски всех доступных продуктов, а runtime остаётся в Windows. Это требует первоначального подключения приложений к новым путям; перенос исходников сам по себе не меняет действующие ссылки.
 
 С 23.10.2026 разработка и все задачи CI используют Linux. На Windows команды
-выполняются внутри WSL2 с Linux-версиями Node.js, pnpm, Python и .NET SDK.
-Не использовать Windows node.exe или pnpm из Windows PATH. Зависимости Linux
+выполняются внутри WSL2 с Linux-версиями Node.js, Bun, Python и .NET SDK.
+Не использовать Windows node.exe или bun.exe из Windows PATH. Зависимости Linux
 устанавливать отдельно от Windows node_modules; предпочтителен checkout внутри
 файловой системы WSL2.
 
-Версии: Node.js из `.node-version`, pnpm из `packageManager`, .NET SDK 8,
+Версии: Node.js из `.node-version`, Bun из `.bun-version`, .NET SDK 8,
 Python 3 (CI: 3.12). Для рендера нужны Chromium и пакеты из
 `tooling/artwork/requirements-fonts.txt`.
 
+## Bun и Node
+
+Bun 1.4.4 закреплён в `.bun-version`. Установите эту версию по официальной инструкции bun.sh для Linux (требуется `unzip`), а не Windows-версию. Для текущей оболочки:
+
 ```bash
-pnpm install --frozen-lockfile
-pnpm run browser:install --with-deps
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+bun --version
+node --version
+```
+
+Добавьте те же строки PATH в профиль своей Linux-оболочки; новый login shell должен находить `bun`. Node выбирается отдельно, строго по `.node-version` (22.23.3). До установки зависимостей проверьте обе версии.
+
+`bunfig.toml` закрепляет `linker = "isolated"`: пакеты не должны полагаться на незаявленные зависимости соседей. Единственный JavaScript-lockfile — `bun.lock`; NuGet `packages.lock.json` сохраняются отдельно. Только `esbuild` и `sharp` перечислены в `trustedDependencies` корневого `package.json`; не разрешать install-скрипты всем зависимостям ради обхода ошибки.
+
+Bun — менеджер пакетов и запускатель package scripts. `node --test`, Node-инструменты, Python и .NET SDK не заменяются Bun; не добавлять `--bun` для принудительного перевода существующих Node-команд.
+
+```bash
+bun install --frozen-lockfile
+bun run browser:install --with-deps
+python3 -m venv .runtime/venv
+. .runtime/venv/bin/activate
 python -m pip install -r tooling/artwork/requirements-fonts.txt
-pnpm run check
-pnpm run verify:ui-renewal
+bun run check
+bun run verify:ui-renewal
 ```
 
 В дистрибутиве должен быть доступен `python` с Python 3, как в CI.
+
+### Ubuntu 26.04
+
+Закреплённый Playwright 1.58.2 пока не содержит сборку `ubuntu26.04-x64`.
+Для этой версии Ubuntu перед установкой Chromium и браузерными проверками используйте:
+
+```bash
+export PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=ubuntu24.04-x64
+bun run browser:install
+```
+
+Это выбор Linux-бинарника Chromium, не Windows-версии и не смена версии Playwright.
+Системные библиотеки Chromium должны быть установлены отдельно. В текущем WSL-окружении
+переменная добавлена условно для Ubuntu 26.04 в login-профили; CI не меняет платформу.
+
 
 ## Companion
 
@@ -30,12 +64,12 @@ pnpm run verify:ui-renewal
 обновить lockfile через `dotnet restore --force-evaluate` для нужного проекта.
 
 ```bash
-pnpm run test:companion
+bun run test:companion
 node --test tests/companion-build.test.mjs
-pnpm --filter ./integrations/companion/system-microphone run build
-pnpm --filter ./integrations/companion/voice-control run build
-pnpm --filter ./integrations/companion/system-microphone run package
-pnpm --filter ./integrations/companion/voice-control run package
+bun run --filter ./integrations/companion/system-microphone build
+bun run --filter ./integrations/companion/voice-control build
+bun run --filter ./integrations/companion/system-microphone package
+bun run --filter ./integrations/companion/voice-control package
 python integrations/companion/shared/test-packages.py
 ```
 

@@ -36,7 +36,7 @@ test('Companion cross-compilation needs no Windows compiler or application insta
 
 test('development scripts do not restore removed Windows tooling', () => {
   const pkg = JSON.parse(read('package.json'));
-  assert.equal(pkg.scripts['test:ui'], 'pnpm --filter ./tooling/ui-catalog run test');
+  assert.equal(pkg.scripts['test:ui'], 'bun run --filter ./tooling/ui-catalog test');
   assert(!pkg.scripts['prepare:companion-libs']);
   for (const file of [
     'tooling/patch-storybook-windows.mjs',

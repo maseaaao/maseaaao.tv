@@ -14,7 +14,7 @@
     "generate-import": "node scripts/generate-import.mjs && node scripts/verify-import.mjs",
     "check": "vue-tsc --noEmit",
     "test": "vitest run && dotnet run --project tests/csharp/StreamerbotTests.csproj --configuration Release",
-    "build": "pnpm run generate-import && vite build && node scripts/verify-build.mjs",
+    "build": "bun run generate-import && vite build && node scripts/verify-build.mjs",
     "preview": "vite preview",
     "source": "node ../../tooling/source-task.mjs"
   },
@@ -37,6 +37,6 @@
     "vitest": "^5.0.0",
     "vue-tsc": "3.0.8",
     "@maseaaao/build-config": "workspace:*",
-    "yaml": "2.8.1"
+    "jsonc-parser": "3.3.1"
   }
 }

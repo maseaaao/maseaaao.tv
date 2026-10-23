@@ -4,11 +4,16 @@ import test from 'node:test';
 
 const root = new URL('../', import.meta.url);
 const read = (name) => readFileSync(new URL(name, root), 'utf8');
-test('workspace uses one pinned pnpm installation contract', () => {
+test('workspace uses one pinned Bun installation contract', () => {
   const pkg = JSON.parse(read('package.json'));
-  assert.equal(pkg.packageManager, 'pnpm@12.15.0');
-  assert.match(read('pnpm-workspace.yaml'), /allowBuilds:/);
-  assert(!/\bnpm run/.test(JSON.stringify(pkg.scripts)));
+  const version = read('.bun-version').trim();
+  assert.match(version, /^\d+\.\d+\.\d+$/);
+  assert.equal(pkg.packageManager, `bun@${version}`);
+  assert.equal(pkg.engines.bun, version);
+  assert.deepEqual(pkg.trustedDependencies, ['esbuild', 'sharp']);
+  assert.match(read('bunfig.toml'), /linker\s*=\s*"isolated"/);
+  assert(Array.isArray(pkg.workspaces) && pkg.workspaces.length > 0);
+  assert(!/\b(?:npm|pnpm)\b/.test(JSON.stringify(pkg.scripts)));
 });
 
 test('graph caches only reproducible outputs in this worktree', () => {
@@ -28,7 +33,7 @@ test('graph caches only reproducible outputs in this worktree', () => {
   assert.match(read('tooling/run-tasks.mjs'), /local:rw/);
 });
 
-test('Stream Info import verification reads pnpm workspace metadata', async () => {
+test('Stream Info import verification reads Bun workspace metadata', async () => {
   const { spawnSync } = await import('node:child_process');
   const { fileURLToPath } = await import('node:url');
   const result = spawnSync(process.execPath, ['apps/stream-info/scripts/verify-import.mjs'], {

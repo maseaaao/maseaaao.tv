@@ -6,7 +6,7 @@ import { snapshot } from '../tooling/source-snapshot.mjs';
 
 /**
  * Dependency layouts differ between package managers: npm hoists a single
- * root node_modules, pnpm links a node_modules directory into every package
+ * root node_modules, Bun isolated installs link a node_modules directory into every package
  * that declares dependencies. Source-isolation snapshots must ignore those
  * installation directories in both layouts.
  */

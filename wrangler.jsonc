@@ -5,7 +5,7 @@
     "directory": "./dist"
   },
   "build": {
-    "command": "pnpm run build:website",
+    "command": "bun run build:website",
     "watch_dir": [
       "apps/website/src",
       "apps/website/public",

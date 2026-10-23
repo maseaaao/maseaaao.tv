@@ -34,7 +34,7 @@ Linux: `ubuntu-latest`, Node из `.node-version`, закреплённая ве
 4. Проверить изменения:
 
    ```sh
-   pnpm run check:artifacts
+   bun run check:artifacts
    git diff --check
    ```
 

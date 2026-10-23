@@ -35,7 +35,7 @@ test('the release manifest declares the products that get independent releases',
 });
 
 test('artwork releases render final images and Stream Info includes its import', () => {
-  assert.equal(manifest.products.find((p) => p.id === 'artwork').build, 'pnpm run verify:artwork');
+  assert.equal(manifest.products.find((p) => p.id === 'artwork').build, 'bun run verify:artwork');
   assert.ok(
     manifest.products
       .find((p) => p.id === 'stream-info')

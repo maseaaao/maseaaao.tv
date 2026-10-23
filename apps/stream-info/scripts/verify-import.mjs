@@ -1,15 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { gunzipSync } from 'node:zlib';
-import { parseAllDocuments } from 'yaml';
+import { parse } from 'jsonc-parser';
 
 const project = resolve(import.meta.dirname, '..');
 const packageMetadata = JSON.parse(readFileSync(resolve(project, 'package.json'), 'utf8'));
-const lockMetadata = parseAllDocuments(
-  readFileSync(resolve(project, '../../pnpm-lock.yaml'), 'utf8'),
-)
-  .map((doc) => doc.toJSON())
-  .find((doc) => doc.importers?.['apps/stream-info']);
+const lockMetadata = parse(readFileSync(resolve(project, '../../bun.lock'), 'utf8'));
 const encoded = readFileSync(resolve(project, 'streamerbot-import.txt'), 'utf8').trim();
 const bytes = Buffer.from(encoded, 'base64');
 
@@ -28,12 +24,16 @@ if (payload.meta?.version !== packageMetadata.version) {
   throw new Error('Streamer.bot import version must match package.json.');
 }
 
-if (!lockMetadata?.importers?.['apps/stream-info']) {
-  throw new Error('Stream Info must have its own pnpm workspace lock entry.');
+if (lockMetadata.workspaces?.['apps/stream-info']?.name !== packageMetadata.name) {
+  throw new Error('Stream Info must have its own Bun workspace lock entry.');
 }
-// pnpm links workspaces rather than duplicating their product version in the lock.
-const consumer = lockMetadata.importers['tooling/ui-catalog']?.dependencies?.[packageMetadata.name];
-if (consumer?.specifier !== 'workspace:*' || consumer.version !== 'link:../../apps/stream-info') {
+const consumer =
+  lockMetadata.workspaces['tooling/ui-catalog']?.dependencies?.[packageMetadata.name];
+if (
+  consumer !== 'workspace:*' ||
+  lockMetadata.packages?.[packageMetadata.name]?.[0] !==
+    `${packageMetadata.name}@workspace:apps/stream-info`
+) {
   throw new Error('Stream Info consumer must resolve this local version through workspace:*.');
 }
 

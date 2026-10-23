@@ -2,6 +2,8 @@
 
 Актуальные локальные результаты Windows от 20.10.2026: [локальная миграция](local-migration-results.md). Ниже сохранены также исторические ограничения предыдущих сред. Текущая среда разработки и CI — Linux/WSL2; прежнее исправление Windows-путей Storybook удалено. Исторические результаты ниже не являются текущими требованиями.
 
+Менеджер пакетов — Bun из `.bun-version` (1.4.4), установка — `bun install --frozen-lockfile`, linker — `isolated` в `bunfig.toml`. `trustedDependencies` разрешает install-скрипты `esbuild` и `sharp`. Node из `.node-version` остаётся runtime для `node:test` и Node-инструментов; Python и .NET не заменяются. Подробнее: [миграция Bun](bun-migration.md).
+
 ## Пакеты
 
 | Пакет                    | Контракт                                                                                                                                          |
@@ -36,20 +38,20 @@
 - `typecheck` проверяет src и tests Stream Info. Фикстуры используют явные проверки значений вместо non-null assertions.
 - `check:repository` проверяет предметные инварианты: структуру, единственный русский экспорт, обои, typography, наличие ресурсов и неизменяемую публичную статику.
 
-`check` объединяет проверки качества и инвариантов. Сгенерированные outputs, двоичные файлы, vendor-ресурсы и build cache исключены из форматирования/линтинга; их содержимое проверяется build/browser-тестами. `pnpm-lock.yaml` управляется pnpm; единственный корневой lockfile.
+`check` объединяет проверки качества и инвариантов. Сгенерированные outputs, двоичные файлы, vendor-ресурсы и build cache исключены из форматирования/линтинга; их содержимое проверяется build/browser-тестами. `bun.lock` управляется Bun; единственный корневой lockfile.
 
 ## Проверки и воспроизводимость
 
-После `pnpm install --frozen-lockfile`:
+После `bun install --frozen-lockfile`:
 
 ```sh
-pnpm run browser:install
-pnpm run build:all
-pnpm run check
-pnpm run test:checks
+bun run browser:install
+bun run build:all
+bun run check
+bun run test:checks
 ```
 
-`pnpm test` дополнительно сам выполняет build:all. Для другого Chromium используется CHROME_BIN. C#-тестам нужен .NET SDK 8. Компиляция Windows helpers/упаковка Companion запускается отдельным Windows CI job.
+`bun run test` дополнительно сам выполняет build:all. Для другого Chromium используется CHROME_BIN. C#-тестам нужен .NET SDK 8. Кросс-компиляция Windows helpers и упаковка Companion выполняются в отдельном Linux CI job через .NET SDK 8 и NuGet reference assemblies.
 
 Тесты проверяют готовые outputs: точные байты встроенного WOFF2/OFL, отсутствие статических внешних зависимостей, provider placeholders, шрифты/DOM/CSP, responsive layout, клавиатуру, сценовую геометрию и QR. Проверки эфира, аудио и внешних провайдеров используют подставные обработчики.
 
@@ -57,11 +59,11 @@ Playwright и Sharp используются через один renderImage; IC
 
 Каноническая среда полной CI-приёмки и побайтового сравнения растровых экспортов — `ubuntu-latest`, Node из `.node-version`, единая закреплённая версия Playwright и Python 3.12 через `setup-python`. Растровый эталон утверждён на Linux: Chromium там использует другой текстовый растеризатор, чем Windows, поэтому байты совпадают только внутри одной ОС. Пересчёт эталона на другой ОС — явное решение с пересборкой всех растровых экспортов, а не фоновая подмена. Шрифты воспроизводимы независимо от ОС: fonttools, brotli и zopfli закреплены версиями, а инстанцирование переменного шрифта не пересчитывает метку времени. Локальный Python вызывается как `python`, без зависимости от Windows-алиаса `python3`.
 
-Модули Companion остаются исключением: их аудиопомощники собираются установленным компилятором .NET Framework и обращаются к Windows-аудиоустройствам, поэтому сборка и упаковка модулей выполняются в отдельном Windows-job. Остальной граф — исходники, продукты, браузерные проверки и растровый эталон — выполняется на Linux.
+Все jobs, включая Companion, выполняются на Linux. .NET SDK 8 кросс-компилирует helpers net481 с NuGet reference assemblies и locked restore. Готовые EXE обращаются к Windows-аудиоустройствам только в Windows runtime; сборка их не запускает.
 
 ## Отдельные последующие работы
 
-Миграция упаковки Companion на официальный @companion-module/tools и декомпозиция main.ts Stream Info остаются отдельными подпроектами, как предусмотрено ревью плана. Текущие Windows build/package и защитные проверки архивов сохранены. Обновление Vite major, изменение дизайна и установка ресурсов в живые приложения не включены в инфраструктурную миграцию.
+Миграция упаковки Companion на официальный @companion-module/tools и декомпозиция main.ts Stream Info остаются отдельными подпроектами, как предусмотрено ревью плана. Linux build/package Companion и защитные проверки архивов сохранены. Обновление Vite major, изменение дизайна и установка ресурсов в живые приложения не включены в инфраструктурную миграцию.
 
 ## Ограничение dependency audit на 19.10.2026
 
@@ -86,13 +88,13 @@ Playwright и Sharp используются через один renderImage; IC
 
 ## Полный граф приёмки UI Renewal
 
-`pnpm run verify:ui-renewal` выполняет по порядку: source lint/typecheck, подготовку WOFF2/логотипа, однократную сборку artwork HTML, полный рендер 12 сцен и всех banners/panels/favicon/wallpapers/website art, сборку UI/stories и всех отдельных продуктов, сборку website **после** изображений, repository checks, браузерные/UI/C# тесты, и `check:artifacts` с `git diff --check`.
+`bun run verify:ui-renewal` выполняет по порядку: source lint/typecheck, подготовку WOFF2/логотипа, однократную сборку artwork HTML, полный рендер 12 сцен и всех banners/panels/favicon/wallpapers/website art, сборку UI/stories и всех отдельных продуктов, сборку website **после** изображений, repository checks, браузерные/UI/C# тесты, и `check:artifacts` с `git diff --check`.
 
-`pnpm run check:artifacts` сравнивает **все управляемые артефакты** с коммитом включая WEBP/PNG/JPEG/ICO, standalone HTML и import; отмечает новые или изменённые untracked файлы, формирует SHA-256 manifest в `.build-cache/verify/artifacts.sha256`. Если Chrome/Sharp/OS дают отличающиеся бинарные изображения, CI останавливается до явного принятия эталона. Не отключать проверку из-за недетерминизма. Рендеры не меняют исходники и живую установку OBS.
+`bun run check:artifacts` сравнивает **все управляемые артефакты** с коммитом включая WEBP/PNG/JPEG/ICO, standalone HTML и import; отмечает новые или изменённые untracked файлы, формирует SHA-256 manifest в `.build-cache/verify/artifacts.sha256`. Если Chrome/Sharp/OS дают отличающиеся бинарные изображения, CI останавливается до явного принятия эталона. Не отключать проверку из-за недетерминизма. Рендеры не меняют исходники и живую установку OBS.
 
-Команды доступны только после `pnpm install --frozen-lockfile`, установки Chromium и `python3 -m pip install -r tooling/artwork/requirements-fonts.txt`. Для полной приёмки C# нужен .NET 8, сборка и упаковка Companion также выполняются в Linux/WSL2. Отсутствие локальных инструментов — блокер запуска, а не зелёный результат.
+Команды доступны только после `bun install --frozen-lockfile`, установки Chromium и `python3 -m pip install -r tooling/artwork/requirements-fonts.txt`. Для полной приёмки C# нужен .NET 8, сборка и упаковка Companion также выполняются в Linux/WSL2. Отсутствие локальных инструментов — блокер запуска, а не зелёный результат.
 
-## Граф задач и CI после миграции на pnpm
+## Граф задач и CI с Bun
 
 Планировщик — закреплённый Turbo (`turbo.json`), кеш только локальный и в пределах дерева (`.build-cache/turbo`). `build` и `check` кешируются, `test`, `package` и сборка Companion — нет: тесты могут пересобирать общие outputs, а живая установка не должна кешироваться. Файлы зависимостей и результаты: `tooling/run-tasks.mjs` запускает Turbo с `--cache=local:rw`, `tooling/affected.mjs` выбирает затронутые пакеты по изменениям, `tooling/ci-result.mjs` закрывает агрегат CI.
 

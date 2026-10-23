@@ -17,7 +17,7 @@ test('affected selection follows transitive workspace consumers', async () => {
 
 test('root, missing base, deleted unknown files and safety nets select everything', async () => {
   const { selectAffected, readWorkspaces } = await import('../tooling/affected.mjs');
-  for (const files of [['pnpm-lock.yaml'], ['turbo.json'], ['tooling/removed.mjs']]) {
+  for (const files of [['bun.lock'], ['turbo.json'], ['tooling/removed.mjs']]) {
     const plan = selectAffected(files, readWorkspaces());
     assert(plan.full && plan.products && plan.raster && plan.companion);
   }

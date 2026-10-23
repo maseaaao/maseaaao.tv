@@ -11,23 +11,23 @@ const workflow = parse(read('.github/workflows/verify.yml'));
 const commands = (job) => workflow.jobs[job].steps.flatMap((step) => (step.run ? [step.run] : []));
 test('acceptance renders before website builds and checks source exactly once', () => {
   assert.deepEqual(pkg.scripts['verify:artwork'].split(' && '), [
-    'pnpm run build:fonts',
-    'pnpm run render:logo',
-    'pnpm run build:artwork',
-    'pnpm run render:scenes --prepared',
-    'pnpm run render:cyber-site all --prepared',
+    'bun run build:fonts',
+    'bun run render:logo',
+    'bun run build:artwork',
+    'bun run render:scenes --prepared',
+    'bun run render:cyber-site all --prepared',
   ]);
   const steps = pkg.scripts['verify:ui-renewal'].split(' && ');
   assert.deepEqual(steps, [
-    'pnpm run check:source',
-    'pnpm run verify:artwork',
-    'pnpm run verify:products',
-    'pnpm run check:repository',
-    'pnpm run test:ui',
-    'pnpm run test:ui-probe',
-    'pnpm run test:static',
-    'pnpm run test:checks',
-    'pnpm run check:artifacts',
+    'bun run check:source',
+    'bun run verify:artwork',
+    'bun run verify:products',
+    'bun run check:repository',
+    'bun run test:ui',
+    'bun run test:ui-probe',
+    'bun run test:static',
+    'bun run test:checks',
+    'bun run check:artifacts',
     'git diff --check',
   ]);
   assert.match(pkg.scripts['verify:products'], /run-tasks\.mjs build/);
@@ -44,8 +44,8 @@ test('raster retains pinned Linux, Python and exact artifact verification after 
   );
   const runs = commands('raster');
   assert(runs.includes('python -m pip install -r tooling/artwork/requirements-fonts.txt'));
-  assert(runs.indexOf('pnpm run verify:artwork') < runs.indexOf('pnpm run build:all'));
-  assert(runs.indexOf('pnpm run build:all') < runs.indexOf('pnpm run check:artifacts'));
+  assert(runs.indexOf('bun run verify:artwork') < runs.indexOf('bun run build:all'));
+  assert(runs.indexOf('bun run build:all') < runs.indexOf('bun run check:artifacts'));
   assert.equal(pkg.scripts['build:fonts'], 'python tooling/artwork/build-web-fonts.py');
   const source = read('tooling/check-generated-artifacts.mjs');
   assert.match(source, /'artwork\/scenes\/rendered'/);
@@ -99,8 +99,8 @@ test('the product outputs are compared byte for byte in the products job', () =>
   // The raster job only builds the website and artwork renders. The standalone
   // product outputs are verified here, so every tracked artifact is compared
   // against the committed baseline in some job.
-  assert(commands('products').includes('pnpm run check:artifacts'));
-  assert(commands('raster').includes('pnpm run check:artifacts'));
+  assert(commands('products').includes('bun run check:artifacts'));
+  assert(commands('raster').includes('bun run check:artifacts'));
 });
 
 test('the published text assets keep LF on every operating system', () => {
@@ -135,9 +135,9 @@ test('split CI preserves all test groups and fails closed at its required aggreg
     'test:static',
     'test:checks',
   ])
-    assert(commands('products').includes(`pnpm run ${command}`), command);
-  assert(commands('source').includes('pnpm run check:source'));
-  assert(!commands('products').includes('pnpm run check:source'));
+    assert(commands('products').includes(`bun run ${command}`), command);
+  assert(commands('source').includes('bun run check:source'));
+  assert(!commands('products').includes('bun run check:source'));
   assert(commands('companion').includes('node --test tests/companion-build.test.mjs'));
   assert(commands('companion').includes('python integrations/companion/shared/test-packages.py'));
   assert.equal(workflow.concurrency['cancel-in-progress'], true);
@@ -151,5 +151,5 @@ test('split CI preserves all test groups and fails closed at its required aggreg
     'companion',
   ]);
   assert(commands('verify').includes('node tooling/ci-result.mjs'));
-  assert.match(read('.github/actions/setup/action.yml'), /pnpm install --frozen-lockfile/);
+  assert.match(read('.github/actions/setup/action.yml'), /bun install --frozen-lockfile/);
 });

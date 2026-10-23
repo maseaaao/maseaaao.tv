@@ -6,6 +6,11 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const pinned = readFileSync(new URL('../.node-version', import.meta.url), 'utf8').trim();
 if (process.versions.node !== pinned)
   throw new Error(`Use Node ${pinned}, got ${process.versions.node}`);
+const bunVersion = readFileSync(new URL('../.bun-version', import.meta.url), 'utf8').trim();
+const bun = spawnSync('bun', ['--version'], { encoding: 'utf8' });
+if (bun.error) throw bun.error;
+if (bun.status !== 0 || bun.stdout.trim() !== bunVersion)
+  throw new Error(`Use Bun ${bunVersion}, got ${bun.stdout.trim() || bun.stderr}`);
 const result = spawnSync(
   process.execPath,
   [
@@ -21,7 +26,7 @@ const result = spawnSync(
     env: {
       ...process.env,
       TURBO_TELEMETRY_DISABLED: '1',
-      MASEAAAO_TOOLCHAIN: `${process.platform}-${process.arch}-node${pinned}`,
+      MASEAAAO_TOOLCHAIN: `${process.platform}-${process.arch}-node${pinned}-bun${bunVersion}`,
     },
   },
 );
