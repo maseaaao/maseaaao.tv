@@ -4,7 +4,8 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import test, { after, before } from 'node:test';
 import { pathToFileURL } from 'node:url';
-import { buildVuePages } from '../packages/build-config/static.mjs';
+import { standaloneConfig } from '@maseaaao/build-config';
+import { build } from 'vite';
 import { launchBrowser } from '../tooling/artwork/browser.mjs';
 
 // Fresh source -> standalone file:// in real Chromium. Only Tuna HTTP/cover peers are fixtures.
@@ -18,19 +19,14 @@ let directory, file, browser;
 before(async () => {
   directory = await mkdtemp(join(tmpdir(), 'tuna-acceptance-'));
   await symlink(resolve(root, 'node_modules'), join(directory, 'node_modules'), 'junction');
-  await buildVuePages({
+  const config = standaloneConfig({
     root: resolve(root, 'apps/tuna-widget/src'),
-    ssrEntry: '../render.mjs',
     outDir: join(directory, 'delivery'),
-    cacheDir: join(directory, 'cache'),
-    pages: [
-      {
-        source: 'index.html',
-        output: 'obs-tuna-widget.html',
-        budgets: { html: 200000, js: 12000 },
-      },
-    ],
+    fileName: 'obs-tuna-widget.html',
+    budgets: { html: 200000, js: 12000 },
   });
+  config.build.modulePreload = false;
+  await build({ ...config, configFile: false });
   file = pathToFileURL(join(directory, 'delivery/obs-tuna-widget.html')).href;
   assert(
     (await readFile(join(directory, 'delivery/obs-tuna-widget.html'), 'utf8')).includes(

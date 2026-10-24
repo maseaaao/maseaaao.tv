@@ -6,7 +6,7 @@ import { JSDOM } from 'jsdom';
 
 const root = resolve(import.meta.dirname, '..');
 test('homepage is static, has no third-party media and keeps main navigation', () => {
-  const source = readFileSync(resolve(root, 'apps/website/src/components/HomePage.vue'), 'utf8');
+  const source = readFileSync(resolve(root, 'apps/website/src/index.html'), 'utf8');
   const html = readFileSync(resolve(root, 'dist/index.html'), 'utf8');
   const index = readFileSync(resolve(root, 'apps/website/src/index.html'), 'utf8');
   for (const text of [source, index, html]) {
@@ -23,7 +23,7 @@ test('homepage is static, has no third-party media and keeps main navigation', (
   );
 });
 test('checker intentionally keeps diagnostic player controls', () => {
-  const source = readFileSync(resolve(root, 'apps/website/src/assets/check.js'), 'utf8');
+  const source = readFileSync(resolve(root, 'apps/website/src/assets/check.ts'), 'utf8');
   assert(source.includes('player.twitch.tv'));
   assert(source.includes('youtube.com/embed/live_stream'));
 });

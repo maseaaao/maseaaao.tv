@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url';
-import { vueStandaloneConfig } from '@maseaaao/build-config/vue';
-export default vueStandaloneConfig({
+import { standaloneConfig } from '@maseaaao/build-config';
+export default standaloneConfig({
   root: fileURLToPath(new URL('./src', import.meta.url)),
   outDir: '../dist',
   fileName: 'change-info-streamer-bot.ru.html',

@@ -31,19 +31,12 @@ test('one Linux verification job runs every product check without selection or t
   );
 });
 
-test('ordinary build commands preserve product-before-catalog ordering and all test groups', () => {
+test('ordinary build commands cover every product build and test group', () => {
   assert.equal(pkg.devDependencies.turbo, undefined);
-  assert.equal(
-    pkg.scripts['verify:products'],
-    'bun run build:all && bun run build:ui-probe && bun run build:static-fixtures && bun run build:storybook',
-  );
+  assert.equal(pkg.scripts['verify:products'], 'bun run build:all');
   assert.equal(
     pkg.scripts['build:all'],
     'bun run build:website && bun run build:stream-info && bun run build:tuna && bun run build:widgets && bun run build:artwork',
-  );
-  assert.equal(
-    pkg.scripts['build:ui'],
-    'bun run build:stream-info && bun run build:widgets && bun run build:ui-probe && bun run build:static-fixtures && bun run build:storybook',
   );
   assert.equal(
     pkg.scripts['test:checks'],

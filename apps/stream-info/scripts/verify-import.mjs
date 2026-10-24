@@ -27,15 +27,6 @@ if (payload.meta?.version !== packageMetadata.version) {
 if (lockMetadata.workspaces?.['apps/stream-info']?.name !== packageMetadata.name) {
   throw new Error('Stream Info must have its own Bun workspace lock entry.');
 }
-const consumer =
-  lockMetadata.workspaces['tooling/ui-catalog']?.dependencies?.[packageMetadata.name];
-if (
-  consumer !== 'workspace:*' ||
-  lockMetadata.packages?.[packageMetadata.name]?.[0] !==
-    `${packageMetadata.name}@workspace:apps/stream-info`
-) {
-  throw new Error('Stream Info consumer must resolve this local version through workspace:*.');
-}
 
 if (requiredVersion >= payload.exportedFrom) {
   throw new Error(

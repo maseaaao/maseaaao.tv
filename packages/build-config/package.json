@@ -5,10 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./index.mjs",
-    "./postcss": "./postcss.mjs",
-    "./vue-env": "./vue-env.d.ts",
-    "./vue": "./vue.mjs",
-    "./static": "./static.mjs"
+    "./postcss": "./postcss.mjs"
   },
   "peerDependencies": {
     "vite": "^6.4.3",
@@ -17,9 +14,7 @@
     "postcss-url": "^10.1.4"
   },
   "dependencies": {
-    "@maseaaao/design": "workspace:*",
-    "@vitejs/plugin-vue": "5.2.4",
-    "vue": "3.5.44"
+    "@maseaaao/design": "workspace:*"
   },
   "scripts": {
     "source": "node ../../tooling/source-task.mjs"

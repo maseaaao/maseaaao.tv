@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test, { after, before } from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { vueStandaloneConfig } from '@maseaaao/build-config/vue';
+import { standaloneConfig } from '@maseaaao/build-config';
 import { build } from 'vite';
 import { launchBrowser } from '../tooling/artwork/browser.mjs';
 
@@ -13,7 +13,7 @@ function matrixBuildConfig(
   outDir,
   root = fileURLToPath(new URL('../apps/stream-info/src', import.meta.url)),
 ) {
-  const config = vueStandaloneConfig({
+  const config = standaloneConfig({
     root,
     outDir,
     fileName,
@@ -45,7 +45,7 @@ test('scratch HTML budget reads fresh output without a dist directory', async ()
     await mkdir(root);
     await mkdir(outDir);
     const config = matrixBuildConfig(outDir, root);
-    const guard = config.plugins.find((plugin) => plugin.name === 'vue-runtime-contract');
+    const guard = config.plugins.find((plugin) => plugin.name === 'standalone-budgets');
     const html = join(outDir, fileName);
     await writeFile(html, '<!doctype html><title>Fresh scratch output</title>');
     await guard.writeBundle();

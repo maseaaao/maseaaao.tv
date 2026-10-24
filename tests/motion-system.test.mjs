@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import { mkdir, readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
-import { parse } from 'vue/compiler-sfc';
 import { launchBrowser } from '../tooling/artwork/browser.mjs';
 
 const delivery = (path) => new URL(`../${path}`, import.meta.url).href;
@@ -175,13 +174,12 @@ test('standalone connection indicators respect reduced motion in both color vari
       'utf8',
     );
     const source = await readFile(
-      new URL('../packages/ui/src/IconIndicator.vue', import.meta.url),
+      new URL('../packages/ui/components.css', import.meta.url),
       'utf8',
     );
-    const { descriptor } = parse(source);
     for (const inverted of [false, true]) {
       const page = await browser.newPage({ reducedMotion: 'no-preference' });
-      await page.setContent(`<style>${tokens}${descriptor.styles[0].content}</style>
+      await page.setContent(`<style>${tokens}${source}</style>
         <p class="icon-indicator ${inverted ? 'icon-indicator--inverted' : ''}">
           <span class="icon-indicator__dot" data-status="connected"></span><span>Подключено</span>
         </p>`);

@@ -1,9 +1,9 @@
 import { StreamerbotClient } from '@streamerbot/client';
-import { computed, onMounted, onScopeDispose, reactive } from 'vue';
-import packageJson from '../../package.json';
-import { rankCategories } from '../category-search';
-import { t } from '../messages';
-import { DEFAULT_TWITCH_TEMPLATE, isTemplateValid, titleFromTemplate } from '../templates';
+import packageJson from '../package.json';
+import { rankCategories } from './category-search';
+import { t } from './messages';
+import { reactive } from './reactive';
+import { DEFAULT_TWITCH_TEMPLATE, isTemplateValid, titleFromTemplate } from './templates';
 import type {
   ActionResponse,
   ActionSummary,
@@ -14,7 +14,7 @@ import type {
   TemplateState,
   TwitchCategory,
   TwitchState,
-} from '../types';
+} from './types';
 
 const API_VERSION = 4;
 const APP_VERSION = packageJson.version;
@@ -39,13 +39,13 @@ export interface Notice {
   kind: NoticeKind;
 }
 
+export interface PresetAction extends ActionSummary {
+  label: string;
+}
+
 interface TemplateDraft {
   twitchTemplate: string;
   subtitle: string;
-}
-
-interface PresetAction extends ActionSummary {
-  label: string;
 }
 
 interface TwitchUpdatePayload extends Record<string, unknown> {
@@ -81,7 +81,7 @@ interface AppState {
   allForm: AllForm | null;
   twitchResults: TwitchCategory[];
   twitchSearchFor: string;
-  loadingPlatforms: Set<Platform>;
+  loadingTwitch: boolean;
   cardEffects: Record<Platform, CardEffect>;
   cardErrors: Record<Platform, boolean>;
   notices: Notice[];
@@ -89,6 +89,8 @@ interface AppState {
   importCopied: boolean;
   lastUpdated: Date | null;
 }
+
+export type { ConnectionStatus, Modal, SearchStatus };
 
 const defaults: ConnectionSettings = {
   host: '127.0.0.1',
@@ -100,6 +102,16 @@ const defaults: ConnectionSettings = {
   lastSubtitle: '',
   twitchEnabled: true,
 };
+
+interface SearchStatus {
+  twitchSearching: boolean;
+  searchError: string | null;
+  searchCursor: string | null;
+  searchHasMore: boolean;
+  searchWarnings: string[];
+  searchPartial: boolean;
+  visibleCategories: number;
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -172,7 +184,7 @@ function parseResponse(value: unknown): ActionResponse | null {
   };
 }
 
-export function useStreamInfo(options: { demo?: boolean } = {}) {
+export function createStreamInfo(options: { demo?: boolean } = {}): StreamInfo {
   const demoMode = options.demo ?? new URLSearchParams(window.location.search).has('demo');
   const settings = reactive(loadSettings());
   const recoveredDraft = restoreTemplateDraft();
@@ -200,7 +212,7 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
     allForm: null,
     twitchResults: [],
     twitchSearchFor: '',
-    loadingPlatforms: new Set(),
+    loadingTwitch: false,
     cardEffects: { twitch: null },
     cardErrors: { twitch: false },
     notices: [],
@@ -295,6 +307,17 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
   }
   let searchFlight: SearchJob | null = null;
   let queuedSearch: SearchJob | null = null;
+
+  const search = reactive<SearchStatus>({
+    twitchSearching: false,
+    searchError: null,
+    searchCursor: null,
+    searchHasMore: false,
+    searchWarnings: [],
+    searchPartial: false,
+    visibleCategories: 20,
+  });
+
   function resetCategorySearch(): void {
     ++searchGeneration;
     if (searchTimer !== null) cancelTimer(searchTimer);
@@ -342,8 +365,12 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
     return platformEnabled(platform) && Boolean(stream?.twitch.connected);
   }
 
-  function editorBusy(): boolean {
-    return state.allSaving || state.loadingPlatforms.size > 0;
+  function platformLoading(platform: Platform): boolean {
+    return platform === 'twitch' && state.loadingTwitch;
+  }
+
+  function busy(): boolean {
+    return state.allSaving || platformLoading('twitch');
   }
 
   function inlineTitle(_platform: Platform, form: AllForm): string {
@@ -785,7 +812,7 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
   ): Promise<boolean> {
     const current = taskGuard();
     if (!Object.keys(payload).length) return true;
-    state.loadingPlatforms.add(platform);
+    state.loadingTwitch = true;
     try {
       const response = await callAction('updateTwitch', payload);
       if (!current()) return false;
@@ -808,7 +835,7 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
       return false;
     } finally {
       if (current()) {
-        state.loadingPlatforms.delete(platform);
+        state.loadingTwitch = false;
       }
     }
   }
@@ -817,7 +844,7 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
     const current = taskGuard();
     const form = state.allForm;
     const stream = state.stream;
-    if (!form || !stream || editorBusy() || !platformAvailable('twitch')) return;
+    if (!form || !stream || busy() || !platformAvailable('twitch')) return;
     const errors = validateAll(form);
     if (errors.length) {
       return;
@@ -874,8 +901,7 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
   function addTag(scope: string): void {
     const holder = getTagHolder(scope);
     if (!holder) return;
-    state.allDirty = true;
-    state.allSaveResult = null;
+    markDirty();
     const value = holder.draft.trim();
     if (!value) return;
     if (!holder.tags.some((tag) => tag.localeCompare(value, 'ru', { sensitivity: 'accent' }) === 0))
@@ -904,8 +930,7 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
       state.allForm.twitchCategory = category;
       state.allForm.twitchCategoryQuery = '';
     }
-    state.allDirty = true;
-    state.allSaveResult = null;
+    markDirty();
     if (kind === 'twitch') resetCategorySearch();
   }
 
@@ -981,23 +1006,6 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
     }
   }
 
-  const search = reactive<{
-    twitchSearching: boolean;
-    searchError: string | null;
-    searchCursor: string | null;
-    searchHasMore: boolean;
-    searchWarnings: string[];
-    searchPartial: boolean;
-    visibleCategories: number;
-  }>({
-    twitchSearching: false,
-    searchError: null,
-    searchCursor: null,
-    searchHasMore: false,
-    searchWarnings: [],
-    searchPartial: false,
-    visibleCategories: 20,
-  });
   let disposed = false;
   const timers = new Set<number>();
   function cancelTimer(id: number): void {
@@ -1021,7 +1029,7 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
   function resetBusy(): void {
     state.allSaving = false;
     state.runningPresetId = null;
-    state.loadingPlatforms.clear();
+    state.loadingTwitch = false;
   }
   function markDirty(): void {
     state.allDirty = true;
@@ -1042,14 +1050,8 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
       markDirty();
     }
   }
-  function setTitleMode(mode: 'subtitle' | 'full'): void {
-    if (state.allForm && !editorBusy()) {
-      state.allForm.twitchTitleMode = mode;
-      markDirty();
-    }
-  }
   function setEnabled(value: boolean): void {
-    if (!editorBusy()) {
+    if (!busy()) {
       settings.twitchEnabled = value;
       state.settingsDraft.twitchEnabled = value;
       saveSettings();
@@ -1130,7 +1132,7 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
   function onVisibility(): void {
     if (document.visibilityState === 'visible') void refreshState(false);
   }
-  onMounted(() => {
+  function start(): void {
     if (demoMode) {
       enableDemoMode();
       initializeEditor();
@@ -1139,8 +1141,9 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
     document.addEventListener('visibilitychange', onVisibility);
     pollingId = window.setInterval(onVisibility, 30_000);
     void connect();
-  });
-  onScopeDispose(() => {
+  }
+  function dispose(): void {
+    if (disposed) return;
     disposed = true;
     ++connectionGeneration;
     ++stateRevision;
@@ -1149,26 +1152,26 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
     for (const id of timers) window.clearTimeout(id);
     timers.clear();
     if (pollingId !== null) window.clearInterval(pollingId);
+    pollingId = null;
     document.removeEventListener('visibilitychange', onVisibility);
     const previous = client;
     client = null;
     if (previous) void Promise.resolve(previous.disconnect()).catch(() => undefined);
-  });
-  const busy = computed(editorBusy);
-  const available = computed(() => platformAvailable('twitch'));
-  const errors = computed(() => (state.allForm ? validateAll(state.allForm) : []));
-  const title = computed(() => (state.allForm ? inlineTitle('twitch', state.allForm) : ''));
-  return {
+  }
+
+  const streamInfo: StreamInfo = {
     state,
     settings,
     search,
-    busy,
-    available,
-    errors,
-    title,
     version: APP_VERSION,
+    demoMode,
     connectionText,
+    busy,
+    platformAvailable,
+    platformLoading,
     cardStatus,
+    errors: () => (state.allForm ? validateAll(state.allForm) : []),
+    title: () => (state.allForm ? inlineTitle('twitch', state.allForm) : ''),
     closeNotice,
     refreshState,
     verifyAction,
@@ -1177,7 +1180,6 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
     runPreset,
     setSubtitle,
     setTitle,
-    setTitleMode,
     setEnabled,
     setTemplate,
     resetTemplates,
@@ -1192,5 +1194,48 @@ export function useStreamInfo(options: { demo?: boolean } = {}) {
     openSettings,
     closeSettings,
     saveConnection,
+    start,
+    dispose,
   };
+
+  return streamInfo;
+}
+
+export interface StreamInfo {
+  state: AppState;
+  settings: ConnectionSettings;
+  search: SearchStatus;
+  version: string;
+  demoMode: boolean;
+  connectionText: () => string;
+  busy: () => boolean;
+  platformAvailable: (platform: Platform) => boolean;
+  platformLoading: (platform: Platform) => boolean;
+  cardStatus: (platform: Platform) => 'live' | 'offline' | 'disconnected';
+  errors: () => string[];
+  title: () => string;
+  closeNotice: (id: string) => void;
+  refreshState: (showError?: boolean) => Promise<void>;
+  verifyAction: () => Promise<void>;
+  connect: () => Promise<void>;
+  saveAll: () => Promise<void>;
+  runPreset: (id: string, name: string) => Promise<void>;
+  setSubtitle: (value: string) => void;
+  setTitle: (value: string) => void;
+  setEnabled: (value: boolean) => void;
+  setTemplate: (value: string) => void;
+  resetTemplates: () => void;
+  setCategoryQuery: (value: string, composing?: boolean) => void;
+  setTagDraft: (value: string) => void;
+  removeTag: (index: number) => void;
+  retrySearch: () => void;
+  moreCategories: () => void;
+  resetCategorySearch: () => void;
+  addTag: () => void;
+  chooseCategory: (id: string) => void;
+  openSettings: () => void;
+  closeSettings: () => void;
+  saveConnection: () => void;
+  start: () => void;
+  dispose: () => void;
 }

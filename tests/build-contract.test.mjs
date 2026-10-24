@@ -9,17 +9,14 @@ import { parse } from 'jsonc-parser';
 const root = resolve(import.meta.dirname, '..');
 const read = (name) => readFileSync(resolve(root, name), 'utf8');
 
-test('browser installation and UI tests use the same exact Playwright release', () => {
+test('browser installation and CI run the same exact Playwright release', () => {
   const manifest = JSON.parse(read('package.json'));
-  const catalog = JSON.parse(read('tooling/ui-catalog/package.json'));
   const lock = parse(read('bun.lock'));
-  const version = catalog.devDependencies.playwright;
+  const version = manifest.devDependencies['playwright-core'];
   assert.match(version, /^\d+\.\d+\.\d+$/);
   assert.equal(manifest.devDependencies['playwright-core'], version);
   assert.equal(lock.packages['playwright-core'][0], `playwright-core@${version}`);
   assert.equal(lock.workspaces[''].devDependencies['playwright-core'], version);
-  assert.equal(lock.packages.playwright[0], `playwright@${version}`);
-  assert.equal(lock.workspaces['tooling/ui-catalog'].devDependencies.playwright, version);
 });
 
 const license = readFileSync(new URL(import.meta.resolve('@maseaaao/design/license')), 'utf8')

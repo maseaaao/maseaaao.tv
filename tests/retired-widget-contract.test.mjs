@@ -26,28 +26,19 @@ test('retired widget has no source, artifact or dedicated behavioral suite', () 
     assert.doesNotMatch(name, retired, 'No retired delivery artifact');
 });
 
-test('active widget build, exports, installer and UI catalog do not reference the retired product', () => {
+test('active widget build, exports and installer do not reference the retired product', () => {
   const active = [
     'tooling/build-widgets.mjs',
     'tooling/sync-local.mjs',
     'apps/obs-widgets/vite.config.mjs',
     'apps/obs-widgets/package.json',
     ...files('apps/obs-widgets/src'),
-    ...files('tooling/ui-catalog/src'),
   ];
   for (const name of active) {
     assert.doesNotMatch(name, retired, `${name}: no retired entrypoint`);
     if (/\.(?:mjs|js|ts|vue|json|css|html)$/.test(name))
       assert.doesNotMatch(read(name), retired, `${name}: no retired reference`);
   }
-  const catalog = '.build-cache/storybook/index.json';
-  assert(
-    existsSync(resolve(root, catalog)),
-    'Build Storybook before checking the delivery catalog',
-  );
-  const index = JSON.parse(read(catalog));
-  assert(Object.values(index.entries).some((entry) => entry.exportName === 'Social'));
-  assert.doesNotMatch(read(catalog), /output[- ]stats|OutputStats|экраны-obs--statistics/i);
 });
 
 test('standalone build rejects the retired entrypoint instead of silently redirecting it', async () => {

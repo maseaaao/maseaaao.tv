@@ -1,7 +1,8 @@
-import { fileURLToPath } from 'node:url';
 import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import { standaloneConfig } from '@maseaaao/build-config';
 import { build } from 'vite';
+
 const root = fileURLToPath(new URL('./src/', import.meta.url));
 const config = standaloneConfig({ root, outDir: '../dist', fileName: 'obs-tuna-widget.html' });
 config.build.modulePreload = false;

@@ -8,6 +8,8 @@
 
 Сначала выполнить `bun run build` из корня. HTML лежат в `apps/*/dist`,
 изображения — в `artwork/scenes/rendered` и `artwork/logo/rendered`.
+Публиковаться должны прежние имена файлов: Stream Info —
+`change-info-streamer-bot.ru.html`, Tuna — `obs-tuna-widget.html`.
 Менять пути через OBS, сохраняя ID, размеры, положение и URL-параметры.
 После обновления файлов перезагрузить соответствующий док/браузерный источник.
 

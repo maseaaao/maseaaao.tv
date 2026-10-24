@@ -10,7 +10,6 @@
     "includes": [
       "**",
       "!!**/dist",
-      "!!.build-cache",
       "!!build",
       "!!**/rendered",
       "!!**/bin",
@@ -55,9 +54,6 @@
   },
   "linter": {
     "enabled": true,
-    "domains": {
-      "vue": "recommended"
-    },
     "rules": {
       "preset": "recommended",
       "correctness": {
@@ -164,8 +160,6 @@
     {
       "includes": [
         "tests/**/*.mjs",
-        "tooling/ui-portability/*.test.mjs",
-        "tooling/static-fixtures/*.test.mjs",
         "apps/stream-info/scripts/verify*-live.mjs",
         "tooling/artwork/*.mjs"
       ],
@@ -202,42 +196,12 @@
           }
         }
       }
-    },
-    {
-      "includes": ["apps/stream-info/src/components/SettingsDialog.vue"],
-      "linter": {
-        "rules": {
-          "a11y": {
-            "noStaticElementInteractions": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["packages/ui/src/AppButton.vue"],
-      "linter": {
-        "rules": {
-          "a11y": {
-            "useAnchorContent": "off"
-          }
-        }
-      }
     }
   ],
   "plugins": [
     {
       "path": "./tooling/biome/no-type-assertions.grit",
-      "includes": [
-        "**/*.vue",
-        "tooling/ui-portability/src/**/*.ts",
-        "tooling/static-fixtures/src/**/*.ts",
-        "tooling/ui-catalog/**/*.ts",
-        "packages/ui/**/*.ts"
-      ]
-    },
-    {
-      "path": "./tooling/biome/design-tokens.grit",
-      "includes": ["**/*.vue"]
+      "includes": ["packages/ui/**/*.ts"]
     }
   ],
   "css": {

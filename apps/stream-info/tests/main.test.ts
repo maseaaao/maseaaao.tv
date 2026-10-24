@@ -1,8 +1,7 @@
-import { mount, type VueWrapper } from '@vue/test-utils';
 import type { MockInstance } from 'vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { nextTick } from 'vue';
 import packageJson from '../package.json';
+import type { Dock } from '../src/render';
 import { parseRecord, required, textValue } from './assertions';
 import { mockStreamerbot } from './mocks/streamerbot-client';
 
@@ -15,6 +14,11 @@ vi.mock('@streamerbot/client', async () => {
   return module;
 });
 
+// Vue's nextTick already resolved one queued microtask hop: DOM was patched and
+// focus/scroll observers scheduled in queueMicrotask ran. The dock renders via
+// the same microtask queue, so one hop is the equivalent checkpoint here.
+const nextTick = (): Promise<void> => new Promise<void>((resolve) => queueMicrotask(resolve));
+
 const flush = async (): Promise<void> => {
   await Promise.resolve();
   await Promise.resolve();
@@ -24,7 +28,7 @@ const flush = async (): Promise<void> => {
 };
 
 type Field = HTMLInputElement | HTMLTextAreaElement;
-let wrapper: VueWrapper | undefined;
+let dock: Dock | undefined;
 
 // Deliberately small helpers: native labels/aria-label and explicit roles, not a
 // second accessibility-name implementation. All queries target the mounted DOM.
@@ -86,12 +90,14 @@ async function setValue(name: string | RegExp, value: string): Promise<Field> {
   await nextTick();
   return input;
 }
-async function boot(): Promise<void> {
-  wrapper?.unmount();
-  wrapper = undefined;
+async function boot(options?: { demo?: boolean }): Promise<void> {
+  // resetModules can leave the previous app's callbacks in place, so each boot
+  // imports a fresh copy and disposes the old dock explicitly.
+  dock?.dispose();
+  dock = undefined;
   document.body.innerHTML = '<div id="app"></div>';
-  const { default: App } = await import('../src/App.vue');
-  wrapper = mount(App, { attachTo: required(document.querySelector('#app')) });
+  const { initDock } = await import('../src/render');
+  dock = initDock(required(document.querySelector('#app')), options);
   await flush();
   await flush();
 }
@@ -172,7 +178,7 @@ function savedTemplateResponse(template: string): Record<string, unknown> {
   };
 }
 
-describe('Stream Info Vue interactions', () => {
+describe('Stream Info DOM interactions', () => {
   const open = vi.fn(() => null);
   const writeText = vi.fn(() => Promise.resolve());
   let timeoutSpy: MockInstance<typeof window.setTimeout>;
@@ -199,8 +205,8 @@ describe('Stream Info Vue interactions', () => {
   });
 
   afterEach(() => {
-    wrapper?.unmount();
-    wrapper = undefined;
+    dock?.dispose();
+    dock = undefined;
     document.body.replaceChildren();
     vi.clearAllTimers();
     vi.useRealTimers();
@@ -1092,8 +1098,8 @@ describe('Stream Info Vue interactions', () => {
       await click('Сохранить подключение');
       await flush();
     } else {
-      required(wrapper).unmount();
-      wrapper = undefined;
+      required(dock).dispose();
+      dock = undefined;
       await boot();
     }
   }
@@ -1607,8 +1613,8 @@ describe('Stream Info Vue interactions', () => {
     await setValue('Категория', 'Retired query');
     await vi.advanceTimersByTimeAsync(250);
     const stale = required(mockStreamerbot.pendingSearches[0]);
-    required(wrapper).unmount();
-    wrapper = undefined;
+    required(dock).dispose();
+    dock = undefined;
     await vi.advanceTimersByTimeAsync(0);
     expect(disconnect).toHaveBeenCalledTimes(1);
     expect(
@@ -1653,11 +1659,8 @@ describe('Stream Info Vue interactions', () => {
   });
 
   it('keeps an explicitly mounted showcase offline even when saving connection settings', async () => {
-    const { default: App } = await import('../src/App.vue');
-    wrapper = mount(App, {
-      props: { demo: true },
-      attachTo: required(document.querySelector('#app')),
-    });
+    const { initDock } = await import('../src/render');
+    dock = initDock(required(document.querySelector('#app')), { demo: true });
     await flush();
     await flush();
     expect(mockStreamerbot.connectCalls).toBe(0);

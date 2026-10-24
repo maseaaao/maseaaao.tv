@@ -5,17 +5,17 @@
 
 ## Продукты
 
-| Каталог | Назначение |
-| --- | --- |
-| [apps/website](apps/website/README.md) | Статический сайт из Vue SFC; публикация в корневом `dist` |
-| [apps/stream-info](apps/stream-info/README.md) | Русский док Twitch, C# API и импорт Streamer.bot |
-| [apps/tuna-widget](apps/tuna-widget/README.md) | Автономный музыкальный виджет |
-| [apps/obs-widgets](apps/obs-widgets/README.md) | Соцполоса, чат, CSS провайдеров и звуки |
-| [integrations/companion](integrations/companion/README.md) | Модули и запускатель Companion |
-| `integrations/streamerbot` | Интеграции Streamer.bot |
-| `artwork` | Логотип, сцены, баннеры, панели и обои |
-| `packages` | Общие дизайн-токены, UI и конфигурации сборки |
-| `tooling` | Сборка, проверки, генераторы и установка |
+| Каталог                                                    | Назначение                                                |
+| ---------------------------------------------------------- | --------------------------------------------------------- |
+| [apps/website](apps/website/README.md)                     | Статический сайт на HTML+TS; публикация в корневом `dist` |
+| [apps/stream-info](apps/stream-info/README.md)             | Русский док Twitch, C# API и импорт Streamer.bot          |
+| [apps/tuna-widget](apps/tuna-widget/README.md)             | Автономный музыкальный виджет                             |
+| [apps/obs-widgets](apps/obs-widgets/README.md)             | Соцполоса, чат, CSS провайдеров и звуки                   |
+| [integrations/companion](integrations/companion/README.md) | Модули и запускатель Companion                            |
+| `integrations/streamerbot`                                 | Интеграции Streamer.bot                                   |
+| `artwork`                                                  | Логотип, сцены, баннеры, панели и обои                    |
+| `packages`                                                 | Общие дизайн-токены, UI и конфигурации сборки             |
+| `tooling`                                                  | Сборка, проверки, генераторы и установка                  |
 
 ## Разработка
 
@@ -27,17 +27,14 @@ libvpx-vp9. Windows-приложения OBS, Streamer.bot и Companion оста
 ```bash
 bun install --frozen-lockfile
 bun run browser:install --with-deps
-python3 -m venv .runtime/venv
-. .runtime/venv/bin/activate
-python -m pip install -r tooling/artwork/requirements-fonts.txt
 bun run build
 bun run check
 bun run test
 ```
 
 Bun запускает package scripts; используйте `bun run test`, не `bun test`.
-Python-launcher выбирает `.runtime/venv/bin/python`, иначе `python` из PATH.
-Для своего Chromium задайте `CHROME_BIN`. На Ubuntu 26.04 с закреплённым
+Python-launcher берёт `python3`/`python` из PATH. Для своего Chromium задайте
+`CHROME_BIN`. На Ubuntu 26.04 с закреплённым
 Playwright при отсутствии браузерной сборки используйте
 `PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=ubuntu24.04-x64` перед установкой и тестами.
 

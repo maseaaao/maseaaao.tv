@@ -8,7 +8,7 @@ import { checkSourceMarkup } from '../tooling/source-markup.mjs';
 const root = resolve(import.meta.dirname, '..');
 const cli = resolve(root, 'node_modules/@biomejs/biome/bin/biome');
 let sequence = 0;
-function lint(source, extension = 'vue', directory = 'packages/ui/src') {
+function lint(source, extension = 'ts', directory = 'packages/ui') {
   const path = `${directory}/BiomePolicy${process.pid}_${sequence++}.${extension}`;
   const target = resolve(root, path);
   writeFileSync(target, source, { flag: 'wx' });
@@ -39,56 +39,35 @@ function lint(source, extension = 'vue', directory = 'packages/ui/src') {
 const has = (result, category) =>
   result.diagnostics.some((diagnostic) => diagnostic.category === category);
 
-test('Vue bindings count as uses, and semantic tokens remain allowed', () => {
-  const result = lint(
-    '<script setup lang="ts">const label = "Тест";</script><template><p>{{ label }}</p></template><style scoped>p { color: var(--color-text); background: color-mix(in srgb, var(--color-surface) 50%, transparent); }</style>',
+test('semantic tokens remain allowed in product sources', () => {
+  assert.equal(
+    lint(
+      'export function token(): string { return "color-mix(in srgb, var(--color-surface) 50%, transparent)"; }',
+    ).status,
+    0,
   );
-  assert.equal(result.status, 0, JSON.stringify(result));
 });
-test('type assertions are rejected both in TypeScript and embedded Vue scripts', () => {
-  const source = 'export const value = {} as string;';
-  assert(has(lint(source, 'ts', 'tooling/ui-catalog/src'), 'plugin'));
-  assert(
-    has(
-      lint(
-        `<script setup lang="ts">${source.replace('export ', '')}</script><template><p>{{ value }}</p></template>`,
-      ),
-      'plugin',
-    ),
-  );
-  assert(has(lint('export const value = <string>{};', 'ts', 'tooling/ui-catalog/src'), 'plugin'));
-});
-test('Vue colors are checked in gradients and function values, not just color declarations', () => {
-  for (const value of ['#fff', 'rgb(0 0 0)', 'hsl(0 0% 0%)', 'linear-gradient(#fff, #000)']) {
-    const result = lint(
-      `<template><p>Тест</p></template><style scoped>p { background: ${value}; }</style>`,
-    );
-    assert(
-      result.diagnostics.some(
-        (diagnostic) =>
-          diagnostic.category === 'plugin' && diagnostic.message.includes('design tokens'),
-      ),
-      JSON.stringify(result),
-    );
-  }
+test('type assertions are rejected in product TypeScript', () => {
+  assert(has(lint('export const value = {} as string;'), 'plugin'));
+  assert(has(lint('export const value = <string>{};'), 'plugin'));
 });
 test('strict TS and workspace import boundaries remain enforced', () => {
-  assert(has(lint('export const value: any = 1;', 'ts'), 'lint/suspicious/noExplicitAny'));
+  assert(has(lint('export const value: any = 1;'), 'lint/suspicious/noExplicitAny'));
   assert(
     has(
-      lint('export const value = document.querySelector("div")!;', 'ts'),
+      lint('export const value = document.querySelector("div")!;'),
       'lint/style/noNonNullAssertion',
     ),
   );
   assert(
     has(
-      lint('import value from "@maseaaao/website/src/private"; console.log(value);', 'ts'),
+      lint('import value from "@maseaaao/website/src/private"; console.log(value);'),
       'lint/style/noRestrictedImports',
     ),
   );
   assert(
     has(
-      lint('export function handle() { return missingBinding; }', 'ts'),
+      lint('export function handle() { return missingBinding; }'),
       'lint/correctness/noUndeclaredVariables',
     ),
   );
@@ -122,7 +101,7 @@ test('document contracts reject missing metadata and nested controls but accept 
   checkSourceMarkup('<span>{message}</span>', 'provider.html', { fragment: true });
 });
 test('Promise mistakes and cross-runtime globals are rejected', () => {
-  assert(has(lint('Promise.resolve(1);', 'ts'), 'lint/nursery/noFloatingPromises'));
+  assert(has(lint('Promise.resolve(1);'), 'lint/nursery/noFloatingPromises'));
   assert(has(lint('console.log(window.location);', 'mjs'), 'lint/style/noRestrictedGlobals'));
   assert(
     has(

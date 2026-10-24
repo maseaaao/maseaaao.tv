@@ -52,6 +52,13 @@ function decorate(source: string, className: string): string {
     .replace(/<title>.*?<\/title>/, '');
 }
 
+export type AppIcon = UiIcon | BrandIcon;
+
+export function anyIcon(name: AppIcon): string {
+  if (name === 'twitch') return brandIcon('twitch');
+  return uiIcon(name);
+}
+
 export function uiIcon(name: UiIcon): string {
   return decorate(uiSources[name], `icon icon-ui icon-${name}`);
 }

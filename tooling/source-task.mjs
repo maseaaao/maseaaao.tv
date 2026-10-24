@@ -25,18 +25,7 @@ const ignored = new Set([
   '.turbo',
   '.build-cache',
 ]);
-const extensions = new Set([
-  '.ts',
-  '.tsx',
-  '.vue',
-  '.js',
-  '.mjs',
-  '.cjs',
-  '.css',
-  '.html',
-  '.json',
-  '.md',
-]);
+const extensions = new Set(['.ts', '.tsx', '.js', '.mjs', '.cjs', '.css', '.html', '.json', '.md']);
 
 function collect(directory, files = []) {
   for (const entry of readdirSync(directory, { withFileTypes: true })) {

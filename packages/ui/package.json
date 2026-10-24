@@ -5,28 +5,15 @@
   "type": "module",
   "exports": {
     "./accessibility.css": "./accessibility.css",
-    "./AppButton.vue": "./src/AppButton.vue",
-    "./IconIndicator.vue": "./src/IconIndicator.vue",
-    "./FieldInput.vue": "./src/FieldInput.vue",
-    "./LiveStatusBadge.vue": "./src/LiveStatusBadge.vue",
     "./components.css": "./components.css"
   },
   "sideEffects": [
     "**/*.css"
   ],
   "dependencies": {
-    "@maseaaao/design": "workspace:*",
-    "vue": "3.5.44"
+    "@maseaaao/design": "workspace:*"
   },
   "devDependencies": {
-    "@maseaaao/build-config": "workspace:*",
-    "vue-tsc": "3.0.8",
-    "typescript": "5.8.3",
-    "@storybook/vue3-vite": "10.6.2",
-    "storybook": "10.6.2"
-  },
-  "scripts": {
-    "check": "vue-tsc --noEmit",
-    "source": "node ../../tooling/source-task.mjs"
+    "typescript": "5.8.3"
   }
 }

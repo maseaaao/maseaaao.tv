@@ -27,7 +27,7 @@ const json = (name) => JSON.parse(readFileSync(join(root, name), 'utf8'));
 const safe = (name) => {
   if (
     !name ||
-    /[\\:\x00-\x1f]/.test(name) ||
+    /[\\:]|\p{Cc}/u.test(name) ||
     name.split('/').some((part) => !part || part === '.' || part === '..' || /[. ]$/.test(part))
   )
     throw new Error(`Unsafe release path: ${name}`);

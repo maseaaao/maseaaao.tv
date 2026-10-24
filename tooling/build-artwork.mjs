@@ -1,10 +1,10 @@
-import { readdir, readFile, rm, mkdir, cp } from 'node:fs/promises';
+import { cp, mkdir, readdir, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { standaloneConfig } from '@maseaaao/build-config';
-import { build } from 'vite';
 import jsQR from 'jsqr';
 import sharp from 'sharp';
+import { build } from 'vite';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 export async function buildArtwork() {
