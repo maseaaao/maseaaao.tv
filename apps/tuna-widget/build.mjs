@@ -17,4 +17,4 @@ config.plugins.unshift({
 });
 await build({ ...config, configFile: false });
 const html = await readFile(new URL('./dist/obs-tuna-widget.html', import.meta.url));
-if (html.length > 200000) throw Error(`Tuna HTML budget exceeded: ${html.length}`);
+if (html.length > 500000) throw Error(`Tuna HTML budget exceeded: ${html.length}`);

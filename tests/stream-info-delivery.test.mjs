@@ -49,8 +49,11 @@ test('Stream Info file://: isolated delivery, 320/390/540, keyboard settings and
         const missing = [];
         for (const weight of weights) {
           const fonts = await document.fonts.load(`${weight} 20px Unbounded`, 'Проверка English');
-          if (!fonts.some((font) => font.status === 'loaded' && font.weight === weight))
-            missing.push(weight);
+          const loaded = fonts.some((font) => {
+            const [lower, upper = lower] = font.weight.split(/\s+/).map(Number);
+            return font.status === 'loaded' && lower <= Number(weight) && Number(weight) <= upper;
+          });
+          if (!loaded) missing.push(weight);
         }
         return missing;
       });

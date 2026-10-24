@@ -34,11 +34,12 @@ for (const [name, weight] of [
     const text = read(name).replaceAll('\r\n', '\n');
     assert(!read(name).includes('\r'), 'Generated text uses canonical LF on every platform');
     const fonts = [...text.matchAll(/data:font\/woff2;base64,([A-Za-z0-9+/=]+)/g)];
-    assert.equal(fonts.length, 1, 'One font-face, no embedded copies');
+    assert.equal(fonts.length, 1, 'One variable font, no embedded copies');
     const expected = readFileSync(
-      new URL(import.meta.resolve(`@maseaaao/design/fonts/unbounded-${weight}.woff2`)),
+      new URL(import.meta.resolve('@maseaaao/design/fonts/unbounded-variable.woff2')),
     );
     assert(Buffer.from(fonts[0][1], 'base64').equals(expected), `Canonical Unbounded ${weight}`);
+    assert.match(text, /font-weight:\s*200 900/);
     assert(text.includes(license));
     if (name.endsWith('.html')) {
       const { document } = new JSDOM(text).window;
@@ -53,10 +54,10 @@ for (const [name, weight] of [
 test('the website publishes the canonical font under a fingerprinted URL and preloads the same bytes', () => {
   const { document } = new JSDOM(read('dist/index.html')).window;
   const href = document.querySelector('link[rel="preload"][as="font"]').getAttribute('href');
-  assert.match(href, /^\/bundles\/unbounded-400-[\w-]+\.woff2$/);
+  assert.match(href, /^\/bundles\/unbounded-variable-[\w-]+\.woff2$/);
   assert(
     readFileSync(resolve(root, 'dist', href.slice(1))).equals(
-      readFileSync(new URL(import.meta.resolve('@maseaaao/design/fonts/unbounded-400.woff2'))),
+      readFileSync(new URL(import.meta.resolve('@maseaaao/design/fonts/unbounded-variable.woff2'))),
     ),
   );
   assert(read('dist/_headers').includes('/bundles/*'));

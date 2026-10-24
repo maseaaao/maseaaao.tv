@@ -6,13 +6,9 @@ const root = new URL('../', import.meta.url);
 test('production rebuild uses current generators without retired aliases', async () => {
   const p = JSON.parse(await fs.readFile(new URL('package.json', root), 'utf8'));
   assert.equal(p.scripts['render:scenes'], 'node tooling/artwork/build-cyber-scenes.mjs');
-  for (const weight of [400, 600]) {
-    const font = await fs.readFile(
-      new URL(`packages/design/fonts/unbounded-${weight}.woff2`, root),
-    );
-    assert.equal(font.toString('ascii', 0, 4), 'wOF2');
-    assert.equal(font.readUInt32BE(8), font.length);
-  }
+  const font = await fs.readFile(new URL('packages/design/fonts/unbounded-variable.woff2', root));
+  assert.equal(font.toString('ascii', 0, 4), 'wOF2');
+  assert.equal(font.readUInt32BE(8), font.length);
   assert.match(
     await fs.readFile(new URL('packages/design/licenses/Unbounded-OFL.txt', root), 'utf8'),
     /SIL OPEN FONT LICENSE/,

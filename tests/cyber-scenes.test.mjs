@@ -53,7 +53,7 @@ for (const [stem, copy] of [
         assert.ok(
           await page.evaluate(() =>
             [...document.fonts].some(
-              (f) => f.family === 'Unbounded' && f.weight === '400' && f.status === 'loaded',
+              (f) => f.family === 'Unbounded' && f.weight === '200 900' && f.status === 'loaded',
             ),
           ),
         );

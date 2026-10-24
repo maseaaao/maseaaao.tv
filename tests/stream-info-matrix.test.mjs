@@ -17,7 +17,7 @@ function matrixBuildConfig(
     root,
     outDir,
     fileName,
-    budgets: { html: 400000, js: 220000 },
+    budgets: { html: 500000, js: 220000 },
   });
   return { ...config, configFile: false, build: { ...config.build, emptyOutDir: false } };
 }
@@ -49,8 +49,8 @@ test('scratch HTML budget reads fresh output without a dist directory', async ()
     const html = join(outDir, fileName);
     await writeFile(html, '<!doctype html><title>Fresh scratch output</title>');
     await guard.writeBundle();
-    await writeFile(html, 'x'.repeat(400001));
-    await assert.rejects(() => guard.writeBundle(), /HTML budget exceeded: 400001 > 400000/);
+    await writeFile(html, 'x'.repeat(500001));
+    await assert.rejects(() => guard.writeBundle(), /HTML budget exceeded: 500001 > 500000/);
   } finally {
     await rm(isolated, { recursive: true, force: true });
   }

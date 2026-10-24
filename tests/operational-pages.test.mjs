@@ -137,7 +137,7 @@ for (const file of ['check.html', 'docs.html']) {
             overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
             bodyFont: getComputedStyle(document.body).fontFamily,
             accentLoaded: [...document.fonts].some(
-              (f) => f.family === 'Unbounded' && f.weight === '400' && f.status === 'loaded',
+              (f) => f.family === 'Unbounded' && f.weight === '200 900' && f.status === 'loaded',
             ),
             small: [...document.querySelectorAll('a,button')]
               .filter(
@@ -186,7 +186,7 @@ test('all banners and Twitch panels load local fonts without clipping supplied h
       assert.equal(
         await page.evaluate(() =>
           [...document.fonts].some(
-            (f) => f.family === 'Unbounded' && f.weight === '400' && f.status === 'loaded',
+            (f) => f.family === 'Unbounded' && f.weight === '200 900' && f.status === 'loaded',
           ),
         ),
         true,

@@ -39,5 +39,5 @@ function providerDesignTokens() {
   };
 }
 export function providerPlugins() {
-  return [atImport(), url({ url: 'inline', maxSize: 200 }), providerDesignTokens()];
+  return [atImport(), url({ url: 'inline', maxSize: 500 }), providerDesignTokens()];
 }

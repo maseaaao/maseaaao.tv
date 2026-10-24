@@ -10,7 +10,7 @@
 
 Статический сайт: исходники страниц — чистые HTML+TS, runtime-фреймворка, SSR
 и гидрации нет ни в исходниках, ни в сборке. Общие CSS-классы действий
-импортируются из `@maseaaao/ui/components.css`. Шрифт — Unbounded 400 с
+импортируются из `@maseaaao/ui/components.css`. Шрифт — Unbounded Variable WOFF2 (вес 400) с
 content hash и preload, основной текст — Arial. OFL публикуется отдельно.
 Budgets: суммарный клиентский JS ≤12000 байт, HTML каждой страницы ≤25000 байт
 (без gzip).

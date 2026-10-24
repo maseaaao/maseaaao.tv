@@ -23,7 +23,7 @@ before(async () => {
     root: resolve(root, 'apps/tuna-widget/src'),
     outDir: join(directory, 'delivery'),
     fileName: 'obs-tuna-widget.html',
-    budgets: { html: 200000, js: 12000 },
+    budgets: { html: 500000, js: 12000 },
   });
   config.build.modulePreload = false;
   await build({ ...config, configFile: false });

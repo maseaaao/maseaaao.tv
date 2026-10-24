@@ -61,6 +61,11 @@ test('artwork renderer rejects a missing accent font before writing an export', 
 });
 
 for (const [declared, requested, passes] of [
+  ['200 900', 200, true],
+  ['200 900', 400, true],
+  ['200 900', 450, true],
+  ['200 900', 600, true],
+  ['200 900', 900, true],
   [400, 400, true],
   [600, 600, true],
   [600, 400, false],
@@ -70,7 +75,7 @@ for (const [declared, requested, passes] of [
     const browser = await launchBrowser();
     try {
       const font = await readFile(
-        new URL(import.meta.resolve(`@maseaaao/design/fonts/unbounded-${declared}.woff2`)),
+        new URL(import.meta.resolve('@maseaaao/design/fonts/unbounded-variable.woff2')),
       );
       const source = join(directory, 'source.html');
       const target = join(directory, 'export.png');

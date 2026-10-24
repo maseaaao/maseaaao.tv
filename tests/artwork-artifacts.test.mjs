@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { cp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -54,7 +62,7 @@ test('all artwork envelopes come from Vite output with embedded local resources 
       assert.equal(fonts.length, 1);
       assert(
         Buffer.from(fonts[0][1], 'base64').equals(
-          readFileSync(join(root, 'packages/design/fonts/unbounded-400.woff2')),
+          readFileSync(join(root, 'packages/design/fonts/unbounded-variable.woff2')),
         ),
       );
       pages++;

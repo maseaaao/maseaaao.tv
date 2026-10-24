@@ -6,9 +6,7 @@
     "./fonts.css": "./fonts.css",
     "./tokens.css": "./tokens.css",
     "./fonts/*": "./fonts/*",
-    "./license": "./licenses/Unbounded-OFL.txt",
-    "./fonts-400.css": "./fonts-400.css",
-    "./fonts-600.css": "./fonts-600.css"
+    "./license": "./licenses/Unbounded-OFL.txt"
   },
   "version": "1.0.0",
   "sideEffects": [

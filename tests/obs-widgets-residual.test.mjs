@@ -128,7 +128,8 @@ test('real Chromium provider-shaped text stress fixtures load fonts and retain l
     assert.equal(await page.locator('#log > div[data-from="imaseaaao"].mention').count(), 0);
     const metrics = await page.evaluate(() => ({
       font: [...document.fonts].some(
-        (face) => face.family === 'Unbounded' && face.weight === '400' && face.status === 'loaded',
+        (face) =>
+          face.family === 'Unbounded' && face.weight === '200 900' && face.status === 'loaded',
       ),
       weight: getComputedStyle(document.querySelector('#log .meta')).fontWeight,
       bg: getComputedStyle(document.querySelector('#log>div.mention')).backgroundColor,
@@ -184,7 +185,7 @@ test('real Chromium provider-shaped text stress fixtures load fonts and retain l
           weight: getComputedStyle(row).fontWeight,
           loaded400: [...document.fonts].some(
             (face) =>
-              face.family === 'Unbounded' && face.weight === '400' && face.status === 'loaded',
+              face.family === 'Unbounded' && face.weight === '200 900' && face.status === 'loaded',
           ),
           text: getComputedStyle(text).color,
           x: rect.right,
