@@ -10,7 +10,7 @@ test('workspace uses one pinned Bun installation contract', () => {
   assert.match(version, /^\d+\.\d+\.\d+$/);
   assert.equal(pkg.packageManager, `bun@${version}`);
   assert.equal(pkg.engines.bun, version);
-  assert.deepEqual(pkg.trustedDependencies, ['esbuild', 'sharp']);
+  assert.deepEqual(pkg.trustedDependencies, ['esbuild', 'sharp', 'workerd']);
   assert.match(read('bunfig.toml'), /linker\s*=\s*"isolated"/);
   assert(Array.isArray(pkg.workspaces) && pkg.workspaces.length > 0);
   assert(!/\b(?:npm|pnpm)\b/.test(JSON.stringify(pkg.scripts)));

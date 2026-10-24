@@ -4,6 +4,7 @@
   "scripts": {
     "build": "bun run build:website",
     "build:website": "bun run --filter ./apps/website build",
+    "deploy:website": "bun run build:website && bunx wrangler deploy",
     "build:stream-info": "bun run --filter ./apps/stream-info build",
     "check:stream-info": "bun run --filter ./apps/stream-info check",
     "test:stream-info": "bun run --filter ./apps/stream-info test",
@@ -64,6 +65,7 @@
     "sharp": "^0.35.5",
     "vite": "6.4.3",
     "vite-plugin-singlefile": "2.3.4",
+    "wrangler": "4.152.0",
     "yaml": "2.8.1",
     "@maseaaao/artwork": "workspace:*",
     "@biomejs/biome": "2.6.2"
@@ -82,6 +84,7 @@
   "packageManager": "bun@1.4.4",
   "trustedDependencies": [
     "esbuild",
-    "sharp"
+    "sharp",
+    "workerd"
   ]
 }

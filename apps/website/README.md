@@ -8,7 +8,12 @@
 
 `check.html` — отдельный диагностический инструмент, который **сохраняет** создание Twitch/YouTube iframe по запросу пользователя и независимый JS `check.ts`. Его тесты не должны подменять контракт главной страницы.
 
-Vue, SSR и гидрации нет ни в исходниках страниц, ни в сборке. Общие CSS-классы действий импортируются из `@maseaaao/ui/components.css`. Шрифт — Unbounded 400 с content hash и preload, основной текст — Arial. OFL публикуется отдельно. Budgets: суммарный клиентский JS ≤12000 байт, HTML каждой страницы ≤25000 байт (без gzip).
+Статический сайт: исходники страниц — чистые HTML+TS, runtime-фреймворка, SSR
+и гидрации нет ни в исходниках, ни в сборке. Общие CSS-классы действий
+импортируются из `@maseaaao/ui/components.css`. Шрифт — Unbounded 400 с
+content hash и preload, основной текст — Arial. OFL публикуется отдельно.
+Budgets: суммарный клиентский JS ≤12000 байт, HTML каждой страницы ≤25000 байт
+(без gzip).
 
 Проверки: `bun run build:website`, `bun run check:ui`, `bun run test:website`; новые сценарии `tests/landing-corrections.test.mjs`, `tests/landing-sync.test.mjs`, `tests/website-build.test.mjs` проверяют отсутствие remote media и доступность ссылок. Для запуска браузерных тестов нужны Playwright Chromium либо `CHROME_BIN`. Изменения исходников до сборки не означают обновление tracked `dist`.
 

@@ -36,7 +36,7 @@ test('active widget build, exports and installer do not reference the retired pr
   ];
   for (const name of active) {
     assert.doesNotMatch(name, retired, `${name}: no retired entrypoint`);
-    if (/\.(?:mjs|js|ts|vue|json|css|html)$/.test(name))
+    if (/\.(?:mjs|js|ts|json|css|html)$/.test(name))
       assert.doesNotMatch(read(name), retired, `${name}: no retired reference`);
   }
 });

@@ -7,7 +7,7 @@
 ## API
 
 - [components.css](components.css): классовые эквиваленты прежних
-  vue-компонентов — `.app-button` (`primary`, `secondary`, `icon`,
+  компонентов — `.app-button` (`primary`, `secondary`, `icon`,
   `app-button--loading`), `.field-input`, `.icon-indicator`
   (`data-status="connected|connecting|disconnected|error"`),
   `.live-status-badge` (`live-status-badge--live|offline|notConnected`),

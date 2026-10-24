@@ -1,6 +1,6 @@
 # Artwork
 
-HTML-файлы в каталогах сцен, баннеров, Twitch-панелей, brand, логотипа и обоев — авторские исходники композиций. Vite/singlefile собирает 27 автономных HTML в `.build-cache/artwork` без Vue, SSR или собственного шаблонизатора. Общие стили находятся в `styles.css` и CSS соответствующих композиций; палитра и шрифт импортируются из `@maseaaao/design`.
+HTML-файлы в каталогах сцен, баннеров, Twitch-панелей, brand, логотипа и обоев — авторские исходники композиций. Vite/singlefile собирает 27 автономных HTML в `.build-cache/artwork` без SSR и собственного шаблонизатора. Общие стили находятся в `styles.css` и CSS соответствующих композиций; палитра и шрифт импортируются из `@maseaaao/design`.
 
 `bun run build:artwork` проверяет утверждённый QR и готовит HTML. Затем `bun run render:scenes`, `render:banners`, `render:twitch-description`, `render:wallpapers` и `brand:assets` создают нужные изображения общим `renderImage`. Каждая отдельная команда подготавливает HTML; если HTML уже подготовлен, можно вызвать соответствующий скрипт с `--prepared`. Рендер проверяет реальные начертания шрифта, загрузку локальных изображений и размеры, блокирует сеть. Источники при генерации не меняются.
 
@@ -10,4 +10,4 @@ HTML-файлы в каталогах сцен, баннеров, Twitch-пан�
 
 `logo/logo.png` и `apps/website/public/assets/maseaaao.tv.png` — защищённые оригиналы. Утверждённые avatar WEBP перенесены побайтово. `render:logo` обновляет только производные аватара, QR не генерирует. Оптимизация пропускает оба защищённых оригинала и по умолчанию обходит только каталоги результатов. Сборка и рендер не устанавливают оформление в OBS и не публикуют сайт.
 
-Проверки: `tests/artwork-vue.test.mjs`, `cyber-scenes`, `cyber-scene-corrections`, `banner-dimensions`, `operational-pages`, `render-image`, `source-isolation`; автономные композиции проверяются из результатов Vite. Целевая Windows 11/OBS/Chrome приёмка отмечается отдельно от macOS-разработки.
+Проверки: `tests/artwork-artifacts.test.mjs`, `cyber-scenes`, `cyber-scene-corrections`, `banner-dimensions`, `operational-pages`, `render-image`, `source-isolation`; автономные композиции проверяются из результатов Vite. Целевая Windows 11/OBS/Chrome приёмка отмечается отдельно от macOS-разработки.

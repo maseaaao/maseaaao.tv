@@ -16,8 +16,6 @@ export default async ({ mode: product }) => {
       for (const entry of Object.values(bundle)) {
         if (entry.type !== 'chunk') continue;
         bytes += Buffer.byteLength(entry.code);
-        if (Object.keys(entry.modules).some((id) => /[/\\](?:@vue|vue)[/\\]/.test(id)))
-          throw Error('Static widgets must not ship Vue runtime or compiler');
       }
       if (bytes > 35000) throw Error(`Widget JS budget exceeded: ${bytes} > 35000`);
     },

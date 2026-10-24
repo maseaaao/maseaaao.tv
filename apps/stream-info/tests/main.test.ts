@@ -14,9 +14,8 @@ vi.mock('@streamerbot/client', async () => {
   return module;
 });
 
-// Vue's nextTick already resolved one queued microtask hop: DOM was patched and
-// focus/scroll observers scheduled in queueMicrotask ran. The dock renders via
-// the same microtask queue, so one hop is the equivalent checkpoint here.
+// Один микротаск-хоп: reactive-выкладка запускается из queueMicrotask, фокус и
+// обсерверы скролла планируются там же, поэтому один хоп — готовый checkpoint.
 const nextTick = (): Promise<void> => new Promise<void>((resolve) => queueMicrotask(resolve));
 
 const flush = async (): Promise<void> => {
@@ -756,7 +755,7 @@ describe('Stream Info DOM interactions', () => {
     expect(option.querySelector('strong')?.textContent).toBe('<img src=x onerror="unsafe()">');
     required(option.querySelector('img')).dispatchEvent(new Event('error'));
     await nextTick();
-    // The Vue cover removes a failed image rather than hiding it with legacy CSS.
+    // Обложка удаляет не загрузившуюся картинку вместо устаревшего CSS-скрытия.
     expect(option.querySelector('img')).toBeNull();
     const fallback = required(option.querySelector('svg.icon-defaultCategory'));
     expect(getComputedStyle(fallback).display).not.toBe('none');

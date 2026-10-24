@@ -83,7 +83,7 @@ test('build configuration is not imported into browser runtime and fonts are not
     'apps/tuna-widget/src',
     'apps/obs-widgets/src',
   ]) {
-    for (const file of files(directory).filter((name) => /\.(?:css|html|js|ts|vue)$/.test(name))) {
+    for (const file of files(directory).filter((name) => /\.(?:css|html|js|ts)$/.test(name))) {
       const source = read(file);
       assert(!/data:font\/[^;]+;base64,/.test(source), `Embedded font in source: ${file}`);
       assert(

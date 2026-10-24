@@ -8,4 +8,6 @@
 
 После обновления проверить отображение в работающем OBS. Сборка экспортов не изменяет коллекции сцен и не запускает эфир.
 
-HTML собираются официальным Vue SSR/Vite через `.build-cache/artwork-vue/ssr` в `.build-cache/artwork/scenes`. Для локального просмотра: `bun run build:artwork`. Редактируемый CSS — obs-scene.css; изображения OBS по-прежнему находятся в rendered.
+HTML собираются Vite/singlefile в `.build-cache/artwork/scenes`. Для локального
+просмотра: `bun run build:artwork`. Редактируемый CSS — obs-scene.css;
+изображения OBS по-прежнему находятся в rendered.

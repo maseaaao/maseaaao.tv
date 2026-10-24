@@ -26,7 +26,7 @@ test('website can be rebuilt repeatedly while retaining traversable nested direc
   }
 });
 
-test('all six Vue pages ship readable static HTML and retain only product scripts', () => {
+test('all six pages ship readable static HTML and retain only product scripts', () => {
   const root = resolve(import.meta.dirname, '..');
   for (const name of [
     'index.html',

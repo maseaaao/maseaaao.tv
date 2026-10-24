@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { cp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -24,7 +24,7 @@ test('artwork preserves approved logo, QR and all avatar bytes across the output
     assert.equal(hash(readFileSync(join(root, name))), entry.sha256, name);
   }
 });
-test('all artwork envelopes use official SSR output with embedded local resources and bounded product JS', () => {
+test('all artwork envelopes come from Vite output with embedded local resources and bounded product JS', () => {
   let pages = 0;
   for (const directory of [
     'scenes',
@@ -37,13 +37,11 @@ test('all artwork envelopes use official SSR output with embedded local resource
     for (const name of readdirSync(join(root, 'artwork', directory)).filter((name) =>
       name.endsWith('.html'),
     )) {
-      const source = readFileSync(join(root, 'artwork', directory, name), 'utf8');
-      assert(source.includes('<!--page-content-->'));
+      assert(existsSync(join(root, 'artwork', directory, name)), `${directory}/${name}`);
       const html = readFileSync(join(root, '.build-cache/artwork', directory, name), 'utf8');
       const { document } = new JSDOM(html).window;
       assert.equal(document.documentElement.lang, 'ru');
       assert.equal(document.querySelectorAll('main').length, 1, directory + '/' + name);
-      assert(!html.includes('<!--page-'));
       assert.equal(document.querySelectorAll('script[src],link[rel="stylesheet"][href]').length, 0);
       for (const image of document.querySelectorAll('img,svg image'))
         assert((image.getAttribute('src') ?? image.getAttribute('href') ?? '').startsWith('data:'));

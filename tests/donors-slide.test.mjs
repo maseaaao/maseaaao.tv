@@ -134,7 +134,7 @@ test('donor panel stays fixed while text rolls, including v-show, long names and
         assert.equal(
           frames.oldHidden,
           true,
-          'Vue receives transitionend and hides the outgoing donor',
+          'transitionend is applied and hides the outgoing donor',
         );
         assert.equal(frames.overflow, false, 'Two lines fit without vertical clipping');
         assert.equal(frames.finalRotate, 'x 0deg', 'Resting text is flat');

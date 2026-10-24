@@ -118,14 +118,13 @@ test('Stream Info built file:// uses the real client protocol and preserves sett
     await page.goto(pathToFileURL(file).href);
     const subtitle = page.getByLabel(/^(Подзаголовок|Название)$/);
     await subtitle.waitFor();
-    await subtitle.fill('Проверка автономного Vue-дока');
+    await subtitle.fill('Проверка автономного дока');
     await page.getByRole('button', { name: 'Применить изменения', exact: true }).click();
     await page.waitForFunction(() => document.body.textContent.includes('Изменения применены'));
     assert(
       commands.some(
         (entry) =>
-          entry.command === 'updateTwitch' &&
-          entry.payload.title === 'Проверка автономного Vue-дока',
+          entry.command === 'updateTwitch' && entry.payload.title === 'Проверка автономного дока',
       ),
     );
     const saved = await page.evaluate(() =>
@@ -139,7 +138,7 @@ test('Stream Info built file:// uses the real client protocol and preserves sett
     await reopened.getByLabel(/^(Подзаголовок|Название)$/).waitFor();
     assert.equal(
       await reopened.getByLabel(/^(Подзаголовок|Название)$/).inputValue(),
-      'Проверка автономного Vue-дока',
+      'Проверка автономного дока',
     );
     assert.deepEqual(errors, []);
     await context.close();

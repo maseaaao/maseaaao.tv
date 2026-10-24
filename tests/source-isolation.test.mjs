@@ -16,7 +16,6 @@ test('builds preserve sources, clean owned outputs and standalone builds preserv
     'apps/stream-info/src',
     'packages/design',
     'packages/ui',
-    'artwork/components',
     'artwork/scenes',
     'artwork/banners',
     'artwork/brand',
