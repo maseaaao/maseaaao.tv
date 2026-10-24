@@ -33,12 +33,7 @@ blur дочернего текста не должен преждевремен�
 `render:banners`, `render:twitch-description`, `render:wallpapers`, `render:favicon`.
 Вызов: `bun run <имя>`. Сначала изменить источник, затем пересобрать нужный экспорт.
 
-Для дополнительных WebM начала/паузы/конца: `bun run render:scene-motion`
-(FFmpeg с libvpx-vp9); одна сцена — `bun run render:scene-motion --scene=01-start`.
-После изменения статичных сцен сначала выполнить `bun run render:scenes`.
-Видео используют готовые WebP и layout, не меняют QR/геометрию и не устанавливаются
-в OBS автоматически. Reduced-motion не влияет на записанное видео: для неподвижной
-сцены выбрать WebP. Настройка сцен: [artwork/scenes/SETUP.md](../artwork/scenes/SETUP.md).
+Настройка сцен: [artwork/scenes/SETUP.md](../artwork/scenes/SETUP.md).
 
 Tracked exports проверяются побайтово в согласованной Linux-среде. При изменении
 шрифта, геометрии или среды просмотра проверить новые изображения; не принимать

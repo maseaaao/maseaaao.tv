@@ -20,8 +20,8 @@
 ## Разработка
 
 Работать в Linux/WSL2 с Linux-версиями Bun и Node из `.bun-version` и
-`.node-version`. Нужны .NET SDK 8 и системный `tar`; для видео сцен — FFmpeg с
-libvpx-vp9. Windows-приложения OBS, Streamer.bot и Companion остаются в Windows.
+`.node-version`. Нужны .NET SDK 8 и системный `tar`.
+Windows-приложения OBS, Streamer.bot и Companion остаются в Windows.
 Не использовать Windows `node_modules` или `node.exe` в WSL.
 
 ```bash

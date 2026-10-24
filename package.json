@@ -45,7 +45,6 @@
     "verify:products": "bun run build:all",
     "check:artifacts": "node tooling/check-generated-artifacts.mjs",
     "verify:ui-renewal": "bun run check:source && bun run verify:artwork && bun run verify:products && bun run check:repository && bun run test:checks && bun run check:artifacts && git diff --check",
-    "render:scene-motion": "node tooling/artwork/render-scene-motion.mjs",
     "check:biome": "biome ci --error-on-warnings .",
     "check:fix": "biome check --write --error-on-warnings .",
     "test:source-policy": "node --test tests/biome-policy.test.mjs",

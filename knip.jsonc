@@ -1,7 +1,5 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
-  // FFmpeg is provided by the development/CI environment.
-  "ignoreBinaries": ["ffmpeg"],
   "ignoreFiles": ["**/dist/**"],
   "workspaces": {
     ".": {
