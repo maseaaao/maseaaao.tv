@@ -2,16 +2,14 @@ param(
     [string]$Root = (Join-Path $env:LOCALAPPDATA 'maseaaao.tv\runtime'),
     [string]$Product,
     [string]$Version,
-    [string]$Bundle,
     [string]$Rollback,
     [switch]$All,
     [switch]$Recover,
     [switch]$Apply
 )
 $ErrorActionPreference = 'Stop'
-$modes = @($All.IsPresent, [bool]$Product, [bool]$Bundle, [bool]$Rollback, $Recover.IsPresent) | Where-Object { $_ }
-if ($modes.Count -gt 1) { throw 'Choose one of -All, -Product, -Bundle, -Rollback or -Recover.' }
-if ($Version -and -not $Product) { throw '-Version requires -Product.' }
+$modes = @($All.IsPresent, [bool]$Product, [bool]$Rollback, $Recover.IsPresent) | Where-Object { $_ }
+if ($modes.Count -gt 1) { throw 'Choose one of -All, -Product, -Rollback or -Recover.' }
 $pythonCommand = Get-Command python -ErrorAction SilentlyContinue
 $pythonPrefix = @()
 if (-not $pythonCommand) {
@@ -23,7 +21,6 @@ if (-not $pythonCommand) { throw 'Install Python 3.10 or newer for Windows. No p
 if ($LASTEXITCODE -ne 0) { throw 'Python 3.10 or newer is required.' }
 $arguments = @((Join-Path $PSScriptRoot 'update_releases.py'), '--root', $Root)
 if ($Product) { $arguments += @('--product', $Product) }
-elseif ($Bundle) { $arguments += @('--bundle', $Bundle) }
 elseif ($Rollback) { $arguments += @('--rollback', $Rollback) }
 elseif ($Recover) { $arguments += '--recover' }
 else { $arguments += '--all' }

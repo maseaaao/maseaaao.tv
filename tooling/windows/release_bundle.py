@@ -69,16 +69,7 @@ def reject_links(path):
     return path
 
 
-def validate_manifest(doc):
-    if doc.get('schemaVersion') != SCHEMA or doc.get('runtimeLayout') != 1:
-        raise ValueError('Unsupported package schema/runtime layout; update the updater')
-    if not ID.fullmatch(doc.get('product', '')):
-        raise ValueError('Invalid product id')
-    safe_name(doc['product'])
-    version_tuple(doc.get('version'))
-    if doc.get('tag') != f"{doc['product']}-v{doc['version']}":
-        raise ValueError('Package tag mismatch')
-    files = doc.get('files')
+def _validate_files(files):
     if not isinstance(files, list) or not 0 < len(files) <= MAX_FILES:
         raise ValueError('Invalid package file count')
     seen, total = set(), 0
@@ -97,6 +88,68 @@ def validate_manifest(doc):
     for name in seen:
         if any('/'.join(name.split('/')[:n]) in seen for n in range(1, len(name.split('/')))):
             raise ValueError('File/directory collision')
+    return seen
+
+
+def validate_bundle_manifest(doc):
+    """Whole-bundle release manifest (schema 2), products as top-level zip folders."""
+    if doc.get('schemaVersion') != 2 or doc.get('runtimeLayout') != 1:
+        raise ValueError('Unsupported bundle schema/runtime layout; update the updater')
+    tag = doc.get('tag', '')
+    if not tag.startswith('v'):
+        raise ValueError('Bundle tag mismatch')
+    version_tuple(tag[1:])
+    if not re.fullmatch('[0-9a-f]{40}', doc.get('commit', '')):
+        raise ValueError('Invalid bundle commit')
+    products = doc.get('products')
+    if not isinstance(products, list) or not products:
+        raise ValueError('Invalid bundle products')
+    ids = set()
+    for product in products:
+        if not ID.fullmatch(product.get('id', '')) or product['id'] in ids:
+            raise ValueError('Invalid/duplicate bundle product')
+        ids.add(product['id'])
+        version_tuple(product.get('version'))
+    seen = _validate_files(doc.get('files'))
+    for product in ids:
+        if not any(name.startswith(product + '/') for name in seen):
+            raise ValueError(f'Bundle misses files for {product}')
+    archive = doc.get('archive', {})
+    if (not ID.fullmatch(archive.get('name', '').split('-', 1)[0])
+            or type(archive.get('size')) is not int or not 0 < archive['size'] <= MAX_BYTES
+            or not re.fullmatch('[0-9a-f]{64}', archive.get('sha256', ''))):
+        raise ValueError('Invalid bundle archive metadata')
+    return doc
+
+
+def product_manifest(bundle, product):
+    """Per-product view of a bundle manifest with the product prefix stripped."""
+    entry = next((p for p in validate_bundle_manifest(bundle)['products'] if p['id'] == product), None)
+    if entry is None:
+        raise ValueError(f'Bundle does not contain {product}')
+    prefix = product + '/'
+    files = [dict(path=f['path'][len(prefix):], size=f['size'], sha256=f['sha256'])
+             for f in bundle['files'] if f['path'].startswith(prefix)]
+    doc = dict(schemaVersion=SCHEMA, runtimeLayout=1, product=product, version=entry['version'],
+               tag=bundle['tag'], activation=entry.get('activation', 'Files installed'),
+               requires=entry.get('requires', {}), files=files, archive=bundle['archive'])
+    return validate_manifest(doc)
+
+
+def validate_manifest(doc):
+    if doc.get('schemaVersion') != SCHEMA or doc.get('runtimeLayout') != 1:
+        raise ValueError('Unsupported package schema/runtime layout; update the updater')
+    if not ID.fullmatch(doc.get('product', '')):
+        raise ValueError('Invalid product id')
+    safe_name(doc['product'])
+    version_tuple(doc.get('version'))
+    tag = doc.get('tag', '')
+    if tag != f"{doc['product']}-v{doc['version']}":
+        # Bundled releases carry the shared bundle tag instead of a product tag.
+        if not tag.startswith('v'):
+            raise ValueError('Package tag mismatch')
+        version_tuple(tag[1:])
+    _validate_files(doc.get('files'))
     requirements = doc.get('requires', {})
     if not isinstance(requirements, dict):
         raise ValueError('Invalid requirements')

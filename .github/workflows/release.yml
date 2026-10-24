@@ -1,134 +1,50 @@
-name: Release independent tool
+name: Release
 on:
   push:
-    tags:
-      [
-        "stream-info-v*",
-        "tuna-widget-v*",
-        "obs-widgets-v*",
-        "artwork-v*",
-        "system-microphone-v*",
-        "voice-stream-v*",
-        "windows-integrations-v*",
-        "website-v*",
-      ]
+    tags: ["v*"]
   workflow_dispatch:
     inputs:
       tag:
-        description: "Existing product tag, e.g. stream-info-v1.3.3"
+        description: "Existing bundle tag, e.g. v1.0.0"
         required: true
         type: string
-      publish:
-        description: "Publish only after the draft passes download verification"
-        type: boolean
-        default: false
 permissions:
-  contents: read
+  contents: write
 concurrency:
   group: release-${{ inputs.tag || github.ref_name }}
-  cancel-in-progress: false
 env:
   RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
   GH_REPO: ${{ github.repository }}
 jobs:
-  plan:
+  release:
     runs-on: ubuntu-latest
-    outputs:
-      sha: ${{ steps.plan.outputs.sha }}
-      dotnet: ${{ steps.plan.outputs.dotnet }}
-      browser: ${{ steps.plan.outputs.browser }}
-      pythonRequirements: ${{ steps.plan.outputs.pythonRequirements }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: refs/tags/${{ inputs.tag || github.ref_name }}
-          fetch-depth: 0
-          persist-credentials: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .node-version
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Validate tag, version and changelog without workspace dependencies
-        id: plan
-        run: node tooling/release-product.mjs --plan "$RELEASE_TAG"
-
-  build:
-    needs: plan
-    runs-on: ubuntu-latest
-    env:
-      RELEASE_SHA: ${{ needs.plan.outputs.sha }}
-      PYTHON_REQUIREMENTS: ${{ needs.plan.outputs.pythonRequirements }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.plan.outputs.sha }}
+          ref: ${{ inputs.tag || github.ref }}
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Validate pinned sources before dependency installation
-        run: python tooling/package-release.py --validate "$RELEASE_TAG"
-      - uses: ./.github/actions/setup
       - uses: actions/setup-dotnet@v4
-        if: needs.plan.outputs.dotnet == 'true'
         with:
           dotnet-version: 8.0.x
-      - name: Install browser only when required
-        if: needs.plan.outputs.browser == 'true'
-        run: bun run browser:install --with-deps
-      - name: Install font requirements only when required
-        if: needs.plan.outputs.pythonRequirements != ''
-        run: python -m pip install -r "$PYTHON_REQUIREMENTS"
-      - name: Build selected product before dist-dependent tests
-        run: node tooling/release-product.mjs --build "$RELEASE_TAG"
-      - name: Release infrastructure contracts
+      - uses: ./.github/actions/setup
+        with:
+          cache-write: true
+      - name: Browser and fonts for widget/artwork builds
         run: |
-          bun run test:releases
-          node --test tests/release-pipeline.test.mjs
-      - name: Package and validate release assets
-        run: |
-          python tooling/package-release.py "$RELEASE_TAG"
-          python tooling/package-release.py --verify-package "$RELEASE_TAG" --commit "$RELEASE_SHA"
-      - uses: actions/upload-artifact@v4
-        with:
-          name: release-package-${{ github.run_id }}-${{ github.run_attempt }}
-          path: build/release/${{ env.RELEASE_TAG }}/
-          if-no-files-found: error
-          include-hidden-files: true
-          retention-days: 7
-
-  draft:
-    needs: [plan, build]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    env:
-      RELEASE_SHA: ${{ needs.plan.outputs.sha }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ needs.plan.outputs.sha }}
-          persist-credentials: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .node-version
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - uses: actions/download-artifact@v4
-        with:
-          name: release-package-${{ github.run_id }}-${{ github.run_attempt }}
-          path: build/release/${{ env.RELEASE_TAG }}/
-      - name: Validate transferred archives before authenticated operations
-        run: python tooling/package-release.py --verify-package "$RELEASE_TAG" --commit "$RELEASE_SHA"
-      - name: Create new draft and verify exact downloaded assets
+          bun run browser:install --with-deps
+          python -m pip install -r tooling/artwork/requirements-fonts.txt
+      - name: Build and test every product
+        run: python tooling/bundle-release.py --build "$RELEASE_TAG"
+      - name: Pack the verified bundle
+        run: python tooling/bundle-release.py "$RELEASE_TAG"
+      - name: Draft release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node tooling/release-product.mjs --draft "$RELEASE_TAG" --sha "$RELEASE_SHA"
-      - name: Promote only the draft verified by this run
-        if: github.event_name == 'workflow_dispatch' && inputs.publish == true
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: node tooling/release-product.mjs --promote "$RELEASE_TAG" --sha "$RELEASE_SHA"
+        run: |
+          cd "build/release/$RELEASE_TAG"
+          gh release create "$RELEASE_TAG" \
+            --verify-tag --draft --title "$RELEASE_TAG" --notes-file notes.md \
+            maseaaao-*.zip maseaaao-*.manifest.json SHA256SUMS

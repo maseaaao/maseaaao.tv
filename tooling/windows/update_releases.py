@@ -1,13 +1,15 @@
-"""Install independently versioned GitHub release packages; Python 3.10+, stdlib only."""
+"""Install products from the single maseaaao.tv bundle release; Python 3.10+, stdlib only."""
 
 import argparse
 from contextlib import contextmanager
 from datetime import datetime, timezone
+import hashlib
 import json
 import os
 from pathlib import Path
 import re
 import shutil
+import stat
 import sys
 import tempfile
 import time
@@ -17,8 +19,9 @@ import urllib.request
 import uuid
 import zipfile
 
-from release_bundle import (ID, MAX_BYTES, json_bytes, read_json, reject_links, safe_name,
-                            sha256, validate_manifest, verify_archive, version_tuple, write_json)
+from release_bundle import (ID, MAX_BYTES, json_bytes, product_manifest, read_json, reject_links,
+                            safe_name, sha256, validate_bundle_manifest, validate_manifest,
+                            version_tuple, write_json)
 
 HERE = Path(__file__).resolve().parent
 STATE = 'installed.json'
@@ -110,43 +113,40 @@ def load_catalog():
     if not file.exists():
         file = HERE.parent / 'release-products.json'
     doc = read_json(file)
-    if doc.get('schemaVersion') != 1:
-        raise ValueError('Unsupported catalog')
+    if doc.get('schemaVersion') != 2:
+        raise ValueError('Unsupported catalog; update the updater first')
     ids = [p['id'] for p in doc['products']]
     if len(ids) != len(set(ids)) or any(not ID.fullmatch(p) for p in ids):
         raise ValueError('Invalid catalog products')
     return doc
 
 
-def select_releases(releases, products, versions=None, all_products=False):
-    versions = versions or {}
-    selected = {}
-    for product in products:
-        candidates = []
-        for release in releases:
-            if release.get('draft') or release.get('prerelease'):
-                continue
-            tag = release.get('tag_name', '')
-            prefix = product + '-v'
-            if not tag.startswith(prefix):
-                continue
-            try:
-                value = version_tuple(tag[len(prefix):])
-            except ValueError:
-                continue
-            if product in versions and tag != prefix + versions[product]:
-                continue
-            candidates.append((value, release))
-        if not candidates:
-            if all_products and product not in versions:
-                print(f'SKIP {product}: no published stable release')
-                continue
-            raise ValueError(f'No published stable release for {product}')
-        candidates.sort(key=lambda entry: entry[0], reverse=True)
-        selected[product] = candidates[0][1]
-    if not selected:
-        raise ValueError('No published stable products available')
-    return selected
+def select_bundle(releases, pin=None):
+    """Newest published bundle release (tag vX.Y.Z); optionally an exact pinned version."""
+    candidates = []
+    for release in releases:
+        if release.get('draft') or release.get('prerelease'):
+            continue
+        tag = release.get('tag_name', '')
+        if not tag.startswith('v'):
+            continue
+        try:
+            value = version_tuple(tag[1:])
+        except ValueError:
+            continue
+        if pin is not None and tag != 'v' + pin:
+            continue
+        candidates.append((value, release))
+    if not candidates:
+        if pin is not None:
+            raise ValueError(f'No published bundle release v{pin}')
+        raise ValueError('No published bundle release')
+    candidates.sort(key=lambda entry: entry[0], reverse=True)
+    return candidates[0][1]
+
+
+def bundle_manifest_name(release):
+    return f"maseaaao-{release['tag_name'][1:]}.manifest.json"
 
 
 def installed(root):
@@ -193,31 +193,34 @@ def check_dependencies(products):
                 raise ValueError(f"{doc['product']} requires {name} >= {minimum}")
 
 
-def plan(client, releases, state):
+def plan(client, release, products, state):
+    bundle = validate_bundle_manifest(
+        json.loads(client.asset(release, bundle_manifest_name(release), 4 * 1024**2)))
+    if bundle['tag'] != release['tag_name']:
+        raise ValueError('Bundle manifest identity mismatch')
+    archive = bundle['archive']
+    if (not re.fullmatch(r'maseaaao-[0-9]+\.[0-9]+\.[0-9]+\.zip', archive.get('name', ''))
+            or type(archive.get('size')) is not int or not 0 < archive['size'] <= MAX_BYTES
+            or not re.fullmatch('[0-9a-f]{64}', archive.get('sha256', ''))):
+        raise ValueError('Invalid bundle archive metadata')
     changes, combined = {}, dict(state['products'])
-    for product, release in releases.items():
-        tag = release['tag_name']
-        doc = validate_manifest(json.loads(client.asset(release, tag + '.manifest.json', 4 * 1024**2)))
-        if doc['tag'] != tag or doc['product'] != product:
-            raise ValueError('Release metadata identity mismatch')
-        archive = doc.get('archive', {})
-        if (archive.get('name') != f"{product}-{doc['version']}.zip"
-                or type(archive.get('size')) is not int or not 0 < archive['size'] <= MAX_BYTES
-                or not re.fullmatch('[0-9a-f]{64}', archive.get('sha256', ''))):
-            raise ValueError('Invalid archive metadata')
+    for product in products:
+        doc = product_manifest(bundle, product)
         before = state['products'].get(product)
         if before and version_tuple(doc['version']) < version_tuple(before['version']):
             raise ValueError(f'{product}: refusing downgrade; use --rollback')
-        if before and before['version'] == doc['version']:
-            if before != doc:
-                raise ValueError(f'{product}: published version was modified')
+        if before and before['tag'].startswith('v') and version_tuple(doc['tag'][1:]) < version_tuple(before['tag'][1:]):
+            raise ValueError(f'{product}: refusing bundle downgrade; use --rollback')
+        if before and before['tag'] == doc['tag'] and before['files'] != doc['files']:
+            raise ValueError(f'{product}: published version was modified')
+        if before and before['files'] == doc['files']:
             print(f'KEEP {product} {doc["version"]}')
         else:
             print(f"UPDATE {product}: {before['version'] if before else 'not installed'} -> {doc['version']}")
-            changes[product] = (release, doc)
+            changes[product] = doc
         combined[product] = doc
     check_dependencies(combined)
-    return changes, dict(schemaVersion=1, products=combined)
+    return changes, dict(schemaVersion=1, products=combined), archive
 
 
 @contextmanager
@@ -305,7 +308,37 @@ def switch(root, source):
     return backup.name if backup.exists() else None
 
 
-def apply_changes(root, client, changes, state):
+def verify_subset(archive, doc, destination):
+    """Allowlist extraction of one product folder from the shared bundle zip."""
+    prefix = doc['product'] + '/'
+    expected = {prefix + item['path']: item for item in doc['files']}
+    found = set()
+    with zipfile.ZipFile(archive) as bundle:
+        for info in bundle.infolist():
+            if info.filename not in expected:
+                continue
+            found.add(info.filename)
+            entry = expected[info.filename]
+            safe_name(info.filename)
+            if info.is_dir() or stat.S_ISLNK(info.external_attr >> 16) or info.flag_bits & 1:
+                raise ValueError('ZIP directories, links and encryption are not supported')
+            target = reject_links(Path(destination) / entry['path'])
+            target.parent.mkdir(parents=True, exist_ok=True)
+            digest, count = hashlib.sha256(), 0
+            with bundle.open(info) as source, target.open('xb') as output:
+                while chunk := source.read(1024 * 1024):
+                    count += len(chunk)
+                    if count > entry['size']:
+                        raise ValueError('Expanded file is too large')
+                    digest.update(chunk)
+                    output.write(chunk)
+            if count != entry['size'] or digest.hexdigest() != entry['sha256']:
+                raise ValueError(f"File checksum mismatch: {info.filename}")
+    if found != set(expected):
+        raise ValueError('Bundle misses product files')
+
+
+def apply_changes(root, client, release, changes, state, archive_meta):
     if not changes:
         print('Already up to date')
         return
@@ -318,21 +351,20 @@ def apply_changes(root, client, changes, state):
             shutil.copytree(root / 'current', candidate)
         else:
             candidate.mkdir()
-        for product, (release, doc) in changes.items():
-            archive = doc['archive']
-            data = client.asset(release, archive['name'], MAX_BYTES)
-            if len(data) != archive['size'] or sha256(data) != archive['sha256']:
-                raise ValueError(f'{product}: archive checksum mismatch')
-            downloaded = stage / archive['name']
-            downloaded.write_bytes(data)
+        data = client.asset(release, archive_meta['name'], MAX_BYTES)
+        if len(data) != archive_meta['size'] or sha256(data) != archive_meta['sha256']:
+            raise ValueError('Bundle archive checksum mismatch')
+        downloaded = stage / archive_meta['name']
+        downloaded.write_bytes(data)
+        for product, doc in changes.items():
             destination = candidate / product
             if destination.exists():
                 shutil.rmtree(destination)
-            verify_archive(downloaded, doc, destination)
+            verify_subset(downloaded, doc, destination)
             cache = root / 'packages' / product / doc['version']
             reject_links(cache)
             cache.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(downloaded, reject_links(cache / archive['name']))
+            shutil.copyfile(downloaded, reject_links(cache / archive_meta['name']))
             write_json(cache / 'manifest.json', doc)
         state['updatedAt'] = datetime.now(timezone.utc).isoformat()
         write_json(candidate / STATE, state)
@@ -340,7 +372,7 @@ def apply_changes(root, client, changes, state):
         print(f'Installed files: {root / "current"}')
         if previous:
             print(f'Rollback snapshot: {previous}')
-        for product, (_, doc) in changes.items():
+        for product, doc in changes.items():
             print(f"NEXT {product}: {doc.get('activation', 'Files installed')}")
 
 
@@ -384,17 +416,14 @@ def verify_current_directory(directory, state):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group(required=True)
-    mode.add_argument('--all', action='store_true', help='latest stable release of every catalog product')
-    mode.add_argument('--product')
-    mode.add_argument('--bundle', type=Path, help='JSON with repository and exact product versions')
+    mode.add_argument('--all', action='store_true', help='every catalog product from the latest bundle')
+    mode.add_argument('--product', help='one product from the bundle')
     mode.add_argument('--rollback', metavar='SNAPSHOT')
     mode.add_argument('--recover', action='store_true')
     parser.add_argument('--root', type=Path, required=True, help='dedicated Windows runtime folder')
-    parser.add_argument('--version', help='exact stable version; only with --product')
+    parser.add_argument('--version', help='exact bundle version, e.g. 1.2.3; default is the latest')
     parser.add_argument('--apply', action='store_true', help='apply the displayed update; default is plan only')
     args = parser.parse_args(argv)
-    if args.version and not args.product:
-        parser.error('--version requires --product')
     doc = load_catalog()
     repository = doc['repository']
     root = reject_links(args.root)
@@ -414,26 +443,21 @@ def main(argv=None):
     if (root / 'transaction.json').exists():
         raise ValueError('Interrupted update detected; run --recover --apply first')
     known = [p['id'] for p in doc['products']]
-    versions = {}
     products = known if args.all else [args.product]
-    if args.bundle:
-        bundle = read_json(args.bundle)
-        if bundle.get('schemaVersion') != 1 or bundle.get('repository') != repository:
-            raise ValueError('Bundle repository/schema mismatch')
-        versions = bundle['products']
-        if not isinstance(versions, dict) or not versions:
-            raise ValueError('Empty/invalid bundle')
-        products = list(versions)
     if any(p not in known for p in products):
         raise ValueError('Unknown product; update the updater/catalog first')
     if args.version:
-        versions[args.product] = args.version
-    for value in versions.values():
-        version_tuple(value)
+        version_tuple(args.version)
     client = GitHub(repository)
-    releases = select_releases(client.releases(), products, versions, args.all)
+    release = select_bundle(client.releases(), args.version)
+    missing = [p['id'] for p in
+               validate_bundle_manifest(
+                   json.loads(client.asset(release, bundle_manifest_name(release), 4 * 1024**2)))['products']
+               if p['id'] not in known]
+    if missing:
+        raise ValueError(f'Bundle contains unknown products: {", ".join(missing)}')
     if not args.apply:
-        changes, _ = plan(client, releases, installed(root))
+        changes, _, _ = plan(client, release, products, installed(root))
         print(f'PLAN: {len(changes)} product(s). Use --apply to download and install files.')
         return
     with locked(root, repository):
@@ -441,8 +465,8 @@ def main(argv=None):
             raise ValueError('Interrupted update detected; run --recover --apply first')
         state = installed(root)
         verify_current(root, state)
-        changes, next_state = plan(client, releases, state)
-        apply_changes(root, client, changes, next_state)
+        changes, next_state, archive = plan(client, release, products, state)
+        apply_changes(root, client, release, changes, next_state, archive)
 
 
 if __name__ == '__main__':
