@@ -3,9 +3,9 @@
   "version": "1.1.0",
   "private": true,
   "scripts": {
-    "build": "node build.mjs",
+    "build": "bun build.mjs",
     "check": "tsc --noEmit",
-    "source": "node ../../tooling/source-task.mjs"
+    "source": "bun ../../tooling/source-task.mjs"
   },
   "type": "module",
   "dependencies": {

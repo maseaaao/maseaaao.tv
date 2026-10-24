@@ -42,9 +42,9 @@ jobs:
       - name: Critical packaging tests
         run: bun run test:releases
       - name: Build and test every product
-        run: node tooling/bundle-release.mjs --build "$RELEASE_TAG"
+        run: bun tooling/bundle-release.mjs --build "$RELEASE_TAG"
       - name: Pack the verified bundle
-        run: node tooling/bundle-release.mjs "$RELEASE_TAG"
+        run: bun tooling/bundle-release.mjs "$RELEASE_TAG"
       - name: Draft release
         uses: softprops/action-gh-release@v2
         with:

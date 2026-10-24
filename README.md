@@ -10,7 +10,7 @@
 | [apps/website](apps/website/README.md)                     | Статический сайт на HTML+TS; публикация в корневом `dist` |
 | [apps/stream-info](apps/stream-info/README.md)             | Русский док Twitch, C# API и импорт Streamer.bot          |
 | [apps/tuna-widget](apps/tuna-widget/README.md)             | Автономный музыкальный виджет                             |
-| [apps/obs-widgets](apps/obs-widgets/README.md)             | Соцполоса, чат и CSS провайдеров                   |
+| [apps/obs-widgets](apps/obs-widgets/README.md)             | Соцполоса, чат и CSS провайдеров                          |
 | [integrations/companion](integrations/companion/README.md) | Модули и запускатель Companion                            |
 | `integrations/streamerbot`                                 | Интеграции Streamer.bot                                   |
 | `artwork`                                                  | Логотип, сцены, баннеры, панели и обои                    |
@@ -19,10 +19,9 @@
 
 ## Разработка
 
-Работать в Linux/WSL2 с Linux-версиями Bun и Node из `.bun-version` и
-`.node-version`. Нужны .NET SDK 8 и системный `tar`.
+Работать в Linux/WSL2 с Linux-версией Bun из `.bun-version`. Нужны .NET SDK 8 и системный `tar`.
 Windows-приложения OBS, Streamer.bot и Companion остаются в Windows.
-Не использовать Windows `node_modules` или `node.exe` в WSL.
+Не использовать Windows `node_modules` или `bun.exe` в WSL.
 
 ```bash
 bun install --frozen-lockfile
@@ -31,6 +30,11 @@ bun run build
 bun run check
 bun run test
 ```
+
+Bun устанавливает зависимости и выполняет скрипты, сборки и JS/TS-тесты; отдельный
+Node.js для разработки не нужен. Импорты `node:*` используют совместимые API Bun,
+а `@types/node` — только объявления типов. Комплектный Node стороннего Companion
+остаётся частью самого приложения.
 
 Bun запускает package scripts; используйте `bun run test`, не `bun test`.
 `bun run check:knip` проверяет неиспользуемые JS/TS-файлы, экспорты и зависимости

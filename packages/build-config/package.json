@@ -17,6 +17,6 @@
     "@maseaaao/design": "workspace:*"
   },
   "scripts": {
-    "source": "node ../../tooling/source-task.mjs"
+    "source": "bun ../../tooling/source-task.mjs"
   }
 }

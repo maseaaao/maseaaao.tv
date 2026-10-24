@@ -178,7 +178,7 @@ if (isCli) {
   const [text, output, ...rest] = process.argv.slice(2);
   if (!text || !output) {
     console.log(
-      'Usage: node scripts/generate-qr-with-logo.mjs <text> <output.png|jpeg> [--width 800] [--logo image] [--margin 3] [--level H] [--logo-fraction 0.16]',
+      'Usage: bun scripts/generate-qr-with-logo.mjs <text> <output.png|jpeg> [--width 800] [--logo image] [--margin 3] [--level H] [--logo-fraction 0.16]',
     );
     process.exit(1);
   }

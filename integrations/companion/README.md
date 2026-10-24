@@ -4,7 +4,7 @@
 
 ## Проверки без действий приложений
 
-Сборка и проверки: Linux/WSL2, Node.js из `.node-version`, Bun из `.bun-version`, .NET SDK 8 и системный `tar`. Готовые модули и аудиопомощники предназначены для Companion в Windows. Из корня репозитория:
+Сборка и проверки: Linux/WSL2, Bun из `.bun-version`, .NET SDK 8 и системный `tar`. Готовые модули и аудиопомощники предназначены для Companion в Windows. Из корня репозитория:
 
 ```bash
 bun run test:companion
@@ -12,7 +12,7 @@ bun run --filter ./integrations/companion/system-microphone build
 bun run --filter ./integrations/companion/voice-control build
 bun run --filter ./integrations/companion/system-microphone package
 bun run --filter ./integrations/companion/voice-control package
-node integrations/companion/shared/test-packages.mjs
+bun integrations/companion/shared/test-packages.mjs
 ```
 
 Зависимости NAudio/Newtonsoft.Json и reference assemblies .NET Framework 4.8.1 восстанавливаются через NuGet; версии и хеши закреплены в `packages.lock.json`, CI использует locked mode. Windows SDK, PowerShell и установленный Streamer.bot для сборки не нужны. Сборка компилирует помощники, но не запускает их. Тесты используют подставные обработчики и собственный локальный тестовый сервер; Actions, звук и эфир не затрагиваются. Упаковка создаёт tgz и локальные JSON-запросы; создание этих файлов не означает установку, отправлять JSON автоматически нельзя.
@@ -34,8 +34,8 @@ node integrations/companion/shared/test-packages.mjs
 
 ## Запуск Companion в Windows
 
-`node integrations/companion/start-companion.mjs --streamerbot-root <путь>`
-(можно заменить `node` на `bun`). `--open-admin` открывает панель после готовности.
+`bun integrations/companion/start-companion.mjs --streamerbot-root <путь>`.
+`--open-admin` открывает панель после готовности.
 Для самого Companion используется его комплектный Node; настройки и machine ID
 читаются из существующего `custom/companion/data`. Проверка запущенного процесса
 использует штатный Windows Script Host/WMI и соседний `companion-processes.wsf`.

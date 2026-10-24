@@ -8,12 +8,12 @@
   },
   "scripts": {
     "dev": "vite",
-    "generate-import": "node scripts/generate-import.mjs && node scripts/verify-import.mjs",
+    "generate-import": "bun scripts/generate-import.mjs && bun scripts/verify-import.mjs",
     "check": "tsc --noEmit",
     "test": "vitest run && dotnet run --project tests/csharp/StreamerbotTests.csproj --configuration Release",
-    "build": "bun run generate-import && vite build && node scripts/verify-build.mjs",
+    "build": "bun run generate-import && vite build && bun scripts/verify-build.mjs",
     "preview": "vite preview",
-    "source": "node ../../tooling/source-task.mjs"
+    "source": "bun ../../tooling/source-task.mjs"
   },
   "dependencies": {
     "@streamerbot/client": "2.0.1",

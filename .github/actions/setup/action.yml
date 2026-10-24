@@ -1,11 +1,8 @@
 name: Pinned workspace toolchain
-description: Pinned Node and Bun with frozen workspace dependencies
+description: Pinned Bun with frozen workspace dependencies
 runs:
   using: composite
   steps:
-    - uses: actions/setup-node@v4
-      with:
-        node-version-file: .node-version
     - uses: oven-sh/setup-bun@v2
       with:
         bun-version-file: .bun-version

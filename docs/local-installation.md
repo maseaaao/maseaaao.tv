@@ -47,18 +47,18 @@ DonationAlerts использует приватную глобальную
 Запускатель `integrations/companion/start-companion.mjs` принимает
 `--streamerbot-root` или `STREAMERBOT_ROOT`; по умолчанию использует соседний
 `../Streamer.bot/custom/companion/data`. Проверить фактические данные до запуска.
-Запуск: `node integrations/companion/start-companion.mjs --streamerbot-root <путь>`
-или та же команда с `bun` вместо `node`. Сам Companion запускается комплектным Node.
+Запуск: `bun integrations/companion/start-companion.mjs --streamerbot-root <путь>`.
+Сам Companion запускается комплектным Node.
 Для проверки уже запущенного процесса нужен штатный Windows Script Host/WMI
 и соседний `companion-processes.wsf`; при ошибке проверки новый экземпляр не запускается.
 `--open-admin` открывает панель после готовности. Старые параметры
 `-StreamerbotRoot` и `-OpenAdmin` также поддерживаются.
 
 Диагностика только чтением: задать `STREAMERBOT_ROOT`, затем выполнить
-`node tooling/local/check-stream-stack-cli.mjs` (русская сводка и отчёт в
+`bun tooling/local/check-stream-stack-cli.mjs` (русская сводка и отчёт в
 `custom/maintenance/stream-stack-latest.json`). Для JSON в stdout оставлен
-`node tooling/local/check-stream-stack.mjs`. C# можно проверить из WSL командой
-`node tooling/local/compile-streamerbot.mjs` против DLL установленного приложения;
+`bun tooling/local/check-stream-stack.mjs`. C# можно проверить из WSL командой
+`bun tooling/local/compile-streamerbot.mjs` против DLL установленного приложения;
 это не заменяет Execute Code внутри Streamer.bot.
 Не менять живые данные на диске при работающем владельце. Откат ресурсов —
 из backup, конфигураций/модулей — штатным восстановлением совместимого экспорта.

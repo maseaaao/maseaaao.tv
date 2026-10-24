@@ -46,6 +46,7 @@
       "ignoreDependencies": ["@maseaaao/design"]
     },
     "integrations/companion/*": {
+      "entry": ["test-*.mjs"],
       "project": ["*.{js,mjs}", "!main.js"]
     }
   }

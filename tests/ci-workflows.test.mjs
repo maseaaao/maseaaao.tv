@@ -36,7 +36,7 @@ test('ordinary build commands cover every product build and test group', () => {
   assert.equal(pkg.scripts['verify:products'], 'bun run build:all');
   assert.equal(
     pkg.scripts['build:all'],
-    'bun run build:website && bun run build:stream-info && bun run build:tuna && bun run build:widgets && bun run build:artwork',
+    'bun run build:website && bun run build:stream-info && bun run build:tuna && bun run build:widgets && bun run build:artwork && bun run build:diagnostics',
   );
   assert.equal(
     pkg.scripts['test:checks'],

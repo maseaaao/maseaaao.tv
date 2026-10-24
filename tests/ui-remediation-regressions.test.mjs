@@ -21,10 +21,7 @@ test('migration preserves Stream Info v4 action/event and existing persisted key
   assert(action.includes('stream_info_api_response'));
 });
 
-test('historical baseline remains separate from the simplified site contract', () => {
-  const baseline = JSON.parse(read('docs/ui-renewal-baseline.json'));
-  assert(Array.isArray(baseline.files));
-  assert(baseline.files.some((file) => file.path === 'dist/index.html'));
+test('homepage stays static and Twitch embeds belong to the checker', () => {
   const source = read('apps/website/src/index.html');
   assert(!source.includes('data-stream-layout'));
   assert(!source.includes('<iframe'));

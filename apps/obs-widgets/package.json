@@ -12,9 +12,9 @@
     "vite": "6.4.3"
   },
   "scripts": {
-    "build": "node ../../tooling/build-widgets.mjs",
+    "build": "bun ../../tooling/build-widgets.mjs",
     "check": "tsc --noEmit",
-    "source": "node ../../tooling/source-task.mjs"
+    "source": "bun ../../tooling/source-task.mjs"
   },
   "exports": {
     "./social.css": "./src/social-strip/styles.css",

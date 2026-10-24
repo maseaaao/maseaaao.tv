@@ -2,9 +2,9 @@
   "name": "@maseaaao/website",
   "private": true,
   "scripts": {
-    "build": "node ../../tooling/build-website.mjs",
+    "build": "bun ../../tooling/build-website.mjs",
     "check": "tsc --noEmit",
-    "source": "node ../../tooling/source-task.mjs"
+    "source": "bun ../../tooling/source-task.mjs"
   },
   "type": "module",
   "dependencies": {

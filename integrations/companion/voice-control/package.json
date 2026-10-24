@@ -11,7 +11,7 @@
     "esbuild": "0.25.12"
   },
   "scripts": {
-    "build": "node build.mjs",
-    "package": "node package.mjs"
+    "build": "bun build.mjs",
+    "package": "bun package.mjs"
   }
 }

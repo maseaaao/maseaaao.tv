@@ -5,7 +5,7 @@ import test from 'node:test';
 const root = new URL('../', import.meta.url);
 test('production rebuild uses current generators without retired aliases', async () => {
   const p = JSON.parse(await fs.readFile(new URL('package.json', root), 'utf8'));
-  assert.equal(p.scripts['render:scenes'], 'node tooling/artwork/build-cyber-scenes.mjs');
+  assert.equal(p.scripts['render:scenes'], 'bun tooling/artwork/build-cyber-scenes.mjs');
   const font = await fs.readFile(new URL('packages/design/fonts/unbounded-variable.woff2', root));
   assert.equal(font.toString('ascii', 0, 4), 'wOF2');
   assert.equal(font.readUInt32BE(8), font.length);

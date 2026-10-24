@@ -6,10 +6,9 @@
 
 Перед запуском задайте `STREAMERBOT_ROOT` — полный Windows-путь к установленному Streamer.bot. Для `start-companion.mjs` и `diagnostics/check-stream-stack-cli.mjs` также можно передать `--streamerbot-root`. Не полагайтесь на расположение соседних папок после установки релиза.
 
-Запуск: `node start-companion.mjs --streamerbot-root <установка>` и
-`node diagnostics/check-stream-stack-cli.mjs --streamerbot-root <установка>`.
-Можно заменить `node` на `bun` или полный путь к комплектному `node.exe` Companion
-(Node 22.13+). Сам Companion всегда запускается комплектным Node.
+Запуск: `bun start-companion.mjs --streamerbot-root <установка>` и
+`bun diagnostics/check-stream-stack-cli.mjs --streamerbot-root <установка>`.
+Сам Companion всегда запускается комплектным Node; отдельная установка Node.js не нужна.
 Запускатель читает существующие рабочие данные; для проверки процесса нужны
 штатный Windows Script Host/WMI и соседний `companion-processes.wsf`.
 Ошибка WMI блокирует запуск второго экземпляра. `--open-admin` открывает панель.

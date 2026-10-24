@@ -29,7 +29,7 @@ export async function startCompanion(argv, dependencies = {}) {
       if (!root || root.startsWith('-')) throw new Error('Missing StreamerbotRoot directory.');
     } else throw new Error(`Unknown argument: ${option}`);
   }
-  if (platform !== 'win32') throw new Error('Run this launcher with Windows Node.js or Bun.');
+  if (platform !== 'win32') throw new Error('Run this launcher with Windows Bun.');
   if (!env.ProgramFiles) throw new Error('ProgramFiles is not set.');
   root = path.resolve(root?.trim() || path.resolve(import.meta.dirname, '../../../Streamer.bot'));
   const install = path.join(env.ProgramFiles, 'Companion');

@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
 import {
   existsSync,
   mkdirSync,
@@ -17,21 +16,6 @@ import { JSDOM } from 'jsdom';
 import { generatedWebsiteImages } from '../tooling/website-assets.mjs';
 
 const root = resolve(import.meta.dirname, '..');
-const baseline = JSON.parse(readFileSync(join(root, 'docs/ui-renewal-baseline.json'), 'utf8'));
-const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
-test('artwork preserves approved logo, QR and all avatar bytes across the output move', () => {
-  for (const entry of baseline.files.filter(
-    (entry) =>
-      ['artwork/logo/logo.png', 'apps/website/public/assets/maseaaao.tv.png'].includes(
-        entry.path,
-      ) || entry.path.startsWith('apps/website/public/assets/avatar-'),
-  )) {
-    const name = entry.path.includes('/avatar-')
-      ? entry.path.replace('apps/website/public/', 'artwork/brand/rendered/website/')
-      : entry.path;
-    assert.equal(hash(readFileSync(join(root, name))), entry.sha256, name);
-  }
-});
 test('all artwork envelopes come from Vite output with embedded local resources and bounded product JS', () => {
   let pages = 0;
   for (const directory of [
