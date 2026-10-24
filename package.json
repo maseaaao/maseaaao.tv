@@ -29,13 +29,15 @@
     "render:artwork": "bun tooling/artwork/cyber-site-render.mjs",
     "render:logo": "bun tooling/artwork/refresh-logo-qr.mjs",
     "render:scenes": "bun tooling/artwork/build-cyber-scenes.mjs",
+    "render:all": "bun run render:logo && bun run render:scenes --prepared && bun run render:artwork all --prepared",
     "verify:artwork": "bun run render:logo && bun run build:artwork && bun run render:scenes --prepared && bun run render:artwork all --prepared",
     "verify:ui-renewal": "bun run --sequential check:source verify:artwork build:all check:repository test:checks check:artifacts && git diff --check",
     "verify:companion": "bun run --sequential --filter './integrations/companion/*' build && bun run --sequential --filter './integrations/companion/*' package && bun integrations/companion/shared/test-packages.mjs",
     "browser:install": "playwright-core install chromium",
     "deploy:website": "bun run build:website && bunx --bun wrangler deploy",
     "sync:local": "bun tooling/sync-local.mjs",
-    "optimize:images": "bun tooling/artwork/optimize-images.mjs"
+    "optimize:images": "bun tooling/artwork/optimize-images.mjs",
+    "full": "bun run --sequential build:all render:all optimize:images"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.2",
