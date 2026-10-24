@@ -47,12 +47,13 @@ process.exit(Number(process.env.TEST_COMPILER_EXIT || 0));
       env,
       encoding: 'utf8',
     });
-    assert.equal(output.match(/COMPILED /g)?.length, 9);
+    assert.equal(output.match(/COMPILED /g)?.length, 8);
+    assert.doesNotMatch(output, /YandexMusic/);
     const records = readFileSync(log, 'utf8')
       .trim()
       .split('\n')
       .map((line) => JSON.parse(line));
-    assert.equal(records.length, 9);
+    assert.equal(records.length, 8);
     for (const record of records) {
       assert.deepEqual(
         [record.args[0], ...record.args.slice(2)],

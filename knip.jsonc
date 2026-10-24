@@ -8,6 +8,8 @@
       "entry": [
         "tests/**/*.test.mjs",
         "tooling/local/check-stream-stack.mjs",
+        "tooling/local/check-stream-stack-cli.mjs",
+        "integrations/companion/start-companion.mjs",
         "tooling/local/compile-streamerbot.mjs",
         "tooling/artwork/generate-qr-with-logo.mjs",
         "integrations/companion/shared/test-*.mjs"

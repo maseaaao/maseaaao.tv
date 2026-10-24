@@ -28,7 +28,7 @@ const groups = {
   tuna: [['apps/tuna-widget/dist/obs-tuna-widget.html', 'obs-tuna-widget.html']],
   widgets: [
     ['apps/obs-widgets/dist/streamlabs-chat', 'streamlabs-chat'],
-    ...['social-strip', 'donors', 'sounds'].map((name) => [
+    ...['social-strip', 'donors'].map((name) => [
       `apps/obs-widgets/dist/${name}`,
       `Streamer.bot/custom/assets/${name}`,
     ]),

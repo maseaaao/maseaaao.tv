@@ -130,16 +130,16 @@
       "path": "tooling/windows",
       "files": [
         {
-          "source": "integrations/streamerbot/yandex-music/control.ps1",
-          "target": "yandex-music/control.ps1"
+          "source": "integrations/companion/start-companion.mjs",
+          "target": "start-companion.mjs"
         },
         {
-          "source": "integrations/companion/start-companion.ps1",
-          "target": "start-companion.ps1"
+          "source": "integrations/companion/companion-processes.wsf",
+          "target": "companion-processes.wsf"
         },
         {
-          "source": "tooling/local/check-stream-stack.ps1",
-          "target": "diagnostics/check-stream-stack.ps1"
+          "source": "tooling/local/check-stream-stack-cli.mjs",
+          "target": "diagnostics/check-stream-stack-cli.mjs"
         },
         {
           "source": "tooling/local/check-stream-stack.mjs",
@@ -160,6 +160,10 @@
         {
           "source": "integrations/streamerbot/chat-sound/Action.cs",
           "target": "actions/chat-sound/Action.cs"
+        },
+        {
+          "source": "integrations/streamerbot/chat-sound/notif.mp3",
+          "target": "actions/chat-sound/notif.mp3"
         },
         {
           "source": "integrations/streamerbot/donationalerts/DonationAlertsAuthorization.cs",
@@ -194,20 +198,16 @@
           "target": "actions/obs-health/Check.cs"
         },
         {
+          "source": "integrations/streamerbot/obs-health/health-warning.mp3",
+          "target": "actions/obs-health/health-warning.mp3"
+        },
+        {
           "source": "integrations/streamerbot/obs-health/CompanionEndpoint.cs",
           "target": "actions/obs-health/CompanionEndpoint.cs"
         },
         {
           "source": "integrations/streamerbot/obs-health/SoundToggle.cs",
           "target": "actions/obs-health/SoundToggle.cs"
-        },
-        {
-          "source": "integrations/streamerbot/yandex-music/Action.cs",
-          "target": "actions/yandex-music/Action.cs"
-        },
-        {
-          "source": "integrations/streamerbot/yandex-music/README.md",
-          "target": "actions/yandex-music/README.md"
         }
       ],
       "test": "node --test tests/bundle-release.test.mjs",

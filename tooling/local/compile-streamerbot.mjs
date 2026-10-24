@@ -16,7 +16,6 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const sources = {
   ChatNotification: ['integrations/streamerbot/chat-sound/Action.cs'],
-  YandexMusic: ['integrations/streamerbot/yandex-music/Action.cs'],
   DonationWatcher: ['integrations/streamerbot/donationalerts/DonationAlertsWatcher.cs'],
   DonationAlerts: [
     'integrations/streamerbot/donationalerts/DonationAlertsIntegration.cs',

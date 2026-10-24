@@ -3,7 +3,10 @@
 Разработка и сборки выполняются в Linux/WSL2. В Windows готовый комплект
 устанавливается вручную из GitHub Releases. OBS, Streamer.bot и Companion
 устанавливаются отдельно; их рабочие данные остаются в прежних каталогах.
-Для диагностики используется комплектный Node Companion (Node 22.13+).
+Запускатели работают через Windows Node.js 22.13+ или Bun. Можно использовать
+полный путь к комплектному `node.exe` Companion вместо `node` в командах.
+Сам Companion всегда запускается его комплектным Node, даже при запуске через Bun.
+Для проверки процесса требуется штатный Windows Script Host/WMI.
 
 ## Формат релиза
 
@@ -48,14 +51,15 @@ maseaaao.tv/
   stream-info/streamerbot-import.txt
   tuna-widget/obs-tuna-widget.html
   obs-widgets/social-strip/index.html
-  obs-widgets/sounds/...
   artwork/scenes/...
   artwork/logo/...
   system-microphone/*.tgz
   voice-stream/*.tgz
-  windows-integrations/yandex-music/control.ps1
-  windows-integrations/start-companion.ps1
+  windows-integrations/companion-processes.wsf
+  windows-integrations/start-companion.mjs
   windows-integrations/diagnostics/...
+  windows-integrations/actions/chat-sound/notif.mp3
+  windows-integrations/actions/obs-health/health-warning.mp3
   windows-integrations/actions/...
   website/...
 ```
@@ -66,16 +70,15 @@ maseaaao.tv/
 Сохранять ID, размеры, размещение, URL-параметры и настройки соединений.
 Пути ниже заданы относительно корня распакованного комплекта.
 
-| Потребитель                              | Путь                                                                                   |
-| ---------------------------------------- | -------------------------------------------------------------------------------------- |
-| OBS — фоны и логотипы                    | `artwork/scenes/`, `artwork/logo/`                                                     |
-| OBS — музыка                             | `tuna-widget/obs-tuna-widget.html` + прежние URL-параметры                             |
-| OBS — соцполоса и прозрачное изображение | `obs-widgets/social-strip/`                                                            |
-| Док INFO и HTTP-маппинг Stream Info      | `stream-info/`                                                                         |
-| C# уведомления и OBS Health              | `obs-widgets/sounds/`                                                                  |
-| C# Яндекс Музыки                         | `windows-integrations/yandex-music/control.ps1`                                        |
-| Запуск Companion                         | `windows-integrations/start-companion.ps1 -StreamerbotRoot <установка>`                |
-| Диагностика                              | `windows-integrations/diagnostics/check-stream-stack.ps1 -StreamerbotRoot <установка>` |
+| Потребитель                              | Путь                                                                                              |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| OBS — фоны и логотипы                    | `artwork/scenes/`, `artwork/logo/`                                                                |
+| OBS — музыка                             | `tuna-widget/obs-tuna-widget.html` + прежние URL-параметры                                        |
+| OBS — соцполоса и прозрачное изображение | `obs-widgets/social-strip/`                                                                       |
+| Док INFO и HTTP-маппинг Stream Info      | `stream-info/`                                                                                    |
+| C# уведомления и OBS Health              | `windows-integrations/actions/chat-sound/notif.mp3`, `windows-integrations/actions/obs-health/health-warning.mp3`                                                                             |
+| Запуск Companion                         | `node windows-integrations/start-companion.mjs --streamerbot-root <установка>`                    |
+| Диагностика                              | `node windows-integrations/diagnostics/check-stream-stack-cli.mjs --streamerbot-root <установка>` |
 
 Выполнить компиляцию изменённых Execute Code внутри Streamer.bot.
 Модули Companion импортировать штатно из `.tgz`, затем выбрать версию

@@ -10,7 +10,7 @@
 | [apps/website](apps/website/README.md)                     | Статический сайт на HTML+TS; публикация в корневом `dist` |
 | [apps/stream-info](apps/stream-info/README.md)             | Русский док Twitch, C# API и импорт Streamer.bot          |
 | [apps/tuna-widget](apps/tuna-widget/README.md)             | Автономный музыкальный виджет                             |
-| [apps/obs-widgets](apps/obs-widgets/README.md)             | Соцполоса, чат, CSS провайдеров и звуки                   |
+| [apps/obs-widgets](apps/obs-widgets/README.md)             | Соцполоса, чат и CSS провайдеров                   |
 | [integrations/companion](integrations/companion/README.md) | Модули и запускатель Companion                            |
 | `integrations/streamerbot`                                 | Интеграции Streamer.bot                                   |
 | `artwork`                                                  | Логотип, сцены, баннеры, панели и обои                    |

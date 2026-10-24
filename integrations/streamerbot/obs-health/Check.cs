@@ -10,7 +10,7 @@ public class CPHInline
     // ОБЯЗАТЕЛЬНО поменяй на точные названия из OBS.
     private const string MicInputName = "1️⃣МИКРО";
     private const string CameraSourceName = "КАМЕРА";
-    private static readonly string AlertSoundPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "maseaaao.tv", "apps", "obs-widgets", "dist", "sounds", "health-warning.mp3");
+    private static readonly string AlertSoundPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "maseaaao.tv", "integrations", "streamerbot", "obs-health", "health-warning.mp3");
     private static string CompanionBaseUrl { get { return CompanionEndpoint.Get(); } }
     private const string TelegramSendActionName = "Telegram | SEND";
     // ВАЖНО: запускай этот Action каждые 10 секунд.

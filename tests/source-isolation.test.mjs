@@ -41,7 +41,7 @@ test('builds preserve sources, clean owned outputs and standalone builds preserv
     'Widget build must not change the website publication',
   );
   const configFile = resolve(root, 'apps/obs-widgets/vite.config.mjs');
-  const siblings = ['streamlabs-chat', 'donors', 'sounds'];
+  const siblings = ['streamlabs-chat', 'donors'];
   const preserved = siblings.flatMap((name) => snapshot(root, 'apps/obs-widgets/dist/' + name));
   await build({ configFile, mode: 'social-strip', logLevel: 'silent' });
   assert.deepEqual(

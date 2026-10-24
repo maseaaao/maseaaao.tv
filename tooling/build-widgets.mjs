@@ -46,7 +46,6 @@ for (const directory of ['streamlabs-chat', 'donors']) {
     await writeFile(to, `/* ${license.replaceAll('*/', '* /')} */\n${css}`);
   }
 }
-await cp(path.join(source, 'sounds'), path.join(output, 'sounds'), { recursive: true });
 
 console.log(
   'Standalone widgets and provider CSS built; provider templates and static resources preserved.',
