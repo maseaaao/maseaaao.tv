@@ -124,6 +124,7 @@ if (values['validate-catalog']) {
       const fontLicense = `${product.id}/licenses/Unbounded-OFL.txt`;
       if (!files[fontLicense]) add('packages/design/licenses/Unbounded-OFL.txt', fontLicense);
     }
+    add('LICENSE', 'LICENSE');
     add('docs/windows-releases.md', 'INSTALL.md');
     const entries = Object.fromEntries(
       Object.entries(files)

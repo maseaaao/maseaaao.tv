@@ -36,10 +36,6 @@ jobs:
       - name: Require an existing tag
         run: git show-ref --verify "refs/tags/$RELEASE_TAG"
       - uses: ./.github/actions/setup
-      # Python is only for retained integration checks, never packaging/fonts.
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x

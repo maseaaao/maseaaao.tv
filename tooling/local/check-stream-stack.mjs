@@ -39,8 +39,8 @@ const canonical = (value) =>
 function readApplicationStorage(instances) {
   return new Promise((resolve, reject) => {
     const child = spawn(
-      'python',
-      [fileURLToPath(new URL('./compare-companion-storage.py', import.meta.url))],
+      process.execPath,
+      [fileURLToPath(new URL('./compare-companion-storage.mjs', import.meta.url))],
       { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] },
     );
     let output = '';

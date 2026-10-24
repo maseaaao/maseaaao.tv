@@ -12,6 +12,6 @@
   },
   "scripts": {
     "build": "node build.mjs",
-    "package": "python package-module.py"
+    "package": "node package-module.mjs"
   }
 }

@@ -13,6 +13,7 @@ test('manual ZIP preserves hidden files, exact targets and licenses without an u
     writeFileSync(join(root, name), data);
   };
   try {
+    put('LICENSE', 'repository license');
     put('CHANGELOG.md', '## 1.0.0\n\nTest release.\n');
     put('docs/windows-releases.md', 'Install manually.');
     put('app/package.json', '{"version":"1.0.0"}');
@@ -50,6 +51,7 @@ test('manual ZIP preserves hidden files, exact targets and licenses without an u
       'example/metadata/version.json',
       'example/LICENSE',
       'example/licenses/Unbounded-OFL.txt',
+      'LICENSE',
       'INSTALL.md',
     ])
       assert(listing.split('\n').includes(file), file);
@@ -57,6 +59,14 @@ test('manual ZIP preserves hidden files, exact targets and licenses without an u
     assert.equal(
       execFileSync('unzip', ['-p', archive, 'example/index.html'], { encoding: 'utf8' }),
       'built',
+    );
+    assert.equal(
+      execFileSync('unzip', ['-p', archive, 'LICENSE'], { encoding: 'utf8' }),
+      'repository license',
+    );
+    assert.equal(
+      execFileSync('unzip', ['-p', archive, 'example/LICENSE'], { encoding: 'utf8' }),
+      'product license',
     );
     const first = readFileSync(archive);
     run();

@@ -5,6 +5,7 @@
     "build": "bun run build:website",
     "build:website": "bun run --filter ./apps/website build",
     "deploy:website": "bun run build:website && bunx wrangler deploy",
+    "build:diagnostics": "node tooling/local/build-diagnostics.mjs",
     "build:stream-info": "bun run --filter ./apps/stream-info build",
     "check:stream-info": "bun run --filter ./apps/stream-info check",
     "test:stream-info": "bun run --filter ./apps/stream-info test",
@@ -26,9 +27,9 @@
     "full": "bun run render:logo && bun run render:scenes && bun run render:cyber-site && bun run build:all",
     "render:cyber-site": "node tooling/artwork/cyber-site-render.mjs",
     "render:wallpapers": "node tooling/artwork/cyber-site-render.mjs wallpapers",
-    "test:local": "node tooling/local/test-action-targets.mjs && node tooling/run-python.mjs tooling/local/test-companion-storage.py",
+    "test:local": "node tooling/local/test-action-targets.mjs && node tooling/local/test-companion-storage.mjs",
     "build:widgets": "bun run --filter ./apps/obs-widgets build",
-    "build:all": "bun run build:website && bun run build:stream-info && bun run build:tuna && bun run build:widgets && bun run build:artwork",
+    "build:all": "bun run build:website && bun run build:stream-info && bun run build:tuna && bun run build:widgets && bun run build:artwork && bun run build:diagnostics",
     "format": "biome format --write .",
     "format:check": "biome format --error-on-warnings .",
     "lint": "biome lint --error-on-warnings .",
@@ -48,7 +49,7 @@
     "check:biome": "biome ci --error-on-warnings .",
     "check:fix": "biome check --write --error-on-warnings .",
     "test:source-policy": "node --test tests/biome-policy.test.mjs",
-    "verify:companion": "bun run --filter ./integrations/companion/system-microphone build && bun run --filter ./integrations/companion/voice-control build && bun run --filter ./integrations/companion/system-microphone package && bun run --filter ./integrations/companion/voice-control package && node tooling/run-python.mjs integrations/companion/shared/test-packages.py",
+    "verify:companion": "bun run --filter ./integrations/companion/system-microphone build && bun run --filter ./integrations/companion/voice-control build && bun run --filter ./integrations/companion/system-microphone package && bun run --filter ./integrations/companion/voice-control package && node integrations/companion/shared/test-packages.mjs",
     "check:knip": "knip"
   },
   "devDependencies": {

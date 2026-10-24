@@ -8,6 +8,7 @@
       "entry": [
         "tests/**/*.test.mjs",
         "tooling/local/check-stream-stack.mjs",
+        "tooling/local/compile-streamerbot.mjs",
         "tooling/artwork/generate-qr-with-logo.mjs",
         "integrations/companion/shared/test-*.mjs"
       ]
@@ -20,7 +21,11 @@
       "vite": false
     },
     "apps/stream-info": {
-      "entry": ["scripts/verify*-live.mjs", "tests/csharp/*.test.mjs"],
+      "entry": [
+        "scripts/verify*-live.mjs",
+        "tests/csharp/*.test.mjs",
+        "tests/csharp/run-framework-category-smoke.mjs"
+      ],
       // Used by src/styles.css.
       "ignoreDependencies": ["@maseaaao/design", "@maseaaao/ui"]
     },

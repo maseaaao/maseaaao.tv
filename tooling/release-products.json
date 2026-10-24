@@ -150,8 +150,8 @@
           "target": "diagnostics/action-targets.mjs"
         },
         {
-          "source": "tooling/local/compare-companion-storage.py",
-          "target": "diagnostics/compare-companion-storage.py"
+          "source": "build/diagnostics/compare-companion-storage.mjs",
+          "target": "diagnostics/compare-companion-storage.mjs"
         },
         {
           "source": "tooling/windows/runtime-README.md",
@@ -211,7 +211,7 @@
         }
       ],
       "test": "node --test tests/bundle-release.test.mjs",
-      "build": "node tooling/bundle-release.mjs --validate-catalog",
+      "build": "bun run build:diagnostics && node tooling/bundle-release.mjs --validate-catalog",
       "browser": false,
       "dotnet": false,
       "activation": "Set STREAMERBOT_ROOT explicitly. Update launcher and Action paths once; no automatic application reconfiguration.",

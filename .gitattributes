@@ -12,7 +12,6 @@
 *.yml text eol=lf
 *.md text eol=lf
 *.txt text eol=lf
-*.py text eol=lf
 *.cs text eol=lf
 *.csproj text eol=lf
 *.ps1 text eol=crlf
@@ -30,3 +29,7 @@ apps/website/public/.well-known/api-catalog text eol=lf
 *.woff2 binary
 *.ttf binary
 *.mp3 binary
+
+# Generated Stream Info distributables are excluded from language statistics.
+apps/stream-info/change-info-streamer-bot.html linguist-generated=true
+apps/stream-info/dist/** linguist-generated=true
