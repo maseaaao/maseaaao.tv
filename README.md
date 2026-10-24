@@ -1,7 +1,7 @@
 # maseaaao.tv
 
-Сайт, оформление OBS и инструменты стрима. Один репозиторий, один релиз
-`vX.Y.Z`, один ZIP с папками продуктов для ручной установки.
+Сайт, оформление OBS и инструменты стрима. Один релиз `vX.Y.Z`, один ZIP
+для ручной установки в Windows. OBS, Streamer.bot и Companion в комплект не входят.
 
 ## Продукты
 
@@ -12,57 +12,48 @@
 | [apps/tuna-widget](apps/tuna-widget/README.md)             | Автономный музыкальный виджет                             |
 | [apps/obs-widgets](apps/obs-widgets/README.md)             | Соцполоса, чат и CSS провайдеров                          |
 | [integrations/companion](integrations/companion/README.md) | Модули и запускатель Companion                            |
-| `integrations/streamerbot`                                 | Интеграции Streamer.bot                                   |
-| `artwork`                                                  | Логотип, сцены, баннеры, панели и обои                    |
+| [integrations/streamerbot](integrations/README.md)         | C# Actions для Streamer.bot                              |
+| [artwork](artwork/README.md)                              | Логотип, сцены, баннеры, панели и обои                    |
 | `packages`                                                 | Общие дизайн-токены, UI и конфигурации сборки             |
 | `tooling`                                                  | Сборка, проверки, генераторы и установка                  |
 
 ## Разработка
 
-Работать в Linux/WSL2 с Linux-версией Bun из `.bun-version`. Нужны .NET SDK 8 и системный `tar`.
-Windows-приложения OBS, Streamer.bot и Companion остаются в Windows.
-Не использовать Windows `node_modules` или `bun.exe` в WSL.
+Среда разработки и CI — Linux/WSL2, Bun из `.bun-version`.
+Для полной проверки нужны .NET SDK 8, системный `tar` и Chromium.
+В WSL используйте Linux-версии Bun и зависимостей, не Windows `node_modules`.
 
 ```bash
 bun install --frozen-lockfile
 bun run browser:install --with-deps
-bun run build
+bun run build:all
 bun run check
 bun run test
 ```
 
-Bun устанавливает зависимости и выполняет скрипты, сборки и JS/TS-тесты; отдельный
-Node.js для разработки не нужен. Импорты `node:*` используют совместимые API Bun,
-а `@types/node` — только объявления типов. Комплектный Node стороннего Companion
-остаётся частью самого приложения.
+| Команда | Назначение |
+| --- | --- |
+| `build` | Только сайт → корневой `dist` |
+| `build:all` | Приложения, HTML/CSS artwork и диагностика; без экспорта растров и TGZ |
+| `check:source` | Biome, Knip, типы и структура исходников; сборки не нужны |
+| `check` | Проверки исходников и готовых результатов |
+| `test` | `build:all`, затем тесты репозитория, Stream Info, Companion и локальных инструментов |
+| `test:checks` | Те же тесты без предварительной сборки |
+| `verify:ui-renewal` | CI-проверка с экспортом и сверкой изображений |
+| `verify:companion` | Сборка, упаковка и проверка модулей Companion |
 
-Основные команды: `build` — сайт, `build:all` — все приложения, artwork и диагностика,
-`check` — исходники и готовые результаты, `test` — сборки и тесты.
-`check:source` не требует готовых результатов; `test:checks` запускает тесты без
-предварительной сборки. Для правок используйте `format` или `check:fix`.
-Продуктовые сборки остаются в workspace-пакетах; корневые команды только объединяют
-их штатным `bun run --sequential`, без отдельного таск-раннера. Полная CI-проверка —
-`verify:ui-renewal`, затем `verify:companion`; генерация изображений — [artwork](artwork/README.md).
+Команды таблицы запускаются через `bun run <команда>`. `bun test <файл>` —
+отдельные JS/TS-тесты; DOM-тесты Stream Info запускайте из `apps/stream-info`.
+Браузерные корневые тесты могут пересобирать общий `dist`: не запускайте их параллельно.
+Для своего Chromium задайте `CHROME_BIN`. CI использует закреплённый образ Playwright
+из `.github/workflows/verify.yml`.
 
-Для полной проверки используйте `bun run test`: команда сначала собирает продукты,
-затем запускает тесты репозитория, Stream Info, Companion и локальных инструментов.
-`bun test` запускает отдельные JS/TS-тесты; DOM-тесты Stream Info запускайте
-из `apps/stream-info`, чтобы применилось их тестовое окружение.
-`bun run check:knip` проверяет неиспользуемые JS/TS-файлы, экспорты и зависимости
-во всех workspace-пакетах. Проверка входит в `check:source`, `check` и CI.
-Knip использует штатные плагины; дополнительные точки входа и исключения
-описаны в `knip.jsonc`. CSS-импорты отдельно не анализируются; зависимости,
-используемые только в стилях, явно отмечены в конфигурации.
-Справочник: [настройка Knip](https://knip.dev/overview/configuration).
-Для своего Chromium задайте `CHROME_BIN`. На Ubuntu 26.04 с закреплённым
-Playwright при отсутствии браузерной сборки используйте
-`PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=ubuntu24.04-x64` перед установкой и тестами.
+Меняйте исходники, затем пересобирайте результаты. `bun run format` форматирует код,
+`bun run check:fix` применяет исправления Biome. Отдельный Node.js не нужен;
+Companion использует собственный комплектный Node.
 
-Исходники меняются в `src`, результаты пересобираются. Сайт статический, без
-runtime-фреймворка и гидрации; главная не содержит Twitch iframe/чата. Деплой в
-Cloudflare — `bun run deploy:website`: он собирает корневой `dist` через
-`wrangler.jsonc` и публикует его. Публикация — отдельная операция от проверки
-исходников.
+`bun run deploy:website` собирает и публикует сайт в Cloudflare через `wrangler.jsonc`.
+Это отдельная операция, не проверка и не часть выпуска ZIP.
 
 ## Установка и оформление
 
@@ -77,10 +68,10 @@ Cloudflare — `bun run deploy:website`: он собирает корневой 
 
 ## Общие документы
 
-- [История изменений](CHANGELOG.md) — единый журнал выпусков и прежняя история продуктов.
+- [История изменений](CHANGELOG.md).
 - [Участие в проекте](CONTRIBUTING.md).
 - [Кодекс поведения](CODE_OF_CONDUCT.md).
 - [Политика безопасности](SECURITY.md).
 - [Лицензия MIT](LICENSE) — собственный код проекта. Для стороннего кода и ресурсов действуют сохранённые рядом лицензии и уведомления, включая [DonationAlerts](integrations/streamerbot/donationalerts/LICENSE) и [Unbounded](packages/design/licenses/Unbounded-OFL.txt).
 
-README продуктов содержат локальные инструкции; общие правила и история изменений ведутся в корне.
+
