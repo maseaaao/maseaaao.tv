@@ -54,7 +54,7 @@ test('all artwork envelopes come from Vite output with embedded local resources 
       for (const image of document.querySelectorAll('img,svg image'))
         assert((image.getAttribute('src') ?? image.getAttribute('href') ?? '').startsWith('data:'));
       const scripts = [...document.querySelectorAll('script:not([type="text/plain"])')];
-      assert.equal(scripts.length, directory === 'banners' ? 1 : 0);
+      assert.equal(scripts.length, 0);
       assert(
         scripts.reduce((sum, element) => sum + Buffer.byteLength(element.textContent), 0) <= 2000,
       );

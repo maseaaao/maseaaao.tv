@@ -1,7 +1,7 @@
 .banner-viewport {
   --banner-width: 2560px;
   --banner-height: 1440px;
-  --banner-scale: 1;
+  --banner-scale: min(calc(100vw / var(--banner-width)), calc(100vh / var(--banner-height)));
   --safe-width: 1400px;
   --safe-height: 320px;
   width: 100vw;

@@ -40,7 +40,6 @@
       "ignoreDependencies": ["@maseaaao/ui"]
     },
     "artwork": {
-      "entry": ["banners/banner.ts"],
       // Used by styles.css.
       "ignoreDependencies": ["@maseaaao/design"]
     },

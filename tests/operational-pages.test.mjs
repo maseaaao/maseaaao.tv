@@ -166,6 +166,39 @@ for (const file of ['check.html', 'docs.html']) {
   });
 }
 
+test('banners fit and stay centered when the viewport changes without JavaScript', async () => {
+  for (const banner of [
+    { name: 'twitch', width: 1200, height: 480 },
+    { name: 'youtube', width: 2560, height: 1440 },
+    { name: 'offline', width: 1920, height: 1080 },
+  ]) {
+    const page = await browser.newPage({ javaScriptEnabled: false });
+    try {
+      await page.goto(`${origin}/.build-cache/artwork/banners/${banner.name}.html`);
+      for (const viewport of [
+        { width: banner.width, height: banner.height },
+        { width: 390, height: 844 },
+        { width: 1000, height: 300 },
+        { width: banner.width * 2, height: banner.height * 2 },
+      ]) {
+        await page.setViewportSize(viewport);
+        const bounds = await page.locator('.banner-shell').boundingBox();
+        assert.ok(bounds, banner.name);
+        const scale = Math.min(viewport.width / banner.width, viewport.height / banner.height);
+        const width = banner.width * scale;
+        const height = banner.height * scale;
+        const context = `${banner.name}: ${viewport.width}×${viewport.height}`;
+        assert.ok(Math.abs(bounds.width - width) < 0.1, `${context}: width`);
+        assert.ok(Math.abs(bounds.height - height) < 0.1, `${context}: height`);
+        assert.ok(Math.abs(bounds.x - (viewport.width - width) / 2) < 0.1, `${context}: x`);
+        assert.ok(Math.abs(bounds.y - (viewport.height - height) / 2) < 0.1, `${context}: y`);
+      }
+    } finally {
+      await page.close();
+    }
+  }
+});
+
 test('all banners and Twitch panels load local fonts without clipping supplied headings', async () => {
   const panels = (await fs.readdir(path.join(root, 'artwork/twitch-description'))).filter((f) =>
     f.endsWith('.html'),
