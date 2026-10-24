@@ -8,7 +8,7 @@
 
 Для пресета создать Action PRESET | Название игры в группе STREAM INFO. Он задаёт persistent globals `stream_info.template.twitch`, `stream_info.template.subtitle`, `stream_info.preset.twitchCategoryId`, `stream_info.preset.twitchTagsJson`, затем вызывает API с command=applyPreset. Пустые категория/теги не меняют соответствующие поля.
 
-Проверки из корня: `bun run check:stream-info`, `bun run test:stream-info`. JS/TS-тесты запускаются через `bun test` из `apps/stream-info`; JSDOM задаёт DOM-окружение, а `@sinonjs/fake-timers` обеспечивает асинхронную прокрутку таймеров. Полная команда `test:stream-info` также запускает C#-проверки. Кеш состояния — 5 секунд со сбросом после записи. Поиск категорий ранжирует результаты, сохраняет выбор по ID и отличает ошибку от пустой выдачи.
+Проверки из корня: `bun run --filter ./apps/stream-info check`, `bun run test:stream-info`. JS/TS-тесты запускаются через `bun test` из `apps/stream-info`; JSDOM задаёт DOM-окружение, а `@sinonjs/fake-timers` обеспечивает асинхронную прокрутку таймеров. Полная команда `test:stream-info` также запускает C#-проверки. Кеш состояния — 5 секунд со сбросом после записи. Поиск категорий ранжирует результаты, сохраняет выбор по ID и отличает ошибку от пустой выдачи.
 
 UI собран без фреймворка: `src/render.ts` — единственный источник разметки Dock (`initDock(host, { demo? })` возвращает `Dock` c `dispose()`), `src/controller.ts` владеет реактивным состоянием и транспортом, `src/reactive.ts` — минимальный прокси-слой, выкладка DOM одним проходом микротаской. Общие классовые стили берутся из `@maseaaao/ui` через workspace exports. Иконки — только доверенные встроенные SVG из `src/icons.ts`; сетевые данные выводятся текстом, `innerHTML` для данных приложения не используется.
 

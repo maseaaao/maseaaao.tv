@@ -29,9 +29,11 @@ blur дочернего текста не должен преждевремен�
 ## Artwork
 
 Геометрия сцен — `artwork/scenes/layout.json`; утверждённые аватар и QR сохранять.
-Генераторы запускаются явно из корня: `render:logo`, `render:scenes`,
-`render:banners`, `render:twitch-description`, `render:wallpapers`, `render:favicon`.
-Вызов: `bun run <имя>`. Сначала изменить источник, затем пересобрать нужный экспорт.
+Генераторы запускаются явно из корня: `bun run render:logo`, `bun run render:scenes`
+и `bun run render:artwork <группа>` (`banners`, `panels`, `wallpapers`, `brand`, `favicon`).
+Без группы `render:artwork` создаёт все изображения, кроме логотипа и сцен;
+`bun run verify:artwork` выполняет полный экспорт. Сначала изменить источник,
+затем пересобрать нужный экспорт.
 
 Настройка сцен: [artwork/scenes/SETUP.md](../artwork/scenes/SETUP.md).
 
