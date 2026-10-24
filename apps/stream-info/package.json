@@ -10,7 +10,7 @@
     "dev": "vite",
     "generate-import": "bun scripts/generate-import.mjs && bun scripts/verify-import.mjs",
     "check": "tsc --noEmit",
-    "test": "vitest run && dotnet run --project tests/csharp/StreamerbotTests.csproj --configuration Release",
+    "test": "bun test && dotnet run --project tests/csharp/StreamerbotTests.csproj --configuration Release",
     "build": "bun run generate-import && vite build && bun scripts/verify-build.mjs",
     "preview": "vite preview",
     "source": "bun ../../tooling/source-task.mjs"
@@ -28,7 +28,9 @@
     "typescript": "5.8.3",
     "vite": "6.4.3",
     "vite-plugin-singlefile": "2.3.4",
-    "vitest": "^5.0.0",
+    "@types/bun": "1.4.4",
+    "@types/jsdom": "^21.1.7",
+    "@sinonjs/fake-timers": "15.4.0",
     "@maseaaao/build-config": "workspace:*",
     "jsonc-parser": "3.3.1"
   }

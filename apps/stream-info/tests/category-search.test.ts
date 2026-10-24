@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'bun:test';
 import { rankCategories } from '../src/category-search';
 import fixtures from './fixtures/category-search.json';
 

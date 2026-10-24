@@ -1,18 +1,12 @@
-import type { MockInstance } from 'vitest';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Mock } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it, jest, mock } from 'bun:test';
 import packageJson from '../package.json';
 import type { Dock } from '../src/render';
 import { parseRecord, required, textValue } from './assertions';
-import { mockStreamerbot } from './mocks/streamerbot-client';
+import { mockStreamerbot, StreamerbotClient } from './mocks/streamerbot-client';
+import { timers } from './timers';
 
-const clientMock = vi.hoisted(
-  (): { current?: typeof import('./mocks/streamerbot-client') } => ({}),
-);
-vi.mock('@streamerbot/client', async () => {
-  const module = await import('./mocks/streamerbot-client');
-  clientMock.current = module;
-  return { StreamerbotClient: module.StreamerbotClient };
-});
+mock.module('@streamerbot/client', () => ({ StreamerbotClient }));
 
 // Один микротаск-хоп: reactive-выкладка запускается из queueMicrotask, фокус и
 // обсерверы скролла планируются там же, поэтому один хоп — готовый checkpoint.
@@ -21,7 +15,7 @@ const nextTick = (): Promise<void> => new Promise<void>((resolve) => queueMicrot
 const flush = async (): Promise<void> => {
   await Promise.resolve();
   await Promise.resolve();
-  if (vi.isFakeTimers()) await vi.advanceTimersByTimeAsync(0);
+  if (timers.isFake()) await timers.advance(0);
   else await new Promise((resolve) => window.setTimeout(resolve, 0));
   await nextTick();
 };
@@ -90,8 +84,7 @@ async function setValue(name: string | RegExp, value: string): Promise<Field> {
   return input;
 }
 async function boot(options?: { demo?: boolean }): Promise<void> {
-  // resetModules can leave the previous app's callbacks in place, so each boot
-  // imports a fresh copy and disposes the old dock explicitly.
+  // Each mount owns its state and callbacks; dispose it before mounting again.
   dock?.dispose();
   dock = undefined;
   document.body.innerHTML = '<div id="app"></div>';
@@ -117,14 +110,12 @@ interface ControlledAction {
 async function controlActions(
   command: 'saveTemplates' | 'updateTwitch' | 'runPreset',
 ): Promise<ControlledAction[]> {
-  await import('@streamerbot/client');
-  const { StreamerbotClient } = required(clientMock.current);
   type Client = InstanceType<typeof StreamerbotClient>;
   type Handler = Parameters<Client['on']>[1];
   const handlers = new WeakMap<Client, Handler>();
   // The original is deliberately rebound with .call(this), not invoked unbound.
   const originalOn = StreamerbotClient.prototype.on;
-  vi.spyOn(StreamerbotClient.prototype, 'on').mockImplementation(function (
+  jest.spyOn(StreamerbotClient.prototype, 'on').mockImplementation(function (
     this: Client,
     event,
     handler,
@@ -134,7 +125,7 @@ async function controlActions(
   });
   const originalAction = StreamerbotClient.prototype.doAction;
   const pending: ControlledAction[] = [];
-  vi.spyOn(StreamerbotClient.prototype, 'doAction').mockImplementation(function (
+  jest.spyOn(StreamerbotClient.prototype, 'doAction').mockImplementation(function (
     this: Client,
     action,
     args = {},
@@ -178,26 +169,25 @@ function savedTemplateResponse(template: string): Record<string, unknown> {
 }
 
 describe('Stream Info DOM interactions', () => {
-  const open = vi.fn(() => null);
-  const writeText = vi.fn(() => Promise.resolve());
-  let timeoutSpy: MockInstance<typeof window.setTimeout>;
-  let intervalSpy: MockInstance<typeof window.setInterval>;
+  const originalOpen = window.open;
+  const open = jest.fn(() => null);
+  const writeText = jest.fn(() => Promise.resolve());
+  let timeoutSpy: Mock<typeof window.setTimeout>;
+  let intervalSpy: Mock<typeof window.setInterval>;
   let clipboardDescriptor: PropertyDescriptor | undefined;
 
   beforeEach(() => {
     clipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
-    // resetModules does not dispose callbacks belonging to the previous app.
     // Track real timers as well as the fake timers used by individual tests.
-    timeoutSpy = vi.spyOn(window, 'setTimeout');
-    intervalSpy = vi.spyOn(window, 'setInterval');
-    vi.resetModules();
+    timeoutSpy = jest.spyOn(window, 'setTimeout');
+    intervalSpy = jest.spyOn(window, 'setInterval');
     mockStreamerbot.reset();
     localStorage.clear();
     delete document.documentElement.dataset.theme;
     sessionStorage.clear();
     window.history.replaceState({}, '', '/');
     document.body.innerHTML = '<div id="app"></div>';
-    vi.stubGlobal('open', open);
+    window.open = open;
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
     open.mockClear();
     writeText.mockClear();
@@ -207,16 +197,16 @@ describe('Stream Info DOM interactions', () => {
     dock?.dispose();
     dock = undefined;
     document.body.replaceChildren();
-    vi.clearAllTimers();
-    vi.useRealTimers();
+    timers.clear();
+    timers.useReal();
     for (const result of timeoutSpy.mock.results) {
       if (result.type === 'return') window.clearTimeout(result.value);
     }
     for (const result of intervalSpy.mock.results) {
       if (result.type === 'return') window.clearInterval(result.value);
     }
-    vi.restoreAllMocks();
-    vi.unstubAllGlobals();
+    jest.restoreAllMocks();
+    window.open = originalOpen;
     if (clipboardDescriptor) Object.defineProperty(navigator, 'clipboard', clipboardDescriptor);
     else Reflect.deleteProperty(navigator, 'clipboard');
   });
@@ -235,23 +225,23 @@ describe('Stream Info DOM interactions', () => {
     'ignores retired client %s without disturbing a new pending search',
     async (hook) => {
       await boot();
-      vi.useFakeTimers();
+      timers.useFake();
       const old = required(mockStreamerbot.instances[0]);
       await setValue('Категория', 'Adventure');
       await click('Настройки');
       await setValue('Порт', '8081');
       await click('Сохранить подключение');
-      await vi.advanceTimersByTimeAsync(250);
+      await timers.advance(250);
       mockStreamerbot.deferSearch = true;
       await setValue('Категория', 'Adventure new');
-      await vi.advanceTimersByTimeAsync(250);
+      await timers.advance(250);
       old.options[hook]?.(new Error('old password error'));
-      await vi.advanceTimersByTimeAsync(0);
+      await timers.advance(0);
       expect(roleText('status', 'Streamer.bot подключён')).not.toBeNull();
       required(mockStreamerbot.pendingSearches[0]).reply({
         data: { results: [{ id: 'fresh', name: 'Adventure new' }] },
       });
-      await vi.advanceTimersByTimeAsync(0);
+      await timers.advance(0);
       expect(categoryOption().textContent?.trim()).toBe('Adventure new');
       expect(document.querySelector('.auth-panel')).toBeNull();
     },
@@ -261,24 +251,24 @@ describe('Stream Info DOM interactions', () => {
     'ignores retired getState completion %s replacement connection',
     async (timing) => {
       await boot();
-      vi.useFakeTimers();
+      timers.useFake();
       const old = required(mockStreamerbot.instances[0]);
       const original = old.doAction.bind(old);
       let finish: () => void = () => {
         throw new Error('Fixture callback was not installed');
       };
-      vi.spyOn(old, 'doAction').mockImplementationOnce(async (action, args) => {
+      jest.spyOn(old, 'doAction').mockImplementationOnce(async (action, args) => {
         await original(action, args);
         await new Promise<void>((resolve) => {
           finish = resolve;
         });
       });
       await click('Обновить данные');
-      await vi.advanceTimersByTimeAsync(0);
+      await timers.advance(0);
       let disconnected: () => void = () => {
         throw new Error('Fixture callback was not installed');
       };
-      vi.spyOn(old, 'disconnect').mockImplementationOnce(
+      jest.spyOn(old, 'disconnect').mockImplementationOnce(
         () =>
           new Promise<void>((resolve) => {
             disconnected = resolve;
@@ -291,17 +281,17 @@ describe('Stream Info DOM interactions', () => {
       await click('Сохранить подключение');
       if (timing === 'before') {
         finish();
-        await vi.advanceTimersByTimeAsync(0);
+        await timers.advance(0);
         expect(roleText('status', 'Подключение…')).not.toBeNull();
         expect(document.querySelector('.notices > [role]')).toBeNull();
         expect(document.querySelector('[role="listbox"]')).toBeNull();
       }
       disconnected();
-      await vi.advanceTimersByTimeAsync(0);
+      await timers.advance(0);
       await setValue('Категория', 'Adventure');
-      await vi.advanceTimersByTimeAsync(250);
+      await timers.advance(250);
       finish();
-      await vi.advanceTimersByTimeAsync(0);
+      await timers.advance(0);
       expect(document.querySelector('section[aria-label="Twitch"]')?.textContent).toContain(
         'Replacement account',
       );
@@ -312,12 +302,12 @@ describe('Stream Info DOM interactions', () => {
 
   it('invalidates callbacks before awaiting old disconnect', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     const old = required(mockStreamerbot.instances[0]);
     let finish: () => void = () => {
       throw new Error('Fixture callback was not installed');
     };
-    vi.spyOn(old, 'disconnect').mockImplementationOnce(
+    jest.spyOn(old, 'disconnect').mockImplementationOnce(
       () =>
         new Promise<void>((resolve) => {
           finish = resolve;
@@ -329,20 +319,20 @@ describe('Stream Info DOM interactions', () => {
     old.options.onDisconnect?.();
     old.options.onConnect?.();
     old.options.onError?.(new Error('old password error'));
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(roleText('status', 'Подключение…')).not.toBeNull();
     expect(document.querySelector('.auth-panel')).toBeNull();
     finish();
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(roleText('status', 'Streamer.bot подключён')).not.toBeNull();
   });
 
   it('renders a failed search envelope as retryable error, never empty', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     mockStreamerbot.searchReply = { ok: false, error: { message: 'Search unavailable' } };
     await setValue('Категория', 'Adventure');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(roleText('alert', 'Search unavailable')).not.toBeNull();
     expect(roleText('status', 'Ничего не найдено')).toBeNull();
     mockStreamerbot.searchReply = {
@@ -350,7 +340,7 @@ describe('Stream Info DOM interactions', () => {
       data: { results: [{ id: 'adventure', name: 'Adventure', imageUrl: '' }] },
     };
     await click('Повторить поиск');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(categoryOption().textContent).toContain('Adventure');
     expect(
       JSON.parse(textValue(mockStreamerbot.actionCalls.at(-1)?.args.payloadJson)),
@@ -361,56 +351,56 @@ describe('Stream Info DOM interactions', () => {
 
   it('serializes search requests and rejects stale ABA responses deterministically', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     mockStreamerbot.deferSearch = true;
     const selector = 'Категория';
     await setValue(selector, 'Alpha');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     await setValue(selector, 'Beta');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     await setValue(selector, 'Alpha');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(mockStreamerbot.pendingSearches).toHaveLength(1);
     required(mockStreamerbot.pendingSearches[0]).reply({
       data: { results: [{ id: 'old', name: 'Old Alpha' }] },
     });
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(optionNamed('Old Alpha')).toBeNull();
     expect(mockStreamerbot.pendingSearches).toHaveLength(2);
     expect(required(mockStreamerbot.pendingSearches[1]).payload).toEqual({ query: 'Alpha' });
     required(mockStreamerbot.pendingSearches[1]).reply({
       data: { results: [{ id: 'new', name: 'Alpha new' }] },
     });
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(categoryOption().textContent?.trim()).toBe('Alpha new');
   });
 
   it('invalidates pending search on reconnect but retains the query draft', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     mockStreamerbot.deferSearch = true;
     await setValue('Категория', 'Adventure');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     mockStreamerbot.disconnectHook?.();
     required(mockStreamerbot.pendingSearches[0]).reply({
       data: { results: [{ id: 'stale', name: 'Adventure stale' }] },
     });
     await click('Настройки');
     await click('Сохранить подключение');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(queryField('Категория')?.value).toBe('Adventure');
     expect(optionNamed('Adventure stale')).toBeNull();
     expect(mockStreamerbot.pendingSearches).toHaveLength(2);
     required(mockStreamerbot.pendingSearches[1]).reply({
       data: { results: [{ id: 'fresh', name: 'Adventure fresh' }] },
     });
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(categoryOption().textContent?.trim()).toBe('Adventure fresh');
   });
 
   it('retains category input identity, caret and composition through background refresh', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     const selector = 'Категория';
     const input = required(queryField(selector));
     input.focus();
@@ -419,35 +409,35 @@ describe('Stream Info DOM interactions', () => {
     await setValue(selector, '冒険');
     input.setSelectionRange(1, 1);
     await click('Обновить данные');
-    await vi.advanceTimersByTimeAsync(500);
+    await timers.advance(500);
     expect(queryField(selector)).toBe(input);
     expect(document.activeElement).toBe(input);
     expect(input.selectionStart).toBe(1);
     expect(commands().filter((command) => command === 'searchTwitchCategories')).toHaveLength(0);
     input.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true }));
     await nextTick();
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(commands().filter((command) => command === 'searchTwitchCategories')).toHaveLength(1);
     await click('Обновить данные');
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(queryField(selector)).toBe(input);
     expect(input.value).toBe('冒険');
   });
 
   it('preserves a focused category button by ID through refresh', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     await setValue('Категория', 'PUBG');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     categoryOption().focus();
     await click('Обновить данные');
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(document.activeElement).toBe(optionNamed('PUBG: BATTLEGROUNDS'));
   });
 
   it('shows ranked batches of twenty and merges cursor pages beyond one hundred candidates', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     const results = Array.from({ length: 100 }, (_, index) => ({
       id: `game-${index}`,
       name: `Adventure ${index}`,
@@ -457,7 +447,7 @@ describe('Stream Info DOM interactions', () => {
       data: { results, cursor: 'page-two', hasMore: true, partial: false },
     };
     await setValue('Категория', 'Adventure');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(options()).toHaveLength(20);
     for (let index = 0; index < 4; index++) await click('Показать ещё');
     expect(options()).toHaveLength(100);
@@ -480,7 +470,7 @@ describe('Stream Info DOM interactions', () => {
     categoryOption(50).focus();
     await click('Показать ещё');
     expect(options()).toHaveLength(100);
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(options()).toHaveLength(120);
     expect(document.querySelector<HTMLElement>('[role="listbox"]')?.scrollTop).toBe(77);
     expect(document.activeElement).toBe(optionNamed('Adventure 50'));
@@ -495,7 +485,7 @@ describe('Stream Info DOM interactions', () => {
 
   it('shows partial warnings separately from errors and does not call a continuable page empty', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     mockStreamerbot.searchReply = {
       data: {
         results: [],
@@ -506,7 +496,7 @@ describe('Stream Info DOM interactions', () => {
       },
     };
     await setValue('Категория', 'Adventure');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(document.querySelector('.category-search-warning')?.textContent).toContain(
       'Some sources unavailable',
     );
@@ -515,7 +505,7 @@ describe('Stream Info DOM interactions', () => {
     expect(button('Показать ещё').disabled).toBe(false);
     mockStreamerbot.searchReply = { ok: false, error: { message: 'Page failed' } };
     await click('Показать ещё');
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(document.querySelector('.category-search-status')?.textContent).toContain('Page failed');
     mockStreamerbot.searchReply = {
       data: {
@@ -526,7 +516,7 @@ describe('Stream Info DOM interactions', () => {
       },
     };
     await click('Повторить поиск');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(JSON.parse(textValue(mockStreamerbot.actionCalls.at(-1)?.args.payloadJson))).toEqual({
       query: 'Adventure',
       cursor: 'continue',
@@ -536,7 +526,7 @@ describe('Stream Info DOM interactions', () => {
 
   it('supports accessible keyboard selection without guessing the first result', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     mockStreamerbot.searchReply = {
       data: {
         results: [
@@ -547,7 +537,7 @@ describe('Stream Info DOM interactions', () => {
     };
     const input = (await setValue('Категория', 'Adventure')) as HTMLInputElement;
     input.focus();
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(input.getAttribute('role')).toBe('combobox');
     expect(input.getAttribute('aria-expanded')).toBe('true');
     expect(
@@ -563,7 +553,7 @@ describe('Stream Info DOM interactions', () => {
     const active = input.getAttribute('aria-activedescendant');
     expect(document.getElementById(required(active))?.textContent?.trim()).toBe('Adventure two');
     await click('Обновить данные');
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(input.getAttribute('aria-activedescendant')).toBe(active);
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
     await nextTick();
@@ -576,8 +566,8 @@ describe('Stream Info DOM interactions', () => {
 
   it('scrolls the keyboard-active category into view after rendering', async () => {
     await boot();
-    vi.useFakeTimers();
-    const scroll = vi.fn();
+    timers.useFake();
+    const scroll = jest.fn();
     Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
       configurable: true,
       value: scroll,
@@ -592,7 +582,7 @@ describe('Stream Info DOM interactions', () => {
         },
       };
       const input = await setValue('Категория', 'Adventure');
-      await vi.advanceTimersByTimeAsync(250);
+      await timers.advance(250);
       for (let i = 0; i < 15; i++) {
         input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
         await nextTick();
@@ -650,10 +640,10 @@ describe('Stream Info DOM interactions', () => {
 
   it('returns focus to category query input instead of BODY when choosing a category', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     mockStreamerbot.searchReply = { data: { results: [{ id: 'pubg', name: 'PUBG' }] } };
     await setValue('Категория', 'PUBG');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     categoryOption().click();
     await nextTick();
     expect(document.activeElement).toBe(queryField('Категория'));
@@ -661,12 +651,12 @@ describe('Stream Info DOM interactions', () => {
 
   it('retains load-more focus while fetching the next page', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     mockStreamerbot.searchReply = {
       data: { results: [{ id: 'one', name: 'Adventure one' }], cursor: 'next', hasMore: true },
     };
     await setValue('Категория', 'Adventure');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     mockStreamerbot.deferSearch = true;
     button('Показать ещё').focus();
     await click('Показать ещё');
@@ -678,7 +668,7 @@ describe('Stream Info DOM interactions', () => {
     required(mockStreamerbot.pendingSearches[0]).reply({
       data: { results: [{ id: 'two', name: 'Adventure two' }], cursor: 'third', hasMore: true },
     });
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(document.activeElement).toBe(button('Показать ещё'));
     expect(button('Показать ещё').getAttribute('aria-disabled')).toBe('false');
     expect(mockStreamerbot.pendingSearches).toHaveLength(1);
@@ -686,30 +676,30 @@ describe('Stream Info DOM interactions', () => {
 
   it('renders old results-only replies including a genuine empty result', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     mockStreamerbot.searchReply = { data: { results: [] } };
     await setValue('Категория', 'Puzzle');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(roleText('status', 'Ничего не найдено')).not.toBeNull();
     expect(buttons('Повторить поиск')[0] ?? null).toBeNull();
     mockStreamerbot.searchReply = { data: { results: [{ id: 'puzzle', name: 'Puzzle' }] } };
     await setValue('Категория', 'Puzzles');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(categoryOption().textContent?.trim()).toBe('Puzzle');
     expect(buttons('Показать ещё')[0] ?? null).toBeNull();
   });
 
   it('keeps candidates after a continuation failure and retries only that cursor', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     mockStreamerbot.searchReply = {
       data: { results: [{ id: 'sim', name: 'Simulator' }], cursor: 'next', hasMore: true },
     };
     await setValue('Категория', 'Simulator');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     mockStreamerbot.searchReply = { ok: false, error: { message: 'Temporarily unavailable' } };
     await click('Показать ещё');
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(categoryOption().textContent?.trim()).toBe('Simulator');
     expect(document.querySelector('.category-search-status')?.textContent).toContain(
       'Temporarily unavailable',
@@ -725,7 +715,7 @@ describe('Stream Info DOM interactions', () => {
       },
     };
     await click('Повторить поиск');
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(options()).toHaveLength(2);
     expect(JSON.parse(textValue(mockStreamerbot.actionCalls.at(-1)?.args.payloadJson))).toEqual({
       query: 'Simulator',
@@ -735,7 +725,7 @@ describe('Stream Info DOM interactions', () => {
 
   it('escapes category names and image attributes and falls back without inline handlers', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     mockStreamerbot.searchReply = {
       data: {
         results: [
@@ -748,7 +738,7 @@ describe('Stream Info DOM interactions', () => {
       },
     };
     await setValue('Категория', 'Safe');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     const option = categoryOption();
     expect(option.querySelectorAll('img')).toHaveLength(1);
     expect(option.querySelector('[onerror]')).toBeNull();
@@ -770,10 +760,10 @@ describe('Stream Info DOM interactions', () => {
     'rejects malformed or failing search replies %j',
     async (envelope) => {
       await boot();
-      vi.useFakeTimers();
+      timers.useFake();
       mockStreamerbot.searchReply = envelope;
       await setValue('Категория', 'Puzzle');
-      await vi.advanceTimersByTimeAsync(250);
+      await timers.advance(250);
       expect(buttons('Повторить поиск')[0] ?? null).not.toBeNull();
       expect(options()[0] ?? null).toBeNull();
     },
@@ -781,7 +771,7 @@ describe('Stream Info DOM interactions', () => {
 
   it('retains earlier partial warnings after a successful continuation page', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     mockStreamerbot.searchReply = {
       data: {
         results: [{ id: 'one', name: 'Adventure one' }],
@@ -792,7 +782,7 @@ describe('Stream Info DOM interactions', () => {
       },
     };
     await setValue('Категория', 'Adventure');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     mockStreamerbot.searchReply = {
       data: {
         results: [{ id: 'two', name: 'Adventure two' }],
@@ -802,7 +792,7 @@ describe('Stream Info DOM interactions', () => {
       },
     };
     await click('Показать ещё');
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(document.querySelector('.category-search-warning')?.textContent).toContain(
       'One source unavailable',
     );
@@ -826,9 +816,9 @@ describe('Stream Info DOM interactions', () => {
 
   it('keeps search candidates and draft when closing settings', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     await setValue('Категория', 'PUBG');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     await click('Настройки');
     await click('Закрыть');
     expect(categoryOption().textContent).toContain('PUBG');
@@ -937,7 +927,6 @@ describe('Stream Info DOM interactions', () => {
       'Recovered %subtitle%',
     );
 
-    vi.resetModules();
     document.body.innerHTML = '<div id="app"></div>';
     await boot();
     await click('Настройки');
@@ -952,7 +941,7 @@ describe('Stream Info DOM interactions', () => {
   it.each(['ack-first', 'event-first'] as const)(
     'requires both independent template-save completions (%s)',
     async (order) => {
-      vi.useFakeTimers();
+      timers.useFake();
       const pending = await controlActions('saveTemplates');
       await boot();
       await setValue('Шаблон Twitch', 'Saved %subtitle%');
@@ -987,7 +976,7 @@ describe('Stream Info DOM interactions', () => {
   it.each([false, true])(
     'rejects a failed ACK even if CodeEvent already arrived: %s',
     async (eventFirst) => {
-      vi.useFakeTimers();
+      timers.useFake();
       const pending = await controlActions('saveTemplates');
       await boot();
       await setValue('Шаблон Twitch', 'Rejected %subtitle%');
@@ -1006,7 +995,7 @@ describe('Stream Info DOM interactions', () => {
       expect(notice.closest('[inert]')).toBeNull();
       expect(document.querySelector('.dock-scroll')?.contains(notice)).toBe(true);
       request.respond(savedTemplateResponse('Rejected %subtitle%'));
-      await vi.advanceTimersByTimeAsync(15_000);
+      await timers.advance(15_000);
       expect(localStorage.getItem('change-info-streamer-bot.settings.v1')).toBe(before);
       expect(field('Шаблон Twitch').value).toBe('Rejected %subtitle%');
       expect(document.querySelectorAll('.notices > [role]')).toHaveLength(1);
@@ -1016,17 +1005,17 @@ describe('Stream Info DOM interactions', () => {
   it.each([false, true])(
     'bounds a missing CodeEvent to 15 seconds with ACK completed: %s',
     async (acknowledged) => {
-      vi.useFakeTimers();
+      timers.useFake();
       const pending = await controlActions('saveTemplates');
       await boot();
       await setValue('Шаблон Twitch', 'Timed out %subtitle%');
       await click('Применить изменения');
       const request = required(pending[0]);
       if (acknowledged) request.acknowledge();
-      await vi.advanceTimersByTimeAsync(14_999);
+      await timers.advance(14_999);
       expect(button('Применить изменения').disabled).toBe(true);
       expect(document.querySelector('.notices > [role]')).toBeNull();
-      await vi.advanceTimersByTimeAsync(1);
+      await timers.advance(1);
       expect(button('Применить изменения').disabled).toBe(false);
       expect(document.querySelector('.notices > [role="alert"]')?.textContent).toContain(
         '15 секунд',
@@ -1043,7 +1032,7 @@ describe('Stream Info DOM interactions', () => {
   );
 
   it('times out a missing ACK after CodeEvent and isolates a late ACK from retry', async () => {
-    vi.useFakeTimers();
+    timers.useFake();
     const pending = await controlActions('saveTemplates');
     await boot();
     await setValue('Шаблон Twitch', 'First %subtitle%');
@@ -1051,9 +1040,9 @@ describe('Stream Info DOM interactions', () => {
     const first = required(pending[0]);
     const before = localStorage.getItem('change-info-streamer-bot.settings.v1');
     first.respond(savedTemplateResponse('First %subtitle%'));
-    await vi.advanceTimersByTimeAsync(14_999);
+    await timers.advance(14_999);
     expect(button('Применить изменения').disabled).toBe(true);
-    await vi.advanceTimersByTimeAsync(1);
+    await timers.advance(1);
     expect(button('Применить изменения').disabled).toBe(false);
     expect(document.querySelector('[role="alert"]')?.textContent).toContain('15 секунд');
     expect(localStorage.getItem('change-info-streamer-bot.settings.v1')).toBe(before);
@@ -1108,7 +1097,7 @@ describe('Stream Info DOM interactions', () => {
       it.each(['ack', 'event'] as const)(
         `ignores retired ${command} after ${lifecycle} while waiting for %s`,
         async (boundary) => {
-          vi.useFakeTimers();
+          timers.useFake();
           const pending = await controlActions(command);
           await boot();
           await startControlledOperation(command);
@@ -1128,11 +1117,11 @@ describe('Stream Info DOM interactions', () => {
             settings: localStorage.getItem('change-info-streamer-bot.settings.v1'),
             draft: sessionStorage.getItem('change-info-streamer-bot.template-draft.v1'),
             calls: mockStreamerbot.actionCalls.length,
-            timers: vi.getTimerCount(),
+            timers: timers.count(),
           };
           retired.respond(envelope);
           retired.acknowledge();
-          await vi.advanceTimersByTimeAsync(1000);
+          await timers.advance(1000);
           expect(document.body.innerHTML).toBe(before.html);
           expect(localStorage.getItem('change-info-streamer-bot.settings.v1')).toBe(
             before.settings,
@@ -1141,7 +1130,7 @@ describe('Stream Info DOM interactions', () => {
             before.draft,
           );
           expect(mockStreamerbot.actionCalls).toHaveLength(before.calls);
-          expect(vi.getTimerCount()).toBe(before.timers);
+          expect(timers.count()).toBe(before.timers);
           expect(
             button(command === 'saveTemplates' ? 'Применить изменения' : 'Применить изменения')
               .disabled,
@@ -1155,7 +1144,7 @@ describe('Stream Info DOM interactions', () => {
   it.each(['reconnect', 'dispose'] as const)(
     'ignores a retired preset ACK after %s without refreshing or resetting the new preset',
     async (lifecycle) => {
-      vi.useFakeTimers();
+      timers.useFake();
       const pending = await controlActions('runPreset');
       await boot();
       await startControlledOperation('runPreset');
@@ -1164,12 +1153,12 @@ describe('Stream Info DOM interactions', () => {
       await startControlledOperation('runPreset');
       expect(pending).toHaveLength(2);
       const before = mockStreamerbot.actionCalls.length;
-      const timers = vi.getTimerCount();
+      const timerCount = timers.count();
       retired.acknowledge();
-      await vi.advanceTimersByTimeAsync(1000);
+      await timers.advance(1000);
       expect(button('PUBG').disabled).toBe(true);
       expect(mockStreamerbot.actionCalls).toHaveLength(before);
-      expect(vi.getTimerCount()).toBe(timers);
+      expect(timers.count()).toBe(timerCount);
       expect(document.querySelector('.notices > [role]')).toBeNull();
     },
   );
@@ -1177,9 +1166,9 @@ describe('Stream Info DOM interactions', () => {
   it('retains the unsaved template status when saving fails', async () => {
     await boot();
     await setValue('Шаблон Twitch', 'Draft %subtitle%');
-    vi.spyOn(required(mockStreamerbot.instances[0]), 'doAction').mockRejectedValueOnce(
-      new Error('Save rejected'),
-    );
+    jest
+      .spyOn(required(mockStreamerbot.instances[0]), 'doAction')
+      .mockRejectedValueOnce(new Error('Save rejected'));
     if (document.querySelector('[role="dialog"]')) await click('Закрыть');
     await click('Применить изменения');
     await flush();
@@ -1233,12 +1222,12 @@ describe('Stream Info DOM interactions', () => {
 
   it('keeps Twitch results selectable when blur emits a duplicate change', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     const selector = 'Категория';
     const fieldBefore = required(queryField(selector));
     await setValue(selector, 'PUBG');
     expect(queryField(selector)).toBe(fieldBefore);
-    await vi.advanceTimersByTimeAsync(350);
+    await timers.advance(350);
     const option = categoryOption();
     const field = required(queryField(selector));
     field.dispatchEvent(new Event('change', { bubbles: true }));
@@ -1252,14 +1241,14 @@ describe('Stream Info DOM interactions', () => {
 
   it('invalidates in-flight Twitch results when the query is cleared', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     mockStreamerbot.searchDelay = 200;
     const selector = 'Категория';
     await setValue(selector, 'PUBG');
-    await vi.advanceTimersByTimeAsync(320);
+    await timers.advance(320);
     await setValue(selector, '');
     const clearedField = queryField(selector);
-    await vi.advanceTimersByTimeAsync(220);
+    await timers.advance(220);
     expect(queryField(selector)).toBe(clearedField);
     await setValue(selector, 'Rust');
     expect(options()[0] ?? null).toBeNull();
@@ -1315,7 +1304,7 @@ describe('Stream Info DOM interactions', () => {
     await boot();
     const client = required(mockStreamerbot.instances[0]);
     const original = client.doAction.bind(client);
-    vi.spyOn(client, 'doAction').mockImplementation(async (action, args) => {
+    jest.spyOn(client, 'doAction').mockImplementation(async (action, args) => {
       if (args?.command === 'updateTwitch') throw new Error('Update rejected');
       return original(action, args);
     });
@@ -1362,9 +1351,9 @@ describe('Stream Info DOM interactions', () => {
       expect(search.value).toBe('');
       expect(search.placeholder).not.toContain(required(selected.textContent));
     }
-    vi.useFakeTimers();
+    timers.useFake();
     await setValue('Категория', 'PUBG');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(categoryOption().textContent?.trim()).toBe('PUBG: BATTLEGROUNDS');
     expect(categoryOption().textContent).not.toContain('ID:');
     categoryOption().click();
@@ -1382,14 +1371,14 @@ describe('Stream Info DOM interactions', () => {
     await click(/^Удалить тег[: ]/, 1);
     expect(buttons(/^Удалить тег[: ]/)).toHaveLength(1);
     await setValue('Название', 'Новое Twitch название');
-    vi.useFakeTimers();
+    timers.useFake();
     await setValue('Категория', 'PUBG');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(options()[0] ?? null).not.toBeNull();
     categoryOption().click();
     await nextTick();
     expect(options()[0] ?? null).toBeNull();
-    vi.useRealTimers();
+    timers.useReal();
     await click('Применить изменения');
     await flush();
     const twitch = mockStreamerbot.actionCalls.find((call) => call.args.command === 'updateTwitch');
@@ -1429,9 +1418,9 @@ describe('Stream Info DOM interactions', () => {
     await click('Настройки');
     await setValue('Шаблон Twitch', 'Тест %subtitle%');
     await click('Закрыть');
-    vi.spyOn(required(mockStreamerbot.instances[0]), 'doAction').mockRejectedValueOnce(
-      new Error('Fixture save failure'),
-    );
+    jest
+      .spyOn(required(mockStreamerbot.instances[0]), 'doAction')
+      .mockRejectedValueOnce(new Error('Fixture save failure'));
     await click('Применить изменения');
     await flush();
     expect(document.querySelector('.notices > [role]')).not.toBeNull();
@@ -1493,14 +1482,14 @@ describe('Stream Info DOM interactions', () => {
   });
   it('debounces category input for exactly 250ms and only searches the latest draft', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     await setValue('Категория', 'Adv');
-    await vi.advanceTimersByTimeAsync(249);
+    await timers.advance(249);
     expect(commands()).not.toContain('searchTwitchCategories');
     await setValue('Категория', 'Adventure');
-    await vi.advanceTimersByTimeAsync(249);
+    await timers.advance(249);
     expect(commands()).not.toContain('searchTwitchCategories');
-    await vi.advanceTimersByTimeAsync(1);
+    await timers.advance(1);
     const calls = mockStreamerbot.actionCalls.filter(
       (call) => call.args.command === 'searchTwitchCategories',
     );
@@ -1512,39 +1501,39 @@ describe('Stream Info DOM interactions', () => {
 
   it('refreshes preset state after 700ms rather than immediately', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     const before = commands().filter((command) => command === 'getState').length;
     await click('PUBG');
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(mockStreamerbot.actionCalls.some((call) => call.id === 'preset-pubg')).toBe(true);
-    await vi.advanceTimersByTimeAsync(699);
+    await timers.advance(699);
     expect(commands().filter((command) => command === 'getState')).toHaveLength(before);
-    await vi.advanceTimersByTimeAsync(1);
+    await timers.advance(1);
     expect(commands().filter((command) => command === 'getState')).toHaveLength(before + 1);
   });
 
   it('times out an unanswered category request after 15 seconds and allows retry', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     mockStreamerbot.deferSearch = true;
     await setValue('Категория', 'Adventure');
-    await vi.advanceTimersByTimeAsync(250);
-    await vi.advanceTimersByTimeAsync(14_999);
+    await timers.advance(250);
+    await timers.advance(14_999);
     expect(buttons('Повторить поиск')).toHaveLength(0);
-    await vi.advanceTimersByTimeAsync(1);
+    await timers.advance(1);
     expect(document.querySelector('[role="alert"]')?.textContent).toContain('15 секунд');
     expect(button('Повторить поиск').disabled).toBe(false);
     required(mockStreamerbot.pendingSearches[0]).reply({
       data: { results: [{ id: 'late', name: 'Too late' }] },
     });
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(optionNamed('Too late')).toBeNull();
     await click('Повторить поиск');
     expect(mockStreamerbot.pendingSearches).toHaveLength(2);
     required(mockStreamerbot.pendingSearches[1]).reply({
       data: { results: [{ id: 'fresh', name: 'Adventure retry' }] },
     });
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(categoryOption().textContent?.trim()).toBe('Adventure retry');
   });
 
@@ -1598,44 +1587,44 @@ describe('Stream Info DOM interactions', () => {
   });
 
   it('unmounts timers and visibility listener and ignores retired replies after remount', async () => {
-    vi.useFakeTimers();
-    const addListener = vi.spyOn(document, 'addEventListener');
-    const removeListener = vi.spyOn(document, 'removeEventListener');
+    timers.useFake();
+    const addListener = jest.spyOn(document, 'addEventListener');
+    const removeListener = jest.spyOn(document, 'removeEventListener');
     await boot();
     const old = required(mockStreamerbot.instances[0]);
-    const disconnect = vi.spyOn(old, 'disconnect');
+    const disconnect = jest.spyOn(old, 'disconnect');
     const listener = required(
       addListener.mock.calls.find(([event]) => event === 'visibilitychange'),
     )[1];
-    expect(vi.getTimerCount()).toBe(1);
+    expect(timers.count()).toBe(1);
     mockStreamerbot.deferSearch = true;
     await setValue('Категория', 'Retired query');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     const stale = required(mockStreamerbot.pendingSearches[0]);
     required(dock).dispose();
     dock = undefined;
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(disconnect).toHaveBeenCalledTimes(1);
     expect(
       removeListener.mock.calls.some(
         ([event, callback]) => event === 'visibilitychange' && callback === listener,
       ),
     ).toBe(true);
-    expect(vi.getTimerCount()).toBe(0);
+    expect(timers.count()).toBe(0);
     const before = mockStreamerbot.actionCalls.length;
     document.dispatchEvent(new Event('visibilitychange'));
-    await vi.advanceTimersByTimeAsync(30_000);
+    await timers.advance(30_000);
     expect(mockStreamerbot.actionCalls).toHaveLength(before);
 
     await boot();
-    expect(vi.getTimerCount()).toBe(1);
+    expect(timers.count()).toBe(1);
     await setValue('Категория', 'Current query');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     stale.reply({ data: { results: [{ id: 'stale', name: 'Retired result' }] } });
     old.options.onConnect?.();
     old.options.onError?.(new Error('retired password error'));
     old.options.onDisconnect?.();
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(field('Категория').value).toBe('Current query');
     expect(optionNamed('Retired result')).toBeNull();
     expect(roleText('status', 'Streamer.bot подключён')).not.toBeNull();
@@ -1643,7 +1632,7 @@ describe('Stream Info DOM interactions', () => {
     required(mockStreamerbot.pendingSearches[1]).reply({
       data: { results: [{ id: 'current', name: 'Current result' }] },
     });
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(categoryOption().textContent?.trim()).toBe('Current result');
   });
 

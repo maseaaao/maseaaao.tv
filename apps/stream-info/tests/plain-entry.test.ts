@@ -1,6 +1,6 @@
+import { expect, it } from 'bun:test';
 import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { expect, it } from 'vitest';
 
 it('authors a plain HTML entry without framework sources or dependencies', () => {
   const pkg = JSON.parse(readFileSync(resolve('package.json'), 'utf8'));
