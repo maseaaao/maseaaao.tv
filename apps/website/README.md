@@ -1,14 +1,14 @@
 # Сайт maseaaao.tv
 
-Шесть маршрутов: главная, документация, Stream Checker и три страницы инструментов. Исходники страниц — `src/components/*.vue`; сборка сохраняет SEO, canonical и JSON-LD.
+Шесть маршрутов: главная, документация, Stream Checker и три страницы инструментов. Исходники страниц — `src/**/*.html`; сборка сохраняет SEO, canonical и JSON-LD.
 
-`bun run build:website` из корня готовит Vue SSR в `.build-cache/website/ssr`, затем Vite собирает корневой `dist`. Используется `prepareVuePages` из `@maseaaao/build-config`. Публичные ресурсы из `apps/website/public` копируются без изменений, а изображения бренда поступают из `artwork/brand/rendered/website`.
+`bun run build:website` из корня собирает авторские HTML, CSS и контроллер чекера штатной многостраничной сборкой Vite в корневой `dist`. Публичные ресурсы из `apps/website/public` копируются без изменений, а изображения бренда поступают из `artwork/brand/rendered/website`.
 
 **Главная намеренно не содержит Twitch iframe, чата, Twitch Embed SDK и autoplay.** Кнопка ведёт непосредственно на Twitch, записи доступны отдельной ссылкой. LIVE-индикатор по умолчанию **отключён**, поскольку статическая публикация не располагает авторизованным публичным источником достоверного статуса эфира. При недоступности backend нельзя подставлять условный LIVE или считать ошибку offline. `LiveStatusBadge` остаётся общим компонентом Stream Info и может использоваться здесь лишь после безопасного server-side источника.
 
-`check.html` — отдельный диагностический инструмент, который **сохраняет** создание Twitch/YouTube iframe по запросу пользователя и независимый JS `check.js`. Его тесты не должны подменять контракт главной страницы.
+`check.html` — отдельный диагностический инструмент, который **сохраняет** создание Twitch/YouTube iframe по запросу пользователя и независимый JS `check.ts`. Его тесты не должны подменять контракт главной страницы.
 
-Vue используется только при сборке: на главной нет Vue runtime и гидрации. Шрифт — Unbounded 400 с content hash и preload, основной текст — Arial. OFL публикуется отдельно. Budgets: суммарный клиентский JS ≤12000 байт, HTML каждой страницы ≤25000 байт (без gzip).
+Vue, SSR и гидрации нет ни в исходниках страниц, ни в сборке. Общие CSS-классы действий импортируются из `@maseaaao/ui/components.css`. Шрифт — Unbounded 400 с content hash и preload, основной текст — Arial. OFL публикуется отдельно. Budgets: суммарный клиентский JS ≤12000 байт, HTML каждой страницы ≤25000 байт (без gzip).
 
 Проверки: `bun run build:website`, `bun run check:ui`, `bun run test:website`; новые сценарии `tests/landing-corrections.test.mjs`, `tests/landing-sync.test.mjs`, `tests/website-build.test.mjs` проверяют отсутствие remote media и доступность ссылок. Для запуска браузерных тестов нужны Playwright Chromium либо `CHROME_BIN`. Изменения исходников до сборки не означают обновление tracked `dist`.
 

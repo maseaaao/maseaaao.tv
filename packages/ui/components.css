@@ -1,0 +1,253 @@
+.app-button {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  box-sizing: border-box;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--control-height);
+  min-width: var(--control-height);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border-control);
+  border-radius: var(--radius-field);
+  background: transparent;
+  color: var(--color-text);
+  font:
+    400 16px / 1.4 Unbounded,
+    Arial,
+    sans-serif;
+  text-decoration: none;
+  max-width: 100%;
+  text-align: center;
+  overflow-wrap: anywhere;
+  transition:
+    color var(--motion-feedback, 160ms),
+    background-color var(--motion-feedback, 160ms),
+    border-color var(--motion-feedback, 160ms),
+    transform var(--motion-enter, 240ms) var(--motion-ease-spring, ease-out);
+}
+.app-button__label {
+  min-width: 0;
+}
+.app-button--primary {
+  background: var(--color-brand);
+  border-color: var(--color-brand);
+  color: var(--color-surface);
+}
+.app-button--icon {
+  padding: 0;
+  border-radius: var(--radius-tag);
+}
+.app-button--loading {
+  cursor: progress;
+}
+.app-button--loading::after {
+  content: '';
+  position: absolute;
+  inset: auto 16% 4px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentcolor;
+  transform-origin: left;
+  animation: action-progress 1.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes action-progress {
+  0%,
+  100% {
+    transform: scaleX(0.2);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scaleX(1);
+    opacity: 0.8;
+  }
+}
+.app-button:disabled,
+.app-button[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+@media (hover: hover) {
+  .app-button:hover:not(:disabled, [aria-disabled='true']) {
+    color: var(--color-brand);
+    border-color: var(--color-brand);
+    background: var(--color-accent-soft);
+  }
+  .app-button--primary:hover:not(:disabled, [aria-disabled='true']) {
+    color: var(--color-surface);
+    background: var(--color-action-hover);
+    border-color: var(--color-action-hover);
+  }
+}
+.app-button:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 4px;
+}
+.app-button--inverted {
+  color: var(--color-surface);
+  border-color: var(--color-surface);
+}
+.app-button--inverted:focus-visible {
+  outline-color: var(--color-surface);
+}
+.app-button--press:active:not(:disabled, [aria-disabled='true']) {
+  transform: translateY(1px) scale(0.985);
+  transition-duration: var(--motion-press, 80ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-button--loading::after {
+    animation: none;
+  }
+  .app-button {
+    transition: none;
+  }
+  .app-button--press:active:not(:disabled, [aria-disabled='true']) {
+    transform: none;
+  }
+}
+
+.field-input {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-2);
+  font-size: 14px;
+}
+.field-input__label {
+  color: var(--color-text);
+}
+.field-input__control {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: var(--control-height);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border-control);
+  border-radius: var(--radius-field);
+  background: var(--color-field);
+  color: var(--color-text);
+  font: inherit;
+  line-height: 1.5;
+}
+textarea.field-input__control {
+  resize: vertical;
+  min-height: 84px;
+}
+.field-input__control:disabled {
+  opacity: 0.7;
+}
+.field-input__control:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 4px;
+}
+.field-input__control--error {
+  border-color: var(--color-danger);
+}
+.field-input__help {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-muted);
+}
+.field-input__help--error {
+  color: var(--color-danger);
+}
+
+.icon-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  min-height: var(--control-height);
+  font-size: 0.93rem;
+  overflow-wrap: anywhere;
+}
+.icon-indicator__dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid currentcolor;
+  background: var(--color-border-control);
+}
+.icon-indicator__dot[data-status='connected'] {
+  animation: var(--connection-motion, connection-settle) var(--motion-scene)
+    var(--motion-ease-spring);
+  background: var(--color-success);
+  border-color: var(--color-success);
+}
+.icon-indicator__dot[data-status='connecting'] {
+  background: var(--color-warning);
+  border-color: var(--color-warning);
+}
+.icon-indicator__dot[data-status='error'] {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+}
+.icon-indicator__label {
+  min-width: 0;
+  color: var(--color-muted);
+}
+.icon-indicator--inverted .icon-indicator__label {
+  color: var(--color-surface);
+}
+.icon-indicator--inverted .icon-indicator__dot {
+  background: var(--color-surface);
+  border-color: var(--color-surface);
+}
+.icon-indicator--inverted .icon-indicator__dot[data-status='connected'] {
+  animation: var(--connection-motion, connection-settle) var(--motion-scene)
+    var(--motion-ease-spring);
+  background: color-mix(in srgb, var(--color-success) 25%, var(--color-surface));
+}
+.icon-indicator--inverted .icon-indicator__dot[data-status='connecting'] {
+  background: color-mix(in srgb, var(--color-warning) 25%, var(--color-surface));
+}
+.icon-indicator--inverted .icon-indicator__dot[data-status='error'] {
+  background: color-mix(in srgb, var(--color-danger) 25%, var(--color-surface));
+}
+
+@keyframes connection-settle {
+  from {
+    transform: scale(0.65);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon-indicator__dot {
+    --connection-motion: none;
+  }
+}
+
+.live-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-tag);
+  background: var(--color-surface);
+  color: var(--color-muted);
+  font:
+    400 12px / 1.5 Unbounded,
+    Arial,
+    sans-serif;
+}
+.live-status-badge__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentcolor;
+}
+.live-status-badge--live {
+  color: var(--color-success);
+}
+.live-status-badge--disconnected {
+  color: var(--color-danger);
+}

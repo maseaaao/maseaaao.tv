@@ -9,42 +9,54 @@ on:
         required: true
         type: string
 permissions:
-  contents: write
+  contents: read
 concurrency:
   group: release-${{ inputs.tag || github.ref_name }}
 env:
   RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
-  GH_REPO: ${{ github.repository }}
 jobs:
   release:
+    timeout-minutes: 60
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.2-noble
+      options: --init --ipc=host
+    defaults:
+      run:
+        shell: bash
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.tag || github.ref }}
           persist-credentials: false
+      - name: Require an existing tag
+        run: git show-ref --verify "refs/tags/$RELEASE_TAG"
+      - uses: ./.github/actions/setup
+      # Python is only for retained integration checks, never packaging/fonts.
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      - uses: ./.github/actions/setup
-        with:
-          cache-write: true
-      - name: Browser and fonts for widget/artwork builds
-        run: |
-          bun run browser:install --with-deps
-          python -m pip install -r tooling/artwork/requirements-fonts.txt
+      - name: Critical packaging tests
+        run: bun run test:releases
       - name: Build and test every product
-        run: python tooling/bundle-release.py --build "$RELEASE_TAG"
+        run: node tooling/bundle-release.mjs --build "$RELEASE_TAG"
       - name: Pack the verified bundle
-        run: python tooling/bundle-release.py "$RELEASE_TAG"
+        run: node tooling/bundle-release.mjs "$RELEASE_TAG"
       - name: Draft release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          cd "build/release/$RELEASE_TAG"
-          gh release create "$RELEASE_TAG" \
-            --verify-tag --draft --title "$RELEASE_TAG" --notes-file notes.md \
-            maseaaao-*.zip maseaaao-*.manifest.json SHA256SUMS
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: ${{ env.RELEASE_TAG }}
+          draft: true
+          fail_on_unmatched_files: true
+          body_path: build/release/${{ env.RELEASE_TAG }}/notes.md
+          files: |
+            build/release/${{ env.RELEASE_TAG }}/maseaaao-*.zip
+            build/release/${{ env.RELEASE_TAG }}/SHA256SUMS

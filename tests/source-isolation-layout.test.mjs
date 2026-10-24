@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import test from 'node:test';
-import { snapshot } from '../tooling/source-snapshot.mjs';
+import { snapshot } from './helpers/source-snapshot.mjs';
 
 /**
  * Dependency layouts differ between package managers: npm hoists a single

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "node build.mjs",
-    "check": "vue-tsc --noEmit",
+    "check": "tsc --noEmit",
     "source": "node ../../tooling/source-task.mjs"
   },
   "type": "module",
@@ -13,12 +13,11 @@
   },
   "devDependencies": {
     "@maseaaao/build-config": "workspace:*",
-    "vue": "3.5.44",
     "typescript": "5.8.3",
-    "vue-tsc": "3.0.8"
+    "vite": "6.4.3"
   },
   "exports": {
-    "./TunaFrame.vue": "./src/TunaFrame.vue",
-    "./ui.css": "./src/styles.css"
+    "./ui.css": "./src/styles.css",
+    "./pages/*": "./src/*"
   }
 }

@@ -8,23 +8,17 @@
   },
   "devDependencies": {
     "@maseaaao/build-config": "workspace:*",
-    "vue": "3.5.44",
     "typescript": "5.8.3",
-    "vue-tsc": "3.0.8",
-    "@maseaaao/website": "workspace:*"
+    "@maseaaao/website": "workspace:*",
+    "vite": "6.4.3"
   },
   "scripts": {
-    "check": "vue-tsc --noEmit",
+    "check": "tsc --noEmit",
     "build": "node ../tooling/build-artwork.mjs",
     "source": "node ../tooling/source-task.mjs"
   },
   "exports": {
-    "./SceneArtwork.vue": "./components/SceneArtwork.vue",
-    "./BannerArtwork.vue": "./components/BannerArtwork.vue",
-    "./OfflineBannerArtwork.vue": "./components/OfflineBannerArtwork.vue",
-    "./TwitchPanel.vue": "./components/TwitchPanel.vue",
-    "./BrandArtwork.vue": "./components/BrandArtwork.vue",
-    "./WallpaperArtwork.vue": "./components/WallpaperArtwork.vue",
-    "./styles.css": "./styles.css"
+    "./styles.css": "./styles.css",
+    "./pages/*": "./*"
   }
 }

@@ -10,12 +10,84 @@
     <link rel="icon" href="favicon.ico?v=rounded-1">
     <link rel="stylesheet" href="assets/design.css">
     <link rel="stylesheet" href="assets/site.css">
-
-    <!--page-styles-->
   </head>
 
   <body class="checker">
-    <!--page-content-->
-    <script type="module" src="assets/check.js"></script>
+    <header
+      ><h1>Stream Checker</h1
+      ><div class="global-actions"
+        ><button
+          class="app-button app-button--secondary app-button--inverted app-button--press"
+          type="button"
+          data-action="add-all"
+          ><span class="app-button__label">Добавить все</span></button
+        ><button
+          class="app-button app-button--secondary app-button--inverted app-button--press"
+          type="button"
+          data-action="remove-all"
+          data-kind="remove"
+          ><span class="app-button__label">Удалить все</span></button
+        ></div
+      ></header
+    ><main class="grid"
+      ><section class="card" data-platform="youtube"
+        ><div class="card-header"
+          ><div
+            ><h2 class="title">YouTube</h2
+            ><div class="status" role="status" data-status>iframe не создан</div></div
+          ><div class="actions"
+            ><button
+              class="app-button app-button--secondary app-button--press"
+              type="button"
+              data-action="add"
+              ><span class="app-button__label">Добавить</span></button
+            ><button
+              class="app-button app-button--secondary app-button--press"
+              type="button"
+              data-action="remove"
+              data-kind="remove"
+              ><span class="app-button__label">Удалить</span></button
+            ><a
+              class="app-button app-button--secondary app-button--press button"
+              href="https://www.youtube.com/channel/UCyJNPWpOcPfMo5csKa27yGg/live"
+              target="_blank"
+              rel="noreferrer"
+              ><span class="app-button__label">Открыть</span></a
+            ></div
+          ></div
+        ><div class="slot" data-slot
+          ><div class="placeholder">YouTube-плеер не загружен</div></div
+        ></section
+      ><section class="card" data-platform="twitch"
+        ><div class="card-header"
+          ><div
+            ><h2 class="title">Twitch</h2
+            ><div class="status" role="status" data-status>iframe не создан</div></div
+          ><div class="actions"
+            ><button
+              class="app-button app-button--secondary app-button--press"
+              type="button"
+              data-action="add"
+              ><span class="app-button__label">Добавить</span></button
+            ><button
+              class="app-button app-button--secondary app-button--press"
+              type="button"
+              data-action="remove"
+              data-kind="remove"
+              ><span class="app-button__label">Удалить</span></button
+            ><a
+              class="app-button app-button--secondary app-button--press button"
+              href="https://www.twitch.tv/maseaaao"
+              target="_blank"
+              rel="noreferrer"
+              ><span class="app-button__label">Открыть</span></a
+            ></div
+          ></div
+        ><div class="slot" data-slot
+          ><div class="placeholder">Twitch-плеер не загружен</div></div
+        ></section
+      ></main
+    >
+    <script type="module" src="assets/check.ts"></script>
   </body>
 </html>

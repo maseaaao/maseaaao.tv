@@ -1,23 +1,16 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { prepareVuePages, vuePagePlugin } from '@maseaaao/build-config/static';
 import { defineConfig } from 'vite';
 import { generatedWebsiteImages } from '../../tooling/website-assets.mjs';
 
 export default defineConfig(async () => {
   const generated = generatedWebsiteImages(fileURLToPath(new URL('../../', import.meta.url)));
   const root = fileURLToPath(new URL('./src/', import.meta.url));
-  const { renderPage, styleFile } = await prepareVuePages({
-    root,
-    ssrEntry: '../render.mjs',
-    cacheDir: fileURLToPath(new URL('../../.build-cache/website/', import.meta.url)),
-  });
   return {
-    root: fileURLToPath(new URL('./src/', import.meta.url)),
+    root,
     publicDir: '../public',
     base: '/',
     plugins: [
-      vuePagePlugin({ root, renderPage, styleFile }),
       {
         name: 'generated-website-images',
         generateBundle(_options, bundle) {
@@ -29,7 +22,7 @@ export default defineConfig(async () => {
         },
       },
       {
-        name: 'website-vue-pages',
+        name: 'website-page-budgets',
         generateBundle(_options, bundle) {
           let jsBytes = 0;
           for (const entry of Object.values(bundle)) {

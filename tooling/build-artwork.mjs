@@ -1,7 +1,8 @@
-import { readdir, readFile, rm } from 'node:fs/promises';
+import { readdir, readFile, rm, mkdir, cp } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { buildVuePages } from '@maseaaao/build-config/static';
+import { standaloneConfig } from '@maseaaao/build-config';
+import { build } from 'vite';
 import jsQR from 'jsqr';
 import sharp from 'sharp';
 
@@ -37,14 +38,33 @@ export async function buildArtwork() {
     }
   }
   await rm(output, { recursive: true, force: true });
-  await buildVuePages({
-    root: source,
-    ssrEntry: 'render.mjs',
-    pages,
-    outDir: output,
-    cacheDir: path.join(root, '.build-cache/artwork-vue'),
-  });
-  console.log('Artwork: official Vue SSR, embedded font/assets, no client Vue.');
+  for (const page of pages) {
+    const temporary = path.join(root, '.build-cache/artwork-pages', page.output);
+    const config = standaloneConfig({
+      root: source,
+      outDir: temporary,
+      fileName: path.basename(page.output),
+    });
+    config.build.modulePreload = false;
+    config.build.rollupOptions = { input: path.join(source, page.source) };
+    config.plugins.unshift({
+      name: 'artwork-script-budget',
+      generateBundle(_options, bundle) {
+        const bytes = Object.values(bundle)
+          .filter((entry) => entry.type === 'chunk')
+          .reduce((sum, entry) => sum + Buffer.byteLength(entry.code), 0);
+        if (bytes > page.budgets.js) throw Error(`Artwork JS budget exceeded: ${page.output}`);
+      },
+    });
+    await build({ ...config, configFile: false });
+    const built = path.join(temporary, path.basename(page.output));
+    if ((await readFile(built)).length > page.budgets.html)
+      throw Error(`Artwork HTML budget exceeded: ${page.output}`);
+    const target = path.join(output, page.output);
+    await mkdir(path.dirname(target), { recursive: true });
+    await cp(built, target);
+  }
+  console.log('Artwork: authored HTML/CSS, Vite singlefile, embedded local resources.');
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url))
   await buildArtwork();

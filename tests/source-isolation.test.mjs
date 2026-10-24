@@ -4,7 +4,7 @@ import { existsSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import test from 'node:test';
 import { build } from 'vite';
-import { snapshot } from '../tooling/source-snapshot.mjs';
+import { snapshot } from './helpers/source-snapshot.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 

@@ -8,7 +8,8 @@
     "./AppButton.vue": "./src/AppButton.vue",
     "./IconIndicator.vue": "./src/IconIndicator.vue",
     "./FieldInput.vue": "./src/FieldInput.vue",
-    "./LiveStatusBadge.vue": "./src/LiveStatusBadge.vue"
+    "./LiveStatusBadge.vue": "./src/LiveStatusBadge.vue",
+    "./components.css": "./components.css"
   },
   "sideEffects": [
     "**/*.css"

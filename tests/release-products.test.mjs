@@ -37,11 +37,12 @@ test('the bundle catalog declares the products packed into the single release', 
 test('the release workflow builds the whole bundle on bundle tags only', () => {
   assert.deepEqual(workflow.on.push.tags, ['v*']);
   const source = readFileSync(resolve(root, '.github/workflows/release.yml'), 'utf8');
-  assert.match(source, /tooling\/bundle-release\.py --build/);
-  assert.match(source, /tooling\/bundle-release\.py "\$RELEASE_TAG"/);
-  assert.match(source, /gh release create/);
+  assert.match(source, /tooling\/bundle-release\.mjs --build/);
+  assert.match(source, /tooling\/bundle-release\.mjs "\$RELEASE_TAG"/);
+  assert.match(source, /softprops\/action-gh-release@v2/);
   assert.doesNotMatch(source, /windows-updater\.zip/);
-  assert.equal(workflow.permissions.contents, 'write');
+  assert.equal(workflow.permissions.contents, 'read');
+  assert.equal(workflow.jobs.release.permissions.contents, 'write');
   assert.equal(Object.keys(workflow.jobs).length, 1);
   assert.doesNotMatch(source, /stream-info-v|website-v|artwork-v/);
 });

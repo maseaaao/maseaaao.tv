@@ -1,7 +1,29 @@
 # Общий дизайн
 
-brand.css — палитра и типографика всех браузерных интерфейсов. fonts/Unbounded.ttf — исходник, fonts/unbounded-600.woff2 — веб-шрифт с полным набором символов для акцентов. Arial берётся из системы и не распространяется. Лицензия Unbounded — licenses/Unbounded-OFL.txt.
+Палитра, типографика и токены движения для браузерных продуктов. Добавьте
+`@maseaaao/design` как `workspace:*` зависимость потребителя.
 
-Для регенерации WOFF2: `bun run build:fonts` (Python и fonttools[woff]). Автономные продукты встраивают шрифт и лицензию; сайт публикует WOFF2 локально.
+```css
+@import '@maseaaao/design/brand.css';
+```
 
-Публичные entrypoints: `@maseaaao/design/brand.css` (совместимый агрегатор), `fonts.css`, `tokens.css`, `fonts/*`, `license`. Импортировать пакет через workspace dependency. Исходники font-face и токенов не требуют отдельной library build. Копирование и embedding выполняет сборщик потребителя.
+`brand.css` подключает токены, Unbounded 400 и правило `[hidden]`.
+Для точечного подключения:
+
+```css
+@import '@maseaaao/design/tokens.css';
+@import '@maseaaao/design/fonts-400.css';
+```
+
+- `tokens.css` — семантические цвета, размеры и движение.
+- `fonts-400.css` / `fonts-600.css` — явный выбор начертания Unbounded.
+  Совместимый `fonts.css` подключает **600**, не оба веса.
+- `fonts/*` — исходный TTF и WOFF2. Arial берётся из системы и не распространяется.
+- `license` — публичный export [Unbounded OFL](licenses/Unbounded-OFL.txt).
+
+Отдельная library build не требуется; копирование/встраивание выполняет сборщик
+потребителя. Автономные HTML/CSS встраивают шрифт и лицензию, сайт публикует WOFF2
+локально. Не удалять лицензионные уведомления и не включать лишние начертания.
+
+Пересборка WOFF2 из корня: `bun run build:fonts`; нужны Python и зависимости
+`tooling/artwork/requirements-fonts.txt`. [Правила оформления](../../docs/design.md).
