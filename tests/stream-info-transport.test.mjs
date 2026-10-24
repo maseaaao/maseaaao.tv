@@ -2,9 +2,20 @@ import assert from 'node:assert/strict';
 import { cp, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import test from 'node:test';
+import test, { after, afterEach, before } from 'node:test';
 import { pathToFileURL } from 'node:url';
 import { launchBrowser } from '../tooling/artwork/browser.mjs';
+
+let browser;
+before(async () => {
+  browser = await launchBrowser();
+});
+afterEach(async () => {
+  if (browser) await Promise.all(browser.contexts().map((context) => context.close()));
+});
+after(async () => {
+  await browser?.close();
+});
 
 // Protocol-shaped fixture: acknowledgement and Custom.CodeEvent are distinct.
 // No connectToServer(): the real client runs, but no live/local service is reached.
@@ -89,14 +100,14 @@ test('Stream Info built file:// uses the real client protocol and preserves sett
 }, async () => {
   const directory = await mkdtemp(join(tmpdir(), 'stream-info-transport-'));
   const file = join(directory, 'dock.html');
-  const browser = await launchBrowser();
+  let context;
   const commands = [];
   try {
     await cp(
       new URL('../apps/stream-info/dist/change-info-streamer-bot.ru.html', import.meta.url),
       file,
     );
-    const context = await browser.newContext();
+    context = await browser.newContext();
     await mockTransport(context, commands);
     await context.addInitScript(() => {
       const key = 'change-info-streamer-bot.settings.v1';
@@ -143,7 +154,7 @@ test('Stream Info built file:// uses the real client protocol and preserves sett
     assert.deepEqual(errors, []);
     await context.close();
   } finally {
-    await browser.close();
+    await context?.close();
     await rm(directory, { recursive: true, force: true });
   }
 });
@@ -154,13 +165,13 @@ for (const order of ['ack-first', 'event-first', 'ack-error', 'missing-event']) 
   }, async () => {
     const directory = await mkdtemp(join(tmpdir(), 'stream-info-ack-'));
     const file = join(directory, 'dock.html');
-    const browser = await launchBrowser();
+    let context;
     try {
       await cp(
         new URL('../apps/stream-info/dist/change-info-streamer-bot.ru.html', import.meta.url),
         file,
       );
-      const context = await browser.newContext();
+      context = await browser.newContext();
       let receive;
       const incoming = new Promise((resolve) => {
         receive = resolve;
@@ -259,7 +270,7 @@ for (const order of ['ack-first', 'event-first', 'ack-error', 'missing-event']) 
       assert.deepEqual(errors, []);
       await context.close();
     } finally {
-      await browser.close();
+      await context?.close();
       await rm(directory, { recursive: true, force: true });
     }
   });
@@ -269,7 +280,7 @@ test('changing the title persists the template input before updating Twitch', {
   timeout: 60000,
 }, async () => {
   const directory = await mkdtemp(join(tmpdir(), 'stream-info-title-'));
-  const browser = await launchBrowser();
+  let context;
   const commands = [];
   try {
     const file = join(directory, 'dock.html');
@@ -277,7 +288,7 @@ test('changing the title persists the template input before updating Twitch', {
       new URL('../apps/stream-info/dist/change-info-streamer-bot.ru.html', import.meta.url),
       file,
     );
-    const context = await browser.newContext();
+    context = await browser.newContext();
     await mockTransport(context, commands);
     const page = await context.newPage();
     await page.goto(pathToFileURL(file).href);
@@ -294,7 +305,7 @@ test('changing the title persists the template input before updating Twitch', {
     );
     await context.close();
   } finally {
-    await browser.close();
+    await context?.close();
     await rm(directory, { recursive: true, force: true });
   }
 });
@@ -304,14 +315,14 @@ for (const failure of ['ack-reject', 'backend-reject', 'timeout', 'disconnect'])
     timeout: 60000,
   }, async () => {
     const directory = await mkdtemp(join(tmpdir(), 'stream-info-rejected-'));
-    const browser = await launchBrowser();
+    let context;
     try {
       const file = join(directory, 'dock.html');
       await cp(
         new URL('../apps/stream-info/dist/change-info-streamer-bot.ru.html', import.meta.url),
         file,
       );
-      const context = await browser.newContext();
+      context = await browser.newContext();
       await mockTransport(context, [], (request) => {
         if (request.command !== 'saveTemplates') return false;
         if (failure === 'ack-reject') request.ack({ status: 'error', error: 'Fixture rejection' });
@@ -347,14 +358,14 @@ for (const failure of ['ack-reject', 'backend-reject', 'timeout', 'disconnect'])
       assert.equal(await subtitle.inputValue(), 'Не подтверждённая тема');
       await context.close();
     } finally {
-      await browser.close();
+      await context?.close();
       await rm(directory, { recursive: true, force: true });
     }
   });
 
 test('reverted subtitle edit does not send any templates write', { timeout: 60000 }, async () => {
   const directory = await mkdtemp(join(tmpdir(), 'stream-info-revert-'));
-  const browser = await launchBrowser();
+  let context;
   const commands = [];
   try {
     const file = join(directory, 'dock.html');
@@ -362,7 +373,7 @@ test('reverted subtitle edit does not send any templates write', { timeout: 6000
       new URL('../apps/stream-info/dist/change-info-streamer-bot.ru.html', import.meta.url),
       file,
     );
-    const context = await browser.newContext();
+    context = await browser.newContext();
     await mockTransport(context, commands);
     const page = await context.newPage();
     await page.goto(pathToFileURL(file).href);
@@ -375,7 +386,7 @@ test('reverted subtitle edit does not send any templates write', { timeout: 6000
     assert.equal(commands.filter((row) => row.command === 'saveTemplates').length, 0);
     await context.close();
   } finally {
-    await browser.close();
+    await context?.close();
     await rm(directory, { recursive: true, force: true });
   }
 });

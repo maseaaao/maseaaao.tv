@@ -7,8 +7,7 @@
     "@maseaaao/design": "workspace:*"
   },
   "scripts": {
-    "build": "bun ../tooling/build-artwork.mjs",
-    "source": "bun ../tooling/source-task.mjs"
+    "build": "bun ../tooling/build-artwork.mjs"
   },
   "exports": {
     "./styles.css": "./styles.css",

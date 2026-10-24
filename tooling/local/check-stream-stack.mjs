@@ -7,6 +7,7 @@ import path from 'node:path';
 import { fileURLToPath, fileURLToPath as fromFileURL } from 'node:url';
 import { gunzipSync } from 'node:zlib';
 import { validateActionTargets } from './action-targets.mjs';
+import { compare } from './companion-storage.mjs';
 
 if (!process.env.STREAMERBOT_ROOT)
   throw Error('Set STREAMERBOT_ROOT to the installed Streamer.bot folder');
@@ -26,16 +27,6 @@ const report = {
 };
 const issue = (s) => report.issues.push(s);
 const warning = (s) => report.warnings.push(s);
-const canonical = (value) =>
-  JSON.stringify(value, (_key, v) =>
-    v && typeof v === 'object' && !Array.isArray(v)
-      ? Object.fromEntries(
-          Object.keys(v)
-            .sort()
-            .map((k) => [k, v[k]]),
-        )
-      : v,
-  );
 function readApplicationStorage(instances) {
   return new Promise((resolve, reject) => {
     const child = spawn(
@@ -136,24 +127,8 @@ try {
     });
     try {
       const rows = db.prepare('SELECT id, value FROM instances').all();
-      const stored = Object.fromEntries(
-        rows
-          .map((r) => [r.id, JSON.parse(r.value)])
-          .filter(([, i]) => (i.moduleInstanceType || 'connection') === 'connection'),
-      );
-      const project = (i) => ({
-        moduleId: i.moduleId,
-        moduleVersionId: i.moduleVersionId,
-        enabled: i.enabled,
-        label: i.label,
-        config: i.config,
-        secrets: i.secrets,
-      });
-      localStorageMatches =
-        Object.keys(stored).length === Object.keys(live.instances).length &&
-        Object.entries(live.instances).every(
-          ([id, i]) => stored[id] && canonical(project(stored[id])) === canonical(project(i)),
-        );
+      const stored = Object.fromEntries(rows.map((r) => [r.id, JSON.parse(r.value)]));
+      localStorageMatches = compare(stored, live.instances);
       report.checks.companionStoredConnections = {
         matchesLive: localStorageMatches,
         source: 'local-readonly-database',

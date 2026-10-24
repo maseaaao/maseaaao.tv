@@ -15,8 +15,5 @@
   },
   "dependencies": {
     "@maseaaao/design": "workspace:*"
-  },
-  "scripts": {
-    "source": "bun ../../tooling/source-task.mjs"
   }
 }

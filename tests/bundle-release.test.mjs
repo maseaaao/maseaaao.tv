@@ -15,7 +15,9 @@ test('manual ZIP preserves hidden files, exact targets and licenses without an u
   try {
     put('LICENSE', 'repository license');
     put('CHANGELOG.md', '## 1.0.0\n\nTest release.\n');
-    put('docs/windows-releases.md', 'Install manually.');
+    const instructions = readFileSync(new URL('../docs/windows-releases.md', import.meta.url));
+    assert.ok(instructions.length > 0, 'the real release instructions must not be empty');
+    put('docs/windows-releases.md', instructions);
     put('app/package.json', '{"version":"1.0.0"}');
     put('app/dist/.well-known/example', 'hidden');
     put('app/dist/index.html', 'built');
@@ -56,6 +58,7 @@ test('manual ZIP preserves hidden files, exact targets and licenses without an u
     ])
       assert(listing.split('\n').includes(file), file);
     assert.doesNotMatch(listing, /updater/);
+    assert.deepEqual(execFileSync('unzip', ['-p', archive, 'INSTALL.md']), instructions);
     assert.equal(
       execFileSync('unzip', ['-p', archive, 'example/index.html'], { encoding: 'utf8' }),
       'built',

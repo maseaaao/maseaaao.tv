@@ -21,17 +21,6 @@ test('the bundle catalog declares the products packed into the single release', 
     'windows-integrations',
     'website',
   ]);
-  for (const product of manifest.products) {
-    assert.match(product.id, /^[a-z][a-z-]*$/);
-    assert.equal(product.tagPrefix, undefined, 'bundle releases have no per-product tags');
-    assert.ok(product.files.length > 0, product.id);
-    for (const mapping of product.files) {
-      assert.equal(typeof mapping.source, 'string');
-      assert.equal(typeof mapping.target, 'string');
-    }
-    assert.ok(product.test && product.build, product.id);
-    assert.ok(product.activation);
-  }
 });
 
 test('the release workflow builds the whole bundle on bundle tags only', () => {

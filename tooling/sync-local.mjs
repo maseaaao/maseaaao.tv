@@ -9,14 +9,20 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { dirname, relative, resolve, sep } from 'node:path';
+import { parseArgs } from 'node:util';
 
 const repo = resolve(import.meta.dirname, '..');
-const args = process.argv.slice(2);
-const value = (key) => args[args.indexOf(key) + 1];
-const obs = resolve(args.includes('--obs-root') ? value('--obs-root') : resolve(repo, '..'));
+const { values } = parseArgs({
+  options: {
+    'obs-root': { type: 'string' },
+    product: { type: 'string', default: 'stream-info' },
+    apply: { type: 'boolean', default: false },
+  },
+});
+const obs = resolve(values['obs-root'] ?? resolve(repo, '..'));
 if (!existsSync(resolve(obs, 'Streamer.bot/Streamer.bot.exe')))
   throw Error('Specify --obs-root pointing to the OBS folder containing Streamer.bot.');
-const product = args.includes('--product') ? value('--product') : 'stream-info';
+const product = values.product;
 const groups = {
   'stream-info': [
     ['apps/stream-info/dist', 'Streamer.bot/custom/stream-info/dist'],
@@ -79,9 +85,9 @@ const backup = resolve(
 );
 for (const { source, destination, content } of changed) {
   console.log(
-    `${args.includes('--apply') ? 'COPY' : 'PLAN'} ${relative(repo, source)} -> ${relative(obs, destination)}`,
+    `${values.apply ? 'COPY' : 'PLAN'} ${relative(repo, source)} -> ${relative(obs, destination)}`,
   );
-  if (!args.includes('--apply')) continue;
+  if (!values.apply) continue;
   // Preserve every overwritten file before writing any new bytes to that path.
   if (existsSync(destination)) {
     const saved = resolve(backup, relative(obs, destination));
@@ -93,6 +99,6 @@ for (const { source, destination, content } of changed) {
   writeFileSync(destination, content);
 }
 console.log(
-  `${changed.length} files ${args.includes('--apply') ? 'updated' : 'would change'}. No Actions, databases or OBS settings are edited.`,
+  `${changed.length} files ${values.apply ? 'updated' : 'would change'}. No Actions, databases or OBS settings are edited.`,
 );
-if (args.includes('--apply') && changed.length) console.log(`Backup: ${backup}`);
+if (values.apply && changed.length) console.log(`Backup: ${backup}`);

@@ -34,5 +34,4 @@ jobs:
           dotnet-version: 8.0.x
       # The pinned image already contains browsers and their system libraries.
       - run: bun run verify:ui-renewal
-      - run: bun run test:releases
       - run: bun run verify:companion

@@ -1428,6 +1428,41 @@ describe('Stream Info DOM interactions', () => {
     expect(document.querySelector('.notices > [role]')).toBeNull();
   });
 
+  it.each(['callback', 'rejection'] as const)(
+    'distinguishes transport errors from auth errors with a saved password (%s)',
+    async (failure) => {
+      localStorage.setItem(
+        'change-info-streamer-bot.settings.v1',
+        JSON.stringify({ password: 'saved-secret', rememberPassword: true }),
+      );
+      let message = 'WebSocket connection refused';
+      jest.spyOn(StreamerbotClient.prototype, 'connect').mockImplementation(function (
+        this: StreamerbotClient,
+      ) {
+        const error = new Error(message);
+        if (failure === 'rejection') return Promise.reject(error);
+        this.options.onError?.(error);
+        return Promise.resolve();
+      });
+
+      await boot();
+      expect(required(mockStreamerbot.instances[0]).options).toMatchObject({
+        password: 'saved-secret',
+      });
+      expect(document.body.textContent).toContain(message);
+      expect(document.querySelectorAll('.auth-panel')).toHaveLength(0);
+      expect(queryField('Пароль')?.value).toBeUndefined();
+      expect(buttons('Подключиться')).toHaveLength(0);
+
+      message = 'WebSocket authentication failed';
+      await boot();
+      expect(document.body.textContent).toContain(message);
+      expect(document.querySelectorAll('.auth-panel')).toHaveLength(1);
+      expect(field('Пароль').value).toBe('saved-secret');
+      expect(button('Подключиться').disabled).toBe(false);
+    },
+  );
+
   it('renders password reconnect', async () => {
     mockStreamerbot.failConnect = true;
     await boot();

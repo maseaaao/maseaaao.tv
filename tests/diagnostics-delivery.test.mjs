@@ -1,20 +1,22 @@
 import assert from 'node:assert/strict';
-import { execFile, execFileSync } from 'node:child_process';
-import { copyFileSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { execFile, execFileSync, spawnSync } from 'node:child_process';
+import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { zipSync } from 'fflate';
 
+const root = new URL('../', import.meta.url);
+const catalog = JSON.parse(readFileSync(new URL('tooling/release-products.json', root), 'utf8'));
+const product = catalog.products.find(({ id }) => id === 'windows-integrations');
+
 test('released storage diagnostic runs without node_modules and retains the ZIP reader license', async () => {
-  const root = new URL('../', import.meta.url);
   execFileSync(process.execPath, [new URL('tooling/local/build-diagnostics.mjs', root).pathname], {
     stdio: 'pipe',
   });
-  const catalog = JSON.parse(readFileSync(new URL('tooling/release-products.json', root), 'utf8'));
-  const product = catalog.products.find(({ id }) => id === 'windows-integrations');
+
   const mapping = product.files.find(
     ({ target }) => target === 'diagnostics/compare-companion-storage.mjs',
   );
@@ -77,6 +79,29 @@ test('released storage diagnostic runs without node_modules and retains the ZIP 
       await new Promise((resolve, reject) =>
         server.close((error) => (error ? reject(error) : resolve())),
       );
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('released checker resolves its local imports without node_modules before requiring an installation', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'checker-delivery-'));
+  try {
+    for (const { source, target } of product.files.filter(({ target }) =>
+      target.startsWith('diagnostics/'),
+    )) {
+      const output = join(directory, target);
+      mkdirSync(dirname(output), { recursive: true });
+      copyFileSync(new URL(source, root), output);
+    }
+    const result = spawnSync(process.execPath, ['diagnostics/check-stream-stack.mjs'], {
+      cwd: directory,
+      encoding: 'utf8',
+      env: { ...process.env, STREAMERBOT_ROOT: '' },
+    });
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /Set STREAMERBOT_ROOT to the installed Streamer.bot folder/);
+    assert.doesNotMatch(result.stderr, /Cannot find (?:module|package)/);
+  } finally {
     rmSync(directory, { recursive: true, force: true });
   }
 });

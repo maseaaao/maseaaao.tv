@@ -7,8 +7,12 @@ import { JSDOM } from 'jsdom';
 
 test('website can be rebuilt repeatedly while retaining traversable nested directories', () => {
   const root = resolve(import.meta.dirname, '..');
+  const attributes = readFileSync(resolve(root, '.gitattributes'), 'utf8');
+  for (const name of ['_headers', 'sitemap.xml', '.well-known/api-catalog'])
+    assert(attributes.includes(`apps/website/public/${name} text eol=lf`));
   for (let i = 0; i < 2; i++) {
-    const result = spawnSync(process.execPath, [resolve(root, 'tooling/build-website.mjs')], {
+    const result = spawnSync(process.execPath, ['run', 'build:website'], {
+      cwd: root,
       encoding: 'utf8',
     });
     assert.equal(result.status, 0, result.stderr);

@@ -12,8 +12,7 @@
     "check": "tsc --noEmit",
     "test": "bun test && dotnet run --project tests/csharp/StreamerbotTests.csproj --configuration Release",
     "build": "bun run generate-import && vite build && bun scripts/verify-build.mjs",
-    "preview": "vite preview",
-    "source": "bun ../../tooling/source-task.mjs"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@streamerbot/client": "2.0.1",

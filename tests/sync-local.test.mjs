@@ -13,6 +13,19 @@ import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import test from 'node:test';
 
+test('local update rejects missing option values and unknown options before reading products', () => {
+  const root = resolve(import.meta.dirname, '..');
+  for (const args of [['--obs-root'], ['--product'], ['--obs-root', '--apply'], ['--aply']]) {
+    const result = spawnSync(process.execPath, ['tooling/sync-local.mjs', ...args], {
+      cwd: root,
+      encoding: 'utf8',
+    });
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /argument|option/i, args.join(' '));
+    assert.doesNotMatch(result.stdout, /COPY|PLAN/);
+  }
+});
+
 test('local update previews changes, preserves unrelated data and backs up replaced resources', () => {
   const root = resolve(import.meta.dirname, '..');
   const target = mkdtempSync(resolve(tmpdir(), 'maseaaao-sync-fixture-'));

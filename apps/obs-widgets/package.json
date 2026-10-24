@@ -13,8 +13,7 @@
   },
   "scripts": {
     "build": "bun ../../tooling/build-widgets.mjs",
-    "check": "tsc --noEmit",
-    "source": "bun ../../tooling/source-task.mjs"
+    "check": "tsc --noEmit"
   },
   "exports": {
     "./social.css": "./src/social-strip/styles.css",

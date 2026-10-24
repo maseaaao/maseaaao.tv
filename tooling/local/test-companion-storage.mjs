@@ -7,7 +7,8 @@ import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
 import { zipSync } from 'fflate';
-import { compare, inspect, inspectArchive } from './compare-companion-storage.mjs';
+import { compare } from './companion-storage.mjs';
+import { inspect, inspectArchive } from './compare-companion-storage.mjs';
 
 const config = {
   moduleInstanceType: 'connection',
@@ -33,6 +34,39 @@ test('missing, extra, changed and renamed connections are detected', () => {
     { c: { ...config, secrets: { test: 'changed' } } },
   ])
     assert.equal(compare(stored, live), false);
+});
+
+test('optional projected fields treat absent, undefined and null alike', () => {
+  for (const key of ['moduleId', 'moduleVersionId', 'enabled', 'label', 'config', 'secrets']) {
+    const absent = { ...config };
+    delete absent[key];
+    for (const value of [undefined, null])
+      assert(compare({ c: absent }, { c: { ...config, [key]: value } }), key);
+  }
+});
+
+test('only nullish instance types default to legacy connections', () => {
+  for (const moduleInstanceType of [undefined, null, 'connection'])
+    assert(compare({ c: { ...config, moduleInstanceType } }, live));
+  for (const moduleInstanceType of ['', false, 'surface'])
+    assert.equal(compare({ c: { ...config, moduleInstanceType } }, live), false);
+});
+
+test('nested null, missing keys, arrays and primitive types remain distinct', () => {
+  for (const [stored, exported] of [
+    [{ a: null }, {}],
+    [{ a: undefined }, {}],
+    [{ a: [1, 2] }, { a: [2, 1] }],
+    [{ a: 1 }, { a: '1' }],
+  ])
+    assert.equal(
+      compare({ c: { ...config, config: stored } }, { c: { ...config, config: exported } }),
+      false,
+    );
+});
+
+test('surface entries in the connection-only live export are not silently ignored', () => {
+  assert.equal(compare({ c: config }, { c: config, s: { moduleInstanceType: 'surface' } }), false);
 });
 
 function archiveFixture(wal, run) {

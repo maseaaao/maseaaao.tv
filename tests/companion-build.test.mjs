@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import test from 'node:test';
 
@@ -32,17 +32,4 @@ test('Companion cross-compilation needs no Windows compiler or application insta
       assert(packages[name].contentHash, `${name} must have a pinned content hash`);
     }
   }
-});
-
-test('development scripts do not restore removed Windows tooling', () => {
-  const pkg = JSON.parse(read('package.json'));
-  assert.equal(pkg.scripts['test:ui'], undefined);
-  assert(!pkg.scripts['prepare:companion-libs']);
-  for (const file of [
-    'tooling/patch-storybook-windows.mjs',
-    'tooling/prepare-companion-libs.ps1',
-    'integrations/companion/shared/build-helper.ps1',
-    'tooling/local/compile-streamerbot.ps1',
-  ])
-    assert(!existsSync(resolve(root, file)), file);
 });

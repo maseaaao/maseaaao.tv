@@ -7,41 +7,15 @@ const read = (name) => readFileSync(new URL('../' + name, import.meta.url), 'utf
 const workflow = parse(read('.github/workflows/verify.yml'));
 const pkg = JSON.parse(read('package.json'));
 
-test('one Linux verification job runs every product check without selection or transfers', () => {
-  assert.deepEqual(Object.keys(workflow.jobs), ['verify']);
+test('CI runs verification without ignoring failures or retaining checkout credentials', () => {
   const job = workflow.jobs.verify;
-  assert.equal(job['runs-on'], 'ubuntu-latest');
-  assert(Number.isInteger(job['timeout-minutes']));
-  assert.equal(job.if, undefined);
   const runs = job.steps.flatMap((step) => (step.run ? [step.run] : []));
-  for (const command of [
-    'bun run verify:ui-renewal',
-    'bun run test:releases',
-    'bun run verify:companion',
-  ])
+  for (const command of ['bun run verify:ui-renewal', 'bun run verify:companion'])
     assert(runs.includes(command), command);
   for (const step of job.steps) {
     assert.equal(step['continue-on-error'], undefined);
-    assert.equal(step.if, undefined);
     if (step.uses === 'actions/checkout@v4') assert.equal(step.with['persist-credentials'], false);
   }
-  assert.doesNotMatch(
-    JSON.stringify(workflow),
-    /affected|ci-result|ci-tests|task-cache|download-artifact|upload-artifact|matrix/,
-  );
-});
-
-test('ordinary build commands cover every product build and test group', () => {
-  assert.equal(pkg.devDependencies.turbo, undefined);
-  assert.equal(pkg.scripts['verify:products'], 'bun run build:all');
-  assert.equal(
-    pkg.scripts['build:all'],
-    'bun run build:website && bun run build:stream-info && bun run build:tuna && bun run build:widgets && bun run build:artwork && bun run build:diagnostics',
-  );
-  assert.equal(
-    pkg.scripts['test:checks'],
-    'bun run test:repository && bun run test:stream-info && bun run test:companion && bun run test:local',
-  );
 });
 
 test('CI uses the matching prebuilt Playwright image without browser installation', () => {

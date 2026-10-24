@@ -27,8 +27,7 @@ async function main() {
   const files = [];
 
   for (const root of roots) {
-    const rootPath = resolveRepoPath(root);
-    await collectImageFiles(rootPath, files);
+    await collectImageFiles(path.resolve(REPO_ROOT, root), files);
   }
 
   if (files.length === 0) {
@@ -52,14 +51,6 @@ async function main() {
   }
 
   printSummary(results);
-}
-
-function resolveRepoPath(value) {
-  if (path.isAbsolute(value)) {
-    return path.resolve(value);
-  }
-
-  return path.resolve(REPO_ROOT, value);
 }
 
 async function collectImageFiles(directoryPath, files) {
@@ -86,117 +77,37 @@ async function optimizeImage(file) {
   if (protectedFiles.has(file))
     return { file, kind: 'kept', saved: 0, message: 'protected original' };
   const extension = path.extname(file).toLowerCase();
-
-  if (extension === '.jpg' || extension === '.jpeg') {
-    return optimizeJpeg(file);
-  }
-
-  if (extension === '.png') {
-    return optimizeWithSharp(file, 'png');
-  }
-
-  return optimizeWithSharp(file, 'webp');
-}
-
-async function optimizeJpeg(file) {
-  const workDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'maseaaao-images-'));
-  const outputFile = path.join(workDirectory, 'optimized.jpg');
-  const originalSize = await getFileSize(file);
-
-  try {
-    const input = await fs.readFile(file);
-    await sharp(input).keepMetadata().jpeg({ mozjpeg: true, quality: 100 }).toFile(outputFile);
-
-    return await keepIfSmaller(file, outputFile, originalSize);
-  } catch (error) {
-    await removeIfExists(outputFile);
-    throw error;
-  } finally {
-    await fs.rm(workDirectory, { force: true, recursive: true }).catch(() => {});
-  }
-}
-
-async function optimizeWithSharp(file, format) {
-  const workDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'maseaaao-images-'));
-  const tempFile = path.join(workDirectory, `optimized${path.extname(file).toLowerCase()}`);
-  const originalSize = await getFileSize(file);
+  const format = extension === '.jpg' || extension === '.jpeg' ? 'jpeg' : extension.slice(1);
+  const options = {
+    jpeg: { mozjpeg: true, quality: 100 },
+    png: { adaptiveFiltering: true, compressionLevel: 9, effort: 10 },
+    webp: { effort: 6, lossless: true },
+  };
   const input = await fs.readFile(file);
-  const image = sharp(input, { animated: true }).keepMetadata();
-
+  const output = await sharp(input, { animated: format !== 'jpeg' })
+    .keepMetadata()
+    .toFormat(format, options[format])
+    .toBuffer();
+  if (output.length >= input.length) return { file, kind: 'kept', saved: 0 };
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'maseaaao-images-'));
   try {
-    let output;
-
-    if (format === 'png') {
-      output = await image
-        .png({
-          adaptiveFiltering: true,
-          compressionLevel: 9,
-          effort: 10,
-        })
-        .toBuffer();
-    } else {
-      output = await image
-        .webp({
-          effort: 6,
-          lossless: true,
-        })
-        .toBuffer();
-    }
-
-    await fs.writeFile(tempFile, output);
-
-    return await keepIfSmaller(file, tempFile, originalSize);
-  } catch (error) {
-    await removeIfExists(tempFile);
-    throw error;
-  } finally {
-    await fs.rm(workDirectory, { force: true, recursive: true }).catch(() => {});
-  }
-}
-
-async function keepIfSmaller(file, tempFile, originalSize) {
-  const optimizedSize = await getFileSize(tempFile);
-
-  if (optimizedSize >= originalSize) {
-    await removeIfExists(tempFile);
-    return {
-      file,
-      kind: 'kept',
-      saved: 0,
-    };
-  }
-
-  try {
-    await replaceFile(tempFile, file);
-  } catch (error) {
-    await removeIfExists(tempFile);
-
-    if (error?.code === 'EPERM' || error?.code === 'EACCES') {
+    const temporary = path.join(directory, `optimized${extension}`);
+    await fs.writeFile(temporary, output);
+    try {
+      await replaceFile(temporary, file);
+    } catch (error) {
+      if (error?.code !== 'EPERM' && error?.code !== 'EACCES') throw error;
       return {
         file,
         kind: 'kept',
-        message: `optimized copy was smaller but could not replace original (${error.code})`,
         saved: 0,
+        message: `optimized copy was smaller but could not replace original (${error.code})`,
       };
     }
-
-    throw error;
+    return { file, kind: 'optimized', saved: input.length - output.length };
+  } finally {
+    await fs.rm(directory, { recursive: true, force: true }).catch(() => {});
   }
-
-  return {
-    file,
-    kind: 'optimized',
-    saved: originalSize - optimizedSize,
-  };
-}
-
-async function getFileSize(file) {
-  const stats = await fs.stat(file);
-  return stats.size;
-}
-
-async function removeIfExists(file) {
-  await fs.rm(file, { force: true }).catch(() => {});
 }
 
 async function replaceFile(sourceFile, destinationFile) {

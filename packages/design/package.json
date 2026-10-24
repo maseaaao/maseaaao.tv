@@ -11,8 +11,5 @@
   "version": "1.0.0",
   "sideEffects": [
     "**/*.css"
-  ],
-  "scripts": {
-    "source": "bun ../../tooling/source-task.mjs"
-  }
+  ]
 }

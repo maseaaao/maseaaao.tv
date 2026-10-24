@@ -2,9 +2,8 @@
   "name": "@maseaaao/website",
   "private": true,
   "scripts": {
-    "build": "bun ../../tooling/build-website.mjs",
-    "check": "tsc --noEmit",
-    "source": "bun ../../tooling/source-task.mjs"
+    "build": "vite build",
+    "check": "tsc --noEmit"
   },
   "type": "module",
   "dependencies": {

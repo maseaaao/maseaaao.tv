@@ -25,6 +25,8 @@ const json = (file) => {
 for (const directory of ['apps', 'artwork', 'packages', 'tooling', 'docs']) {
   for (const file of files(resolve(root, directory))) {
     const name = file.slice(root.length + 1).replaceAll('\\', '/');
+    if (/^(?:apps\/|artwork\/|packages\/design\/).+\.(?:html|css)$/.test(name))
+      checkFontFamilies(readFileSync(file, 'utf8'), file);
     if (
       !name.endsWith('.html') ||
       name.split('/').some((part) => ['dist', 'rendered', 'bin', 'obj'].includes(part))
@@ -117,13 +119,6 @@ console.log(
     : 'Repository structure, light appearance, static publication parity and artwork dependencies verified.',
 );
 
-// Both browser applications and exported widgets use only the two agreed families.
-for (const directory of ['apps', 'artwork', 'packages/design']) {
-  for (const file of files(resolve(root, directory)).filter((file) => /\.(html|css)$/.test(file))) {
-    const text = readFileSync(file, 'utf8');
-    checkFontFamilies(text, file);
-  }
-}
 assert.deepEqual(readdirSync(resolve(root, 'packages/design/fonts')).sort(), [
   'unbounded-variable.woff2',
 ]);

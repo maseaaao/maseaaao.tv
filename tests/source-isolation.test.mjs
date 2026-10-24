@@ -29,7 +29,7 @@ test('builds preserve sources, clean owned outputs and standalone builds preserv
     oldWebsite,
     'Artwork HTML build must not change the website',
   );
-  execFileSync(process.execPath, ['tooling/build-website.mjs'], { cwd: root, stdio: 'pipe' });
+  execFileSync(process.execPath, ['run', 'build:website'], { cwd: root, stdio: 'pipe' });
   const website = snapshot(root, 'dist');
   const stale = resolve(root, 'apps/obs-widgets/dist/retired.css');
   writeFileSync(stale, 'stale fixture');

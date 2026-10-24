@@ -6,35 +6,12 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { pathToFileURL } from 'node:url';
-import { isDeepStrictEqual } from 'node:util';
 import { unzipSync } from 'fflate';
+import { compare, connections } from './companion-storage.mjs';
 
 const archiveLimit = 32 * 1024 * 1024;
 const databaseLimit = 64 * 1024 * 1024;
 const databaseFiles = new Set(['db.sqlite', 'db.sqlite-wal', 'db.sqlite-shm']);
-const connections = (rows) =>
-  Object.fromEntries(
-    Object.entries(rows).filter(
-      ([, value]) => (value.moduleInstanceType ?? 'connection') === 'connection',
-    ),
-  );
-const project = (value) =>
-  Object.fromEntries(
-    ['moduleId', 'moduleVersionId', 'enabled', 'label', 'config', 'secrets'].map((key) => [
-      key,
-      value[key] ?? null,
-    ]),
-  );
-
-export function compare(stored, live) {
-  const saved = connections(stored);
-  return (
-    isDeepStrictEqual(Object.keys(saved).sort(), Object.keys(live).sort()) &&
-    Object.entries(live).every(([key, value]) =>
-      isDeepStrictEqual(project(saved[key]), project(value)),
-    )
-  );
-}
 
 export function inspectArchive(raw, live) {
   if (raw.byteLength > archiveLimit) throw new Error('archive limit');

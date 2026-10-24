@@ -44,22 +44,12 @@ export async function buildArtwork() {
       root: source,
       outDir: temporary,
       fileName: path.basename(page.output),
+      budgets: page.budgets,
     });
     config.build.modulePreload = false;
     config.build.rollupOptions = { input: path.join(source, page.source) };
-    config.plugins.unshift({
-      name: 'artwork-script-budget',
-      generateBundle(_options, bundle) {
-        const bytes = Object.values(bundle)
-          .filter((entry) => entry.type === 'chunk')
-          .reduce((sum, entry) => sum + Buffer.byteLength(entry.code), 0);
-        if (bytes > page.budgets.js) throw Error(`Artwork JS budget exceeded: ${page.output}`);
-      },
-    });
     await build({ ...config, configFile: false });
     const built = path.join(temporary, path.basename(page.output));
-    if ((await readFile(built)).length > page.budgets.html)
-      throw Error(`Artwork HTML budget exceeded: ${page.output}`);
     const target = path.join(output, page.output);
     await mkdir(path.dirname(target), { recursive: true });
     await cp(built, target);
