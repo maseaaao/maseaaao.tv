@@ -90,8 +90,6 @@ interface AppState {
   lastUpdated: Date | null;
 }
 
-export type { ConnectionStatus, Modal, SearchStatus };
-
 const defaults: ConnectionSettings = {
   host: '127.0.0.1',
   port: 8080,

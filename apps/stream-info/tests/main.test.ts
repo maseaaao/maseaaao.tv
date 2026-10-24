@@ -11,7 +11,7 @@ const clientMock = vi.hoisted(
 vi.mock('@streamerbot/client', async () => {
   const module = await import('./mocks/streamerbot-client');
   clientMock.current = module;
-  return module;
+  return { StreamerbotClient: module.StreamerbotClient };
 });
 
 // Один микротаск-хоп: reactive-выкладка запускается из queueMicrotask, фокус и

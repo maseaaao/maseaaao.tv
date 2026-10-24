@@ -1,0 +1,48 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
+  // FFmpeg is provided by the development/CI environment.
+  "ignoreBinaries": ["ffmpeg"],
+  "ignoreFiles": ["**/dist/**"],
+  "workspaces": {
+    ".": {
+      "entry": [
+        "tests/**/*.test.mjs",
+        "tooling/local/check-stream-stack.mjs",
+        "tooling/artwork/generate-qr-with-logo.mjs",
+        "integrations/companion/shared/test-*.mjs"
+      ]
+    },
+    "apps/obs-widgets": {
+      "entry": ["vite.config.mjs"],
+      // Used by CSS imports, which Knip does not follow without a custom compiler.
+      "ignoreDependencies": ["@maseaaao/design"],
+      // This config requires the build's social-strip mode; analyze it statically.
+      "vite": false
+    },
+    "apps/stream-info": {
+      "entry": ["scripts/verify*-live.mjs", "tests/csharp/*.test.mjs"],
+      // Used by src/styles.css.
+      "ignoreDependencies": ["@maseaaao/design", "@maseaaao/ui"]
+    },
+    "apps/tuna-widget": {
+      // Used by src/styles.css.
+      "ignoreDependencies": ["@maseaaao/design"]
+    },
+    "apps/website": {
+      // Used by src/assets/design.css.
+      "ignoreDependencies": ["@maseaaao/ui"]
+    },
+    "artwork": {
+      "entry": ["banners/banner.ts"],
+      // Used by styles.css.
+      "ignoreDependencies": ["@maseaaao/design"]
+    },
+    "packages/ui": {
+      // components.css consumes design custom properties supplied by the host page.
+      "ignoreDependencies": ["@maseaaao/design"]
+    },
+    "integrations/companion/*": {
+      "project": ["*.{js,mjs}", "!main.js"]
+    }
+  }
+}

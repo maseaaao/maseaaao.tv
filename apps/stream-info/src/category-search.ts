@@ -8,7 +8,7 @@ function literalKey(value: string): string {
 }
 
 /** Comparison key only: never rewrite the display name or category ID. */
-export function normalizeCategoryQuery(value: string): string {
+function normalizeCategoryQuery(value: string): string {
   return literalKey(value)
     .normalize('NFD')
     .replace(/\p{M}/gu, '')

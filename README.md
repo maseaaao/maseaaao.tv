@@ -33,6 +33,12 @@ bun run test
 ```
 
 Bun запускает package scripts; используйте `bun run test`, не `bun test`.
+`bun run check:knip` проверяет неиспользуемые JS/TS-файлы, экспорты и зависимости
+во всех workspace-пакетах. Проверка входит в `check:source`, `check` и CI.
+Knip использует штатные плагины; дополнительные точки входа и исключения
+описаны в `knip.jsonc`. CSS-импорты отдельно не анализируются; зависимости,
+используемые только в стилях, явно отмечены в конфигурации.
+Справочник: [настройка Knip](https://knip.dev/overview/configuration).
 Python-launcher берёт `python3`/`python` из PATH. Для своего Chromium задайте
 `CHROME_BIN`. На Ubuntu 26.04 с закреплённым
 Playwright при отсутствии браузерной сборки используйте

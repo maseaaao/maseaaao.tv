@@ -11,7 +11,7 @@ import { resolve } from 'node:path';
  * source snapshot. Symlinks are skipped for the same reason: they point at
  * shared store content outside the source tree.
  */
-export const ignoredDirectories = new Set(['node_modules', '.build-cache']);
+const ignoredDirectories = new Set(['node_modules', '.build-cache']);
 
 export function snapshot(root, directory) {
   const rows = [];

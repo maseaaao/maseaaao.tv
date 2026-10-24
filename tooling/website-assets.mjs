@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-export const websiteImages = [
+const websiteImages = [
   'android-chrome-512x512.png',
   'apple-touch-icon-1024x1024.png',
   'apple-touch-icon.png',

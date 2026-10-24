@@ -38,7 +38,7 @@
     "test:checks": "bun run test:repository && bun run test:stream-info && bun run test:companion && bun run test:local",
     "check:repository": "node tooling/check-repository.mjs",
     "check:ui": "bun run --filter \"./apps/*\" --filter ./artwork check",
-    "check:source": "bun run check:biome && bun run test:source-policy && bun run check:ui && node tooling/check-repository.mjs --source",
+    "check:source": "bun run check:biome && bun run check:knip && bun run test:source-policy && bun run check:ui && node tooling/check-repository.mjs --source",
     "test:repository": "node tooling/artwork/cyber-site-test.mjs",
     "verify:artwork": "bun run render:logo && bun run build:artwork && bun run render:scenes --prepared && bun run render:cyber-site all --prepared",
     "verify:products": "bun run build:all",
@@ -48,14 +48,18 @@
     "check:biome": "biome ci --error-on-warnings .",
     "check:fix": "biome check --write --error-on-warnings .",
     "test:source-policy": "node --test tests/biome-policy.test.mjs",
-    "verify:companion": "bun run --filter ./integrations/companion/system-microphone build && bun run --filter ./integrations/companion/voice-control build && bun run --filter ./integrations/companion/system-microphone package && bun run --filter ./integrations/companion/voice-control package && node tooling/run-python.mjs integrations/companion/shared/test-packages.py"
+    "verify:companion": "bun run --filter ./integrations/companion/system-microphone build && bun run --filter ./integrations/companion/voice-control build && bun run --filter ./integrations/companion/system-microphone package && bun run --filter ./integrations/companion/voice-control package && node tooling/run-python.mjs integrations/companion/shared/test-packages.py",
+    "check:knip": "knip"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.6.2",
     "@maseaaao/build-config": "workspace:*",
     "@maseaaao/design": "workspace:*",
+    "fflate": "0.8.3",
     "jsdom": "26.1.0",
     "jsonc-parser": "3.3.1",
     "jsqr": "^1.4.0",
+    "knip": "6.43.0",
     "playwright-core": "1.58.2",
     "png-to-ico": "3.0.2",
     "postcss": "8.5.31",
@@ -66,9 +70,7 @@
     "vite": "6.4.3",
     "vite-plugin-singlefile": "2.3.4",
     "wrangler": "4.152.0",
-    "yaml": "2.8.1",
-    "@maseaaao/artwork": "workspace:*",
-    "@biomejs/biome": "2.6.2"
+    "yaml": "2.8.1"
   },
   "workspaces": [
     "apps/*",
