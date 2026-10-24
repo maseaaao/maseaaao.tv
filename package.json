@@ -30,7 +30,7 @@
     "render:logo": "bun tooling/artwork/refresh-logo-qr.mjs",
     "render:scenes": "bun tooling/artwork/build-cyber-scenes.mjs",
     "render:all": "bun run render:logo && bun run render:scenes --prepared && bun run render:artwork all --prepared",
-    "verify:artwork": "bun run render:logo && bun run build:artwork && bun run render:scenes --prepared && bun run render:artwork all --prepared",
+    "verify:artwork": "bun run render:logo && bun run build:artwork && bun run render:scenes --prepared && bun run render:artwork all --prepared && bun run optimize:images",
     "verify:ui-renewal": "bun run --sequential check:source verify:artwork build:all check:repository test:checks check:artifacts && git diff --check",
     "verify:companion": "bun run --sequential --filter './integrations/companion/*' build && bun run --sequential --filter './integrations/companion/*' package && bun integrations/companion/shared/test-packages.mjs",
     "browser:install": "playwright-core install chromium",
