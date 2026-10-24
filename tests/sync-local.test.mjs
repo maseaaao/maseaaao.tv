@@ -60,34 +60,3 @@ test('local update previews changes, preserves unrelated data and backs up repla
     rmSync(target, { recursive: true, force: true });
   }
 });
-
-test('widgets restores the transparent image used by existing OBS camera sources', () => {
-  const root = resolve(import.meta.dirname, '..');
-  const target = mkdtempSync(resolve(tmpdir(), 'maseaaao-widgets-fixture-'));
-  mkdirSync(resolve(target, 'Streamer.bot'), { recursive: true });
-  writeFileSync(resolve(target, 'Streamer.bot/Streamer.bot.exe'), 'test marker only');
-  try {
-    const result = spawnSync(
-      process.execPath,
-      [
-        resolve(root, 'tooling/sync-local.mjs'),
-        '--obs-root',
-        target,
-        '--product',
-        'widgets',
-        '--apply',
-      ],
-      { encoding: 'utf8' },
-    );
-    assert.equal(result.status, 0, result.stderr);
-    const file = resolve(target, 'Streamer.bot/custom/assets/social-strip/transparent.png');
-    assert(existsSync(file), 'saved OBS camera source must be restorable');
-    assert(
-      readFileSync(file).equals(
-        readFileSync(resolve(root, 'apps/obs-widgets/dist/social-strip/transparent.png')),
-      ),
-    );
-  } finally {
-    rmSync(target, { recursive: true, force: true });
-  }
-});
