@@ -3,6 +3,13 @@ description: Pinned Bun with frozen workspace dependencies
 runs:
   using: composite
   steps:
+    - name: Install Bun extraction prerequisite
+      shell: bash
+      run: |
+        if ! command -v unzip >/dev/null 2>&1; then
+          apt-get update
+          apt-get install -y --no-install-recommends unzip
+        fi
     - uses: oven-sh/setup-bun@v2
       with:
         bun-version-file: .bun-version
