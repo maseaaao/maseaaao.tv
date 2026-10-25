@@ -87,7 +87,25 @@ PR создан с пустым документом до начала ревь�
 ### R07 · P2 · Авторизация DonationAlerts сообщает успех при неуспешном обмене code
 
 - Код: [DonationAlertsIntegration.cs:673–693](https://github.com/maseaaao/maseaaao.tv/blob/33961514ab13ba5e56d4cbe6b337a486aca29581/integrations/streamerbot/donationalerts/DonationAlertsIntegration.cs#L673-L693), [ObtainAccessToken:104–121](https://github.com/maseaaao/maseaaao.tv/blob/33961514ab13ba5e56d4cbe6b337a486aca29581/integrations/streamerbot/donationalerts/DonationAlertsIntegration.cs#L104-L121).
-- Результат `Handler(code)` игнорируется. При отсутствующем/просроченном code или отказе token endpoint `ObtainAccessToken` возвращает false, но страница безусловно показывает «DonationAlerts подключён» и закрывает listener.
+- `Handler(code)` только сохраняет code; сразу после него страница безусловно показывает «DonationAlerts подключён» и закрывает listener. Обмен code через `ObtainAccessToken` выполняется позднее, уже после возврата `CreateAuthLink`, в `DonationAlertsAuthorization.cs`. Поэтому отсутствующий/просроченный code или отказ token endpoint выявляются после того, как пользователь уже увидел успех.
 - Дополнительно таймер на 300000 ms создаётся с AutoReset=true и никогда не останавливается/не освобождается. Он обращается к изменяемому полю Listener; после повторной авторизации старый таймер может закрыть уже новую попытку раньше её пяти минут.
 - Исправление: обрабатывать error/code и результат обмена, выдавать успех только после сохранения валидных токенов; listener и одноразовый timeout владеть одной попыткой и освобождать в finally.
 - Подтверждение: статический разбор ветвей ошибки и времени жизни таймера. Авторизация пользователя не запускалась.
+
+## Дополнение 3 — сборка и независимый блокер проверок
+
+### R08 · P2 · Штатный check стабильно падает на зависимости lefthook
+
+- Код: [package.json:70](https://github.com/maseaaao/maseaaao.tv/blob/33961514ab13ba5e56d4cbe6b337a486aca29581/package.json#L70), [knip.jsonc](https://github.com/maseaaao/maseaaao.tv/blob/33961514ab13ba5e56d4cbe6b337a486aca29581/knip.jsonc), [verify.yml](https://github.com/maseaaao/maseaaao.tv/blob/33961514ab13ba5e56d4cbe6b337a486aca29581/.github/workflows/verify.yml).
+- После успешного `full` повторный `bun run check` завершается кодом 1: `Unused devDependencies (1): lefthook package.json:70:6`. Это отдельная причина отказа, сохраняющаяся после устранения отсутствующих generated assets из R03.
+- Lefthook действительно нужен hooks; исправление — корректно описать его использование/точечное исключение для Knip, сохранив саму проверку зависимостей и hooks.
+- Последствие: локальный check и тот же шаг Verify/Release блокируются на текущем исходном состоянии. Удалённый CI в рамках этой проверки не объявляется прошедшим.
+- Подтверждение: два запуска check, до и после полной генерации.
+
+### Новые результаты выполнения
+
+- `full`: прошёл весь экспорт artwork и сборки website, Stream Info, Tuna, OBS widgets, Windows integrations (копирование/подготовка файлов, не запуск Windows).
+- `build:ui`: прошёл.
+- C# policy/backend suites прошли, включая 10 общих ranking fixtures. Из-за ошибки среды в CLI .NET (Process.GetStat) использована прямая компиляция тем же SDK Roslyn и запуск DLL через .NET 8, без изменения исходников тестов.
+- Chromium для штатной загрузки недоступен; для проверки экспорта использован локально подготовленный Chromium 153 через поддерживаемый `CHROME_BIN`.
+- Уточнена последовательность R07: страница успеха показывается **до** обмена code; обмен вызывается отдельным action после возврата CreateAuthLink.
