@@ -63,3 +63,31 @@ PR создан с пустым документом до начала ревь�
 - `build:stream-info`, `build:tuna`, `build:widgets`: прошли.
 - `bun run test`: 99 тестов Stream Info прошли, 0 ошибок; все три набора Companion прошли, включая 11 runtime/configuration/reconnect checks. Внешние операции подменены.
 - Загрузка Chromium 156 через `browser:install` не удалась: вместо ZIP сервер загрузки возвращает HTML «Site Unavailable». Это ограничение данной среды, не подтверждённый дефект проекта.
+
+## Дополнение 2 — безопасность и авторизация
+
+### R05 · P2 · Middleware Artwork отдаёт закрытые файлы репозитория
+
+- Код: [tooling/dev.ts:84–111](https://github.com/maseaaao/maseaaao.tv/blob/33961514ab13ba5e56d4cbe6b337a486aca29581/tooling/dev.ts#L84-L111).
+- `artworkOutsideAssets` проверяет существование пути, затем читает любой файл из корня репозитория. Словарь MIME-типов не является allowlist: неизвестные расширения отдаются как application/octet-stream. Проверки Vite для .env/.git здесь обходятся собственным middleware.
+- Подтверждение: в изолированном checkout создан только искусственный `.env.review-sentinel` со строкой `REVIEW_SENTINEL=synthetic-no-secret`; после запуска dev запрос к `http://127.0.0.1:5186/.env.review-sentinel` вернул HTTP 200 и содержимое. Файл удалён после проверки; настоящие секреты не читались.
+- Граница риска: сервер сейчас слушает 127.0.0.1, это не доказательство утечки из production или удалённой эксплуатации через Интернет. Проблема проявляется у получившего доступ к dev-порту, в том числе при туннеле/проксировании.
+- Исправление: разрешать только конкретные ресурсные каталоги и поддерживаемые расширения, проверять realpath и обычный файл; остальные запросы передавать Vite. Правило deny должно сохраняться.
+- Основание: [Vite server.fs.deny](https://vite.dev/config/server-options#server-fs-deny).
+
+### R06 · P2 · OAuth DonationAlerts не связывает callback с начатой авторизацией
+
+- Код: [DonationAlertsIntegration.cs:657–708](https://github.com/maseaaao/maseaaao.tv/blob/33961514ab13ba5e56d4cbe6b337a486aca29581/integrations/streamerbot/donationalerts/DonationAlertsIntegration.cs#L657-L708).
+- `GetAuthLink` не генерирует state/PKCE. Listener принимает первый запрос, извлекает только `code` и сразу вызывает Handler; проверки одноразового значения, ошибки OAuth и происхождения авторизационной транзакции нет.
+- Условие: активное окно авторизации на loopback-порту. Сторонний запрос может завершить текущую попытку, а подходящий код того же OAuth client не привязан к этой попытке. Возможность подмены учётной записи зависит от получения валидного кода и доставки callback; полноценная атака на аккаунт не выполнялась.
+- Исправление: криптографически случайный одноразовый state на каждую попытку, проверка до обмена code, отклонение незапрошенных callback; PKCE при подтверждённой поддержке провайдером.
+- Подтверждение: статический разбор формирования URL и callback.
+- Основание: [RFC 9700, §2.1 и §4.7.1](https://www.rfc-editor.org/rfc/rfc9700.html#section-4.7.1).
+
+### R07 · P2 · Авторизация DonationAlerts сообщает успех при неуспешном обмене code
+
+- Код: [DonationAlertsIntegration.cs:673–693](https://github.com/maseaaao/maseaaao.tv/blob/33961514ab13ba5e56d4cbe6b337a486aca29581/integrations/streamerbot/donationalerts/DonationAlertsIntegration.cs#L673-L693), [ObtainAccessToken:104–121](https://github.com/maseaaao/maseaaao.tv/blob/33961514ab13ba5e56d4cbe6b337a486aca29581/integrations/streamerbot/donationalerts/DonationAlertsIntegration.cs#L104-L121).
+- Результат `Handler(code)` игнорируется. При отсутствующем/просроченном code или отказе token endpoint `ObtainAccessToken` возвращает false, но страница безусловно показывает «DonationAlerts подключён» и закрывает listener.
+- Дополнительно таймер на 300000 ms создаётся с AutoReset=true и никогда не останавливается/не освобождается. Он обращается к изменяемому полю Listener; после повторной авторизации старый таймер может закрыть уже новую попытку раньше её пяти минут.
+- Исправление: обрабатывать error/code и результат обмена, выдавать успех только после сохранения валидных токенов; listener и одноразовый timeout владеть одной попыткой и освобождать в finally.
+- Подтверждение: статический разбор ветвей ошибки и времени жизни таймера. Авторизация пользователя не запускалась.
