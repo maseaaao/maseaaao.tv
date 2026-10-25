@@ -1,30 +1,35 @@
-import { mount, type VueWrapper } from '@vue/test-utils';
-import type { MockInstance } from 'vitest';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { nextTick } from 'vue';
+import type { Mock } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it, jest, mock } from 'bun:test';
 import packageJson from '../package.json';
+import type { Dock } from '../src/render';
 import { parseRecord, required, textValue } from './assertions';
-import { mockStreamerbot } from './mocks/streamerbot-client';
+import { mockStreamerbot, StreamerbotClient } from './mocks/streamerbot-client';
+import { timers } from './timers';
 
-const clientMock = vi.hoisted(
-  (): { current?: typeof import('./mocks/streamerbot-client') } => ({}),
-);
-vi.mock('@streamerbot/client', async () => {
-  const module = await import('./mocks/streamerbot-client');
-  clientMock.current = module;
-  return module;
-});
+const REMOVE_TAG_RE = /^Удалить тег[: ]/;
+
+mock.module('@streamerbot/client', () => ({ StreamerbotClient }));
+mock.module('../../../dist/.cache/stream-info/streamerbot-import.txt?raw', () => ({
+  default: 'fixture Streamer.bot import',
+}));
+
+// Один микротаск-хоп: reactive-выкладка запускается из queueMicrotask, фокус и
+// обсерверы скролла планируются там же, поэтому один хоп — готовый checkpoint.
+const nextTick = (): Promise<void> => new Promise<void>((resolve) => queueMicrotask(resolve));
 
 const flush = async (): Promise<void> => {
   await Promise.resolve();
   await Promise.resolve();
-  if (vi.isFakeTimers()) await vi.advanceTimersByTimeAsync(0);
-  else await new Promise((resolve) => window.setTimeout(resolve, 0));
+  if (timers.isFake()) {
+    await timers.advance(0);
+  } else {
+    await new Promise((resolve) => window.setTimeout(resolve, 0));
+  }
   await nextTick();
 };
 
 type Field = HTMLInputElement | HTMLTextAreaElement;
-let wrapper: VueWrapper | undefined;
+let dock: Dock | undefined;
 
 // Deliberately small helpers: native labels/aria-label and explicit roles, not a
 // second accessibility-name implementation. All queries target the mounted DOM.
@@ -34,9 +39,9 @@ function queryField(name: string | RegExp): Field | null {
   const fields = Array.from(document.querySelectorAll<Field>('input, textarea'));
   return (
     fields.find(
-      (field) =>
-        matches(field.getAttribute('aria-label') ?? '') ||
-        Array.from(field.labels ?? []).some((label) => matches(label.textContent ?? '')),
+      (fieldLocal) =>
+        matches(fieldLocal.getAttribute('aria-label') ?? '') ||
+        Array.from(fieldLocal.labels ?? []).some((label) => matches(label.textContent ?? '')),
     ) ?? null
   );
 }
@@ -44,19 +49,26 @@ function field(name: string | RegExp): Field {
   return required(queryField(name));
 }
 function buttons(name: string | RegExp): HTMLButtonElement[] {
-  return Array.from(document.querySelectorAll<HTMLButtonElement>('button')).filter((button) => {
-    const label = (button.getAttribute('aria-label') ?? button.textContent ?? '').trim();
-    return typeof name === 'string' ? label === name : name.test(label);
-  });
+  return Array.from(document.querySelectorAll<HTMLButtonElement>('button')).filter(
+    (buttonLocal) => {
+      const label = (
+        buttonLocal.getAttribute('aria-label') ??
+        buttonLocal.textContent ??
+        ''
+      ).trim();
+      return typeof name === 'string' ? label === name : name.test(label);
+    },
+  );
 }
 function button(name: string | RegExp, index = 0): HTMLButtonElement {
   const value = buttons(name)[index];
-  if (!value)
+  if (!value) {
     throw new Error(
       `Button ${name} is not rendered. Available: ${Array.from(document.querySelectorAll('button'))
         .map((b) => b.getAttribute('aria-label') ?? b.textContent)
         .join(', ')}`,
     );
+  }
   return value;
 }
 function roleText(role: 'status' | 'alert', text: string): HTMLElement | null {
@@ -86,12 +98,13 @@ async function setValue(name: string | RegExp, value: string): Promise<Field> {
   await nextTick();
   return input;
 }
-async function boot(): Promise<void> {
-  wrapper?.unmount();
-  wrapper = undefined;
+async function boot(optionsLocal?: { demo?: boolean }): Promise<void> {
+  // Each mount owns its state and callbacks; dispose it before mounting again.
+  dock?.dispose();
+  dock = undefined;
   document.body.innerHTML = '<div id="app"></div>';
-  const { default: App } = await import('../src/App.vue');
-  wrapper = mount(App, { attachTo: required(document.querySelector('#app')) });
+  const { initDock } = await import('../src/render');
+  dock = initDock(required(document.querySelector('#app')), optionsLocal);
   await flush();
   await flush();
 }
@@ -101,61 +114,63 @@ function commands(): string[] {
 }
 
 interface ControlledAction {
+  acknowledge: () => void;
   args: Record<string, unknown>;
-  acknowledge(): void;
-  rejectAck(error: Error): void;
-  respond(envelope: Record<string, unknown>): void;
+  rejectAck: (error: Error) => void;
+  respond: (envelope: Record<string, unknown>) => void;
 }
 
 // Keep the existing client mock, but separate transport ACK from CodeEvent.
 // Install before mounting so each client retains its own registered event handler.
-async function controlActions(
+function controlActions(
   command: 'saveTemplates' | 'updateTwitch' | 'runPreset',
-): Promise<ControlledAction[]> {
-  await import('@streamerbot/client');
-  const { StreamerbotClient } = required(clientMock.current);
+): ControlledAction[] {
   type Client = InstanceType<typeof StreamerbotClient>;
   type Handler = Parameters<Client['on']>[1];
   const handlers = new WeakMap<Client, Handler>();
   // The original is deliberately rebound with .call(this), not invoked unbound.
   const originalOn = StreamerbotClient.prototype.on;
-  vi.spyOn(StreamerbotClient.prototype, 'on').mockImplementation(function (
+  jest.spyOn(StreamerbotClient.prototype, 'on').mockImplementation(function (
     this: Client,
     event,
     handler,
   ) {
-    if (event === 'Custom.CodeEvent') handlers.set(this, handler);
+    if (event === 'Custom.CodeEvent') {
+      handlers.set(this, handler);
+    }
     return originalOn.call(this, event, handler);
   });
   const originalAction = StreamerbotClient.prototype.doAction;
   const pending: ControlledAction[] = [];
-  vi.spyOn(StreamerbotClient.prototype, 'doAction').mockImplementation(function (
+  jest.spyOn(StreamerbotClient.prototype, 'doAction').mockImplementation(function (
     this: Client,
     action,
     args = {},
   ) {
     const controlled =
       command === 'runPreset' ? action.id === 'preset-pubg' : args.command === command;
-    if (!controlled) return originalAction.call(this, action, args);
-    mockStreamerbot.actionCalls.push({ id: action.id, args });
+    if (!controlled) {
+      return originalAction.call(this, action, args);
+    }
+    mockStreamerbot.actionCalls.push({ args, id: action.id });
     return new Promise<void>((resolve, reject) => {
       pending.push({
-        args,
         acknowledge: resolve,
+        args,
         rejectAck: reject,
         respond: (envelope) =>
           required(handlers.get(this))({
             data: {
-              eventName: 'stream_info_api_response',
               args: {
                 apiVersion: 4,
-                requestId: textValue(args.requestId),
                 command: textValue(args.command),
-                ok: true,
                 data: {},
                 error: null,
+                ok: true,
+                requestId: textValue(args.requestId),
                 ...envelope,
               },
+              eventName: 'stream_info_api_response',
             },
           }),
       });
@@ -167,53 +182,59 @@ async function controlActions(
 function savedTemplateResponse(template: string): Record<string, unknown> {
   return {
     data: {
-      templates: { twitchTemplate: template, subtitle: 'Старт', configured: true },
+      templates: { configured: true, subtitle: 'Старт', twitchTemplate: template },
     },
   };
 }
 
-describe('Stream Info Vue interactions', () => {
-  const open = vi.fn(() => null);
-  const writeText = vi.fn(() => Promise.resolve());
-  let timeoutSpy: MockInstance<typeof window.setTimeout>;
-  let intervalSpy: MockInstance<typeof window.setInterval>;
+describe('Stream Info DOM interactions', () => {
+  const originalOpen = window.open;
+  const open = jest.fn(() => null);
+  const writeText = jest.fn(() => Promise.resolve());
+  let timeoutSpy: Mock<typeof window.setTimeout>;
+  let intervalSpy: Mock<typeof window.setInterval>;
   let clipboardDescriptor: PropertyDescriptor | undefined;
 
   beforeEach(() => {
     clipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
-    // resetModules does not dispose callbacks belonging to the previous app.
     // Track real timers as well as the fake timers used by individual tests.
-    timeoutSpy = vi.spyOn(window, 'setTimeout');
-    intervalSpy = vi.spyOn(window, 'setInterval');
-    vi.resetModules();
+    timeoutSpy = jest.spyOn(window, 'setTimeout');
+    intervalSpy = jest.spyOn(window, 'setInterval');
     mockStreamerbot.reset();
     localStorage.clear();
     delete document.documentElement.dataset.theme;
     sessionStorage.clear();
     window.history.replaceState({}, '', '/');
     document.body.innerHTML = '<div id="app"></div>';
-    vi.stubGlobal('open', open);
+    window.open = open;
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
     open.mockClear();
     writeText.mockClear();
   });
 
   afterEach(() => {
-    wrapper?.unmount();
-    wrapper = undefined;
+    dock?.dispose();
+    dock = undefined;
     document.body.replaceChildren();
-    vi.clearAllTimers();
-    vi.useRealTimers();
+    timers.clear();
+    timers.useReal();
     for (const result of timeoutSpy.mock.results) {
-      if (result.type === 'return') window.clearTimeout(result.value);
+      if (result.type === 'return') {
+        window.clearTimeout(result.value);
+      }
     }
     for (const result of intervalSpy.mock.results) {
-      if (result.type === 'return') window.clearInterval(result.value);
+      if (result.type === 'return') {
+        window.clearInterval(result.value);
+      }
     }
-    vi.restoreAllMocks();
-    vi.unstubAllGlobals();
-    if (clipboardDescriptor) Object.defineProperty(navigator, 'clipboard', clipboardDescriptor);
-    else Reflect.deleteProperty(navigator, 'clipboard');
+    jest.restoreAllMocks();
+    window.open = originalOpen;
+    if (clipboardDescriptor) {
+      Object.defineProperty(navigator, 'clipboard', clipboardDescriptor);
+    } else {
+      Reflect.deleteProperty(navigator, 'clipboard');
+    }
   });
 
   it('does not replace a healthy socket when connection settings are unchanged', async () => {
@@ -230,23 +251,23 @@ describe('Stream Info Vue interactions', () => {
     'ignores retired client %s without disturbing a new pending search',
     async (hook) => {
       await boot();
-      vi.useFakeTimers();
+      timers.useFake();
       const old = required(mockStreamerbot.instances[0]);
       await setValue('Категория', 'Adventure');
       await click('Настройки');
       await setValue('Порт', '8081');
       await click('Сохранить подключение');
-      await vi.advanceTimersByTimeAsync(250);
+      await timers.advance(250);
       mockStreamerbot.deferSearch = true;
       await setValue('Категория', 'Adventure new');
-      await vi.advanceTimersByTimeAsync(250);
+      await timers.advance(250);
       old.options[hook]?.(new Error('old password error'));
-      await vi.advanceTimersByTimeAsync(0);
+      await timers.advance(0);
       expect(roleText('status', 'Streamer.bot подключён')).not.toBeNull();
       required(mockStreamerbot.pendingSearches[0]).reply({
         data: { results: [{ id: 'fresh', name: 'Adventure new' }] },
       });
-      await vi.advanceTimersByTimeAsync(0);
+      await timers.advance(0);
       expect(categoryOption().textContent?.trim()).toBe('Adventure new');
       expect(document.querySelector('.auth-panel')).toBeNull();
     },
@@ -256,24 +277,24 @@ describe('Stream Info Vue interactions', () => {
     'ignores retired getState completion %s replacement connection',
     async (timing) => {
       await boot();
-      vi.useFakeTimers();
+      timers.useFake();
       const old = required(mockStreamerbot.instances[0]);
       const original = old.doAction.bind(old);
       let finish: () => void = () => {
         throw new Error('Fixture callback was not installed');
       };
-      vi.spyOn(old, 'doAction').mockImplementationOnce(async (action, args) => {
+      jest.spyOn(old, 'doAction').mockImplementationOnce(async (action, args) => {
         await original(action, args);
         await new Promise<void>((resolve) => {
           finish = resolve;
         });
       });
       await click('Обновить данные');
-      await vi.advanceTimersByTimeAsync(0);
+      await timers.advance(0);
       let disconnected: () => void = () => {
         throw new Error('Fixture callback was not installed');
       };
-      vi.spyOn(old, 'disconnect').mockImplementationOnce(
+      jest.spyOn(old, 'disconnect').mockImplementationOnce(
         () =>
           new Promise<void>((resolve) => {
             disconnected = resolve;
@@ -286,17 +307,17 @@ describe('Stream Info Vue interactions', () => {
       await click('Сохранить подключение');
       if (timing === 'before') {
         finish();
-        await vi.advanceTimersByTimeAsync(0);
+        await timers.advance(0);
         expect(roleText('status', 'Подключение…')).not.toBeNull();
         expect(document.querySelector('.notices > [role]')).toBeNull();
         expect(document.querySelector('[role="listbox"]')).toBeNull();
       }
       disconnected();
-      await vi.advanceTimersByTimeAsync(0);
+      await timers.advance(0);
       await setValue('Категория', 'Adventure');
-      await vi.advanceTimersByTimeAsync(250);
+      await timers.advance(250);
       finish();
-      await vi.advanceTimersByTimeAsync(0);
+      await timers.advance(0);
       expect(document.querySelector('section[aria-label="Twitch"]')?.textContent).toContain(
         'Replacement account',
       );
@@ -307,12 +328,12 @@ describe('Stream Info Vue interactions', () => {
 
   it('invalidates callbacks before awaiting old disconnect', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     const old = required(mockStreamerbot.instances[0]);
     let finish: () => void = () => {
       throw new Error('Fixture callback was not installed');
     };
-    vi.spyOn(old, 'disconnect').mockImplementationOnce(
+    jest.spyOn(old, 'disconnect').mockImplementationOnce(
       () =>
         new Promise<void>((resolve) => {
           finish = resolve;
@@ -324,28 +345,28 @@ describe('Stream Info Vue interactions', () => {
     old.options.onDisconnect?.();
     old.options.onConnect?.();
     old.options.onError?.(new Error('old password error'));
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(roleText('status', 'Подключение…')).not.toBeNull();
     expect(document.querySelector('.auth-panel')).toBeNull();
     finish();
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(roleText('status', 'Streamer.bot подключён')).not.toBeNull();
   });
 
   it('renders a failed search envelope as retryable error, never empty', async () => {
     await boot();
-    vi.useFakeTimers();
-    mockStreamerbot.searchReply = { ok: false, error: { message: 'Search unavailable' } };
+    timers.useFake();
+    mockStreamerbot.searchReply = { error: { message: 'Search unavailable' }, ok: false };
     await setValue('Категория', 'Adventure');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(roleText('alert', 'Search unavailable')).not.toBeNull();
     expect(roleText('status', 'Ничего не найдено')).toBeNull();
     mockStreamerbot.searchReply = {
+      data: { results: [{ id: 'adventure', imageUrl: '', name: 'Adventure' }] },
       ok: true,
-      data: { results: [{ id: 'adventure', name: 'Adventure', imageUrl: '' }] },
     };
     await click('Повторить поиск');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(categoryOption().textContent).toContain('Adventure');
     expect(
       JSON.parse(textValue(mockStreamerbot.actionCalls.at(-1)?.args.payloadJson)),
@@ -356,56 +377,56 @@ describe('Stream Info Vue interactions', () => {
 
   it('serializes search requests and rejects stale ABA responses deterministically', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     mockStreamerbot.deferSearch = true;
     const selector = 'Категория';
     await setValue(selector, 'Alpha');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     await setValue(selector, 'Beta');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     await setValue(selector, 'Alpha');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(mockStreamerbot.pendingSearches).toHaveLength(1);
     required(mockStreamerbot.pendingSearches[0]).reply({
       data: { results: [{ id: 'old', name: 'Old Alpha' }] },
     });
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(optionNamed('Old Alpha')).toBeNull();
     expect(mockStreamerbot.pendingSearches).toHaveLength(2);
     expect(required(mockStreamerbot.pendingSearches[1]).payload).toEqual({ query: 'Alpha' });
     required(mockStreamerbot.pendingSearches[1]).reply({
       data: { results: [{ id: 'new', name: 'Alpha new' }] },
     });
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(categoryOption().textContent?.trim()).toBe('Alpha new');
   });
 
   it('invalidates pending search on reconnect but retains the query draft', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     mockStreamerbot.deferSearch = true;
     await setValue('Категория', 'Adventure');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     mockStreamerbot.disconnectHook?.();
     required(mockStreamerbot.pendingSearches[0]).reply({
       data: { results: [{ id: 'stale', name: 'Adventure stale' }] },
     });
     await click('Настройки');
     await click('Сохранить подключение');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(queryField('Категория')?.value).toBe('Adventure');
     expect(optionNamed('Adventure stale')).toBeNull();
     expect(mockStreamerbot.pendingSearches).toHaveLength(2);
     required(mockStreamerbot.pendingSearches[1]).reply({
       data: { results: [{ id: 'fresh', name: 'Adventure fresh' }] },
     });
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(categoryOption().textContent?.trim()).toBe('Adventure fresh');
   });
 
   it('retains category input identity, caret and composition through background refresh', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     const selector = 'Категория';
     const input = required(queryField(selector));
     input.focus();
@@ -414,50 +435,56 @@ describe('Stream Info Vue interactions', () => {
     await setValue(selector, '冒険');
     input.setSelectionRange(1, 1);
     await click('Обновить данные');
-    await vi.advanceTimersByTimeAsync(500);
+    await timers.advance(500);
     expect(queryField(selector)).toBe(input);
     expect(document.activeElement).toBe(input);
     expect(input.selectionStart).toBe(1);
     expect(commands().filter((command) => command === 'searchTwitchCategories')).toHaveLength(0);
     input.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true }));
     await nextTick();
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(commands().filter((command) => command === 'searchTwitchCategories')).toHaveLength(1);
     await click('Обновить данные');
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(queryField(selector)).toBe(input);
     expect(input.value).toBe('冒険');
   });
 
   it('preserves a focused category button by ID through refresh', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     await setValue('Категория', 'PUBG');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     categoryOption().focus();
     await click('Обновить данные');
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(document.activeElement).toBe(optionNamed('PUBG: BATTLEGROUNDS'));
   });
 
   it('shows ranked batches of twenty and merges cursor pages beyond one hundred candidates', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     const results = Array.from({ length: 100 }, (_, index) => ({
       id: `game-${index}`,
-      name: `Adventure ${index}`,
       imageUrl: '',
+      name: `Adventure ${index}`,
     }));
     mockStreamerbot.searchReply = {
-      data: { results, cursor: 'page-two', hasMore: true, partial: false },
+      data: { cursor: 'page-two', hasMore: true, partial: false, results },
     };
     await setValue('Категория', 'Adventure');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(options()).toHaveLength(20);
-    for (let index = 0; index < 4; index++) await click('Показать ещё');
+    for (let index = 0; index < 4; index += 1) {
+      // biome-ignore lint/performance/noAwaitInLoops: Each step observes shared fixture state; keep browser actions and lifecycle checks in order.
+      await click('Показать ещё');
+    }
     expect(options()).toHaveLength(100);
     mockStreamerbot.searchReply = {
       data: {
+        cursor: null,
+        hasMore: false,
+        partial: false,
         results: [
           results[0],
           ...Array.from({ length: 30 }, (_, index) => ({
@@ -465,9 +492,6 @@ describe('Stream Info Vue interactions', () => {
             name: `Adventure next ${index}`,
           })),
         ],
-        cursor: null,
-        hasMore: false,
-        partial: false,
       },
     };
     const list = required(document.querySelector<HTMLElement>('[role="listbox"]'));
@@ -475,13 +499,13 @@ describe('Stream Info Vue interactions', () => {
     categoryOption(50).focus();
     await click('Показать ещё');
     expect(options()).toHaveLength(100);
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(options()).toHaveLength(120);
     expect(document.querySelector<HTMLElement>('[role="listbox"]')?.scrollTop).toBe(77);
     expect(document.activeElement).toBe(optionNamed('Adventure 50'));
     expect(JSON.parse(textValue(mockStreamerbot.actionCalls.at(-1)?.args.payloadJson))).toEqual({
-      query: 'Adventure',
       cursor: 'page-two',
+      query: 'Adventure',
     });
     await click('Показать ещё');
     expect(options()).toHaveLength(130);
@@ -490,48 +514,48 @@ describe('Stream Info Vue interactions', () => {
 
   it('shows partial warnings separately from errors and does not call a continuable page empty', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     mockStreamerbot.searchReply = {
       data: {
-        results: [],
         cursor: 'continue',
         hasMore: true,
         partial: true,
+        results: [],
         warnings: ['Some sources unavailable'],
       },
     };
     await setValue('Категория', 'Adventure');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(document.querySelector('.category-search-warning')?.textContent).toContain(
       'Some sources unavailable',
     );
     expect(roleText('status', 'Результатов: 0')).not.toBeNull();
     expect(roleText('status', 'Ничего не найдено')).toBeNull();
     expect(button('Показать ещё').disabled).toBe(false);
-    mockStreamerbot.searchReply = { ok: false, error: { message: 'Page failed' } };
+    mockStreamerbot.searchReply = { error: { message: 'Page failed' }, ok: false };
     await click('Показать ещё');
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(document.querySelector('.category-search-status')?.textContent).toContain('Page failed');
     mockStreamerbot.searchReply = {
       data: {
-        results: [{ id: 'found', name: 'Adventure' }],
         cursor: null,
         hasMore: false,
         partial: false,
+        results: [{ id: 'found', name: 'Adventure' }],
       },
     };
     await click('Повторить поиск');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(JSON.parse(textValue(mockStreamerbot.actionCalls.at(-1)?.args.payloadJson))).toEqual({
-      query: 'Adventure',
       cursor: 'continue',
+      query: 'Adventure',
     });
     expect(categoryOption().textContent?.trim()).toBe('Adventure');
   });
 
   it('supports accessible keyboard selection without guessing the first result', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     mockStreamerbot.searchReply = {
       data: {
         results: [
@@ -542,27 +566,27 @@ describe('Stream Info Vue interactions', () => {
     };
     const input = (await setValue('Категория', 'Adventure')) as HTMLInputElement;
     input.focus();
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(input.getAttribute('role')).toBe('combobox');
     expect(input.getAttribute('aria-expanded')).toBe('true');
     expect(
       document.getElementById(required(input.getAttribute('aria-controls')))?.getAttribute('role'),
     ).toBe('listbox');
-    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    input.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Enter' }));
     await nextTick();
     expect(input.value).toBe('Adventure');
-    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    input.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'ArrowDown' }));
     await nextTick();
-    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    input.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'ArrowDown' }));
     await nextTick();
     const active = input.getAttribute('aria-activedescendant');
     expect(document.getElementById(required(active))?.textContent?.trim()).toBe('Adventure two');
     await click('Обновить данные');
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(input.getAttribute('aria-activedescendant')).toBe(active);
-    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+    input.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'ArrowUp' }));
     await nextTick();
-    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    input.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Enter' }));
     await nextTick();
     expect(input.value).toBe('');
     expect(document.querySelector('.selected-category')?.textContent).toContain('Adventure one');
@@ -571,8 +595,8 @@ describe('Stream Info Vue interactions', () => {
 
   it('scrolls the keyboard-active category into view after rendering', async () => {
     await boot();
-    vi.useFakeTimers();
-    const scroll = vi.fn();
+    timers.useFake();
+    const scroll = jest.fn();
     Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
       configurable: true,
       value: scroll,
@@ -587,9 +611,10 @@ describe('Stream Info Vue interactions', () => {
         },
       };
       const input = await setValue('Категория', 'Adventure');
-      await vi.advanceTimersByTimeAsync(250);
-      for (let i = 0; i < 15; i++) {
-        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      await timers.advance(250);
+      for (let i = 0; i < 15; i += 1) {
+        input.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'ArrowDown' }));
+        // biome-ignore lint/performance/noAwaitInLoops: Each step observes shared fixture state; keep browser actions and lifecycle checks in order.
         await nextTick();
       }
       expect(scroll).toHaveBeenLastCalledWith({ block: 'nearest' });
@@ -598,7 +623,10 @@ describe('Stream Info Vue interactions', () => {
       );
       expect(document.activeElement).toBe(input);
     } finally {
-      delete (HTMLElement.prototype as { scrollIntoView?: unknown }).scrollIntoView;
+      Reflect.deleteProperty(
+        HTMLElement.prototype as { scrollIntoView?: unknown },
+        'scrollIntoView',
+      );
     }
   });
 
@@ -612,17 +640,17 @@ describe('Stream Info Vue interactions', () => {
     expect(Boolean(document.querySelector('main')?.closest('[inert]'))).toBe(true);
     button('Сохранить подключение').focus();
     button('Сохранить подключение').dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }),
+      new KeyboardEvent('keydown', { bubbles: true, key: 'Tab' }),
     );
     await nextTick();
     expect(document.activeElement).toBe(button('Закрыть'));
     button('Закрыть').dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true }),
+      new KeyboardEvent('keydown', { bubbles: true, key: 'Tab', shiftKey: true }),
     );
     await nextTick();
     expect(document.activeElement).toBe(button('Сохранить подключение'));
     button('Сохранить подключение').dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }),
+      new KeyboardEvent('keydown', { bubbles: true, key: 'Escape' }),
     );
     await nextTick();
     // Dialog focus restoration is scheduled after its unmount patch.
@@ -645,10 +673,10 @@ describe('Stream Info Vue interactions', () => {
 
   it('returns focus to category query input instead of BODY when choosing a category', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     mockStreamerbot.searchReply = { data: { results: [{ id: 'pubg', name: 'PUBG' }] } };
     await setValue('Категория', 'PUBG');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     categoryOption().click();
     await nextTick();
     expect(document.activeElement).toBe(queryField('Категория'));
@@ -656,12 +684,12 @@ describe('Stream Info Vue interactions', () => {
 
   it('retains load-more focus while fetching the next page', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     mockStreamerbot.searchReply = {
-      data: { results: [{ id: 'one', name: 'Adventure one' }], cursor: 'next', hasMore: true },
+      data: { cursor: 'next', hasMore: true, results: [{ id: 'one', name: 'Adventure one' }] },
     };
     await setValue('Категория', 'Adventure');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     mockStreamerbot.deferSearch = true;
     button('Показать ещё').focus();
     await click('Показать ещё');
@@ -671,9 +699,9 @@ describe('Stream Info Vue interactions', () => {
     await click('Показать ещё');
     expect(mockStreamerbot.pendingSearches).toHaveLength(1);
     required(mockStreamerbot.pendingSearches[0]).reply({
-      data: { results: [{ id: 'two', name: 'Adventure two' }], cursor: 'third', hasMore: true },
+      data: { cursor: 'third', hasMore: true, results: [{ id: 'two', name: 'Adventure two' }] },
     });
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(document.activeElement).toBe(button('Показать ещё'));
     expect(button('Показать ещё').getAttribute('aria-disabled')).toBe('false');
     expect(mockStreamerbot.pendingSearches).toHaveLength(1);
@@ -681,76 +709,76 @@ describe('Stream Info Vue interactions', () => {
 
   it('renders old results-only replies including a genuine empty result', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     mockStreamerbot.searchReply = { data: { results: [] } };
     await setValue('Категория', 'Puzzle');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(roleText('status', 'Ничего не найдено')).not.toBeNull();
     expect(buttons('Повторить поиск')[0] ?? null).toBeNull();
     mockStreamerbot.searchReply = { data: { results: [{ id: 'puzzle', name: 'Puzzle' }] } };
     await setValue('Категория', 'Puzzles');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(categoryOption().textContent?.trim()).toBe('Puzzle');
     expect(buttons('Показать ещё')[0] ?? null).toBeNull();
   });
 
   it('keeps candidates after a continuation failure and retries only that cursor', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     mockStreamerbot.searchReply = {
-      data: { results: [{ id: 'sim', name: 'Simulator' }], cursor: 'next', hasMore: true },
+      data: { cursor: 'next', hasMore: true, results: [{ id: 'sim', name: 'Simulator' }] },
     };
     await setValue('Категория', 'Simulator');
-    await vi.advanceTimersByTimeAsync(250);
-    mockStreamerbot.searchReply = { ok: false, error: { message: 'Temporarily unavailable' } };
+    await timers.advance(250);
+    mockStreamerbot.searchReply = { error: { message: 'Temporarily unavailable' }, ok: false };
     await click('Показать ещё');
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(categoryOption().textContent?.trim()).toBe('Simulator');
     expect(document.querySelector('.category-search-status')?.textContent).toContain(
       'Temporarily unavailable',
     );
     mockStreamerbot.searchReply = {
       data: {
+        cursor: null,
+        hasMore: false,
         results: [
           { id: 'sim', name: 'Simulator' },
           { id: 'sim2', name: 'Simulator two' },
         ],
-        cursor: null,
-        hasMore: false,
       },
     };
     await click('Повторить поиск');
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(options()).toHaveLength(2);
     expect(JSON.parse(textValue(mockStreamerbot.actionCalls.at(-1)?.args.payloadJson))).toEqual({
-      query: 'Simulator',
       cursor: 'next',
+      query: 'Simulator',
     });
   });
 
   it('escapes category names and image attributes and falls back without inline handlers', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     mockStreamerbot.searchReply = {
       data: {
         results: [
           {
             id: 'safe',
-            name: '<img src=x onerror="unsafe()">',
             imageUrl: 'https://example.invalid/cover" onerror="unsafe()',
+            name: '<img src=x onerror="unsafe()">',
           },
         ],
       },
     };
     await setValue('Категория', 'Safe');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     const option = categoryOption();
     expect(option.querySelectorAll('img')).toHaveLength(1);
     expect(option.querySelector('[onerror]')).toBeNull();
     expect(option.querySelector('strong')?.textContent).toBe('<img src=x onerror="unsafe()">');
     required(option.querySelector('img')).dispatchEvent(new Event('error'));
     await nextTick();
-    // The Vue cover removes a failed image rather than hiding it with legacy CSS.
+    // Обложка удаляет не загрузившуюся картинку вместо устаревшего CSS-скрытия.
     expect(option.querySelector('img')).toBeNull();
     const fallback = required(option.querySelector('svg.icon-defaultCategory'));
     expect(getComputedStyle(fallback).display).not.toBe('none');
@@ -765,10 +793,10 @@ describe('Stream Info Vue interactions', () => {
     'rejects malformed or failing search replies %j',
     async (envelope) => {
       await boot();
-      vi.useFakeTimers();
+      timers.useFake();
       mockStreamerbot.searchReply = envelope;
       await setValue('Категория', 'Puzzle');
-      await vi.advanceTimersByTimeAsync(250);
+      await timers.advance(250);
       expect(buttons('Повторить поиск')[0] ?? null).not.toBeNull();
       expect(options()[0] ?? null).toBeNull();
     },
@@ -776,28 +804,28 @@ describe('Stream Info Vue interactions', () => {
 
   it('retains earlier partial warnings after a successful continuation page', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     mockStreamerbot.searchReply = {
       data: {
-        results: [{ id: 'one', name: 'Adventure one' }],
         cursor: 'next',
         hasMore: true,
         partial: true,
+        results: [{ id: 'one', name: 'Adventure one' }],
         warnings: ['One source unavailable'],
       },
     };
     await setValue('Категория', 'Adventure');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     mockStreamerbot.searchReply = {
       data: {
-        results: [{ id: 'two', name: 'Adventure two' }],
         cursor: null,
         hasMore: false,
         partial: false,
+        results: [{ id: 'two', name: 'Adventure two' }],
       },
     };
     await click('Показать ещё');
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(document.querySelector('.category-search-warning')?.textContent).toContain(
       'One source unavailable',
     );
@@ -821,9 +849,9 @@ describe('Stream Info Vue interactions', () => {
 
   it('keeps search candidates and draft when closing settings', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     await setValue('Категория', 'PUBG');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     await click('Настройки');
     await click('Закрыть');
     expect(categoryOption().textContent).toContain('PUBG');
@@ -919,7 +947,9 @@ describe('Stream Info Vue interactions', () => {
     await click('Настройки');
     expect(queryField('Шаблон Twitch')?.value).toBe('Draft %subtitle%');
     expect(document.querySelector('.template-dirty')?.textContent).toContain('несохранённые');
-    if (document.querySelector('[role="dialog"]')) await click('Закрыть');
+    if (document.querySelector('[role="dialog"]')) {
+      await click('Закрыть');
+    }
     await click('Применить изменения');
     await flush();
     expect(document.querySelector('.template-dirty')?.textContent).toBe('');
@@ -932,7 +962,6 @@ describe('Stream Info Vue interactions', () => {
       'Recovered %subtitle%',
     );
 
-    vi.resetModules();
     document.body.innerHTML = '<div id="app"></div>';
     await boot();
     await click('Настройки');
@@ -947,8 +976,8 @@ describe('Stream Info Vue interactions', () => {
   it.each(['ack-first', 'event-first'] as const)(
     'requires both independent template-save completions (%s)',
     async (order) => {
-      vi.useFakeTimers();
-      const pending = await controlActions('saveTemplates');
+      timers.useFake();
+      const pending = controlActions('saveTemplates');
       await boot();
       await setValue('Шаблон Twitch', 'Saved %subtitle%');
       await click('Применить изменения');
@@ -957,16 +986,22 @@ describe('Stream Info Vue interactions', () => {
         twitchTemplate: 'Saved %subtitle%',
       });
       const before = localStorage.getItem('change-info-streamer-bot.settings.v1');
-      if (order === 'ack-first') request.acknowledge();
-      else request.respond(savedTemplateResponse('Saved %subtitle%'));
+      if (order === 'ack-first') {
+        request.acknowledge();
+      } else {
+        request.respond(savedTemplateResponse('Saved %subtitle%'));
+      }
       await flush();
       expect(button('Применить изменения').disabled).toBe(true);
       expect(roleText('status', 'Есть несохранённые изменения шаблонов')).not.toBeNull();
       expect(document.querySelector('.notices > [role]')).toBeNull();
       expect(localStorage.getItem('change-info-streamer-bot.settings.v1')).toBe(before);
       mockStreamerbot.state.templates.twitchTemplate = 'Saved %subtitle%';
-      if (order === 'ack-first') request.respond(savedTemplateResponse('Saved %subtitle%'));
-      else request.acknowledge();
+      if (order === 'ack-first') {
+        request.respond(savedTemplateResponse('Saved %subtitle%'));
+      } else {
+        request.acknowledge();
+      }
       await flush();
       expect(button('Применить изменения').disabled).toBe(false);
       expect(document.querySelector('.template-dirty')?.textContent).toBe('');
@@ -982,14 +1017,16 @@ describe('Stream Info Vue interactions', () => {
   it.each([false, true])(
     'rejects a failed ACK even if CodeEvent already arrived: %s',
     async (eventFirst) => {
-      vi.useFakeTimers();
-      const pending = await controlActions('saveTemplates');
+      timers.useFake();
+      const pending = controlActions('saveTemplates');
       await boot();
       await setValue('Шаблон Twitch', 'Rejected %subtitle%');
       await click('Применить изменения');
       const request = required(pending[0]);
       const before = localStorage.getItem('change-info-streamer-bot.settings.v1');
-      if (eventFirst) request.respond(savedTemplateResponse('Rejected %subtitle%'));
+      if (eventFirst) {
+        request.respond(savedTemplateResponse('Rejected %subtitle%'));
+      }
       request.rejectAck(new Error('ACK rejected'));
       await flush();
       expect(button('Применить изменения').disabled).toBe(false);
@@ -1001,7 +1038,7 @@ describe('Stream Info Vue interactions', () => {
       expect(notice.closest('[inert]')).toBeNull();
       expect(document.querySelector('.dock-scroll')?.contains(notice)).toBe(true);
       request.respond(savedTemplateResponse('Rejected %subtitle%'));
-      await vi.advanceTimersByTimeAsync(15_000);
+      await timers.advance(15_000);
       expect(localStorage.getItem('change-info-streamer-bot.settings.v1')).toBe(before);
       expect(field('Шаблон Twitch').value).toBe('Rejected %subtitle%');
       expect(document.querySelectorAll('.notices > [role]')).toHaveLength(1);
@@ -1011,17 +1048,19 @@ describe('Stream Info Vue interactions', () => {
   it.each([false, true])(
     'bounds a missing CodeEvent to 15 seconds with ACK completed: %s',
     async (acknowledged) => {
-      vi.useFakeTimers();
-      const pending = await controlActions('saveTemplates');
+      timers.useFake();
+      const pending = controlActions('saveTemplates');
       await boot();
       await setValue('Шаблон Twitch', 'Timed out %subtitle%');
       await click('Применить изменения');
       const request = required(pending[0]);
-      if (acknowledged) request.acknowledge();
-      await vi.advanceTimersByTimeAsync(14_999);
+      if (acknowledged) {
+        request.acknowledge();
+      }
+      await timers.advance(14_999);
       expect(button('Применить изменения').disabled).toBe(true);
       expect(document.querySelector('.notices > [role]')).toBeNull();
-      await vi.advanceTimersByTimeAsync(1);
+      await timers.advance(1);
       expect(button('Применить изменения').disabled).toBe(false);
       expect(document.querySelector('.notices > [role="alert"]')?.textContent).toContain(
         '15 секунд',
@@ -1038,17 +1077,17 @@ describe('Stream Info Vue interactions', () => {
   );
 
   it('times out a missing ACK after CodeEvent and isolates a late ACK from retry', async () => {
-    vi.useFakeTimers();
-    const pending = await controlActions('saveTemplates');
+    timers.useFake();
+    const pending = controlActions('saveTemplates');
     await boot();
     await setValue('Шаблон Twitch', 'First %subtitle%');
     await click('Применить изменения');
     const first = required(pending[0]);
     const before = localStorage.getItem('change-info-streamer-bot.settings.v1');
     first.respond(savedTemplateResponse('First %subtitle%'));
-    await vi.advanceTimersByTimeAsync(14_999);
+    await timers.advance(14_999);
     expect(button('Применить изменения').disabled).toBe(true);
-    await vi.advanceTimersByTimeAsync(1);
+    await timers.advance(1);
     expect(button('Применить изменения').disabled).toBe(false);
     expect(document.querySelector('[role="alert"]')?.textContent).toContain('15 секунд');
     expect(localStorage.getItem('change-info-streamer-bot.settings.v1')).toBe(before);
@@ -1075,25 +1114,31 @@ describe('Stream Info Vue interactions', () => {
     command: 'saveTemplates' | 'updateTwitch' | 'runPreset',
   ): Promise<void> {
     if (command === 'saveTemplates') {
-      if (document.querySelector('[role="dialog"]')) await click('Закрыть');
+      if (document.querySelector('[role="dialog"]')) {
+        await click('Закрыть');
+      }
       await setValue('Шаблон Twitch', 'Pending %subtitle%');
       await click('Применить изменения');
     } else if (command === 'updateTwitch') {
       await setValue('Название', 'Pending title');
       await click('Применить изменения');
-    } else await click('PUBG');
+    } else {
+      await click('PUBG');
+    }
     await flush();
   }
 
   async function retireOperation(lifecycle: 'reconnect' | 'dispose'): Promise<void> {
     if (lifecycle === 'reconnect') {
-      if (!document.querySelector('[role="dialog"]')) await click('Настройки');
+      if (!document.querySelector('[role="dialog"]')) {
+        await click('Настройки');
+      }
       await setValue('Порт', '8081');
       await click('Сохранить подключение');
       await flush();
     } else {
-      required(wrapper).unmount();
-      wrapper = undefined;
+      required(dock).dispose();
+      dock = undefined;
       await boot();
     }
   }
@@ -1103,31 +1148,34 @@ describe('Stream Info Vue interactions', () => {
       it.each(['ack', 'event'] as const)(
         `ignores retired ${command} after ${lifecycle} while waiting for %s`,
         async (boundary) => {
-          vi.useFakeTimers();
-          const pending = await controlActions(command);
+          timers.useFake();
+          const pending = controlActions(command);
           await boot();
           await startControlledOperation(command);
           const retired = required(pending[0]);
           const envelope =
             command === 'saveTemplates'
               ? savedTemplateResponse('Retired %subtitle%')
-              : { ok: false, data: { fields: { title: false, category: false, tags: false } } };
-          if (boundary === 'ack') retired.respond(envelope);
-          else retired.acknowledge();
+              : { data: { fields: { category: false, tags: false, title: false } }, ok: false };
+          if (boundary === 'ack') {
+            retired.respond(envelope);
+          } else {
+            retired.acknowledge();
+          }
           await flush();
           await retireOperation(lifecycle);
           await startControlledOperation(command);
           expect(pending).toHaveLength(2);
           const before = {
+            calls: mockStreamerbot.actionCalls.length,
+            draft: sessionStorage.getItem('change-info-streamer-bot.template-draft.v1'),
             html: document.body.innerHTML,
             settings: localStorage.getItem('change-info-streamer-bot.settings.v1'),
-            draft: sessionStorage.getItem('change-info-streamer-bot.template-draft.v1'),
-            calls: mockStreamerbot.actionCalls.length,
-            timers: vi.getTimerCount(),
+            timers: timers.count(),
           };
           retired.respond(envelope);
           retired.acknowledge();
-          await vi.advanceTimersByTimeAsync(1000);
+          await timers.advance(1000);
           expect(document.body.innerHTML).toBe(before.html);
           expect(localStorage.getItem('change-info-streamer-bot.settings.v1')).toBe(
             before.settings,
@@ -1136,7 +1184,7 @@ describe('Stream Info Vue interactions', () => {
             before.draft,
           );
           expect(mockStreamerbot.actionCalls).toHaveLength(before.calls);
-          expect(vi.getTimerCount()).toBe(before.timers);
+          expect(timers.count()).toBe(before.timers);
           expect(
             button(command === 'saveTemplates' ? 'Применить изменения' : 'Применить изменения')
               .disabled,
@@ -1150,8 +1198,8 @@ describe('Stream Info Vue interactions', () => {
   it.each(['reconnect', 'dispose'] as const)(
     'ignores a retired preset ACK after %s without refreshing or resetting the new preset',
     async (lifecycle) => {
-      vi.useFakeTimers();
-      const pending = await controlActions('runPreset');
+      timers.useFake();
+      const pending = controlActions('runPreset');
       await boot();
       await startControlledOperation('runPreset');
       const retired = required(pending[0]);
@@ -1159,12 +1207,12 @@ describe('Stream Info Vue interactions', () => {
       await startControlledOperation('runPreset');
       expect(pending).toHaveLength(2);
       const before = mockStreamerbot.actionCalls.length;
-      const timers = vi.getTimerCount();
+      const timerCount = timers.count();
       retired.acknowledge();
-      await vi.advanceTimersByTimeAsync(1000);
+      await timers.advance(1000);
       expect(button('PUBG').disabled).toBe(true);
       expect(mockStreamerbot.actionCalls).toHaveLength(before);
-      expect(vi.getTimerCount()).toBe(timers);
+      expect(timers.count()).toBe(timerCount);
       expect(document.querySelector('.notices > [role]')).toBeNull();
     },
   );
@@ -1172,10 +1220,12 @@ describe('Stream Info Vue interactions', () => {
   it('retains the unsaved template status when saving fails', async () => {
     await boot();
     await setValue('Шаблон Twitch', 'Draft %subtitle%');
-    vi.spyOn(required(mockStreamerbot.instances[0]), 'doAction').mockRejectedValueOnce(
-      new Error('Save rejected'),
-    );
-    if (document.querySelector('[role="dialog"]')) await click('Закрыть');
+    jest
+      .spyOn(required(mockStreamerbot.instances[0]), 'doAction')
+      .mockRejectedValueOnce(new Error('Save rejected'));
+    if (document.querySelector('[role="dialog"]')) {
+      await click('Закрыть');
+    }
     await click('Применить изменения');
     await flush();
     expect(document.querySelector('.template-dirty')?.textContent).toContain('несохранённые');
@@ -1228,15 +1278,15 @@ describe('Stream Info Vue interactions', () => {
 
   it('keeps Twitch results selectable when blur emits a duplicate change', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     const selector = 'Категория';
     const fieldBefore = required(queryField(selector));
     await setValue(selector, 'PUBG');
     expect(queryField(selector)).toBe(fieldBefore);
-    await vi.advanceTimersByTimeAsync(350);
+    await timers.advance(350);
     const option = categoryOption();
-    const field = required(queryField(selector));
-    field.dispatchEvent(new Event('change', { bubbles: true }));
+    const fieldLocal = required(queryField(selector));
+    fieldLocal.dispatchEvent(new Event('change', { bubbles: true }));
     await nextTick();
     expect(option.isConnected).toBe(true);
     option.click();
@@ -1247,14 +1297,14 @@ describe('Stream Info Vue interactions', () => {
 
   it('invalidates in-flight Twitch results when the query is cleared', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     mockStreamerbot.searchDelay = 200;
     const selector = 'Категория';
     await setValue(selector, 'PUBG');
-    await vi.advanceTimersByTimeAsync(320);
+    await timers.advance(320);
     await setValue(selector, '');
     const clearedField = queryField(selector);
-    await vi.advanceTimersByTimeAsync(220);
+    await timers.advance(220);
     expect(queryField(selector)).toBe(clearedField);
     await setValue(selector, 'Rust');
     expect(options()[0] ?? null).toBeNull();
@@ -1271,6 +1321,7 @@ describe('Stream Info Vue interactions', () => {
     const card = required(document.querySelector('section[aria-label="Twitch"]'));
     const savePanel = required(button('Применить изменения').closest('.save-panel'));
     expect(savePanel.parentElement).toBe(document.querySelector('.dock-shell'));
+    // biome-ignore lint/suspicious/noBitwiseOperators: Packed RGB channels and binary protocol fields require bitwise operations.
     expect(card.compareDocumentPosition(savePanel) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
   });
 
@@ -1291,7 +1342,7 @@ describe('Stream Info Vue interactions', () => {
     expect(
       document.querySelector('[aria-label="Изменить информацию"] [role="status"]')?.textContent,
     ).toBe('Изменения применены');
-    await click(/^Удалить тег[: ]/);
+    await click(REMOVE_TAG_RE);
     expect(
       document.querySelector('[aria-label="Изменить информацию"] [role="status"]')?.textContent,
     ).toBe('Есть несохранённые изменения');
@@ -1310,8 +1361,10 @@ describe('Stream Info Vue interactions', () => {
     await boot();
     const client = required(mockStreamerbot.instances[0]);
     const original = client.doAction.bind(client);
-    vi.spyOn(client, 'doAction').mockImplementation(async (action, args) => {
-      if (args?.command === 'updateTwitch') throw new Error('Update rejected');
+    jest.spyOn(client, 'doAction').mockImplementation((action, args) => {
+      if (args?.command === 'updateTwitch') {
+        return Promise.reject(new Error('Update rejected'));
+      }
       return original(action, args);
     });
     await setValue('Название', 'Не сохранится');
@@ -1357,9 +1410,9 @@ describe('Stream Info Vue interactions', () => {
       expect(search.value).toBe('');
       expect(search.placeholder).not.toContain(required(selected.textContent));
     }
-    vi.useFakeTimers();
+    timers.useFake();
     await setValue('Категория', 'PUBG');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(categoryOption().textContent?.trim()).toBe('PUBG: BATTLEGROUNDS');
     expect(categoryOption().textContent).not.toContain('ID:');
     categoryOption().click();
@@ -1370,21 +1423,21 @@ describe('Stream Info Vue interactions', () => {
     await boot();
     await setValue('Добавить тег', 'Rust');
     queryField('Добавить тег')?.dispatchEvent(
-      new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
+      new KeyboardEvent('keydown', { bubbles: true, key: 'Enter' }),
     );
     await nextTick();
-    expect(buttons(/^Удалить тег[: ]/)).toHaveLength(2);
-    await click(/^Удалить тег[: ]/, 1);
-    expect(buttons(/^Удалить тег[: ]/)).toHaveLength(1);
+    expect(buttons(REMOVE_TAG_RE)).toHaveLength(2);
+    await click(REMOVE_TAG_RE, 1);
+    expect(buttons(REMOVE_TAG_RE)).toHaveLength(1);
     await setValue('Название', 'Новое Twitch название');
-    vi.useFakeTimers();
+    timers.useFake();
     await setValue('Категория', 'PUBG');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     expect(options()[0] ?? null).not.toBeNull();
     categoryOption().click();
     await nextTick();
     expect(options()[0] ?? null).toBeNull();
-    vi.useRealTimers();
+    timers.useReal();
     await click('Применить изменения');
     await flush();
     const twitch = mockStreamerbot.actionCalls.find((call) => call.args.command === 'updateTwitch');
@@ -1417,22 +1470,59 @@ describe('Stream Info Vue interactions', () => {
     expect(buttons('Проверить снова')[0] ?? null).not.toBeNull();
 
     mockStreamerbot.actions = [
-      { id: 'api-action', name: 'STREAM INFO | API', group: 'STREAM INFO', enabled: true },
+      { enabled: true, group: 'STREAM INFO', id: 'api-action', name: 'STREAM INFO | API' },
     ];
     await click('Проверить снова');
     await flush();
     await click('Настройки');
     await setValue('Шаблон Twitch', 'Тест %subtitle%');
     await click('Закрыть');
-    vi.spyOn(required(mockStreamerbot.instances[0]), 'doAction').mockRejectedValueOnce(
-      new Error('Fixture save failure'),
-    );
+    jest
+      .spyOn(required(mockStreamerbot.instances[0]), 'doAction')
+      .mockRejectedValueOnce(new Error('Fixture save failure'));
     await click('Применить изменения');
     await flush();
     expect(document.querySelector('.notices > [role]')).not.toBeNull();
     await click('Закрыть уведомление');
     expect(document.querySelector('.notices > [role]')).toBeNull();
   });
+
+  it.each(['callback', 'rejection'] as const)(
+    'distinguishes transport errors from auth errors with a saved password (%s)',
+    async (failure) => {
+      localStorage.setItem(
+        'change-info-streamer-bot.settings.v1',
+        JSON.stringify({ password: 'saved-secret', rememberPassword: true }),
+      );
+      let message = 'WebSocket connection refused';
+      jest.spyOn(StreamerbotClient.prototype, 'connect').mockImplementation(function (
+        this: StreamerbotClient,
+      ) {
+        const error = new Error(message);
+        if (failure === 'rejection') {
+          return Promise.reject(error);
+        }
+        this.options.onError?.(error);
+        return Promise.resolve();
+      });
+
+      await boot();
+      expect(required(mockStreamerbot.instances[0]).options).toMatchObject({
+        password: 'saved-secret',
+      });
+      expect(document.body.textContent).toContain(message);
+      expect(document.querySelectorAll('.auth-panel')).toHaveLength(0);
+      expect(queryField('Пароль')?.value).toBeUndefined();
+      expect(buttons('Подключиться')).toHaveLength(0);
+
+      message = 'WebSocket authentication failed';
+      await boot();
+      expect(document.body.textContent).toContain(message);
+      expect(document.querySelectorAll('.auth-panel')).toHaveLength(1);
+      expect(field('Пароль').value).toBe('saved-secret');
+      expect(button('Подключиться').disabled).toBe(false);
+    },
+  );
 
   it('renders password reconnect', async () => {
     mockStreamerbot.failConnect = true;
@@ -1488,14 +1578,14 @@ describe('Stream Info Vue interactions', () => {
   });
   it('debounces category input for exactly 250ms and only searches the latest draft', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     await setValue('Категория', 'Adv');
-    await vi.advanceTimersByTimeAsync(249);
+    await timers.advance(249);
     expect(commands()).not.toContain('searchTwitchCategories');
     await setValue('Категория', 'Adventure');
-    await vi.advanceTimersByTimeAsync(249);
+    await timers.advance(249);
     expect(commands()).not.toContain('searchTwitchCategories');
-    await vi.advanceTimersByTimeAsync(1);
+    await timers.advance(1);
     const calls = mockStreamerbot.actionCalls.filter(
       (call) => call.args.command === 'searchTwitchCategories',
     );
@@ -1507,39 +1597,39 @@ describe('Stream Info Vue interactions', () => {
 
   it('refreshes preset state after 700ms rather than immediately', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     const before = commands().filter((command) => command === 'getState').length;
     await click('PUBG');
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(mockStreamerbot.actionCalls.some((call) => call.id === 'preset-pubg')).toBe(true);
-    await vi.advanceTimersByTimeAsync(699);
+    await timers.advance(699);
     expect(commands().filter((command) => command === 'getState')).toHaveLength(before);
-    await vi.advanceTimersByTimeAsync(1);
+    await timers.advance(1);
     expect(commands().filter((command) => command === 'getState')).toHaveLength(before + 1);
   });
 
   it('times out an unanswered category request after 15 seconds and allows retry', async () => {
     await boot();
-    vi.useFakeTimers();
+    timers.useFake();
     mockStreamerbot.deferSearch = true;
     await setValue('Категория', 'Adventure');
-    await vi.advanceTimersByTimeAsync(250);
-    await vi.advanceTimersByTimeAsync(14_999);
+    await timers.advance(250);
+    await timers.advance(14_999);
     expect(buttons('Повторить поиск')).toHaveLength(0);
-    await vi.advanceTimersByTimeAsync(1);
+    await timers.advance(1);
     expect(document.querySelector('[role="alert"]')?.textContent).toContain('15 секунд');
     expect(button('Повторить поиск').disabled).toBe(false);
     required(mockStreamerbot.pendingSearches[0]).reply({
       data: { results: [{ id: 'late', name: 'Too late' }] },
     });
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(optionNamed('Too late')).toBeNull();
     await click('Повторить поиск');
     expect(mockStreamerbot.pendingSearches).toHaveLength(2);
     required(mockStreamerbot.pendingSearches[1]).reply({
       data: { results: [{ id: 'fresh', name: 'Adventure retry' }] },
     });
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(categoryOption().textContent?.trim()).toBe('Adventure retry');
   });
 
@@ -1549,19 +1639,19 @@ describe('Stream Info Vue interactions', () => {
       localStorage.setItem(
         'change-info-streamer-bot.settings.v1',
         JSON.stringify({
-          host: 'localhost',
-          port: 8123,
           endpoint: '/stream',
+          host: 'localhost',
           password: 'saved-secret',
+          port: 8123,
           rememberPassword,
         }),
       );
       await boot();
       expect(required(mockStreamerbot.instances[0]).options).toMatchObject({
-        host: 'localhost',
-        port: 8123,
         endpoint: '/stream',
+        host: 'localhost',
         password: rememberPassword ? 'saved-secret' : undefined,
+        port: 8123,
       });
       await click('Настройки');
       expect(field('Пароль').value).toBe(rememberPassword ? 'saved-secret' : '');
@@ -1571,8 +1661,8 @@ describe('Stream Info Vue interactions', () => {
   it('keeps partial field failures dirty and retains the unsent tag draft', async () => {
     await boot();
     mockStreamerbot.actionReplies.updateTwitch = {
+      data: { fields: { category: false, tags: true, title: true } },
       ok: false,
-      data: { fields: { title: true, category: false, tags: true } },
     };
     await setValue('Название', 'Partial title');
     await setValue('Добавить тег', 'Unsent');
@@ -1582,9 +1672,9 @@ describe('Stream Info Vue interactions', () => {
     expect(commands()).toContain('updateTwitch');
     const notice = required(document.querySelector('[role="alert"]'));
     expect(notice.textContent).toContain('Не удалось изменить Twitch');
-    expect(Array.from(notice.querySelectorAll('.notice-line'), (line) => line.textContent)).toEqual(
-      ['Название: успешно', 'Категория: ошибка', 'Теги: успешно'],
-    );
+    expect(
+      Array.from(notice.querySelectorAll('.notice-line'), (line) => line.textContent).sort(),
+    ).toEqual(['Название: успешно', 'Категория: ошибка', 'Теги: успешно'].sort());
     expect(field('Добавить тег').value).toBe('Unsent');
     expect(
       document.querySelector('[aria-label="Изменить информацию"] [role="status"]')?.textContent,
@@ -1593,44 +1683,45 @@ describe('Stream Info Vue interactions', () => {
   });
 
   it('unmounts timers and visibility listener and ignores retired replies after remount', async () => {
-    vi.useFakeTimers();
-    const addListener = vi.spyOn(document, 'addEventListener');
-    const removeListener = vi.spyOn(document, 'removeEventListener');
+    timers.useFake();
+    // jsdom's document proxy does not retain spies installed on the instance.
+    const addListener = jest.spyOn(window.Document.prototype, 'addEventListener');
+    const removeListener = jest.spyOn(window.Document.prototype, 'removeEventListener');
     await boot();
     const old = required(mockStreamerbot.instances[0]);
-    const disconnect = vi.spyOn(old, 'disconnect');
-    const listener = required(
+    const disconnect = jest.spyOn(old, 'disconnect');
+    const [, listener] = required(
       addListener.mock.calls.find(([event]) => event === 'visibilitychange'),
-    )[1];
-    expect(vi.getTimerCount()).toBe(1);
+    );
+    expect(timers.count()).toBe(1);
     mockStreamerbot.deferSearch = true;
     await setValue('Категория', 'Retired query');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     const stale = required(mockStreamerbot.pendingSearches[0]);
-    required(wrapper).unmount();
-    wrapper = undefined;
-    await vi.advanceTimersByTimeAsync(0);
+    required(dock).dispose();
+    dock = undefined;
+    await timers.advance(0);
     expect(disconnect).toHaveBeenCalledTimes(1);
     expect(
       removeListener.mock.calls.some(
         ([event, callback]) => event === 'visibilitychange' && callback === listener,
       ),
     ).toBe(true);
-    expect(vi.getTimerCount()).toBe(0);
+    expect(timers.count()).toBe(0);
     const before = mockStreamerbot.actionCalls.length;
     document.dispatchEvent(new Event('visibilitychange'));
-    await vi.advanceTimersByTimeAsync(30_000);
+    await timers.advance(30_000);
     expect(mockStreamerbot.actionCalls).toHaveLength(before);
 
     await boot();
-    expect(vi.getTimerCount()).toBe(1);
+    expect(timers.count()).toBe(1);
     await setValue('Категория', 'Current query');
-    await vi.advanceTimersByTimeAsync(250);
+    await timers.advance(250);
     stale.reply({ data: { results: [{ id: 'stale', name: 'Retired result' }] } });
     old.options.onConnect?.();
     old.options.onError?.(new Error('retired password error'));
     old.options.onDisconnect?.();
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(field('Категория').value).toBe('Current query');
     expect(optionNamed('Retired result')).toBeNull();
     expect(roleText('status', 'Streamer.bot подключён')).not.toBeNull();
@@ -1638,7 +1729,7 @@ describe('Stream Info Vue interactions', () => {
     required(mockStreamerbot.pendingSearches[1]).reply({
       data: { results: [{ id: 'current', name: 'Current result' }] },
     });
-    await vi.advanceTimersByTimeAsync(0);
+    await timers.advance(0);
     expect(categoryOption().textContent?.trim()).toBe('Current result');
   });
 
@@ -1653,11 +1744,8 @@ describe('Stream Info Vue interactions', () => {
   });
 
   it('keeps an explicitly mounted showcase offline even when saving connection settings', async () => {
-    const { default: App } = await import('../src/App.vue');
-    wrapper = mount(App, {
-      props: { demo: true },
-      attachTo: required(document.querySelector('#app')),
-    });
+    const { initDock } = await import('../src/render');
+    dock = initDock(required(document.querySelector('#app')), { demo: true });
     await flush();
     await flush();
     expect(mockStreamerbot.connectCalls).toBe(0);

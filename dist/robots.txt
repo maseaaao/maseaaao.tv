@@ -1,5 +1,0 @@
-User-agent: *
-Disallow:
-Content-Signal: ai-train=yes, search=yes, ai-input=yes
-
-Sitemap: https://maseaaao.tv/sitemap.xml

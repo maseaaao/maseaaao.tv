@@ -1,20 +1,15 @@
 {
   "name": "@maseaaao/design",
+  "version": "1.0.0",
   "private": true,
+  "sideEffects": [
+    "**/*.css"
+  ],
   "exports": {
     "./brand.css": "./brand.css",
     "./fonts.css": "./fonts.css",
     "./tokens.css": "./tokens.css",
     "./fonts/*": "./fonts/*",
-    "./license": "./licenses/Unbounded-OFL.txt",
-    "./fonts-400.css": "./fonts-400.css",
-    "./fonts-600.css": "./fonts-600.css"
-  },
-  "version": "1.0.0",
-  "sideEffects": [
-    "**/*.css"
-  ],
-  "scripts": {
-    "source": "node ../../tooling/source-task.mjs"
+    "./license": "./licenses/Unbounded-OFL.txt"
   }
 }

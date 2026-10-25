@@ -1,31 +1,24 @@
 {
   "name": "@maseaaao/website",
   "private": true,
-  "scripts": {
-    "build": "node ../../tooling/build-website.mjs",
-    "check": "vue-tsc --noEmit",
-    "source": "node ../../tooling/source-task.mjs"
-  },
   "type": "module",
+  "exports": {
+    "./ui.css": "./src/assets/site.css",
+    "./qr.png": "./public/assets/maseaaao.tv.png",
+    "./pages/*": "./src/*"
+  },
+  "scripts": {
+    "build": "bun --bun vite build --configLoader native",
+    "check": "tsc --noEmit && tsc -p tsconfig.tools.json",
+    "dev": "bun --bun vite --configLoader native --host 127.0.0.1"
+  },
   "dependencies": {
     "@maseaaao/design": "workspace:*",
-    "@maseaaao/ui": "workspace:*",
-    "vue": "3.5.44"
+    "@maseaaao/ui": "workspace:*"
   },
   "devDependencies": {
-    "vite": "6.4.3",
-    "@maseaaao/build-config": "workspace:*",
-    "vue-tsc": "3.0.8",
-    "typescript": "5.8.3"
-  },
-  "exports": {
-    "./HomePage.vue": "./src/components/HomePage.vue",
-    "./CheckerPage.vue": "./src/components/CheckerPage.vue",
-    "./DocsPage.vue": "./src/components/DocsPage.vue",
-    "./ToolsPage.vue": "./src/components/ToolsPage.vue",
-    "./StreamInfoPage.vue": "./src/components/StreamInfoPage.vue",
-    "./TunaPage.vue": "./src/components/TunaPage.vue",
-    "./ui.css": "./src/assets/site.css",
-    "./qr.png": "./public/assets/maseaaao.tv.png"
+    "@11ty/eleventy-img": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
   }
 }

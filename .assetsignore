@@ -1,0 +1,16 @@
+# Publish browser products only; new top-level dist outputs stay private by default.
+/*
+!/website/
+!/ui-gallery/
+!/artwork/
+!/stream-info/
+!/tuna-widget/
+!/obs-widgets/
+
+# The Streamer.bot import is a local installation artifact, not a web page.
+/stream-info/streamerbot-import.txt
+**/_headers
+**/_redirects
+**/.assetsignore
+**/.DS_Store
+**/*.map

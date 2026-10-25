@@ -1,148 +1,262 @@
 {
-  "$schema": "https://turborepo.com/schema.json",
-  "cacheDir": ".build-cache/turbo",
-  "globalEnv": ["MASEAAAO_TOOLCHAIN"],
-  "globalPassThroughEnv": ["TEMP", "TMP", "TMPDIR", "SystemRoot", "SYSTEMROOT"],
+  "$schema": "https://turborepo.dev/schema.json",
+  "ui": "stream",
+  "cacheDir": ".turbo/cache",
   "globalDependencies": [
-    ".node-version",
     ".bun-version",
     "bunfig.toml",
-    "tooling/*.mjs",
-    "tooling/artwork/**",
-    "tooling/lib/**",
-    "biome.json",
-    "tooling/biome/**"
+    "tooling/run-task.ts",
+    ".env*",
+    "bun.lock"
   ],
+  "globalEnv": [
+    "TASK_CACHE_TOOLCHAIN",
+    "NODE_ENV",
+    "CI",
+    "CHROME_BIN",
+    "CHROME_PATH",
+    "PLAYWRIGHT_BROWSERS_PATH",
+    "FONTCONFIG_FILE",
+    "FONTCONFIG_PATH",
+    "LANG",
+    "LC_ALL",
+    "TZ",
+    "ImageOS",
+    "ImageVersion",
+    "VITE_*"
+  ],
+  "globalPassThroughEnv": ["DOTNET_ROOT", "NUGET_PACKAGES"],
   "tasks": {
-    "source": {
-      "dependsOn": ["^source"],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "!dist/**",
-        "!**/bin/**",
-        "!**/obj/**",
-        "!**/rendered/**",
-        "!.turbo/**",
-        "!streamerbot-import.txt"
-      ],
-      "outputs": []
-    },
-    "build": {
-      "dependsOn": ["^source"],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "!dist/**",
-        "!**/bin/**",
-        "!**/obj/**",
-        "!**/rendered/**",
-        "!.turbo/**",
-        "!streamerbot-import.txt"
-      ],
-      "outputs": ["dist/**"]
-    },
-    "check": {
-      "dependsOn": ["^source"],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "!dist/**",
-        "!**/bin/**",
-        "!**/obj/**",
-        "!**/rendered/**",
-        "!.turbo/**",
-        "!streamerbot-import.txt"
-      ],
-      "outputs": []
-    },
-    "test": {
-      "cache": false
-    },
-    "package": {
-      "cache": false
-    },
     "@maseaaao/website#build": {
-      "dependsOn": ["^source"],
       "inputs": [
-        "$TURBO_DEFAULT$",
-        "!dist/**",
-        "!**/bin/**",
-        "!**/obj/**",
-        "!**/rendered/**",
-        "!.turbo/**",
-        "!streamerbot-import.txt",
-        "$TURBO_ROOT$/artwork/brand/rendered/website/**"
+        "$TURBO_ROOT$/apps/website/**",
+        "$TURBO_ROOT$/packages/design/**",
+        "$TURBO_ROOT$/packages/ui/**",
+        "$TURBO_ROOT$/packages/build-config/**",
+        "$TURBO_ROOT$/tooling/website-assets.ts",
+        "$TURBO_ROOT$/dist/artwork/brand/website/**",
+        "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
+        "!$TURBO_ROOT$/**/.DS_Store"
       ],
-      "outputs": ["$TURBO_ROOT$/dist/**"]
-    },
-    "@maseaaao/artwork#build": {
-      "dependsOn": ["^source"],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "!dist/**",
-        "!**/bin/**",
-        "!**/obj/**",
-        "!**/rendered/**",
-        "!.turbo/**",
-        "!streamerbot-import.txt"
-      ],
-      "outputs": ["$TURBO_ROOT$/.build-cache/artwork/**"]
-    },
-    "@maseaaao/ui-catalog#build": {
-      "dependsOn": ["^source", "@maseaaao/obs-widgets#build", "change-info-streamer-bot#build"],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "!dist/**",
-        "!**/bin/**",
-        "!**/obj/**",
-        "!**/rendered/**",
-        "!.turbo/**",
-        "!streamerbot-import.txt"
-      ],
-      "outputs": ["$TURBO_ROOT$/.build-cache/storybook/**"]
-    },
-    "@maseaaao/ui-portability#build": {
-      "dependsOn": ["^source"],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "!dist/**",
-        "!**/bin/**",
-        "!**/obj/**",
-        "!**/rendered/**",
-        "!.turbo/**",
-        "!streamerbot-import.txt"
-      ],
-      "outputs": ["$TURBO_ROOT$/.build-cache/ui-portability/**"]
-    },
-    "@maseaaao/static-fixtures#build": {
-      "dependsOn": ["^source"],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "!dist/**",
-        "!**/bin/**",
-        "!**/obj/**",
-        "!**/rendered/**",
-        "!.turbo/**",
-        "!streamerbot-import.txt"
-      ],
-      "outputs": ["$TURBO_ROOT$/.build-cache/static-fixtures/**"]
+      "outputs": ["$TURBO_ROOT$/dist/website/**"]
     },
     "change-info-streamer-bot#build": {
-      "dependsOn": ["^source"],
       "inputs": [
-        "$TURBO_DEFAULT$",
-        "!dist/**",
-        "!**/bin/**",
-        "!**/obj/**",
-        "!**/rendered/**",
-        "!.turbo/**",
-        "!streamerbot-import.txt"
+        "$TURBO_ROOT$/apps/stream-info/**",
+        "$TURBO_ROOT$/packages/design/**",
+        "$TURBO_ROOT$/packages/ui/**",
+        "$TURBO_ROOT$/packages/build-config/**",
+        "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
+        "!$TURBO_ROOT$/**/.DS_Store"
       ],
-      "outputs": ["dist/**", "streamerbot-import.txt"]
+      "outputs": [
+        "$TURBO_ROOT$/dist/stream-info/**",
+        "$TURBO_ROOT$/dist/.cache/stream-info/**"
+      ]
     },
-    "companion-module-local-system-microphone#build": {
-      "cache": false
+    "@maseaaao/tuna-widget#build": {
+      "inputs": [
+        "$TURBO_ROOT$/apps/tuna-widget/**",
+        "$TURBO_ROOT$/packages/design/**",
+        "$TURBO_ROOT$/packages/ui/**",
+        "$TURBO_ROOT$/packages/build-config/**",
+        "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
+        "!$TURBO_ROOT$/**/.DS_Store"
+      ],
+      "outputs": ["$TURBO_ROOT$/dist/tuna-widget/**"]
     },
-    "companion-module-local-voice-control#build": {
-      "cache": false
+    "@maseaaao/obs-widgets#build": {
+      "inputs": [
+        "$TURBO_ROOT$/apps/obs-widgets/**",
+        "$TURBO_ROOT$/packages/design/**",
+        "$TURBO_ROOT$/packages/ui/**",
+        "$TURBO_ROOT$/packages/build-config/**",
+        "$TURBO_ROOT$/tooling/build-widgets.ts",
+        "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
+        "!$TURBO_ROOT$/**/.DS_Store"
+      ],
+      "outputs": ["$TURBO_ROOT$/dist/obs-widgets/**"]
+    },
+    "@maseaaao/tooling#build:diagnostics": {
+      "inputs": [
+        "$TURBO_ROOT$/tooling/local/**",
+        "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
+        "!$TURBO_ROOT$/**/.DS_Store"
+      ],
+      "outputs": ["$TURBO_ROOT$/dist/diagnostics/**"]
+    },
+    "@maseaaao/tooling#build:windows": {
+      "inputs": [
+        "$TURBO_ROOT$/tooling/build-windows.ts",
+        "$TURBO_ROOT$/tooling/local/**",
+        "$TURBO_ROOT$/tooling/windows/**",
+        "$TURBO_ROOT$/integrations/**",
+        "!$TURBO_ROOT$/integrations/companion/*/main.js",
+        "!$TURBO_ROOT$/integrations/companion/*/*.exe",
+        "!$TURBO_ROOT$/integrations/companion/*/*.dll",
+        "!$TURBO_ROOT$/integrations/companion/*/*.pdb",
+        "!$TURBO_ROOT$/integrations/companion/*/*.exe.config",
+        "!$TURBO_ROOT$/integrations/companion/*/*.tgz",
+        "!$TURBO_ROOT$/integrations/companion/*/install.json",
+        "!$TURBO_ROOT$/integrations/companion/*/request.json",
+        "!$TURBO_ROOT$/integrations/companion/shared/lib/**",
+        "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
+        "!$TURBO_ROOT$/**/.DS_Store"
+      ],
+      "outputs": ["$TURBO_ROOT$/dist/windows-integrations/**"],
+      "dependsOn": ["@maseaaao/tooling#build:diagnostics"]
+    },
+    "@maseaaao/tooling#build:companion": {
+      "inputs": [
+        "$TURBO_ROOT$/integrations/companion/**",
+        "$TURBO_ROOT$/Directory.Build.props",
+        "$TURBO_ROOT$/NuGet.Config",
+        "$TURBO_ROOT$/global.json",
+        "!$TURBO_ROOT$/integrations/companion/*/main.js",
+        "!$TURBO_ROOT$/integrations/companion/*/*.exe",
+        "!$TURBO_ROOT$/integrations/companion/*/*.dll",
+        "!$TURBO_ROOT$/integrations/companion/*/*.pdb",
+        "!$TURBO_ROOT$/integrations/companion/*/*.exe.config",
+        "!$TURBO_ROOT$/integrations/companion/*/*.tgz",
+        "!$TURBO_ROOT$/integrations/companion/*/install.json",
+        "!$TURBO_ROOT$/integrations/companion/*/request.json",
+        "!$TURBO_ROOT$/integrations/companion/shared/lib/**",
+        "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
+        "!$TURBO_ROOT$/**/.DS_Store"
+      ],
+      "outputs": [
+        "$TURBO_ROOT$/dist/companion/**",
+        "!$TURBO_ROOT$/dist/companion/**/*.tgz",
+        "!$TURBO_ROOT$/dist/companion/**/request.json",
+        "!$TURBO_ROOT$/dist/companion/**/install.json"
+      ]
+    },
+    "@maseaaao/tooling#package:companion": {
+      "inputs": [
+        "$TURBO_ROOT$/integrations/companion/**",
+        "$TURBO_ROOT$/Directory.Build.props",
+        "$TURBO_ROOT$/NuGet.Config",
+        "$TURBO_ROOT$/global.json",
+        "$TURBO_ROOT$/dist/companion/**",
+        "!$TURBO_ROOT$/dist/companion/**/*.tgz",
+        "!$TURBO_ROOT$/dist/companion/**/request.json",
+        "!$TURBO_ROOT$/dist/companion/**/install.json",
+        "!$TURBO_ROOT$/integrations/companion/*/main.js",
+        "!$TURBO_ROOT$/integrations/companion/*/*.exe",
+        "!$TURBO_ROOT$/integrations/companion/*/*.dll",
+        "!$TURBO_ROOT$/integrations/companion/*/*.pdb",
+        "!$TURBO_ROOT$/integrations/companion/*/*.exe.config",
+        "!$TURBO_ROOT$/integrations/companion/*/*.tgz",
+        "!$TURBO_ROOT$/integrations/companion/*/install.json",
+        "!$TURBO_ROOT$/integrations/companion/*/request.json",
+        "!$TURBO_ROOT$/integrations/companion/shared/lib/**",
+        "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
+        "!$TURBO_ROOT$/**/.DS_Store"
+      ],
+      "outputs": [
+        "$TURBO_ROOT$/dist/companion/**/*.tgz",
+        "$TURBO_ROOT$/dist/companion/**/request.json",
+        "$TURBO_ROOT$/dist/companion/**/install.json"
+      ]
+    },
+    "@maseaaao/tooling#check:knip": {
+      "inputs": [
+        "$TURBO_ROOT$/**",
+        "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
+        "!$TURBO_ROOT$/{dist,build}/**",
+        "!$TURBO_ROOT$/**/.DS_Store",
+        "!$TURBO_ROOT$/integrations/companion/*/{main.js,*.exe,*.dll,*.tgz,*.exe.config,*.pdb,install.json,request.json}",
+        "!$TURBO_ROOT$/integrations/companion/shared/lib/**"
+      ],
+      "outputs": []
+    },
+    "change-info-streamer-bot#test": {
+      "inputs": [
+        "$TURBO_ROOT$/**",
+        "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
+        "!$TURBO_ROOT$/{dist,build}/**",
+        "!$TURBO_ROOT$/**/.DS_Store",
+        "!$TURBO_ROOT$/integrations/companion/*/{main.js,*.exe,*.dll,*.tgz,*.exe.config,*.pdb,install.json,request.json}",
+        "!$TURBO_ROOT$/integrations/companion/shared/lib/**",
+        "$TURBO_ROOT$/dist/stream-info/**",
+        "$TURBO_ROOT$/dist/.cache/stream-info/**"
+      ],
+      "outputs": []
+    },
+    "@maseaaao/tooling#test:companion": {
+      "inputs": [
+        "$TURBO_ROOT$/**",
+        "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
+        "!$TURBO_ROOT$/{dist,build}/**",
+        "!$TURBO_ROOT$/**/.DS_Store",
+        "!$TURBO_ROOT$/integrations/companion/*/{main.js,*.exe,*.dll,*.tgz,*.exe.config,*.pdb,install.json,request.json}",
+        "!$TURBO_ROOT$/integrations/companion/shared/lib/**"
+      ],
+      "outputs": []
+    },
+    "@maseaaao/tooling#check:biome": {
+      "inputs": [
+        "$TURBO_ROOT$/**",
+        "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
+        "!$TURBO_ROOT$/{dist,build}/**",
+        "!$TURBO_ROOT$/**/.DS_Store",
+        "!$TURBO_ROOT$/integrations/companion/*/{main.js,*.exe,*.dll,*.tgz,*.exe.config,*.pdb,install.json,request.json}",
+        "!$TURBO_ROOT$/integrations/companion/shared/lib/**"
+      ],
+      "outputs": []
+    },
+    "@maseaaao/ui-gallery#build": {
+      "inputs": [
+        "$TURBO_ROOT$/apps/ui-gallery/**",
+        "$TURBO_ROOT$/packages/design/**",
+        "$TURBO_ROOT$/packages/ui/**",
+        "$TURBO_ROOT$/packages/build-config/**",
+        "$TURBO_ROOT$/dist/artwork/**",
+        "$TURBO_ROOT$/artwork/logo/logo.png",
+        "$TURBO_ROOT$/artwork/brand/favicon-mask.svg",
+        "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
+        "!$TURBO_ROOT$/**/.DS_Store"
+      ],
+      "outputs": ["$TURBO_ROOT$/dist/ui-gallery/**"]
+    },
+    "@maseaaao/artwork#build": {
+      "inputs": [
+        "$TURBO_ROOT$/artwork/**",
+        "!$TURBO_ROOT$/artwork/package.json",
+        "$TURBO_ROOT$/packages/design/**",
+        "$TURBO_ROOT$/packages/build-config/**",
+        "$TURBO_ROOT$/tooling/build-artwork.ts",
+        "$TURBO_ROOT$/apps/website/public/assets/maseaaao.tv.png",
+        "$TURBO_ROOT$/dist/artwork/brand/website/assets/avatar-master.png",
+        "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
+        "!$TURBO_ROOT$/**/.DS_Store"
+      ],
+      "outputs": ["$TURBO_ROOT$/dist/artwork/html/**"]
+    },
+    "check": {
+      "inputs": [
+        "$TURBO_ROOT$/**",
+        "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
+        "!$TURBO_ROOT$/{dist,build}/**",
+        "!$TURBO_ROOT$/**/.DS_Store",
+        "!$TURBO_ROOT$/integrations/companion/*/{main.js,*.exe,*.dll,*.tgz,*.exe.config,*.pdb,install.json,request.json}",
+        "!$TURBO_ROOT$/integrations/companion/shared/lib/**"
+      ],
+      "outputs": []
+    },
+    "@maseaaao/tooling#render:all": {
+      "inputs": [
+        "$TURBO_ROOT$/artwork/**",
+        "!$TURBO_ROOT$/artwork/package.json",
+        "$TURBO_ROOT$/packages/design/**",
+        "$TURBO_ROOT$/packages/build-config/**",
+        "$TURBO_ROOT$/tooling/build-artwork.ts",
+        "$TURBO_ROOT$/apps/website/public/assets/maseaaao.tv.png",
+        "$TURBO_ROOT$/tooling/artwork/**",
+        "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
+        "!$TURBO_ROOT$/**/.DS_Store"
+      ],
+      "outputs": ["$TURBO_ROOT$/dist/artwork/**"]
     }
   }
 }

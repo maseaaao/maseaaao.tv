@@ -5,7 +5,7 @@
     {
       "name": "01-start",
       "file": "01-start.html",
-      "rendered": "rendered/01-start.webp",
+      "rendered": "01-start.webp",
       "width": 2560,
       "height": 1440,
       "kind": "status",
@@ -15,7 +15,7 @@
     {
       "name": "01-start-vertical",
       "file": "01-start-vertical.html",
-      "rendered": "rendered/01-start-vertical.webp",
+      "rendered": "01-start-vertical.webp",
       "width": 1080,
       "height": 1920,
       "kind": "status",
@@ -25,7 +25,7 @@
     {
       "name": "02-pause",
       "file": "02-pause.html",
-      "rendered": "rendered/02-pause.webp",
+      "rendered": "02-pause.webp",
       "width": 2560,
       "height": 1440,
       "kind": "status",
@@ -35,7 +35,7 @@
     {
       "name": "02-pause-vertical",
       "file": "02-pause-vertical.html",
-      "rendered": "rendered/02-pause-vertical.webp",
+      "rendered": "02-pause-vertical.webp",
       "width": 1080,
       "height": 1920,
       "kind": "status",
@@ -45,7 +45,7 @@
     {
       "name": "99-end",
       "file": "99-end.html",
-      "rendered": "rendered/99-end.webp",
+      "rendered": "99-end.webp",
       "width": 2560,
       "height": 1440,
       "kind": "status",
@@ -55,7 +55,7 @@
     {
       "name": "99-end-vertical",
       "file": "99-end-vertical.html",
-      "rendered": "rendered/99-end-vertical.webp",
+      "rendered": "99-end-vertical.webp",
       "width": 1080,
       "height": 1920,
       "kind": "status",
@@ -65,7 +65,7 @@
     {
       "name": "04-camera-horizontal",
       "file": "04-camera-horizontal.html",
-      "rendered": "rendered/04-camera-horizontal.webp",
+      "rendered": "04-camera-horizontal.webp",
       "width": 2560,
       "height": 1440,
       "kind": "camera",
@@ -75,7 +75,7 @@
     {
       "name": "04-camera-vertical",
       "file": "04-camera-vertical.html",
-      "rendered": "rendered/04-camera-vertical.webp",
+      "rendered": "04-camera-vertical.webp",
       "width": 1080,
       "height": 1920,
       "kind": "camera",
@@ -85,7 +85,7 @@
     {
       "name": "00-blank",
       "file": "00-blank.html",
-      "rendered": "rendered/00-blank.webp",
+      "rendered": "00-blank.webp",
       "width": 2560,
       "height": 1440,
       "kind": "blank",
@@ -95,7 +95,7 @@
     {
       "name": "background",
       "file": "background.html",
-      "rendered": "rendered/background.webp",
+      "rendered": "background.webp",
       "width": 2560,
       "height": 1440,
       "kind": "blank",
@@ -105,7 +105,7 @@
     {
       "name": "00-blank-vertical",
       "file": "00-blank-vertical.html",
-      "rendered": "rendered/00-blank-vertical.webp",
+      "rendered": "00-blank-vertical.webp",
       "width": 1080,
       "height": 1920,
       "kind": "gameplay",
@@ -115,7 +115,7 @@
     {
       "name": "cam-frame",
       "file": "cam-frame.html",
-      "rendered": "rendered/cam-frame.webp",
+      "rendered": "cam-frame.webp",
       "width": 600,
       "height": 341,
       "kind": "tile",

@@ -1,0 +1,21 @@
+{
+  "name": "@maseaaao/ui-gallery",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun --bun vite build --configLoader native",
+    "check": "tsc --noEmit && tsc -p tsconfig.tools.json",
+    "dev": "bun --bun vite --configLoader native --host 127.0.0.1",
+    "preview": "bun --bun vite preview --configLoader native --host 127.0.0.1"
+  },
+  "dependencies": {
+    "@maseaaao/design": "workspace:*",
+    "@maseaaao/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "@maseaaao/build-config": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}

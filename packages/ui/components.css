@@ -1,0 +1,261 @@
+.app-button {
+  position: relative;
+  box-sizing: border-box;
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+  justify-content: center;
+  min-width: var(--control-height);
+  max-width: 100%;
+  min-height: var(--control-height);
+  padding: var(--space-3) var(--space-4);
+  font:
+    400 16px / 1.4 Unbounded,
+    Arial,
+    sans-serif;
+  color: var(--color-text);
+  text-align: center;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--color-border-control);
+  border-radius: var(--radius-field);
+  isolation: isolate;
+  transition:
+    color var(--motion-feedback, 160ms),
+    background-color var(--motion-feedback, 160ms),
+    border-color var(--motion-feedback, 160ms),
+    transform var(--motion-enter, 240ms) var(--motion-ease-spring, ease-out);
+}
+.app-button__label {
+  min-width: 0;
+}
+.app-button--primary {
+  color: var(--color-surface);
+  background: var(--color-brand);
+  border-color: var(--color-brand);
+}
+.app-button--icon {
+  padding: 0;
+  border-radius: var(--radius-tag);
+}
+.app-button--loading {
+  cursor: progress;
+}
+.app-button--loading::after {
+  position: absolute;
+  inset: auto 16% 4px;
+  height: 2px;
+  pointer-events: none;
+  content: '';
+  background: currentcolor;
+  border-radius: 2px;
+  transform-origin: left;
+  animation: action-progress 1.4s ease-in-out infinite;
+}
+
+@keyframes action-progress {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scaleX(0.2);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scaleX(1);
+  }
+}
+.app-button:disabled,
+.app-button[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+@media (hover: hover) {
+  .app-button:hover:not(:disabled, [aria-disabled='true']) {
+    color: var(--color-brand);
+    background: var(--color-accent-soft);
+    border-color: var(--color-brand);
+  }
+  .app-button--primary:hover:not(:disabled, [aria-disabled='true']) {
+    color: var(--color-surface);
+    background: var(--color-action-hover);
+    border-color: var(--color-action-hover);
+  }
+}
+.app-button:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 4px;
+}
+.app-button--inverted {
+  color: var(--color-surface);
+  border-color: var(--color-surface);
+}
+.app-button--inverted:focus-visible {
+  outline-color: var(--color-surface);
+}
+.app-button--press:active:not(:disabled, [aria-disabled='true']) {
+  transform: translateY(1px) scale(0.985);
+  transition-duration: var(--motion-press, 80ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-button--loading::after {
+    animation: none;
+  }
+  .app-button {
+    transition: none;
+  }
+  .app-button--press:active:not(:disabled, [aria-disabled='true']) {
+    transform: none;
+  }
+}
+
+.field-input {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  font-size: 14px;
+}
+.field-input__label {
+  color: var(--color-text);
+}
+.field-input__control {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: var(--control-height);
+  padding: var(--space-3);
+  font: inherit;
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-field);
+  border: 1px solid var(--color-border-control);
+  border-radius: var(--radius-field);
+}
+textarea.field-input__control {
+  min-height: 84px;
+  resize: vertical;
+}
+.field-input__control:disabled {
+  opacity: 0.7;
+}
+.field-input__control:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 4px;
+}
+.field-input__control--error {
+  border-color: var(--color-danger);
+}
+.field-input__help {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-muted);
+}
+.field-input__help--error {
+  color: var(--color-danger);
+}
+
+.icon-indicator {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+  min-height: var(--control-height);
+  margin: 0;
+  font-size: 0.93rem;
+  overflow-wrap: anywhere;
+}
+.icon-indicator__dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: var(--color-border-control);
+  border: 1px solid currentcolor;
+  border-radius: 50%;
+}
+.icon-indicator__dot[data-status='connected'] {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  animation: var(--connection-motion, connection-settle) var(--motion-scene)
+    var(--motion-ease-spring);
+}
+.icon-indicator__dot[data-status='connecting'] {
+  background: var(--color-warning);
+  border-color: var(--color-warning);
+}
+.icon-indicator__dot[data-status='error'] {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+}
+.icon-indicator__label {
+  min-width: 0;
+  color: var(--color-muted);
+}
+.icon-indicator--inverted .icon-indicator__label {
+  color: var(--color-surface);
+}
+.icon-indicator--inverted .icon-indicator__dot {
+  background: var(--color-surface);
+  border-color: var(--color-surface);
+}
+.icon-indicator--inverted .icon-indicator__dot[data-status='connected'] {
+  background: color-mix(
+    in srgb,
+    var(--color-success) 25%,
+    var(--color-surface)
+  );
+  animation: var(--connection-motion, connection-settle) var(--motion-scene)
+    var(--motion-ease-spring);
+}
+.icon-indicator--inverted .icon-indicator__dot[data-status='connecting'] {
+  background: color-mix(
+    in srgb,
+    var(--color-warning) 25%,
+    var(--color-surface)
+  );
+}
+.icon-indicator--inverted .icon-indicator__dot[data-status='error'] {
+  background: color-mix(in srgb, var(--color-danger) 25%, var(--color-surface));
+}
+
+@keyframes connection-settle {
+  from {
+    transform: scale(0.65);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon-indicator__dot {
+    --connection-motion: none;
+  }
+}
+
+.live-status-badge {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  padding: var(--space-1) var(--space-3);
+  font:
+    400 12px / 1.5 Unbounded,
+    Arial,
+    sans-serif;
+  color: var(--color-muted);
+  background: var(--color-surface);
+  border-radius: var(--radius-tag);
+}
+.live-status-badge__dot {
+  width: 7px;
+  height: 7px;
+  background: currentcolor;
+  border-radius: 50%;
+}
+.live-status-badge--live {
+  color: var(--color-success);
+}
+.live-status-badge--disconnected {
+  color: var(--color-danger);
+}

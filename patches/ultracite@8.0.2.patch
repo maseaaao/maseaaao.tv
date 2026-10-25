@@ -1,0 +1,24 @@
+diff --git a/config/biome/core/biome.jsonc b/config/biome/core/biome.jsonc
+index d3d6546d3d9b4fb8f001e474801a1bc5a3f7eb4a..4fbcab2e82677d864164c43394b43c760e0a30fe 100644
+--- a/config/biome/core/biome.jsonc
++++ b/config/biome/core/biome.jsonc
+@@ -305,18 +305,7 @@
+         "noUnknownUnit": "error",
+         "noUnmatchableAnbSelector": "error"
+       },
+-      "nursery": {
+-        // Typically we don't enable nursery rules anymore (https://github.com/haydenbleasel/ultracite/issues/457)
+-        // but this was requested specifically by a lot of people.
+-        "useSortedClasses": {
+-          "fix": "safe",
+-          "level": "error",
+-          "options": {
+-            // class and className attributes are sorted by default.
+-            "functions": ["clsx", "cva", "tw", "twMerge", "cn", "twJoin", "tv"]
+-          }
+-        }
+-      },
++      "nursery": {},
+       "performance": {
+         /** ------------------------ JavaScript Rules ------------------------ **/
+ 

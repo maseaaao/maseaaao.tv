@@ -1,0 +1,204 @@
+:root {
+  --bg: #0f1015;
+  --panel: #16171e;
+  --line: #262833;
+  --text: #e7e7ee;
+  --muted: #9a9cab;
+  --accent: #ff9fc6;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  font:
+    400 14px / 1.5 system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  color: var(--text);
+  background: var(--bg);
+}
+
+#menu {
+  flex-shrink: 0;
+  width: 280px;
+  padding: 18px 14px;
+  overflow: auto;
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+}
+
+#home-link {
+  font-size: 16px;
+  color: var(--text);
+  letter-spacing: 0.02em;
+  text-decoration: none;
+}
+
+#home-link:hover {
+  color: var(--accent);
+}
+
+#items {
+  display: grid;
+  gap: 2px;
+  padding: 0;
+  margin: 16px 0 0;
+  list-style: none;
+}
+
+.item > button {
+  width: 100%;
+  padding: 7px 10px;
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+}
+
+.item > button:hover {
+  background: #1e2028;
+}
+
+.item > button.active {
+  background: #242631;
+  border-color: var(--line);
+}
+
+.item > button:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.subitems {
+  display: grid;
+  gap: 2px;
+  padding: 0 0 0 14px;
+  margin: 1px 0 4px;
+  list-style: none;
+}
+
+.subitems > button {
+  width: 100%;
+  padding: 5px 9px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--muted);
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+}
+
+.subitems > button:hover {
+  color: var(--text);
+  background: #1e2028;
+}
+
+.subitems > button.active {
+  color: var(--text);
+}
+
+#hint {
+  margin: 14px 4px 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+#preview {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+#bar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+#zoom {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+#zoom[hidden] {
+  display: none;
+}
+
+#zoom button {
+  padding: 4px 9px;
+  font-size: 12px;
+  color: var(--text);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+#zoom button:hover {
+  background: #1e2028;
+}
+
+#zoom-range {
+  width: 120px;
+}
+
+#zoom-value {
+  min-width: 4em;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: right;
+}
+
+#open {
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+#open:hover {
+  color: var(--text);
+}
+
+#frame-wrap {
+  display: flex;
+  flex: 1;
+  overflow: auto;
+  background: #101014;
+}
+
+#stage {
+  width: 100%;
+  height: 100%;
+  margin: auto;
+}
+
+#frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: 0;
+}
+/* hmr-check */

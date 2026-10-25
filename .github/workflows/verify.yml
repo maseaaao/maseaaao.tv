@@ -1,9 +1,7 @@
 name: Verify monorepo
 on:
-  push:
-    branches: [main]
   pull_request:
-    branches: [main]
+    branches: [ main ]
   workflow_dispatch:
   schedule:
     - cron: "17 3 * * 1"
@@ -13,277 +11,32 @@ concurrency:
   group: verify-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 jobs:
-  plan:
-    timeout-minutes: 5
-    runs-on: ubuntu-latest
-    outputs:
-      products: ${{ steps.select.outputs.products }}
-      raster: ${{ steps.select.outputs.raster }}
-      companion: ${{ steps.select.outputs.companion }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-          fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .node-version
-      - id: select
-        env:
-          BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'push' && github.event.before || '' }}
-        run: node tooling/affected.mjs
-  source:
-    timeout-minutes: 15
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/setup
-        with:
-          cache-write: "true"
-      - uses: ./.github/actions/task-cache
-        with:
-          lane: source
-          mode: restore
-      - run: bun run check:source
-      - uses: ./.github/actions/task-cache
-        with:
-          lane: source
-          mode: save
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: bun run test:releases
-      - run: bun run test:local
-      - run: node --test tests/task-graph.test.mjs tests/task-graph-integrity.test.mjs tests/affected.test.mjs tests/source-only.test.mjs tests/ui-renewal-pipeline.test.mjs tests/ci-workflows.test.mjs tests/ci-tests.test.mjs
-      - run: git diff --check
-  products:
-    timeout-minutes: 15
-    needs: [plan, source]
-    if: needs.plan.outputs.products == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/setup
-      - uses: ./.github/actions/task-cache
-        with:
-          lane: products
-          mode: restore
-      - run: bun run verify:products
-      - uses: ./.github/actions/task-cache
-        with:
-          lane: products
-          mode: save
-      - run: bun run check:repository
-      # Compare the actual rebuilt product bytes, not checkout-only baseline files.
-      - run: bun run check:artifacts
-      - name: Archive complete product outputs
-        id: archive
-        run: |
-          tar -cf "$RUNNER_TEMP/ci-products.tar" \
-            dist apps/stream-info/dist apps/tuna-widget/dist apps/obs-widgets/dist \
-            apps/stream-info/streamerbot-import.txt \
-            .build-cache/artwork .build-cache/storybook \
-            .build-cache/ui-portability .build-cache/static-fixtures
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ci-products
-          path: ${{ runner.temp }}/ci-products.tar
-          if-no-files-found: error
-          retention-days: 3
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: standalone-tools
-          retention-days: 7
-          path: |
-            apps/stream-info/dist/*.html
-            apps/tuna-widget/dist/*.html
-            apps/obs-widgets/dist/**
-  ui-tests:
-    timeout-minutes: 15
-    needs: products
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/setup
-      - run: bun run browser:install --with-deps
-      - uses: actions/download-artifact@v4
-        with:
-          name: ci-products
-          path: ${{ runner.temp }}
-      - name: Restore exact product outputs
-        id: restore-products
-        run: |
-          # Validate the transfer before removing any tracked checkout outputs.
-          tar -tf "$RUNNER_TEMP/ci-products.tar" > /dev/null
-          rm -rf dist apps/stream-info/dist apps/tuna-widget/dist apps/obs-widgets/dist \
-            apps/stream-info/streamerbot-import.txt .build-cache/artwork \
-            .build-cache/storybook .build-cache/ui-portability .build-cache/static-fixtures
-          tar -xf "$RUNNER_TEMP/ci-products.tar"
-      # Keep browser groups serialized within this checkout.
-      - run: bun run test:ui
-      - run: bun run test:ui-probe
-      - run: bun run test:static
-  repository-tests:
-    timeout-minutes: 20
-    needs: [plan, products]
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3]
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/setup
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: bun run browser:install --with-deps
-      - uses: actions/download-artifact@v4
-        with:
-          name: ci-products
-          path: ${{ runner.temp }}
-      - name: Restore exact product outputs
-        id: restore-products
-        run: |
-          # Validate the transfer before removing any tracked checkout outputs.
-          tar -tf "$RUNNER_TEMP/ci-products.tar" > /dev/null
-          rm -rf dist apps/stream-info/dist apps/tuna-widget/dist apps/obs-widgets/dist \
-            apps/stream-info/streamerbot-import.txt .build-cache/artwork \
-            .build-cache/storybook .build-cache/ui-portability .build-cache/static-fixtures
-          tar -xf "$RUNNER_TEMP/ci-products.tar"
-      # Each shard serializes its files: some contracts replace shared dist.
-      - run: node tooling/ci-tests.mjs --shard ${{ matrix.shard }}/3
-      # Product-only changes must retain these mocks even if Companion is skipped.
-      - if: matrix.shard == 1 && needs.plan.outputs.companion == 'false'
-        run: bun run test:companion
-  stream-info-tests:
-    timeout-minutes: 15
-    needs: products
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/setup
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
-      - uses: actions/download-artifact@v4
-        with:
-          name: ci-products
-          path: ${{ runner.temp }}
-      - name: Restore exact product outputs
-        id: restore-products
-        run: |
-          # Validate the transfer before removing any tracked checkout outputs.
-          tar -tf "$RUNNER_TEMP/ci-products.tar" > /dev/null
-          rm -rf dist apps/stream-info/dist apps/tuna-widget/dist apps/obs-widgets/dist \
-            apps/stream-info/streamerbot-import.txt .build-cache/artwork \
-            .build-cache/storybook .build-cache/ui-portability .build-cache/static-fixtures
-          tar -xf "$RUNNER_TEMP/ci-products.tar"
-      - run: bun run test:stream-info
-  raster:
-    timeout-minutes: 25
-    needs: [plan, source]
-    if: needs.plan.outputs.raster == 'true'
-    # The committed raster baseline belongs to the canonical Linux environment.
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/setup
-      - uses: ./.github/actions/task-cache
-        with:
-          lane: raster
-          mode: restore
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: bun run browser:install --with-deps
-      - run: python -m pip install -r tooling/artwork/requirements-fonts.txt
-      - run: bun run verify:artwork
-      # Rebuild after rendering; this complete bundle remains directly acceptable.
-      - run: bun run build:all
-      - uses: ./.github/actions/task-cache
-        with:
-          lane: raster
-          mode: save
-      - run: bun run check:repository
-      - run: bun run check:artifacts
-      - run: git diff --check
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: website-and-artwork-preview
-          if-no-files-found: warn
-          retention-days: 7
-          include-hidden-files: true
-          path: |
-            dist/**
-            apps/stream-info/dist/**
-            apps/stream-info/streamerbot-import.txt
-            apps/tuna-widget/dist/**
-            apps/obs-widgets/dist/**
-            artwork/scenes/rendered/**
-            artwork/banners/rendered/**
-            artwork/twitch-description/rendered/**
-            artwork/brand/rendered/website/**
-            artwork/logo/rendered/**
-            artwork/wallpapers/rendered/**
-            .build-cache/verify/artifacts.sha256
-  companion:
-    timeout-minutes: 15
-    needs: [plan, source]
-    if: needs.plan.outputs.companion == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: ./.github/actions/setup
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: node --test tests/companion-build.test.mjs
-      - run: bun run test:companion
-      - run: bun run --filter ./integrations/companion/system-microphone build
-      - run: bun run --filter ./integrations/companion/voice-control build
-      - run: bun run --filter ./integrations/companion/system-microphone package
-      - run: bun run --filter ./integrations/companion/voice-control package
-      - name: Verify Companion archive contents and install payloads
-        run: python integrations/companion/shared/test-packages.py
-      - uses: actions/upload-artifact@v4
-        with:
-          name: companion-modules
-          retention-days: 7
-          if-no-files-found: error
-          path: integrations/companion/*/*.tgz
   verify:
-    timeout-minutes: 5
-    if: always()
-    needs:
-      [plan, source, products, ui-tests, repository-tests, stream-info-tests, raster, companion]
-    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    runs-on: ubuntu-24.04
+    env:
+      # Weekly verification executes tasks even when their inputs are unchanged.
+      TURBO_FORCE: ${{ github.event_name == 'schedule' && 'true' || 'false' }}
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - name: Trust checked-out workspace for Git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - uses: ./.github/actions/setup
+      - uses: actions/setup-dotnet@v4
         with:
-          node-version-file: .node-version
-      - env:
-          CI_NEEDS: ${{ toJSON(needs) }}
-        run: node tooling/ci-result.mjs
+          dotnet-version: 8.0.x
+          cache: true
+          cache-dependency-path: integrations/companion/*/packages.lock.json
+      - run: bun run browser:install --with-deps
+      - run: bun run full
+      - run: bun run build:companion
+      - run: bun run package:companion
+      - run: bun run check
+      - run: bun run test
+      - run: git diff --check
+      - run: bun run verify:companion

@@ -1,18 +1,12 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.6.2/schema.json",
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git",
-    "useIgnoreFile": true
-  },
+  "$schema": "https://biomejs.dev/schemas/2.6.3/schema.json",
+  "extends": ["ultracite/biome/core"],
   "files": {
     "ignoreUnknown": true,
     "includes": [
-      "**",
       "!!**/dist",
-      "!!.build-cache",
       "!!build",
-      "!!**/rendered",
+
       "!!**/bin",
       "!!**/obj",
       "!bun.lock",
@@ -41,7 +35,7 @@
     "experimentalFullSupportEnabled": true,
     "formatter": {
       "enabled": true,
-      "whitespaceSensitivity": "strict"
+      "whitespaceSensitivity": "css"
     }
   },
   "markdown": {
@@ -55,40 +49,27 @@
   },
   "linter": {
     "enabled": true,
-    "domains": {
-      "vue": "recommended"
-    },
     "rules": {
-      "preset": "recommended",
       "correctness": {
-        "noUnusedImports": "error",
-        "noUnusedVariables": "error",
-        "noUnusedFunctionParameters": "error",
-        "noUndeclaredVariables": "error",
-        "noUnknownProperty": "error",
-        "noUnknownFunction": "error",
         "useUniqueElementIds": "error"
       },
       "suspicious": {
-        "noExplicitAny": "error",
-        "noDoubleEquals": "error",
-        "noTsIgnore": "error",
-        "noDebugger": "error",
         "noFocusedTests": "error",
         "noDuplicateSelectors": "off",
         "noUndeclaredEnvVars": "off"
       },
       "style": {
-        "noNonNullAssertion": "error",
-        "useImportType": "error",
-        "useConst": "error",
         "noDescendingSpecificity": "off",
         "noRestrictedImports": {
           "level": "error",
           "options": {
             "patterns": [
               {
-                "group": ["@maseaaao/*/src/**", "**/packages/*/src/**", "**/apps/*/src/**"],
+                "group": [
+                  "@maseaaao/*/src/**",
+                  "**/packages/*/src/**",
+                  "**/apps/*/src/**"
+                ],
                 "message": "Use workspace exports instead of another product internals."
               }
             ]
@@ -106,14 +87,20 @@
       }
     }
   },
-  "assist": {
-    "actions": {
-      "source": {
-        "organizeImports": "on"
-      }
-    }
-  },
   "overrides": [
+    {
+      "includes": ["**/*.js", "**/*.jsx", "**/*.mjs", "**/*.cjs"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useFilenamingConvention": {
+              "level": "error",
+              "options": { "match": ".*[.]tsx?" }
+            }
+          }
+        }
+      }
+    },
     {
       "includes": ["apps/obs-widgets/src/streamlabs-chat/*.html"],
       "linter": {
@@ -125,17 +112,14 @@
       }
     },
     {
-      "includes": ["tests/**/*.mjs"],
-      "linter": {
-        "rules": {
-          "performance": {
-            "useDomNodeTextContent": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["**/*.mjs", "**/*.cjs", "integrations/**/*.js", "*.js", "packages/**/*.js"],
+      "includes": [
+        "tooling/**/*.ts",
+        "integrations/**/*.ts",
+        "packages/build-config/**/*.ts",
+        "apps/**/scripts/**/*.ts",
+        "apps/**/vite.config.ts",
+        "apps/**/build.ts"
+      ],
       "linter": {
         "rules": {
           "style": {
@@ -163,11 +147,8 @@
     },
     {
       "includes": [
-        "tests/**/*.mjs",
-        "tooling/ui-portability/*.test.mjs",
-        "tooling/static-fixtures/*.test.mjs",
-        "apps/stream-info/scripts/verify*-live.mjs",
-        "tooling/artwork/*.mjs"
+        "apps/stream-info/scripts/verify*-live.ts",
+        "tooling/artwork/*.ts"
       ],
       "linter": {
         "rules": {
@@ -178,7 +159,7 @@
       }
     },
     {
-      "includes": ["apps/**/src/**/*.js"],
+      "includes": ["apps/**/src/**/*.ts"],
       "linter": {
         "rules": {
           "style": {
@@ -202,42 +183,12 @@
           }
         }
       }
-    },
-    {
-      "includes": ["apps/stream-info/src/components/SettingsDialog.vue"],
-      "linter": {
-        "rules": {
-          "a11y": {
-            "noStaticElementInteractions": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["packages/ui/src/AppButton.vue"],
-      "linter": {
-        "rules": {
-          "a11y": {
-            "useAnchorContent": "off"
-          }
-        }
-      }
     }
   ],
   "plugins": [
     {
       "path": "./tooling/biome/no-type-assertions.grit",
-      "includes": [
-        "**/*.vue",
-        "tooling/ui-portability/src/**/*.ts",
-        "tooling/static-fixtures/src/**/*.ts",
-        "tooling/ui-catalog/**/*.ts",
-        "packages/ui/**/*.ts"
-      ]
-    },
-    {
-      "path": "./tooling/biome/design-tokens.grit",
-      "includes": ["**/*.vue"]
+      "includes": ["packages/ui/**/*.ts"]
     }
   ],
   "css": {

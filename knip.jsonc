@@ -1,0 +1,67 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
+  "workspaces": {
+    ".": {
+      "entry": [
+        "integrations/companion/start-companion.ts",
+        "integrations/companion/shared/test-*.ts"
+      ]
+    },
+    "tooling": {
+      "entry": [
+        "local/check-stream-stack.ts",
+        "local/check-stream-stack-cli.ts",
+        "local/compile-streamerbot.ts",
+        // Helper for manual OBS provider CSS deployment, not a test fixture.
+        "local/obs-provider-css.ts",
+        "artwork/generate-qr-with-logo.ts"
+      ]
+    },
+    "apps/dev-launcher": {
+      // Браузерная страница меню, запускается через tooling/dev.ts.
+      "entry": ["src/main.ts"]
+    },
+    "apps/obs-widgets": {
+      "entry": ["vite.config.ts"],
+      // Used by CSS imports, which Knip does not follow without a custom compiler.
+      "ignoreDependencies": ["@maseaaao/design"],
+      // This config requires the build's social-strip mode; analyze it statically.
+      "vite": false
+    },
+    "apps/stream-info": {
+      "entry": [
+        "scripts/verify*-live.ts",
+        "tests/csharp/run-framework-category-smoke.ts"
+      ],
+      // Used by src/styles.css.
+      "ignoreDependencies": ["@maseaaao/design", "@maseaaao/ui"]
+    },
+    "apps/tuna-widget": {
+      // Used by src/styles.css.
+      "ignoreDependencies": ["@maseaaao/design"]
+    },
+    "apps/website": {
+      // Used by src/assets/design.css.
+      "ignoreDependencies": ["@maseaaao/ui"]
+    },
+    "apps/ui-gallery": {
+      // Used by src/styles.css.
+      "ignoreDependencies": ["@maseaaao/ui"]
+    },
+    "artwork": {
+      // Used by styles.css.
+      "ignoreDependencies": ["@maseaaao/design"]
+    },
+    "packages/ui": {
+      // components.css consumes design custom properties supplied by the host page.
+      "ignoreDependencies": ["@maseaaao/design"]
+    },
+    "integrations/companion/voice-control": {
+      "entry": ["test-*.ts"],
+      "project": ["*.ts"]
+    },
+    "integrations/companion/system-microphone": {
+      "project": ["*.ts"]
+    }
+  }
+}

@@ -1,4 +1,4 @@
-@import '@maseaaao/design/fonts-400.css';
+@import '@maseaaao/design/fonts.css';
 @import '@maseaaao/design/tokens.css';
 
 :root {
@@ -12,38 +12,38 @@
 }
 html,
 body {
-  margin: 0;
   width: 100%;
   height: 100%;
+  margin: 0;
   overflow: hidden;
   background: transparent;
 }
 .strip {
   position: relative;
-  width: 100%;
-  height: 100%;
   display: flex;
+  gap: 16px;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  background: var(--color-surface);
+  width: 100%;
+  height: 100%;
   color: var(--color-brand);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 0 0 12px 12px;
 }
 .logos {
   display: flex;
-  align-items: center;
-  gap: 14px;
-  height: 50px;
   flex: none;
+  gap: 14px;
+  align-items: center;
+  height: 50px;
   padding: 0 4px;
 }
 .logo {
   display: block;
+  flex: none;
   width: 28px;
   height: 28px;
-  flex: none;
   opacity: var(--social-rest-opacity);
   transform: translateY(0) scale(1);
   animation: var(--social-animation) 30s ease-in-out 1.5s infinite;
@@ -65,12 +65,12 @@ body {
     400 32px / 1.15 Unbounded,
     Arial,
     sans-serif;
-  letter-spacing: -0.5px;
   color: var(--color-text);
+  letter-spacing: -0.5px;
 }
 .divider {
-  height: 28px;
   width: 1px;
+  height: 28px;
   background: var(--color-border);
 }
 .logo svg {

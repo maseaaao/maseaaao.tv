@@ -1,13 +1,22 @@
 # Artwork
 
-`components/*.vue` — настоящие композиции сцен, баннеров, Twitch-панелей, brand, логотипа и обоев. `render.mjs` выбирает композицию; HTML-файлы — стабильные оболочки. Общая официальная Vue SSR → Vite/singlefile цепочка создаёт 26 автономных HTML в `.build-cache/artwork`. Vue нужен только при сборке. Стили используют одну семантическую палитру и Unbounded 400/Arial; BrandSurface и SceneZone переиспользуются в подтверждённых композициях.
+HTML/CSS композиций — исходники; корневые `dist/artwork/<группа>/` — готовые изображения.
+Палитра и шрифт берутся из `@maseaaao/design`.
 
-`bun run build:artwork` проверяет утверждённый QR и готовит HTML. Затем `bun run render:scenes`, `render:banners`, `render:twitch-description`, `render:wallpapers` и `brand:assets` создают нужные изображения общим `renderImage`. Каждая отдельная команда подготавливает HTML; если HTML уже подготовлен, можно вызвать соответствующий скрипт с `--prepared`. Рендер проверяет реальные начертания шрифта, загрузку локальных изображений и размеры, блокирует сеть. Источники при генерации не меняются.
+Команды из корня:
 
-`scenes/layout.json` — геометрия 12 сцен: все live-зоны, камера, identity/header/title, canvas и путь каждого WEBP. Координаты сохранены; существующее наложение music/donors в vertical-camera не исправляется визуальной миграцией. `scenes/SETUP.md` описывает установку. OBS читает готовые изображения по прежним путям.
+| Команда                           | Результат                                                                  |
+| --------------------------------- | -------------------------------------------------------------------------- |
+| `bun run build:artwork`           | Автономные HTML в `dist/artwork/html`, без растров                         |
+| `bun run render:logo`             | Производные аватара                                                        |
+| `bun run render:scenes`           | Сцены OBS из `scenes/layout.json`                                          |
+| `bun run render:artwork <группа>` | `banners`, `panels`, `wallpapers`, `brand` или `favicon`; без группы — все |
+| `bun run render:all`              | Полный экспорт изображений                                                 |
 
-`brand/rendered/website` — единственный владелец генерируемых изображений сайта: аватары, OG, subscribe, favicon и apple/android icons. `build:website` копирует их с прежними URL, отклоняет коллизии с public/страницами/bundles; `check:repository` проверяет побайтовую актуальность. Storybook читает те же файлы. В public остаются защищённые документы и QR.
+Рендер готовит HTML сам; `--prepared` пропускает подготовку, если она уже выполнена.
+`dist/artwork/brand/website` — источник изображений сайта для `build:website`.
+`logo/logo.png` и `apps/website/public/assets/maseaaao.tv.png` — защищённые оригиналы;
+`render:logo` не генерирует QR. Сохраняйте утверждённые аватар и QR.
 
-`logo/logo.png` и `apps/website/public/assets/maseaaao.tv.png` — защищённые оригиналы. Утверждённые avatar WEBP перенесены побайтово. `render:logo` обновляет только производные аватара, QR не генерирует. Оптимизация пропускает оба защищённых оригинала и по умолчанию обходит только каталоги результатов. Сборка и рендер не устанавливают оформление в OBS и не публикуют сайт.
-
-Проверки: `tests/artwork-vue.test.mjs`, `cyber-scenes`, `cyber-scene-corrections`, `banner-dimensions`, `operational-pages`, `render-image`, `source-isolation`; восемь полных композиций в Storybook. Целевая Windows 11/OBS/Chrome приёмка отмечается отдельно от macOS-разработки.
+Растры сверяются в Linux-среде CI; изменения нужно просматривать.
+[Подключение сцен](scenes/SETUP.md) · [Дизайн](../docs/design.md).

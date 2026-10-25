@@ -1,4 +1,4 @@
-@import '@maseaaao/design/fonts-400.css';
+@import '@maseaaao/design/fonts.css';
 @import '@maseaaao/design/tokens.css';
 
 :root {
@@ -7,7 +7,10 @@
   --art-swap: 420ms;
   --pad: calc(10px * var(--scale));
   --gap: calc(16px * var(--scale));
-  --cover: max(1px, min(calc(64px * var(--scale) * var(--img)), calc(100vh - 2 * var(--pad))));
+  --cover: max(
+    1px,
+    min(calc(64px * var(--scale) * var(--img)), calc(100vh - 2 * var(--pad)))
+  );
   --title: calc(20px * var(--scale));
   --meta: calc(16px * var(--scale));
   --ease: var(--motion-ease-enter);
@@ -31,8 +34,8 @@ body {
 body {
   font-family: Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
-  text-rendering: geometricprecision;
   font-synthesis: none;
+  text-rendering: geometricprecision;
 }
 
 /* The controller owns visibility: fade by default, opaque sliding for a shared slot. */
@@ -40,23 +43,23 @@ body {
   position: relative;
   display: grid;
   grid-template-columns: var(--cover) minmax(0, 1fr);
+  gap: var(--gap);
   align-items: center;
   width: 100%;
   height: 100%;
   padding: var(--pad);
-  gap: var(--gap);
+  contain: layout paint style;
   overflow: hidden;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-field);
   opacity: 0;
-  contain: layout paint style;
   will-change: opacity;
 }
 
 html[data-opaque='1'] #player {
-  opacity: 1;
   border-radius: var(--radius-surface);
+  opacity: 1;
   transform: translateY(100%);
   will-change: transform;
 }
@@ -89,8 +92,8 @@ html[data-reveal='soft'] #surface {
 html[data-reveal='soft'] #cover-frame,
 html[data-reveal='soft'] #content {
   opacity: 0;
-  transform: translateY(6px) scale(0.985);
   filter: blur(3px);
+  transform: translateY(6px) scale(0.985);
 }
 
 /* Retain the two nodes for the existing artwork controller, never paint them. */
@@ -110,8 +113,8 @@ html[data-reveal='soft'] #content {
   height: var(--cover);
   overflow: hidden;
   background: var(--color-field);
-  border-radius: var(--radius-field);
   border: 1px solid var(--color-border);
+  border-radius: var(--radius-field);
 }
 
 #cover-fallback {
@@ -184,26 +187,26 @@ html[data-reveal='soft'] .track-text {
 .track-title {
   min-width: 0;
   overflow: hidden;
-  color: var(--color-text);
+  text-overflow: ellipsis;
   font-family: Unbounded, Arial, sans-serif;
   font-size: var(--title);
   font-weight: 400;
   line-height: 1.3;
+  color: var(--color-text);
   letter-spacing: -0.015em;
   white-space: nowrap;
-  text-overflow: ellipsis;
 }
 
 .track-subtitle {
   min-width: 0;
-  overflow: hidden;
   margin-top: calc(4px * var(--scale));
-  color: var(--color-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-size: var(--meta);
   font-weight: 400;
   line-height: 1.15;
+  color: var(--color-muted);
   white-space: nowrap;
-  text-overflow: ellipsis;
 }
 
 @media (prefers-reduced-motion: reduce) {

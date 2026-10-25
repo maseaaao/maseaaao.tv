@@ -2,23 +2,21 @@
   "name": "@maseaaao/tuna-widget",
   "version": "1.1.0",
   "private": true,
-  "scripts": {
-    "build": "node build.mjs",
-    "check": "vue-tsc --noEmit",
-    "source": "node ../../tooling/source-task.mjs"
-  },
   "type": "module",
+  "exports": {
+    "./ui.css": "./src/styles.css",
+    "./pages/*": "./src/*"
+  },
+  "scripts": {
+    "build": "bun build.ts",
+    "check": "tsc --noEmit && tsc -p tsconfig.tools.json"
+  },
   "dependencies": {
     "@maseaaao/design": "workspace:*"
   },
   "devDependencies": {
     "@maseaaao/build-config": "workspace:*",
-    "vue": "3.5.44",
-    "typescript": "5.8.3",
-    "vue-tsc": "3.0.8"
-  },
-  "exports": {
-    "./TunaFrame.vue": "./src/TunaFrame.vue",
-    "./ui.css": "./src/styles.css"
+    "typescript": "catalog:",
+    "vite": "catalog:"
   }
 }

@@ -5,7 +5,7 @@ public class CPHInline
 {
     public bool Execute()
     {
-        string soundPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "maseaaao.tv", "apps", "obs-widgets", "dist", "sounds", "notif.mp3");
+        string soundPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "maseaaao.tv", "integrations", "streamerbot", "chat-sound", "notif.mp3");
         if (!File.Exists(soundPath))
         {
             CPH.LogWarn("Chat notification sound not found: " + soundPath);

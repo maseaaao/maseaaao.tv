@@ -3,7 +3,7 @@
     "target": "ES2022",
     "module": "ESNext",
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
-    "types": ["vite/client", "@maseaaao/build-config/vue-env"],
+    "types": ["vite/client"],
     "moduleResolution": "Bundler",
     "strict": true,
     "noUncheckedIndexedAccess": true,
@@ -11,7 +11,8 @@
     "noUnusedParameters": true,
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    "allowJs": false
   },
   "include": ["src"]
 }

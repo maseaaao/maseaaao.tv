@@ -7,15 +7,10 @@
       "path": "apps/stream-info",
       "files": [
         {
-          "source": "apps/stream-info/dist",
+          "source": "dist/stream-info",
           "target": "."
-        },
-        {
-          "source": "apps/stream-info/streamerbot-import.txt",
-          "target": "streamerbot-import.txt"
         }
       ],
-      "test": "bun run test:stream-info",
       "build": "bun run build:stream-info",
       "browser": false,
       "dotnet": true,
@@ -28,11 +23,10 @@
       "path": "apps/tuna-widget",
       "files": [
         {
-          "source": "apps/tuna-widget/dist/obs-tuna-widget.html",
+          "source": "dist/tuna-widget/obs-tuna-widget.html",
           "target": "obs-tuna-widget.html"
         }
       ],
-      "test": "node --test tests/tuna-widget.test.mjs",
       "build": "bun run build:tuna",
       "browser": true,
       "dotnet": false,
@@ -45,11 +39,10 @@
       "path": "apps/obs-widgets",
       "files": [
         {
-          "source": "apps/obs-widgets/dist",
+          "source": "dist/obs-widgets",
           "target": "."
         }
       ],
-      "test": "bun run --filter ./apps/obs-widgets check",
       "build": "bun run build:widgets",
       "browser": false,
       "dotnet": false,
@@ -61,49 +54,46 @@
       "path": "artwork",
       "files": [
         {
-          "source": "artwork/logo/rendered",
+          "source": "dist/artwork/logo",
           "target": "logo"
         },
         {
-          "source": "artwork/scenes/rendered",
+          "source": "dist/artwork/scenes",
           "target": "scenes"
         },
         {
-          "source": "artwork/banners/rendered",
+          "source": "dist/artwork/banners",
           "target": "banners"
         },
         {
-          "source": "artwork/twitch-description/rendered",
+          "source": "dist/artwork/twitch-description",
           "target": "twitch-description"
         },
         {
-          "source": "artwork/wallpapers/rendered",
+          "source": "dist/artwork/wallpapers",
           "target": "wallpapers"
         },
         {
-          "source": "artwork/brand/rendered/website",
+          "source": "dist/artwork/brand/website",
           "target": "brand"
         }
       ],
-      "test": "bun run --filter ./artwork check",
-      "build": "bun run verify:artwork",
+      "build": "bun run render:all",
       "browser": true,
       "dotnet": false,
       "activation": "Images ready. OBS source paths must point into this product directory.",
       "requires": {},
-      "extensions": [".png", ".webp", ".jpg", ".jpeg", ".ico", ".svg"],
-      "pythonRequirements": "tooling/artwork/requirements-fonts.txt"
+      "extensions": [".png", ".webp", ".jpg", ".jpeg", ".ico", ".svg"]
     },
     {
       "id": "system-microphone",
       "path": "integrations/companion/system-microphone",
       "files": [
         {
-          "source": "integrations/companion/system-microphone/local-system-microphone-{version}.tgz",
+          "source": "dist/companion/system-microphone/local-system-microphone-{version}.tgz",
           "target": "local-system-microphone-{version}.tgz"
         }
       ],
-      "test": "bun run test:companion && node --test tests/companion-build.test.mjs",
       "build": "bun run --filter ./integrations/companion/system-microphone build && bun run --filter ./integrations/companion/system-microphone package",
       "browser": false,
       "dotnet": true,
@@ -115,11 +105,10 @@
       "path": "integrations/companion/voice-control",
       "files": [
         {
-          "source": "integrations/companion/voice-control/local-voice-stream-{version}.tgz",
+          "source": "dist/companion/voice-control/local-voice-stream-{version}.tgz",
           "target": "local-voice-stream-{version}.tgz"
         }
       ],
-      "test": "bun run test:companion && node --test tests/companion-build.test.mjs",
       "build": "bun run --filter ./integrations/companion/voice-control build && bun run --filter ./integrations/companion/voice-control package",
       "browser": false,
       "dotnet": true,
@@ -131,88 +120,95 @@
       "path": "tooling/windows",
       "files": [
         {
-          "source": "integrations/streamerbot/yandex-music/control.ps1",
-          "target": "yandex-music/control.ps1"
+          "source": "dist/windows-integrations/start-companion.ts",
+          "target": "start-companion.ts"
         },
         {
-          "source": "integrations/companion/start-companion.ps1",
-          "target": "start-companion.ps1"
+          "source": "dist/windows-integrations/companion-processes.wsf",
+          "target": "companion-processes.wsf"
         },
         {
-          "source": "tooling/local/check-stream-stack.ps1",
-          "target": "diagnostics/check-stream-stack.ps1"
+          "source": "dist/windows-integrations/diagnostics/check-stream-stack-cli.ts",
+          "target": "diagnostics/check-stream-stack-cli.ts"
         },
         {
-          "source": "tooling/local/check-stream-stack.mjs",
-          "target": "diagnostics/check-stream-stack.mjs"
+          "source": "dist/windows-integrations/diagnostics/check-stream-stack.ts",
+          "target": "diagnostics/check-stream-stack.ts"
         },
         {
-          "source": "tooling/local/action-targets.mjs",
-          "target": "diagnostics/action-targets.mjs"
+          "source": "dist/windows-integrations/diagnostics/action-targets.ts",
+          "target": "diagnostics/action-targets.ts"
         },
         {
-          "source": "tooling/local/compare-companion-storage.py",
-          "target": "diagnostics/compare-companion-storage.py"
+          "source": "dist/windows-integrations/diagnostics/companion-storage.ts",
+          "target": "diagnostics/companion-storage.ts"
         },
         {
-          "source": "tooling/windows/runtime-README.md",
+          "source": "dist/windows-integrations/diagnostics/diagnostic-types.ts",
+          "target": "diagnostics/diagnostic-types.ts"
+        },
+        {
+          "source": "dist/windows-integrations/diagnostics/compare-companion-storage.mjs",
+          "target": "diagnostics/compare-companion-storage.mjs"
+        },
+        {
+          "source": "dist/windows-integrations/README.md",
           "target": "README.md"
         },
         {
-          "source": "integrations/streamerbot/chat-sound/Action.cs",
+          "source": "dist/windows-integrations/actions/chat-sound/Action.cs",
           "target": "actions/chat-sound/Action.cs"
         },
         {
-          "source": "integrations/streamerbot/donationalerts/DonationAlertsAuthorization.cs",
+          "source": "dist/windows-integrations/actions/chat-sound/notif.mp3",
+          "target": "actions/chat-sound/notif.mp3"
+        },
+        {
+          "source": "dist/windows-integrations/actions/donationalerts/DonationAlertsAuthorization.cs",
           "target": "actions/donationalerts/DonationAlertsAuthorization.cs"
         },
         {
-          "source": "integrations/streamerbot/donationalerts/DonationAlertsIntegration.cs",
+          "source": "dist/windows-integrations/actions/donationalerts/DonationAlertsIntegration.cs",
           "target": "actions/donationalerts/DonationAlertsIntegration.cs"
         },
         {
-          "source": "integrations/streamerbot/donationalerts/DonationAlertsWatcher.cs",
+          "source": "dist/windows-integrations/actions/donationalerts/DonationAlertsWatcher.cs",
           "target": "actions/donationalerts/DonationAlertsWatcher.cs"
         },
         {
-          "source": "integrations/streamerbot/donationalerts/DonationChat.cs",
+          "source": "dist/windows-integrations/actions/donationalerts/DonationChat.cs",
           "target": "actions/donationalerts/DonationChat.cs"
         },
         {
-          "source": "integrations/streamerbot/donationalerts/LICENSE",
+          "source": "dist/windows-integrations/actions/donationalerts/LICENSE",
           "target": "actions/donationalerts/LICENSE"
         },
         {
-          "source": "integrations/streamerbot/donationalerts/README.md",
+          "source": "dist/windows-integrations/actions/donationalerts/README.md",
           "target": "actions/donationalerts/README.md"
         },
         {
-          "source": "integrations/streamerbot/donationalerts/WebSocketMessages.cs",
+          "source": "dist/windows-integrations/actions/donationalerts/WebSocketMessages.cs",
           "target": "actions/donationalerts/WebSocketMessages.cs"
         },
         {
-          "source": "integrations/streamerbot/obs-health/Check.cs",
+          "source": "dist/windows-integrations/actions/obs-health/Check.cs",
           "target": "actions/obs-health/Check.cs"
         },
         {
-          "source": "integrations/streamerbot/obs-health/CompanionEndpoint.cs",
+          "source": "dist/windows-integrations/actions/obs-health/health-warning.mp3",
+          "target": "actions/obs-health/health-warning.mp3"
+        },
+        {
+          "source": "dist/windows-integrations/actions/obs-health/CompanionEndpoint.cs",
           "target": "actions/obs-health/CompanionEndpoint.cs"
         },
         {
-          "source": "integrations/streamerbot/obs-health/SoundToggle.cs",
+          "source": "dist/windows-integrations/actions/obs-health/SoundToggle.cs",
           "target": "actions/obs-health/SoundToggle.cs"
-        },
-        {
-          "source": "integrations/streamerbot/yandex-music/Action.cs",
-          "target": "actions/yandex-music/Action.cs"
-        },
-        {
-          "source": "integrations/streamerbot/yandex-music/README.md",
-          "target": "actions/yandex-music/README.md"
         }
       ],
-      "test": "python -m unittest discover -s tests -p \"test_release*.py\"",
-      "build": "python tooling/bundle-release.py --validate-catalog",
+      "build": "bun run build:windows && bun tooling/bundle-release.ts --validate-catalog",
       "browser": false,
       "dotnet": false,
       "activation": "Set STREAMERBOT_ROOT explicitly. Update launcher and Action paths once; no automatic application reconfiguration.",
@@ -224,11 +220,10 @@
       "path": "apps/website",
       "files": [
         {
-          "source": "dist",
+          "source": "dist/website",
           "target": "."
         }
       ],
-      "test": "bun run --filter ./apps/website check",
       "build": "bun run build:website",
       "browser": false,
       "dotnet": false,

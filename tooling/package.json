@@ -1,0 +1,39 @@
+{
+  "name": "@maseaaao/tooling",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:companion": "cd .. && bun run --sequential --filter './integrations/companion/*' build",
+    "build:diagnostics": "bun local/build-diagnostics.ts",
+    "build:windows": "bun build-windows.ts",
+    "check": "tsc -p tsconfig.json",
+    "check:biome": "cd .. && biome ci --error-on-warnings .",
+    "check:knip": "cd .. && knip",
+    "package:companion": "cd .. && bun run --sequential --filter './integrations/companion/*' package",
+    "render:all": "cd .. && bun run render:logo && bun tooling/build-artwork.ts && bun run render:scenes --prepared && bun run render:artwork all --prepared && bun run optimize:images",
+    "test:companion": "cd .. && bun integrations/companion/shared/test-helper-process.ts && bun integrations/companion/voice-control/test-guard.ts && bun integrations/companion/voice-control/test-runtime.ts"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:",
+    "@maseaaao/build-config": "workspace:*",
+    "@types/bun": "catalog:",
+    "@types/jsdom": "catalog:",
+    "@types/node": "catalog:",
+    "@types/qrcode": "catalog:",
+    "fflate": "catalog:",
+    "jsdom": "catalog:",
+    "jsonc-parser": "catalog:",
+    "jsqr": "catalog:",
+    "knip": "catalog:",
+    "playwright-core": "catalog:",
+    "png-to-ico": "catalog:",
+    "postcss": "catalog:",
+    "postcss-import": "catalog:",
+    "postcss-url": "catalog:",
+    "qrcode": "catalog:",
+    "sharp": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-singlefile": "catalog:"
+  }
+}

@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <meta
+      content="Живая витрина общих компонентов и дизайн-токенов maseaaao.tv."
+      name="description"
+    >
+    <title>UI Gallery — maseaaao.tv</title>
+    <link href="./styles.css" rel="stylesheet">
+    <script src="./main.ts" type="module"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#content">К содержимому</a>
+    <header class="masthead">
+      <a class="wordmark" href="#content">maseaaao.tv <span>/ ui</span></a>
+    </header>
+    <div class="layout">
+      <aside class="sidebar">
+        <p class="eyebrow">Категории</p>
+        <div
+          aria-label="Категории витрины"
+          aria-orientation="vertical"
+          class="gallery-tabs"
+          role="tablist"
+        >
+          <button
+            aria-controls="panel-ui"
+            aria-selected="true"
+            id="tab-ui"
+            role="tab"
+            tabindex="0"
+            type="button"
+          >
+            UI-компоненты
+          </button>
+        </div>
+        <div class="sidebar-note">
+          <code>packages/design</code><code>packages/ui</code>
+          <p>Одни исходники с продуктами. Изменения общих стилей сразу видны здесь.</p>
+        </div>
+      </aside>
+      <main id="content">
+        <div class="intro">
+          <p class="eyebrow">Дизайн-система / живая витрина</p>
+          <h1>Всё, что можно<br>переиспользовать.</h1>
+          <p class="lead">
+            Не скриншоты, а настоящие элементы. Смотри состояния, пробуй взаимодействия и забирай
+            разметку в следующий интерфейс.
+          </p>
+          <div class="intro-meta">
+            <span>HTML + CSS + TypeScript</span><span>Локально и без сервисов</span>
+          </div>
+        </div>
+        <div aria-labelledby="tab-ui" id="panel-ui" role="tabpanel">
+          <nav aria-label="Разделы UI" class="section-nav">
+            <a href="#palette">Палитра</a>
+            <a href="#type">Типографика</a>
+            <a href="#geometry">Размеры и радиусы</a>
+            <a href="#motion">Motion</a>
+            <a href="#buttons">Кнопки</a>
+            <a href="#fields">Поля ввода</a>
+            <a href="#connection">Подключение</a>
+            <a href="#badges">Статус эфира</a>
+            <a href="#inverted">На синем фоне</a>
+          </nav>
+          <div class="search-bar">
+            <label class="field-input" for="search"
+              ><span class="sr-only">Поиск по витрине</span>
+              <input
+                class="field-input__control"
+                id="search"
+                placeholder="Найти элемент, токен или CSS-класс…"
+                type="search"
+              ></label
+            >
+            <p aria-live="polite" id="result-count" role="status"></p>
+          </div>
+          <p class="empty" hidden id="empty">
+            Ничего не найдено. Попробуйте другое название или CSS-класс.
+          </p>
+
+          <section class="example" data-example id="palette">
+            <div class="section-heading">
+              <h2>Палитра</h2>
+              <span class="source-label">design / tokens.css</span>
+            </div>
+            <p class="description">
+              Семантические цвета. Используй токен по назначению, а не HEX из соседнего экрана.
+            </p>
+            <div class="swatches" id="colors"></div>
+          </section>
+          <section class="example" data-example id="type">
+            <div class="section-heading">
+              <h2>Типографика</h2>
+              <span class="source-label">design / fonts.css</span>
+            </div>
+            <p class="description">
+              Unbounded — заголовки и акценты, Arial — основной текст. Локальный variable-шрифт,
+              веса 200–900.
+            </p>
+            <div class="type-specimen">
+              <span class="eyebrow">--font-display / 400</span>
+              <p class="display-sample">Привет, это эфир.<br>Аа Бб Вв 012345</p>
+            </div>
+            <div class="type-specimen">
+              <span class="eyebrow">--font-body / 400</span>
+              <p class="body-sample">
+                Здесь важна ясность. Подписи объясняют действие, статусы не зависят только от цвета,
+                а ошибки помогают продолжить.
+              </p>
+            </div>
+          </section>
+          <section class="example" data-example id="geometry">
+            <div class="section-heading">
+              <h2>Размеры и радиусы</h2>
+              <span class="source-label">design / tokens.css</span>
+            </div>
+            <p class="description">Общая шкала отступов, радиусы и высота контролов.</p>
+            <div class="radius-grid" id="radii"></div>
+            <div class="token-list" id="metrics"></div>
+          </section>
+          <section class="example" data-example id="motion">
+            <div class="section-heading">
+              <h2>Motion</h2>
+              <span class="source-label">design / tokens.css</span>
+            </div>
+            <p class="description">
+              Запускайте примеры по одному или вместе. Тайминги и кривые берутся из общих токенов;
+              замедление помогает рассмотреть быстрые переходы.
+            </p>
+            <div class="motion-controls">
+              <button class="app-button" id="motion-play-all" type="button">
+                Воспроизвести всё
+              </button>
+              <label class="field-input"
+                ><span class="field-input__label">Скорость</span
+                ><select class="field-input__control" id="motion-speed">
+                  <option value="1">1× · реальная</option>
+                  <option value="4">0,25× · замедленная</option>
+                </select></label
+              >
+              <label class="motion-reduce"
+                ><input id="motion-reduce" type="checkbox">Без движения</label
+              >
+            </div>
+            <p class="description" id="motion-status" role="status"></p>
+            <div class="motion-grid" id="motion-grid"></div>
+          </section>
+          <section class="example" data-example id="buttons">
+            <div class="section-heading">
+              <h2>Кнопки</h2>
+              <span class="source-label">ui / components.css</span>
+            </div>
+            <p class="description">
+              Основное и вторичное действия, иконка, ссылка, disabled и loading. Наведи курсор,
+              нажми или перейди Tab. Loading сохраняет подпись и блокирует действие.
+            </p>
+            <div class="example-preview">
+              <button class="app-button app-button--primary app-button--press" type="button">
+                Основное действие
+              </button>
+              <button class="app-button app-button--press" type="button">Вторичное</button>
+              <button
+                aria-label="Добавить"
+                class="app-button app-button--icon app-button--press"
+                type="button"
+              >
+                +
+              </button>
+              <a class="app-button" href="#fields">Ссылка к полям ↗</a>
+              <button class="app-button app-button--primary" disabled type="button">
+                Недоступно
+              </button>
+              <button
+                aria-busy="true"
+                class="app-button app-button--primary app-button--loading"
+                disabled
+                type="button"
+              >
+                <span class="app-button__label">Сохранить</span>
+              </button>
+            </div>
+          </section>
+          <section class="example" data-example id="fields">
+            <div class="section-heading">
+              <h2>Поля ввода</h2>
+              <span class="source-label">ui / components.css</span>
+            </div>
+            <p class="description">
+              Подпись остаётся над полем. Подсказка связана с контролом; ошибка обозначена текстом и
+              aria-invalid. Можно печатать — данные никуда не отправляются.
+            </p>
+            <div class="example-preview fields-preview">
+              <label class="field-input"
+                ><span class="field-input__label">Название стрима</span>
+                <input
+                  aria-describedby="title-help"
+                  class="field-input__control"
+                  placeholder="Во что играем сегодня?"
+                  type="text"
+                ><span class="field-input__help" id="title-help"
+                  >Обычное поле с подсказкой.</span
+                ></label
+              >
+              <label class="field-input"
+                ><span class="field-input__label">Категория</span>
+                <input
+                  aria-describedby="category-error"
+                  aria-invalid="true"
+                  class="field-input__control field-input__control--error"
+                  type="text"
+                  value="Неизвестная категория"
+                ><span class="field-input__help field-input__help--error" id="category-error"
+                  >Выберите категорию из списка.</span
+                ></label
+              >
+              <label class="field-input"
+                ><span class="field-input__label">Отключённое поле</span>
+                <input
+                  class="field-input__control"
+                  disabled
+                  type="text"
+                  value="Сейчас недоступно"
+                ></label
+              >
+              <label class="field-input"
+                ><span class="field-input__label">Режим</span
+                ><select class="field-input__control">
+                  <option>Обычный</option>
+                  <option>Компактный</option>
+                </select></label
+              >
+              <label class="field-input"
+                ><span class="field-input__label">Описание</span
+                ><textarea
+                  class="field-input__control"
+                  placeholder="Несколько строк текста…"
+                ></textarea></label
+              >
+            </div>
+          </section>
+          <section class="example" data-example id="connection">
+            <div class="section-heading">
+              <h2>Подключение</h2>
+              <span class="source-label">ui / components.css</span>
+            </div>
+            <p class="description">
+              Четыре состояния icon-indicator. Это демонстрационные значения, не реальные
+              подключения.
+            </p>
+            <div class="example-preview">
+              <p class="icon-indicator">
+                <span aria-hidden="true" class="icon-indicator__dot" data-status="connected"></span
+                ><span class="icon-indicator__label">Подключено</span>
+              </p>
+              <p class="icon-indicator">
+                <span aria-hidden="true" class="icon-indicator__dot" data-status="connecting"></span
+                ><span class="icon-indicator__label">Подключение…</span>
+              </p>
+              <p class="icon-indicator">
+                <span
+                  aria-hidden="true"
+                  class="icon-indicator__dot"
+                  data-status="disconnected"
+                ></span><span class="icon-indicator__label">Не подключено</span>
+              </p>
+              <p class="icon-indicator">
+                <span aria-hidden="true" class="icon-indicator__dot" data-status="error"></span
+                ><span class="icon-indicator__label">Ошибка подключения</span>
+              </p>
+            </div>
+          </section>
+          <section class="example" data-example id="badges">
+            <div class="section-heading">
+              <h2>Статус эфира</h2>
+              <span class="source-label">ui / components.css</span>
+            </div>
+            <p class="description">
+              Компактные бейджи live-status-badge. Статус всегда подписан словами.
+            </p>
+            <div class="example-preview">
+              <span class="live-status-badge live-status-badge--live"
+                ><span aria-hidden="true" class="live-status-badge__dot"></span>В эфире</span
+              >
+              <span class="live-status-badge"
+                ><span aria-hidden="true" class="live-status-badge__dot"></span>Не в эфире</span
+              >
+              <span class="live-status-badge live-status-badge--disconnected"
+                ><span aria-hidden="true" class="live-status-badge__dot"></span>Нет
+                подключения</span
+              >
+            </div>
+          </section>
+          <section class="example" data-example id="inverted">
+            <div class="section-heading">
+              <h2>На синем фоне</h2>
+              <span class="source-label">ui / components.css</span>
+            </div>
+            <p class="description">
+              Инвертированные кнопки и индикаторы для брендовой поверхности. Фон задаётся
+              потребителем: background: var(--color-brand).
+            </p>
+            <div class="example-preview inverted-preview">
+              <button class="app-button app-button--inverted app-button--press" type="button">
+                Вторичное действие
+              </button>
+              <p class="icon-indicator icon-indicator--inverted">
+                <span aria-hidden="true" class="icon-indicator__dot" data-status="connected"></span
+                ><span class="icon-indicator__label">Подключено</span>
+              </p>
+              <p class="icon-indicator icon-indicator--inverted">
+                <span aria-hidden="true" class="icon-indicator__dot" data-status="connecting"></span
+                ><span class="icon-indicator__label">Подключение…</span>
+              </p>
+              <p class="icon-indicator icon-indicator--inverted">
+                <span
+                  aria-hidden="true"
+                  class="icon-indicator__dot"
+                  data-status="disconnected"
+                ></span><span class="icon-indicator__label">Не подключено</span>
+              </p>
+              <p class="icon-indicator icon-indicator--inverted">
+                <span aria-hidden="true" class="icon-indicator__dot" data-status="error"></span
+                ><span class="icon-indicator__label">Ошибка</span>
+              </p>
+            </div>
+          </section>
+        </div>
+        <div id="artwork-panels"></div>
+        <dialog aria-labelledby="artwork-dialog-title" id="artwork-dialog">
+          <div class="dialog-toolbar">
+            <h2 id="artwork-dialog-title">Просмотр изображения</h2>
+            <button class="copy-button" id="close-artwork" type="button">Закрыть</button>
+          </div>
+          <div class="artwork-full"><img alt="" id="artwork-full-image"></div>
+          <a class="app-button" download href="#artwork-dialog" id="artwork-download"
+            >Скачать оригинал</a
+          >
+        </dialog>
+        <footer>
+          <p>Общие компоненты, не копии экранов.</p>
+          <p>
+            Паттерны внутри приложений пока не являются API пакета UI. Стили раскладки этой страницы
+            — только для витрины.
+          </p>
+        </footer>
+      </main>
+    </div>
+    <p aria-live="polite" class="copy-status" id="copy-status" role="status"></p>
+  </body>
+</html>

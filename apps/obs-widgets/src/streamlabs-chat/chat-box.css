@@ -1,4 +1,4 @@
-@import '@maseaaao/design/fonts-400.css';
+@import '@maseaaao/design/fonts.css';
 @import '@maseaaao/design/tokens.css';
 
 /* Streamlabs owns message delivery, deletion and the configured hide delay.
@@ -24,12 +24,12 @@ body {
   background: transparent !important;
 }
 body {
-  color: var(--cm-text);
   font-family: Arial, sans-serif;
   font-size: var(--provider-font-size);
   font-weight: 400;
   font-synthesis: none;
   line-height: 1.4;
+  color: var(--cm-text);
   text-shadow: none;
 }
 #log {
@@ -39,22 +39,22 @@ body {
   flex-direction: column;
   gap: 12px;
   width: 100%;
-  margin: 0;
   padding: 0 16px 16px;
+  margin: 0;
 }
 #log > div {
   position: relative;
   display: block;
   flex: none;
   min-width: 0;
-  margin: 0;
   padding: 16px 20px;
+  margin: 0;
   overflow: hidden;
+  text-shadow: none;
+  background: var(--cm-surface);
   border: 1px solid var(--cm-line);
   border-radius: 14px;
-  background: var(--cm-surface);
   box-shadow: none;
-  text-shadow: none;
   animation:
     slideInSoft 0.3s var(--motion-ease-spring) forwards,
     chatFocus var(--motion-focus) ease-out,
@@ -73,28 +73,28 @@ body {
 }
 #log .meta {
   display: flex;
+  gap: 8px;
   align-items: center;
   justify-content: flex-start;
-  gap: 8px;
   min-width: 0;
   max-width: 100%;
-  margin: 0;
   padding: 0;
-  border: 0;
-  color: var(--cm-accent) !important;
+  margin: 0;
   font-family: Unbounded, Arial, sans-serif;
   font-size: 0.65em;
   font-weight: 400;
   line-height: 1.45;
-  letter-spacing: -0.025em;
+  color: var(--cm-accent) !important;
   text-align: left;
+  letter-spacing: -0.025em;
   white-space: nowrap;
+  border: 0;
 }
 #log .badges {
   display: inline-flex;
   flex: 0 1 auto;
-  align-items: center;
   gap: 4px;
+  align-items: center;
   min-width: 0;
   max-width: 35%;
   overflow: hidden;
@@ -122,11 +122,11 @@ body {
   display: block;
   min-width: 0;
   margin: 12px 0 0;
-  color: var(--cm-text);
   font-family: Arial, sans-serif;
   font-size: 1em;
   font-weight: 400;
   line-height: 1.4;
+  color: var(--cm-text);
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
@@ -135,15 +135,15 @@ body {
 }
 #log > div.host .meta {
   max-width: none;
-  margin: -16px -20px 0;
   padding: 12px 20px;
-  background: var(--cm-accent);
+  margin: -16px -20px 0;
   color: var(--cm-surface) !important;
+  background: var(--cm-accent);
 }
 #log > div.mention {
+  padding-inline-start: 17px;
   border-color: var(--cm-accent);
   border-inline-start-width: 4px;
-  padding-inline-start: 17px;
 }
 #log .colon {
   display: none;
@@ -152,16 +152,16 @@ body {
   position: relative;
   display: inline-block;
   padding: 0 0.1em;
+  vertical-align: middle;
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
-  vertical-align: middle;
 }
 #log .emote img {
   display: inline-block;
   width: auto;
-  height: 1.25em;
   max-width: 100%;
+  height: 1.25em;
   opacity: 0;
 }
 

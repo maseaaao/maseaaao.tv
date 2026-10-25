@@ -14,8 +14,8 @@
   inset: 40px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: flex-start;
+  justify-content: center;
   padding: 64px;
 }
 .og h1 {
@@ -30,8 +30,8 @@
 }
 .og span {
   position: absolute;
-  left: 64px;
   bottom: 36px;
+  left: 64px;
   font-size: 20px;
   color: var(--color-muted);
 }
@@ -56,12 +56,12 @@
 }
 .subscribe p {
   margin: 12px 0 32px;
-  color: var(--color-muted);
   font-size: 20px;
+  color: var(--color-muted);
 }
 .subscribe strong {
-  color: var(--color-brand);
   font-size: 28px;
+  color: var(--color-brand);
   letter-spacing: -0.04em;
 }
 .icon {

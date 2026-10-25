@@ -1,0 +1,31 @@
+# Canonical directory URLs keep relative product resources under their prefix.
+/ui /ui/ 301
+/scenes /scenes/ 301
+/stream-info /stream-info/ 301
+/tuna /tuna/ 301
+/widgets /widgets/ 301
+/tools /tools/ 307
+/widgets/social-strip /widgets/social-strip/ 307
+/index / 307
+
+# Product entry points.
+/ /website/ 200
+/ui/ /ui-gallery/ 200
+/scenes/ /artwork/html/scenes/01-start 200
+/stream-info/ /stream-info/change-info-streamer-bot.ru 200
+/tuna/ /tuna-widget/obs-tuna-widget 200
+/widgets/ /obs-widgets/social-strip/ 200
+/tools/ /website/tools/ 200
+/widgets/social-strip/ /obs-widgets/social-strip/ 200
+
+# Product resources and additional pages; keep the website fallback last.
+# Normalize HTML URLs before rewriting, so redirects never expose dist paths.
+/*.html /:splat 307
+/*/index /:splat/ 307
+/*/ /:splat 307
+/ui/* /ui-gallery/:splat 200
+/scenes/* /artwork/html/scenes/:splat 200
+/stream-info/* /stream-info/:splat 200
+/tuna/* /tuna-widget/:splat 200
+/widgets/* /obs-widgets/:splat 200
+/* /website/:splat 200

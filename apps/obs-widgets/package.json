@@ -3,27 +3,22 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./social.css": "./src/social-strip/styles.css",
+
+    "./pages/*": "./src/*"
+  },
+  "scripts": {
+    "build": "bun ../../tooling/build-widgets.ts",
+    "check": "tsc --noEmit && tsc -p tsconfig.tools.json",
+    "dev": "bun --bun vite --configLoader native --mode social-strip --host 127.0.0.1"
+  },
   "dependencies": {
-    "@maseaaao/design": "workspace:*",
-    "@maseaaao/ui": "workspace:*"
+    "@maseaaao/design": "workspace:*"
   },
   "devDependencies": {
     "@maseaaao/build-config": "workspace:*",
-    "vue": "3.5.44",
-    "typescript": "5.8.3",
-    "vue-tsc": "3.0.8"
-  },
-  "scripts": {
-    "build": "node ../../tooling/build-widgets.mjs",
-    "check": "vue-tsc --noEmit",
-    "source": "node ../../tooling/source-task.mjs"
-  },
-  "exports": {
-    "./SocialStrip.vue": "./src/social-strip/SocialStrip.vue",
-    "./social.css": "./src/social-strip/styles.css",
-    "./delivery/chat.css": "./dist/streamlabs-chat/chat-box.css",
-    "./delivery/chat.html": "./dist/streamlabs-chat/chat-box.html",
-    "./delivery/alerts.css": "./dist/streamlabs-chat/donationalerts-alerts.css",
-    "./delivery/donors.css": "./dist/donors/donationalerts-stream-stats.css"
+    "typescript": "catalog:",
+    "vite": "catalog:"
   }
 }

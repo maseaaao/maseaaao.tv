@@ -1,8 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'bun:test';
 import { rankCategories } from '../src/category-search';
 import fixtures from './fixtures/category-search.json';
 
-const entry = (id: string, name: string) => ({ id, name, imageUrl: '' });
+const entry = (id: string, name: string) => ({ id, imageUrl: '', name });
 
 describe('category search relevance', () => {
   it.each(fixtures)('shared ranking contract: $name', ({ query, results, expected }) => {

@@ -1,2 +1,7 @@
-/* Compatibility entrypoint for existing 600 consumers. Choose a weight explicitly in new UI. */
-@import './fonts-600.css';
+@font-face {
+  font-family: Unbounded;
+  src: url('./fonts/unbounded-variable.woff2') format('woff2');
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: block;
+}

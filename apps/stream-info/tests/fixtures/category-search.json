@@ -90,7 +90,10 @@
   {
     "name": "unicode word separators",
     "query": "game",
-    "results": [{ "id": "1", "name": "Endgame" }, { "id": "2", "name": "New—Game" }],
+    "results": [
+      { "id": "1", "name": "Endgame" },
+      { "id": "2", "name": "New—Game" }
+    ],
     "expected": ["2", "1"]
   }
 ]

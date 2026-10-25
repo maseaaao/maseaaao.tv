@@ -16,22 +16,25 @@ import warning from 'lucide-static/icons/triangle-alert.svg?raw';
 import close from 'lucide-static/icons/x.svg?raw';
 import twitch from 'simple-icons/icons/twitch.svg?raw';
 
+const SVGBOUNDARY_RE = /<svg\b([^>]*)>/;
+const TITLE_TITLE_RE = /<title>.*?<\/title>/;
+
 const uiSources = {
-  info,
-  error,
-  check,
   braces,
+  check,
   close,
   copy,
   dashboard,
   defaultCategory,
+  error,
   external,
+  info,
   monitor,
-  sun,
   moon,
   play,
   refresh,
   settings,
+  sun,
   warning,
 } as const;
 
@@ -42,14 +45,23 @@ export type BrandIcon = keyof typeof brandSources;
 
 function decorate(source: string, className: string): string {
   return source
-    .replace(/<svg\b([^>]*)>/, (_tag, attributes: string) => {
+    .replace(SVGBOUNDARY_RE, (_tag, attributes: string) => {
       const preservedAttributes = attributes.replace(
         /\s(?:class|role|aria-[\w-]+|focusable)=(?:"[^"]*"|'[^']*')/gi,
         '',
       );
       return `<svg${preservedAttributes} class="${className}" aria-hidden="true" focusable="false">`;
     })
-    .replace(/<title>.*?<\/title>/, '');
+    .replace(TITLE_TITLE_RE, '');
+}
+
+export type AppIcon = UiIcon | BrandIcon;
+
+export function anyIcon(name: AppIcon): string {
+  if (name === 'twitch') {
+    return brandIcon('twitch');
+  }
+  return uiIcon(name);
 }
 
 export function uiIcon(name: UiIcon): string {

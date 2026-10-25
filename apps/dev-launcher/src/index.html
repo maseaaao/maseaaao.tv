@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width,initial-scale=1" name="viewport">
+    <title>Запускатель — maseaaao.tv</title>
+    <link href="styles.css" rel="stylesheet">
+  </head>
+  <body>
+    <aside id="menu">
+      <h1><a href="/" id="home-link">maseaaao.tv</a></h1>
+      <ul id="items"></ul>
+      <p hidden id="hint"></p>
+    </aside>
+    <main id="preview">
+      <div id="bar">
+        <div hidden id="zoom">
+          <button data-zoom="fit" type="button">Вписать</button>
+          <button data-zoom="width" type="button">По ширине</button>
+          <button data-zoom="1" type="button">1:1</button>
+          <input
+            aria-label="Масштаб предпросмотра"
+            id="zoom-range"
+            max="200"
+            min="25"
+            step="5"
+            type="range"
+            value="100"
+          >
+          <output for="zoom-range" id="zoom-value">100%</output>
+        </div>
+        <a hidden href="/" id="open" rel="noreferrer" target="_blank">Открыть отдельно ↗</a>
+      </div>
+      <div id="frame-wrap">
+        <div id="stage"><iframe id="frame" title="Предпросмотр выбранного проекта"></iframe></div>
+      </div>
+    </main>
+    <script src="main.ts" type="module"></script>
+  </body>
+</html>

@@ -2,16 +2,7 @@
   "name": "maseaaao-tv",
   "compatibility_date": "2026-01-15",
   "assets": {
-    "directory": "./dist"
-  },
-  "build": {
-    "command": "bun run build:website",
-    "watch_dir": [
-      "apps/website/src",
-      "apps/website/public",
-      "packages/design",
-      "packages/ui",
-      "artwork/brand/rendered/website"
-    ]
+    "directory": "./dist",
+    "not_found_handling": "404-page"
   }
 }

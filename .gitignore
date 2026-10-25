@@ -1,4 +1,5 @@
 node_modules/
+.wrangler/
 .runtime/
 .turbo/
 .DS_Store
@@ -7,8 +8,7 @@ node_modules/
 **/obj/
 **/__pycache__/
 **/.playwright-cli/
-artwork/scenes/rendered/review/
-artwork/scenes/rendered/*-report.json
+
 integrations/companion/*/main.js
 integrations/companion/*/*.exe
 integrations/companion/*/*.dll
@@ -19,3 +19,4 @@ build/
 integrations/companion/*/*.exe.config
 integrations/companion/*/*.pdb
 integrations/companion/shared/lib/
+/dist/

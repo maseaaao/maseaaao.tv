@@ -1,50 +1,77 @@
 name: Release
 on:
   push:
-    tags: ["v*"]
+    branches: [ main ]
   workflow_dispatch:
-    inputs:
-      tag:
-        description: "Existing bundle tag, e.g. v1.0.0"
-        required: true
-        type: string
 permissions:
-  contents: write
+  contents: read
 concurrency:
-  group: release-${{ inputs.tag || github.ref_name }}
+  group: auto-release
+  queue: max
 env:
-  RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
-  GH_REPO: ${{ github.repository }}
+  RELEASE_TAG: v${{ github.run_number }}
 jobs:
   release:
-    runs-on: ubuntu-latest
+    if: github.repository == 'maseaaao/maseaaao.tv' && github.ref == 'refs/heads/main'
+    timeout-minutes: 60
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag || github.ref }}
+          ref: ${{ github.sha }}
           persist-credentials: false
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
+      - name: Trust checked-out workspace for Git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - uses: ./.github/actions/setup
+      - name: Stamp candidate versions after frozen install
+        run: bun tooling/prepare-release.ts "$GITHUB_RUN_NUMBER"
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      - uses: ./.github/actions/setup
-        with:
-          cache-write: true
-      - name: Browser and fonts for widget/artwork builds
+          cache: true
+          cache-dependency-path: integrations/companion/*/packages.lock.json
+      - run: bun run browser:install --with-deps
+      - run: bun run full
+      - run: bun run build:ui
+      - run: bun run build:companion
+      - run: bun run package:companion
+      - run: bun run check
+      - run: bun run test
+      - run: bun run verify:companion
+      - name: Prepare Cloudflare metadata without rebuilding products
+        run: bun run prepare:cloudflare
+      - name: Archive the verified browser products
         run: |
-          bun run browser:install --with-deps
-          python -m pip install -r tooling/artwork/requirements-fonts.txt
-      - name: Build and test every product
-        run: python tooling/bundle-release.py --build "$RELEASE_TAG"
-      - name: Pack the verified bundle
-        run: python tooling/bundle-release.py "$RELEASE_TAG"
-      - name: Draft release
+          tar -czf "$RUNNER_TEMP/cloudflare-dist.tar.gz" -C dist \
+            website ui-gallery artwork stream-info tuna-widget obs-widgets \
+            _redirects _headers .assetsignore
+      - name: Save the web build for manual deployment
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloudflare-dist
+          path: ${{ runner.temp }}/cloudflare-dist.tar.gz
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: true
+      - name: Read checked commit title
+        id: candidate
+        run: |
+          title="$(git log -1 --format=%s "$GITHUB_SHA")"
+          if [[ "$title" == *'[skip release]'* ]]; then
+            echo 'skip=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'skip=false' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Pack the verified candidate
+        if: steps.candidate.outputs.skip != 'true'
+        run: bun tooling/bundle-release.ts "$RELEASE_TAG"
+      - name: Update the managed draft for manual publication
+        if: steps.candidate.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          cd "build/release/$RELEASE_TAG"
-          gh release create "$RELEASE_TAG" \
-            --verify-tag --draft --title "$RELEASE_TAG" --notes-file notes.md \
-            maseaaao-*.zip maseaaao-*.manifest.json SHA256SUMS
+        run: bun tooling/publish-release.ts

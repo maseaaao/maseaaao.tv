@@ -1,9 +1,9 @@
 .canvas {
   position: relative;
   overflow: hidden;
-  background: var(--color-surface);
   font-family: var(--font-body);
   color: var(--color-text);
+  background: var(--color-surface);
 }
 .canvas.blank {
   background: var(--color-canvas);
@@ -16,8 +16,8 @@
 .identity {
   position: absolute;
   display: flex;
-  align-items: center;
   gap: 24px;
+  align-items: center;
   font: 400 32px / 1.5 var(--font-display);
   letter-spacing: -0.035em;
   background: var(--color-surface);
@@ -41,10 +41,10 @@
   position: absolute;
   margin: 0;
   font-family: var(--font-display);
-  line-height: 1.08;
   font-weight: 400;
-  letter-spacing: -0.035em;
+  line-height: 1.08;
   color: var(--color-surface);
+  letter-spacing: -0.035em;
 }
 .zone {
   position: absolute;
