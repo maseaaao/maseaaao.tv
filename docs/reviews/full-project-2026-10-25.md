@@ -134,9 +134,21 @@ PR создан с пустым документом до начала ревь�
 
 ### R10 · P2 · Ошибка старой команды снимает блокировку новой команды эфира
 
-- Код: [guard.ts:89–106](https://github.com/maseaaao/maseaaao.tv/blob/33961514ab13ba5e56d4cbe6b337a486aca29581/integrations/companion/voice-control/guard.ts#L89-L106), [index.ts:310–330](https://github.com/maseaaao/maseaaao.tv/blob/33961514ab13ba5e56d4cbe6b337a486aca29581/integrations/companion/voice-control/index.ts#L310-L330).
+- Код: [guard.ts:76–110](https://github.com/maseaaao/maseaaao.tv/blob/33961514ab13ba5e56d4cbe6b337a486aca29581/integrations/companion/voice-control/guard.ts#L76-L110), [index.ts:407–433](https://github.com/maseaaao/maseaaao.tv/blob/33961514ab13ba5e56d4cbe6b337a486aca29581/integrations/companion/voice-control/index.ts#L407-L433).
 - `generation` проверяется после чтения OBS, но не в `catch` после `await dispatch`. `restart()` сохраняет тот же объект guard; `destroy()` не отменяет HTTP-запрос. Поздний reject старого запроса безусловно сбрасывает `busy/target` и очищает **текущий** timeout.
 - Воспроизведение с подставным transport: начать команду A; выполнить destroy/offline/status как при restart; начать команду B; отклонить ещё ожидающую A. До reject: два запроса, `busy=true,target=true`; после: `busy=false,target=undefined`, хотя B не завершена. Новое удержание отправляет третий запрос.
 - Последствие: защита от параллельных команд после переподключения/изменения конфигурации перестаёт действовать. Это не автоматическая отправка без нажатия: для третьего запроса нужно новое удержание.
 - Исправление: отдельный идентификатор жизненного цикла/операции для dispatch и timeout; старое завершение не должно изменять новую операцию. Не привязывать завершение только к generation удержания, поскольку отпускание штатно увеличивает её.
 - Подтверждение: импортирован настоящий `StreamGuard` из снимка, read/dispatch подставные, задержки hold уменьшены через существующие параметры до 1 ms. Получен счётчик dispatch 3 при незавершённой B; сеть/OBS/Actions не использовались.
+
+
+## Дополнение 6 — отказ загрузки голосового доната
+
+### R11 · P2 · Ошибка аудиофайла подавляет обработку всего доната
+
+- Код: [DonationAlertsIntegration.cs:206–245](https://github.com/maseaaao/maseaaao.tv/blob/33961514ab13ba5e56d4cbe6b337a486aca29581/integrations/streamerbot/donationalerts/DonationAlertsIntegration.cs#L206-L245), [258–264](https://github.com/maseaaao/maseaaao.tv/blob/33961514ab13ba5e56d4cbe6b337a486aca29581/integrations/streamerbot/donationalerts/DonationAlertsIntegration.cs#L258-L264), [387–408](https://github.com/maseaaao/maseaaao.tv/blob/33961514ab13ba5e56d4cbe6b337a486aca29581/integrations/streamerbot/donationalerts/DonationAlertsIntegration.cs#L387-L408).
+- Для audio-события `ExportDonation` синхронно скачивает файл до записи суммы/валюты и до вызовов DonationHandler. Если CDN возвращает 404/сетевую ошибку либо локальная запись не удаётся, исключение выходит в общий catch ProcessMessage. Ни основной обработчик, ни `DonationHandler_After` не вызываются.
+- ID уже добавлен в receivedIds **до** callback. Повтор того же события также отбрасывается, пока ID остаётся в наборе (до вытеснения из окна 1024 ID/перезапуска). Это не потеря самого платежа у провайдера, а потеря его локальной обработки/сообщения.
+- Особенно заметно для `DonationChat.cs`: ему достаточно текста «[голосовое сообщение]», скачанный WAV не нужен, но ошибка загрузки блокирует и этот сценарий.
+- Исправление: сначала сохранить основные поля; сделать загрузку аудио отдельным ограниченным по времени шагом с состоянием ошибки и текстовым fallback. Не решать проблему повтором всех обработчиков без учёта уже выполненных побочных действий.
+- Подтверждение: статический разбор синхронной цепочки, исключений и порядка дедупликации; настоящий донат, сеть и отправка сообщений не использовались.
