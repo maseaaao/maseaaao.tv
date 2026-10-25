@@ -1,0 +1,18 @@
+name: Предложение
+description: Улучшение продукта или документации
+labels: [ enhancement ]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Какую задачу нужно решить
+      description: Укажите продукт и конкретный сценарий использования.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Предлагаемое поведение
+      description: Как должен выглядеть результат? Какие альтернативы уже пробовали?
+    validations:
+      required: true

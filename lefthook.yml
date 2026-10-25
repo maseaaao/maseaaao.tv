@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://lefthook.dev/schema.json
+lefthook: 'PATH="${BUN_INSTALL:-$HOME/.bun}/bin:$PATH" bun run --bun lefthook'
+
+pre-commit:
+  parallel: true
+  commands:
+    biome:
+      run: bun run --bun biome check --error-on-warnings --no-errors-on-unmatched {staged_files}
+    whitespace:
+      run: git diff --cached --check
+
+pre-push:
+  commands:
+    verify:
+      run: bun run check && bun run test

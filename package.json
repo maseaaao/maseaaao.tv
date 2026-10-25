@@ -11,7 +11,7 @@
     "tooling"
   ],
   "scripts": {
-    "browser:install": "playwright-core install chromium",
+    "browser:install": "playwright-core install chromium --no-shell",
     "build": "bun run build:website",
     "build:all": "bun run --sequential build:artwork build:apps build:ui",
     "build:apps": "bun run --sequential build:website build:stream-info build:tuna build:widgets build:windows",
@@ -25,12 +25,13 @@
     "build:website": "bun tooling/run-task.ts @maseaaao/website#build",
     "build:widgets": "bun tooling/run-task.ts @maseaaao/obs-widgets#build",
     "build:windows": "bun tooling/run-task.ts @maseaaao/tooling#build:windows",
-    "check": "bun run --sequential check:code check:repository",
+    "check": "bun run --sequential check:hooks check:code check:repository",
     "check:biome": "bun tooling/run-task.ts @maseaaao/tooling#check:biome",
     "check:build-config": "bun tooling/run-task.ts @maseaaao/build-config#check",
     "check:code": "bun run --sequential check:biome check:knip check:types",
     "check:companion": "bun tooling/run-task.ts check --filter='./integrations/companion/*'",
     "check:fix": "biome check --write --error-on-warnings .",
+    "check:hooks": "bun run --bun lefthook validate",
     "check:knip": "bun tooling/run-task.ts @maseaaao/tooling#check:knip",
     "check:repository": "bun tooling/check-repository.ts",
     "check:tooling": "bun tooling/run-task.ts @maseaaao/tooling#check",
@@ -41,6 +42,8 @@
     "dev:ui": "bun run --filter ./apps/ui-gallery dev",
     "format": "biome format --write .",
     "full": "bun run --sequential render:all build:apps",
+    "hooks:install": "bun run --bun lefthook install",
+    "postinstall": "if [ -z \"$CI\" ] && [ -e .git ]; then bun run hooks:install; fi",
     "lint": "biome lint --error-on-warnings .",
     "optimize:images": "bun tooling/artwork/optimize-images.ts",
     "package:companion": "bun tooling/run-task.ts @maseaaao/tooling#package:companion",
@@ -64,6 +67,7 @@
     "@types/postcss-import": "catalog:",
     "@types/postcss-url": "catalog:",
     "knip": "catalog:",
+    "lefthook": "catalog:",
     "playwright-core": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:",
@@ -106,7 +110,8 @@
     "vite-plugin-singlefile": "2.3.4",
     "wrangler": "4.152.0",
     "turbo": "2.11.10",
-    "ultracite": "8.0.2"
+    "ultracite": "8.0.2",
+    "lefthook": "2.2.2"
   },
   "patchedDependencies": {
     "ultracite@8.0.2": "patches/ultracite@8.0.2.patch"

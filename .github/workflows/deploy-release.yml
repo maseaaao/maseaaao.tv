@@ -1,0 +1,41 @@
+name: Deploy published release
+on:
+  release:
+    types: [ published ]
+permissions:
+  contents: read
+  actions: write
+jobs:
+  dispatch:
+    if: github.repository == 'maseaaao/maseaaao.tv' && !github.event.release.prerelease && contains(github.event.release.body, '<!-- maseaaao:auto-release -->')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Resolve the published build and request deployment from main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        shell: bash
+        run: |
+          if [[ ! "$RELEASE_TAG" =~ ^v[1-9][0-9]*$ ]]; then
+            echo 'Expected a managed release tag vN.' >&2
+            exit 1
+          fi
+          sha="$(gh api "repos/$GITHUB_REPOSITORY/commits/$RELEASE_TAG" --jq '.sha')"
+          runs="$(gh api --paginate --slurp \
+            "repos/$GITHUB_REPOSITORY/actions/workflows/release.yml/runs?branch=main&head_sha=$sha&status=success&per_page=100")"
+          run_id="$(jq -r --arg number "${RELEASE_TAG#v}" --arg sha "$sha" '
+            [.[].workflow_runs[] | select(
+              (.run_number | tostring) == $number
+              and .head_sha == $sha
+              and .head_branch == "main"
+              and (.event == "push" or .event == "workflow_dispatch")
+              and .status == "completed"
+              and .conclusion == "success")]
+            | if length == 1 then .[0].id else empty end' <<< "$runs")"
+          if [[ ! "$run_id" =~ ^[1-9][0-9]*$ ]]; then
+            echo 'No unique successful Release run matches the published tag and commit.' >&2
+            exit 1
+          fi
+          gh workflow run deploy.yml --repo "$GITHUB_REPOSITORY" --ref main -f run_id="$run_id"
+          echo "Requested Deploy website from main for $RELEASE_TAG, Release run $run_id ($sha). See Deploy website for the deployment result." >> "$GITHUB_STEP_SUMMARY"

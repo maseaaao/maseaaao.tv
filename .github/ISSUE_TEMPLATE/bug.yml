@@ -1,0 +1,34 @@
+name: Ошибка
+description: Что-то работает не так, как ожидается
+labels: [ bug ]
+body:
+  - type: markdown
+    attributes:
+      value: Не прикладывайте токены, базы, приватные экспорты и личные данные. Уязвимости сообщайте через Security → Report a vulnerability.
+  - type: input
+    id: product
+    attributes:
+      label: Продукт и версия
+      placeholder: Stream Info, v123 или SHA коммита
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Окружение
+      description: ОС и версии используемых OBS, Streamer.bot, Companion или браузера.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Как воспроизвести
+      description: Минимальные шаги без доступа к вашим аккаунтам.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Ожидаемый и фактический результат
+    validations:
+      required: true

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Сообщить об уязвимости приватно
+    url: https://github.com/maseaaao/maseaaao.tv/security/advisories/new
+    about: Не публикуйте уязвимости и секреты в обычных Issues.
+  - name: Установка и документация
+    url: https://github.com/maseaaao/maseaaao.tv/blob/main/README.md
+    about: Инструкции по продуктам, установке и разработке.
