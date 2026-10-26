@@ -1,5 +1,6 @@
 // Turbo handles caching; this launcher adds runtime tools to its cache identity.
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { existsSync, lstatSync, readFileSync, rmdirSync, rmSync } from 'node:fs';
 import { release } from 'node:os';
 import { resolve } from 'node:path';
@@ -60,11 +61,24 @@ function version(command: string, argsLocal: string[]) {
   return result.status === 0 ? result.stdout.trim() : 'unavailable';
 }
 
+function browserFingerprint(executable: string) {
+  if (!existsSync(executable)) {
+    return 'unavailable';
+  }
+  // chrome.exe --version opens a GUI on Windows; hash binaries without launching them.
+  const hash = createHash('sha256').update(readFileSync(executable));
+  const dll = resolve(executable, '..', 'chrome.dll');
+  if (process.platform === 'win32' && existsSync(dll)) {
+    hash.update(readFileSync(dll));
+  }
+  return hash.digest('hex');
+}
+
 const browser = process.env.CHROME_BIN || process.env.CHROME_PATH || chromium.executablePath();
 const toolchain = JSON.stringify({
   arch: process.arch,
   bun: process.versions.bun,
-  chromium: version(browser, ['--version']),
+  chromium: browserFingerprint(browser),
   dotnet: version('dotnet', ['--version']),
   os: existsSync('/etc/os-release') ? readFileSync('/etc/os-release', 'utf8') : release(),
   platform: process.platform,
