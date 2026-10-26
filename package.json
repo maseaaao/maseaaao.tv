@@ -53,10 +53,11 @@
     "render:logo": "bun tooling/artwork/refresh-logo-qr.ts",
     "render:scenes": "bun tooling/artwork/build-cyber-scenes.ts",
     "sync:local": "bun tooling/sync-local.ts",
-    "test": "bun run --sequential test:stream-info test:companion",
+    "test": "bun run --sequential test:stream-info test:companion test:tuna",
     "test:companion": "bun tooling/run-task.ts @maseaaao/tooling#test:companion",
     "test:csharp": "bun run --filter ./apps/stream-info test:csharp",
     "test:stream-info": "bun tooling/run-task.ts change-info-streamer-bot#test",
+    "test:tuna": "bun tooling/run-task.ts @maseaaao/tuna-widget#test",
     "verify:companion": "bun integrations/companion/shared/test-packages.ts"
   },
   "devDependencies": {

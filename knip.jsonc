@@ -33,6 +33,10 @@
         "scripts/verify*-live.ts",
         "tests/csharp/run-framework-category-smoke.ts"
       ],
+      // Generated raw text has no source module; build verifies this exact import.
+      "ignoreUnresolved": [
+        "../../../dist/.cache/stream-info/streamerbot-import.txt?raw"
+      ],
       // Used by src/styles.css.
       "ignoreDependencies": ["@maseaaao/design", "@maseaaao/ui"]
     },

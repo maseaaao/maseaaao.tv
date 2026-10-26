@@ -67,6 +67,11 @@
       },
       "devDependencies": {
         "@maseaaao/build-config": "workspace:*",
+        "@sinonjs/fake-timers": "catalog:",
+        "@types/bun": "catalog:",
+        "@types/jsdom": "catalog:",
+        "@types/node": "catalog:",
+        "jsdom": "catalog:",
         "typescript": "catalog:",
         "vite": "catalog:",
       },

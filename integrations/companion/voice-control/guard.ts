@@ -16,6 +16,7 @@ export class StreamGuard {
   timeout: ReturnType<typeof setTimeout> | undefined;
   timer: ReturnType<typeof setTimeout> | undefined;
   generation = 0;
+  operation = 0;
   holdStart = 0;
   holdMs = 0;
   online: boolean;
@@ -36,6 +37,7 @@ export class StreamGuard {
       this.busy = true;
       this.cancel();
     } else if (this.target === undefined || this.target === active) {
+      this.operation += 1;
       this.busy = false;
       this.target = undefined;
       clearTimeout(this.timeout);
@@ -62,6 +64,8 @@ export class StreamGuard {
         if (!this.held || this.busy || !this.online) {
           return;
         }
+        let { operation } = this;
+        let dispatched = false;
         try {
           const current = await this.read();
           if (
@@ -73,17 +77,28 @@ export class StreamGuard {
           ) {
             return;
           }
+          this.operation += 1;
+          ({ operation } = this);
+          dispatched = true;
           this.busy = true;
           this.target = !active;
           this.update();
           // An uncertain HTTP result must never be retried automatically.
           this.timeout = setTimeout(() => {
+            if (operation !== this.operation) {
+              return;
+            }
+            this.operation += 1;
             this.busy = false;
             this.target = undefined;
             this.update();
           }, 45_000);
           await this.dispatch(active ? 'STATE | STOP' : 'STATE | START');
         } catch {
+          if (dispatched ? operation !== this.operation : generation !== this.generation) {
+            return;
+          }
+          this.operation += 1;
           this.busy = false;
           this.target = undefined;
           clearTimeout(this.timeout);
@@ -104,6 +119,7 @@ export class StreamGuard {
     this.generation += 1;
   }
   destroy() {
+    this.operation += 1;
     this.cancel();
     clearTimeout(this.timeout);
     this.busy = false;
