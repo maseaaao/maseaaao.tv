@@ -6,6 +6,7 @@ import {
   type ConfigEnv,
   createServer,
   isFileLoadingAllowed,
+  normalizePath,
   type PluginOption,
   type ServerOptions,
   type UserConfig,
@@ -57,13 +58,30 @@ const importDefaultConfig = async (app: string, env: ConfigEnv = devEnvironment)
 const artworkRoot = path.resolve(root, 'artwork');
 const CANVAS_SIZE = /style="width:(\d+(?:\.\d+)?)px;height:(\d+(?:\.\d+)?)px/;
 const HTML_SUFFIX = /\.html$/;
-// Композиции с фиксированным canvas задают его размер прямо в разметке;
-// остальные страницы адаптивны и в масштабировании не нуждаются.
-const pageSize = (source: string): { width: number | null; height: number | null } => {
+// Размеры viewport для экспорта; в dev масштабируем весь iframe, а не перевёрстываем
+// композицию под размер предпросмотра. Сцены уже задают canvas в разметке.
+const artworkViewports: Record<string, readonly [number, number]> = {
+  'banners/offline.html': [1920, 1080],
+  'banners/twitch.html': [1200, 480],
+  'banners/youtube.html': [2560, 1440],
+  'brand/background.html': [512, 512],
+  'brand/icon.html': [512, 512],
+  'brand/og.html': [1200, 630],
+  'brand/subscribe.html': [512, 512],
+  'logo/maseaaao.html': [1920, 540],
+  'wallpapers/desktop-4k.html': [3840, 2160],
+  'wallpapers/portrait-4k.html': [2160, 3840],
+};
+const pageSize = (
+  source: string,
+  name: string,
+): { width: number | null; height: number | null } => {
   const match = source.match(CANVAS_SIZE);
-  return match
-    ? { height: Number(match[2]), width: Number(match[1]) }
-    : { height: null, width: null };
+  if (match) {
+    return { height: Number(match[2]), width: Number(match[1]) };
+  }
+  const viewport = name.startsWith('twitch-description/') ? [320, 64] : artworkViewports[name];
+  return viewport ? { height: viewport[1], width: viewport[0] } : { height: null, width: null };
 };
 const artworkPages = (): GuestPage[] => {
   const pages: GuestPage[] = [];
@@ -75,7 +93,7 @@ const artworkPages = (): GuestPage[] => {
       }
       if (entry.name.endsWith('.html')) {
         const source = prefix + entry.name;
-        const size = pageSize(readFileSync(path.join(directory, entry.name), 'utf8'));
+        const size = pageSize(readFileSync(path.join(directory, entry.name), 'utf8'), source);
         pages.push({ label: source.replace(HTML_SUFFIX, ''), path: `/${source}`, ...size });
       }
     }
@@ -122,8 +140,8 @@ const artworkOutsideAssets = (): PluginOption => ({
           !(
             allowedRoots.some((directory) => within(actual, directory)) &&
             statSync(actual).isFile() &&
-            isFileLoadingAllowed(server.config, outside) &&
-            isFileLoadingAllowed(server.config, actual)
+            isFileLoadingAllowed(server.config, normalizePath(outside)) &&
+            isFileLoadingAllowed(server.config, normalizePath(actual))
           )
         ) {
           next();
