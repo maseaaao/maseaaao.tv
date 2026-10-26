@@ -1,10 +1,11 @@
 import { spawn } from 'node:child_process';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import path, { extname } from 'node:path';
 import process from 'node:process';
 import {
   type ConfigEnv,
   createServer,
+  isFileLoadingAllowed,
   type PluginOption,
   type ServerOptions,
   type UserConfig,
@@ -24,6 +25,7 @@ interface ProjectPage {
   width: number | null;
 }
 interface ProjectDefinition {
+  demo?: boolean;
   guestPages?: () => GuestPage[];
   id: string;
   importConfig: () => Promise<UserConfig>;
@@ -39,7 +41,7 @@ interface ProjectInfo {
   url: string | null;
 }
 
-const root = new URL('../', import.meta.url).pathname;
+const root = realpathSync(new URL('../', import.meta.url));
 const host = '127.0.0.1';
 const launcherPort = 5180;
 const running: ViteDevServer[] = [];
@@ -84,19 +86,12 @@ const artworkPages = (): GuestPage[] => {
 const artworkOutsideAssets = (): PluginOption => ({
   configureServer(server) {
     server.middlewares.use((request, response, next) => {
-      const name = decodeURIComponent(
-        new URL(request.url || '/', 'http://localhost').pathname.slice(1),
-      );
-      if (name === '' || name.includes('..')) {
-        next();
-        return;
-      }
-      const inside = path.resolve(artworkRoot, name);
-      const outside = path.resolve(root, name);
-      // Всё, что есть внутри artwork, отдаёт сам Vite; из репозитория
-      // докармливаем только файлы, на которые ссылаются композиции
-      // (QR из apps/website/public, готовые изображения из dist).
-      if (!outside.startsWith(root) || existsSync(inside) || !existsSync(outside)) {
+      let name: string;
+      try {
+        name = decodeURIComponent(
+          new URL(request.url || '/', 'http://localhost').pathname.slice(1),
+        );
+      } catch {
         next();
         return;
       }
@@ -107,8 +102,38 @@ const artworkOutsideAssets = (): PluginOption => ({
         '.svg': 'image/svg+xml',
         '.webp': 'image/webp',
       };
-      response.setHeader('Content-Type', types[extname(outside)] ?? 'application/octet-stream');
-      response.end(readFileSync(outside));
+      const outside = path.resolve(root, name);
+      const type = types[extname(outside).toLowerCase()];
+      const allowedRoots = ['apps/website/public', 'dist/artwork'].map((directory) =>
+        path.resolve(root, directory),
+      );
+      const within = (file: string, directory: string) => file.startsWith(directory + path.sep);
+      if (
+        !type ||
+        existsSync(path.resolve(artworkRoot, name)) ||
+        !allowedRoots.some((directory) => within(outside, directory))
+      ) {
+        next();
+        return;
+      }
+      try {
+        const actual = realpathSync(outside);
+        if (
+          !(
+            allowedRoots.some((directory) => within(actual, directory)) &&
+            statSync(actual).isFile() &&
+            isFileLoadingAllowed(server.config, outside) &&
+            isFileLoadingAllowed(server.config, actual)
+          )
+        ) {
+          next();
+          return;
+        }
+        response.setHeader('Content-Type', type);
+        response.end(readFileSync(actual));
+      } catch {
+        next();
+      }
     });
   },
   name: 'artwork-outside-assets',
@@ -143,12 +168,19 @@ const definitions: ProjectDefinition[] = [
     port: 5181,
   },
   {
+    demo: true,
     id: 'stream-info',
     importConfig: prepareStreamInfo,
     label: 'Stream Info',
     port: 5182,
   },
-  { id: 'tuna', importConfig: () => importDefaultConfig('tuna-widget'), label: 'Tuna', port: 5183 },
+  {
+    demo: true,
+    id: 'tuna',
+    importConfig: () => importDefaultConfig('tuna-widget'),
+    label: 'Tuna',
+    port: 5183,
+  },
   {
     id: 'social-strip',
     importConfig: () =>
@@ -211,7 +243,9 @@ const startProject = async (definition: ProjectDefinition): Promise<void> => {
       url: new URL(guest.path, url ?? 'http://localhost/').href,
       width: guest.width,
     }));
-    const shown = definition.pageOnly ? null : url;
+    const shown = definition.pageOnly
+      ? null
+      : url && (definition.demo ? new URL('?demo=1', url).href : url);
     info.push({
       hint: shown === null && !definition.pageOnly ? 'Dev-сервер не запустился' : null,
       id: definition.id,

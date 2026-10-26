@@ -257,6 +257,10 @@
         "!$TURBO_ROOT$/**/.DS_Store"
       ],
       "outputs": ["$TURBO_ROOT$/dist/artwork/**"]
+    },
+    "@maseaaao/tuna-widget#test": {
+      "inputs": ["$TURBO_DEFAULT$"],
+      "outputs": []
     }
   }
 }

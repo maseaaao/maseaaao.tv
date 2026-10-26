@@ -12,44 +12,53 @@ const websiteImageTypes: Record<string, string> = {
   '.webp': 'image/webp',
 };
 
-export default defineConfig(async (): Promise<UserConfig> => {
+export default defineConfig((): UserConfig => {
   const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
-  const generated = generatedWebsiteImages(repoRoot);
   const root = fileURLToPath(new URL('./src/', import.meta.url));
 
-  // The only content image of the site: one master from the artwork export,
-  // variants and the <img srcset sizes> markup are produced by @11ty/eleventy-img
-  // at build time so browsers pick the file that fits display size and pixel density.
-  const avatarMaster = 'assets/avatar-master.png';
-  const avatarWidths = [64, 96, 128, 192, 256, 288, 384, 512];
-  const avatarCacheDir = join(repoRoot, 'dist/.cache/website-images');
-  const avatarMeta = await Image(join(repoRoot, 'dist/artwork/brand/website', avatarMaster), {
-    filenameFormat: (_id: number, _src: string, width: number, format: string) =>
-      `avatar-${width}.${format}`,
-    formats: ['webp'],
-    outputDir: avatarCacheDir,
-    sharpWebpOptions: { effort: 6, quality: 88 },
-    urlPath: '/assets/',
-    widths: avatarWidths,
-  });
-  const avatarMarkup = generateHTML(
-    avatarMeta,
-    {
-      alt: '',
-      class: 'avatar',
-      decoding: 'async',
-      fetchpriority: 'high',
-      loading: 'eager',
-      sizes: '(max-width: 540px) 64px, 88px',
-    },
-    { fallback: 'smallest' },
-  );
-  const avatarFiles = new Map(
-    (avatarMeta.webp ?? []).map((entry) => [
-      `assets/${entry.filename}`,
-      readFileSync(join(avatarCacheDir, entry.filename)),
-    ]),
-  );
+  const loadImages = async () => {
+    const generated = generatedWebsiteImages(repoRoot);
+    // The only content image of the site: one master from the artwork export,
+    // variants and the <img srcset sizes> markup are produced by @11ty/eleventy-img
+    // at build time so browsers pick the file that fits display size and pixel density.
+    const avatarMaster = 'assets/avatar-master.png';
+    const avatarWidths = [64, 96, 128, 192, 256, 288, 384, 512];
+    const avatarCacheDir = join(repoRoot, 'dist/.cache/website-images');
+    const avatarMeta = await Image(join(repoRoot, 'dist/artwork/brand/website', avatarMaster), {
+      filenameFormat: (_id: number, _src: string, width: number, format: string) =>
+        `avatar-${width}.${format}`,
+      formats: ['webp'],
+      outputDir: avatarCacheDir,
+      sharpWebpOptions: { effort: 6, quality: 88 },
+      urlPath: '/assets/',
+      widths: avatarWidths,
+    });
+    const avatarMarkup = generateHTML(
+      avatarMeta,
+      {
+        alt: '',
+        class: 'avatar',
+        decoding: 'async',
+        fetchpriority: 'high',
+        loading: 'eager',
+        sizes: '(max-width: 540px) 64px, 88px',
+      },
+      { fallback: 'smallest' },
+    );
+    const avatarFiles = new Map(
+      (avatarMeta.webp ?? []).map((entry) => [
+        `assets/${entry.filename}`,
+        readFileSync(join(avatarCacheDir, entry.filename)),
+      ]),
+    );
+
+    return { avatarFiles, avatarMarkup, avatarMaster, generated };
+  };
+  let images: ReturnType<typeof loadImages> | undefined;
+  const getImages = () => {
+    images ??= loadImages();
+    return images;
+  };
 
   return {
     base: '/',
@@ -79,7 +88,8 @@ export default defineConfig(async (): Promise<UserConfig> => {
     },
     plugins: [
       {
-        configureServer(server) {
+        async configureServer(server) {
+          const { generated, avatarMaster, avatarFiles } = await getImages();
           server.middlewares.use((request, response, next) => {
             const name = new URL(request.url || '/', 'http://localhost').pathname.slice(1);
             const source =
@@ -93,7 +103,8 @@ export default defineConfig(async (): Promise<UserConfig> => {
             response.end(source);
           });
         },
-        generateBundle(_options, bundle) {
+        async generateBundle(_options, bundle) {
+          const { generated, avatarMaster, avatarFiles } = await getImages();
           for (const [fileName, source] of generated) {
             if (fileName === avatarMaster) {
               continue;
@@ -139,11 +150,12 @@ export default defineConfig(async (): Promise<UserConfig> => {
       {
         name: 'responsive-avatar',
         transformIndexHtml: {
-          handler(html: string) {
+          async handler(html: string) {
             const marker = '<!--avatar-->';
             if (!html.includes(marker)) {
               return html;
             }
+            const { avatarMarkup } = await getImages();
             return html.replace(marker, avatarMarkup);
           },
           order: 'post',

@@ -9,7 +9,6 @@ using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Security.Cryptography;
-using System.Timers;
 
 ///----------------------------------------------------------------------------
 ///   Module:     DonationAlertsIntegration
@@ -87,38 +86,35 @@ public class CPHInline
     {
         if (SocketService != null) SocketService.Close();
     }
+    private bool authorizationCompleted;
     public bool CreateAuthLink()
     {
-        string authLink = Service.GetAuthLink();
+        authorizationCompleted = false;
+        CPH.SetGlobalVar("daCode", "", true);
         CPH.LogInfo("DonationAlerts: authorize using the browser window.");
-
-        Logger.Debug("Opened URL in the default browser. Awaiting for confirmation");
-
         return Service.ServeAndListenAuth(delegate (string code)
         {
-            CPH.SetGlobalVar("daCode", code, true);
-
-            return code;
+            return StoreAccessToken(code) ? code : null;
         });
     }
     public bool ObtainAccessToken()
     {
+        // Preserve the previous two-step Action contract without exchanging an
+        // already consumed code a second time after CreateAuthLink succeeded.
         string code = CPH.GetGlobalVar<string>("daCode");
-        if (code == "")
-        {
-            Logger.Debug("Code argument has not arrivied. Make sure you initialized connection for the DA");
-            return false;
-        }
-
+        if (string.IsNullOrWhiteSpace(code)) return authorizationCompleted;
+        return StoreAccessToken(code);
+    }
+    private bool StoreAccessToken(string code)
+    {
         var tokenData = Service.ObtainToken(code);
-        if (tokenData == null)
+        if (tokenData == null || string.IsNullOrWhiteSpace(tokenData.AccessToken) || string.IsNullOrWhiteSpace(tokenData.RefreshToken))
             return false;
-
         CPH.SetGlobalVar("daAccessToken", tokenData.AccessToken, true);
         CPH.SetGlobalVar("daRefreshToken", tokenData.RefreshToken, true);
-
+        CPH.SetGlobalVar("daCode", "", true);
+        authorizationCompleted = true;
         Logger.Debug("AccessToken and RefreshToken are obtained successfully");
-
         return true;
     }
     public bool RefreshAccessToken()
@@ -233,16 +229,24 @@ public class CPHInline
         CPH.SetArgument("daName", Donation["name"]);
         CPH.SetArgument("daUsername", username);
         CPH.SetArgument("daType", type);
-        if (type == SocketService.DonationData.TypeText)
-            CPH.SetArgument("daMessage", Donation["content"]);
-        else if (type == SocketService.DonationData.TypeAudio) {
-            CPH.SetArgument("daAudioUrl", Donation["content"]);
-            CPH.SetArgument("daAudio", SaveFileToTemp(Donation["content"], Donation["id"] + ".wav"));
-        }
-
         CPH.SetArgument("daAmount", Donation["amount"]);
         CPH.SetArgument("daCurrency", Donation["currency"]);
         CPH.SetArgument("daAmountConverted", Donation["amount_in_user_currency"]);
+        CPH.SetArgument("daAudio", "");
+        CPH.SetArgument("daAudioUrl", "");
+        CPH.SetArgument("daAudioError", false);
+        if (type == SocketService.DonationData.TypeText)
+            CPH.SetArgument("daMessage", Donation["content"]);
+        else if (type == SocketService.DonationData.TypeAudio) {
+            CPH.SetArgument("daMessage", "[голосовое сообщение]");
+            CPH.SetArgument("daAudioUrl", Donation["content"]);
+            try {
+                CPH.SetArgument("daAudio", SaveFileToTemp(Donation["content"], Donation["id"] + ".wav"));
+            } catch (Exception) {
+                CPH.SetArgument("daAudioError", true);
+                Logger.Error("Voice donation audio unavailable; continuing with text fallback.");
+            }
+        }
     }
 
     private void ExportGoal(Dictionary<string, string> GoalData)
@@ -258,9 +262,16 @@ public class CPHInline
     private string SaveFileToTemp(string fileUrl, string name)
     {
         string targetPath = Path.Combine(Path.GetTempPath(), name);
-        using (var client = new WebClient())
-        {
-            client.DownloadFile(fileUrl, targetPath);
+        bool saved = false;
+        try {
+            using (var client = new WebClient())
+            using (var timeout = new CancellationTokenSource(10000))
+            using (timeout.Token.Register(client.CancelAsync)) {
+                client.DownloadFileTaskAsync(new Uri(fileUrl), targetPath).GetAwaiter().GetResult();
+                saved = true;
+            }
+        } finally {
+            if (!saved && File.Exists(targetPath)) File.Delete(targetPath);
         }
 
         return targetPath;
@@ -643,7 +654,7 @@ public class Service
     private readonly string ClientSecret;
     private CPHInline.PrefixedLogger Logger { get; set; }
     private Client Client { get; set; }
-    private HttpListener Listener = null;
+    private int authorizationRunning;
 
     public Service(Client Client, CPHInline.PrefixedLogger Logger, string clientId, string clientSecret)
     {
@@ -656,56 +667,74 @@ public class Service
     }
     public bool ServeAndListenAuth(HandleCode Handler)
     {
+        if (Interlocked.CompareExchange(ref authorizationRunning, 1, 0) != 0) return false;
         try
         {
-            Listener = new HttpListener();
-            Listener.Prefixes.Add(RedirectUrl);
-            Listener.Start();
-            System.Diagnostics.Process.Start(GetAuthLink());
-            Func<Task> func = new Func<Task>(async () => {
-                bool runServer = true;
-                while (runServer)
+            // Listener and timeout belong to this attempt only. An expired
+            // attempt cannot close the listener of a later authorization.
+            using (var listener = new HttpListener())
+            using (var timeout = new CancellationTokenSource(300000))
+            {
+                listener.Prefixes.Add(RedirectUrl);
+                listener.Start();
+                using (timeout.Token.Register(listener.Close))
                 {
-                    Logger.Debug("Server is waiting ...");
-                    HttpListenerContext context = await Listener.GetContextAsync();
-                    HttpListenerRequest request = context.Request;
-                    HttpListenerResponse resp = context.Response;
-                    var queryDictionary = HttpUtility.ParseQueryString(request.Url.Query);
-                    string code = queryDictionary["code"];
-                    Handler(code);
-
-                    string pageData = "<!doctype html><html><meta charset=\"utf-8\"><title>DonationAlerts</title><body><h2>DonationAlerts подключён</h2><p>Можно закрыть вкладку и вернуться в Streamer.bot.</p></body></html>";
-                    byte[] data = Encoding.UTF8.GetBytes(pageData);
-                    resp.ContentType = "text/html";
-                    resp.ContentEncoding = Encoding.UTF8;
-                    resp.ContentLength64 = data.LongLength;
-                    await context.Response.OutputStream.WriteAsync(data, 0, data.Length);
-                    resp.Close();
-                    runServer = false;
-                    Listener.Close();
+                    string state = NewAuthState();
+                    System.Diagnostics.Process.Start(GetAuthLink(state));
+                    while (!timeout.IsCancellationRequested)
+                    {
+                        HttpListenerContext context = listener.GetContextAsync().GetAwaiter().GetResult();
+                        var query = context.Request.QueryString;
+                        if (context.Request.HttpMethod != "GET" || context.Request.Url.AbsolutePath != new Uri(RedirectUrl).AbsolutePath || query["state"] != state)
+                        {
+                            SendAuthPage(context.Response, 400, "Недействительный запрос авторизации.");
+                            continue;
+                        }
+                        // Consume the state before exchanging the code, even
+                        // when the provider rejects it or token storage fails.
+                        state = null;
+                        bool success = false;
+                        if (string.IsNullOrEmpty(query["error"]) && !string.IsNullOrWhiteSpace(query["code"]))
+                        {
+                            try { success = !string.IsNullOrWhiteSpace(Handler(query["code"])); }
+                            catch (Exception) { Logger.Error("Authorization token exchange or storage failed."); }
+                        }
+                        SendAuthPage(context.Response, success ? 200 : 400, success
+                            ? "DonationAlerts подключён. Можно закрыть вкладку и вернуться в Streamer.bot."
+                            : "Не удалось подключить DonationAlerts. Повторите авторизацию в Streamer.bot.");
+                        return success;
+                    }
                 }
-            });
-            Task listenTask = func.Invoke();
-            var forceCloseTimer = new System.Timers.Timer(300000);
-            forceCloseTimer.Elapsed += ForceCloseServer;
-            forceCloseTimer.AutoReset = true;
-            forceCloseTimer.Enabled = true;
-
-            listenTask.GetAwaiter().GetResult();
-            Listener.Close();
+            }
         }
-        catch (WebException e)
+        catch (Exception)
         {
-            Logger.Debug(e.Status.ToString());
-            return false;
+            // Never include callback URLs, codes or tokens in logs.
+            Logger.Error("Authorization failed or timed out; retry in Streamer.bot.");
         }
-
-        return true;
+        finally { Interlocked.Exchange(ref authorizationRunning, 0); }
+        return false;
     }
-    public string GetAuthLink()
+    private static void SendAuthPage(HttpListenerResponse response, int status, string message)
     {
-        string url = Client.TargetHost + EndpointAuthorize;
-        return string.Format("{0}?client_id={1}&redirect_uri={2}&scope={3}&response_type=code", url, ClientId, GetEncodedRedirectUri(), DefaultScope);
+        byte[] data = Encoding.UTF8.GetBytes("<!doctype html><html lang=\"ru\"><meta charset=\"utf-8\"><title>DonationAlerts</title><body><p>" + message + "</p></body></html>");
+        response.StatusCode = status;
+        response.ContentType = "text/html; charset=utf-8";
+        response.Headers["Cache-Control"] = "no-store";
+        response.ContentLength64 = data.LongLength;
+        using (response) { response.OutputStream.Write(data, 0, data.Length); }
+    }
+    private static string NewAuthState()
+    {
+        byte[] bytes = new byte[32];
+        using (var random = RandomNumberGenerator.Create()) random.GetBytes(bytes);
+        return BitConverter.ToString(bytes).Replace("-", "");
+    }
+    public string GetAuthLink() { return GetAuthLink(NewAuthState()); }
+    private string GetAuthLink(string state)
+    {
+        return string.Format("{0}{1}?client_id={2}&redirect_uri={3}&scope={4}&response_type=code&state={5}",
+            Client.TargetHost, EndpointAuthorize, HttpUtility.UrlEncode(ClientId), GetEncodedRedirectUri(), HttpUtility.UrlEncode(DefaultScope), HttpUtility.UrlEncode(state));
     }
     public ProfileInfoData GetProfileInfo(string accessToken)
     {
@@ -813,16 +842,6 @@ public class Service
     {
         return HttpUtility.UrlEncode(RedirectUrl);
     }
-    private void ForceCloseServer(Object source, ElapsedEventArgs e)
-    {
-        Logger.Debug("Timer invoked");
-        if (Listener != null && Listener.IsListening)
-        {
-            Listener.Close();
-            Logger.Debug("Server has been closed by timeout");
-        }
-    }
-
     public class TokenResponse
     {
         [JsonProperty("access_token")]

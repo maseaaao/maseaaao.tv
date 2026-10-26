@@ -9,13 +9,19 @@
   },
   "scripts": {
     "build": "bun build.ts",
-    "check": "tsc --noEmit && tsc -p tsconfig.tools.json"
+    "check": "tsc --noEmit && tsc -p tsconfig.tools.json && tsc -p tsconfig.tests.json",
+    "test": "bun test"
   },
   "dependencies": {
     "@maseaaao/design": "workspace:*"
   },
   "devDependencies": {
     "@maseaaao/build-config": "workspace:*",
+    "@sinonjs/fake-timers": "catalog:",
+    "@types/bun": "catalog:",
+    "@types/jsdom": "catalog:",
+    "@types/node": "catalog:",
+    "jsdom": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:"
   }

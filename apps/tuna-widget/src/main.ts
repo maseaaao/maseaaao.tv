@@ -22,6 +22,7 @@ interface TextSwap {
 
 (() => {
   const query = new URLSearchParams(location.search);
+  const demo = query.get('demo') === '1';
   const debug = query.get('debug') === '1';
   const trace = (event: string, error: unknown) => {
     if (debug) {
@@ -973,6 +974,9 @@ interface TextSwap {
     }
 
     if (!src) {
+      if (state.artworkSource || state.artworkStatus !== 'empty') {
+        onArtworkTrackChanged(src, key, now);
+      }
       return;
     }
 
@@ -1049,6 +1053,17 @@ interface TextSwap {
   };
 
   const request = async () => {
+    if (demo) {
+      process({
+        album: 'Демонстрация',
+        artist: 'Tuna',
+        artwork: '',
+        id: 'demo',
+        playing: true,
+        title: 'Предпросмотр виджета',
+      });
+      return;
+    }
     const controller = new AbortController();
     const timer = setTimeout(() => {
       controller.abort();

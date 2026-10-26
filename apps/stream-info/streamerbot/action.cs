@@ -19,7 +19,7 @@ public class CPHInline
         Timeout = TimeSpan.FromSeconds(10)
     };
     private const string ReplyEvent = "stream_info_api_response";
-    private const string DefaultTwitchTemplate = "🔴 %subtitle%| !tg !yt";
+    private const string DefaultTwitchTemplate = "🔴 %subtitle%| !tg !yt !tw !donate";
     private const string TwitchTemplateKey = "stream_info.template.twitch";
     private const string SubtitleKey = "stream_info.template.subtitle";
     private const string TwitchCategoryKey = "stream_info.preset.twitchCategoryId";
@@ -277,39 +277,56 @@ public class CPHInline
         if (broadcaster == null || string.IsNullOrWhiteSpace(broadcaster.UserId))
             throw new InvalidOperationException("Twitch broadcaster не подключён в Streamer.bot.");
 
+        string title = payload["title"] == null ? null : payload.Value<string>("title");
+        string categoryId = payload["categoryId"] == null ? null : payload.Value<string>("categoryId");
+        List<string> tags = payload["tags"] == null ? null : ReadTags(payload["tags"]);
+        if (payload["title"] != null)
+            Ensure(!string.IsNullOrWhiteSpace(title) && title.Length <= 140, "Название Twitch должно содержать от 1 до 140 символов.");
+        if (payload["categoryId"] != null)
+            Ensure(!string.IsNullOrWhiteSpace(categoryId), "Не выбрана категория Twitch.");
+        if (tags != null)
+            Ensure(tags.Count <= 10 && tags.All(t => t.Length <= 25 && !t.Any(char.IsWhiteSpace)), "Теги Twitch: максимум 10, до 25 символов, без пробелов.");
+        Ensure(title != null || categoryId != null || tags != null, "Нет изменений Twitch для сохранения.");
+
         JObject fields = new JObject();
         bool allOk = true;
-
-        if (payload["title"] != null)
+        string pendingField = null;
+        try
         {
-            string title = payload.Value<string>("title");
-            Ensure(!string.IsNullOrWhiteSpace(title) && title.Length <= 140, "Название Twitch должно содержать от 1 до 140 символов.");
-            bool result = CPH.SetChannelTitle(title);
-            fields["title"] = result;
-            allOk &= result;
+            if (title != null)
+            {
+                pendingField = "title";
+                bool result = CPH.SetChannelTitle(title);
+                fields["title"] = result;
+                allOk &= result;
+            }
+            if (categoryId != null)
+            {
+                pendingField = "category";
+                bool result = CPH.SetChannelGameById(categoryId);
+                fields["category"] = result;
+                allOk &= result;
+            }
+            if (tags != null)
+            {
+                pendingField = "tags";
+                bool result = CPH.TwitchSetChannelTags(tags);
+                fields["tags"] = result;
+                allOk &= result;
+            }
+            return new JObject { ["ok"] = allOk, ["fields"] = fields };
         }
-
-        if (payload["categoryId"] != null)
+        catch (Exception ex)
         {
-            string categoryId = payload.Value<string>("categoryId");
-            Ensure(!string.IsNullOrWhiteSpace(categoryId), "Не выбрана категория Twitch.");
-            bool result = CPH.SetChannelGameById(categoryId);
-            fields["category"] = result;
-            allOk &= result;
+            // The failed call may have changed Twitch before throwing. Preserve
+            // completed fields and report the uncertain field without retrying it.
+            return new JObject { ["ok"] = false, ["fields"] = fields,
+                ["failedField"] = pendingField, ["error"] = ex.Message };
         }
-
-        if (payload["tags"] != null)
+        finally
         {
-            List<string> tags = ReadTags(payload["tags"]);
-            Ensure(tags.Count <= 10 && tags.All(t => t.Length <= 25 && !t.Any(char.IsWhiteSpace)), "Теги Twitch: максимум 10, до 25 символов, без пробелов.");
-            bool result = CPH.TwitchSetChannelTags(tags);
-            fields["tags"] = result;
-            allOk &= result;
+            StateCache.Invalidate();
         }
-
-        Ensure(fields.HasValues, "Нет изменений Twitch для сохранения.");
-        StateCache.Invalidate();
-        return new JObject { ["ok"] = allOk, ["fields"] = fields };
     }
 
     private JObject TwitchGet(string path)
@@ -354,6 +371,7 @@ public class CPHInline
 
     private static List<string> ReadTags(JToken token)
     {
+        Ensure(token.Type == JTokenType.Array, "Теги Twitch должны быть массивом.");
         var tags = new List<string>();
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (string raw in token.Values<string>())

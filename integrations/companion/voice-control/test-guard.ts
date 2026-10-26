@@ -50,3 +50,52 @@ g.destroy();
 console.log(
   'PASS: real 3s / 2s timing, early release, one dispatch per hold, disconnect and changed-state cancellation; no live stream commands sent.',
 );
+
+// A late result from an old request must not release a newer dispatch.
+let rejectOld: ((reason: Error) => void) | undefined;
+let rejectNew: ((reason: Error) => void) | undefined;
+let requests = 0;
+const restarted = new StreamGuard({
+  dispatch: () =>
+    new Promise((_resolve, reject) => {
+      requests += 1;
+      if (requests === 1) {
+        rejectOld = reject;
+      } else {
+        rejectNew = reject;
+      }
+    }),
+  read: () => Promise.resolve(false),
+  startMs: 1,
+  update: () => {
+    /* No UI side effects in this test. */
+  },
+});
+restarted.status(false);
+restarted.down();
+await sleep(10);
+restarted.up();
+restarted.destroy();
+restarted.offline();
+restarted.status(false);
+restarted.down();
+await sleep(10);
+restarted.up();
+const currentTimeout = restarted.timeout;
+rejectOld?.(new Error('old request failed'));
+await sleep(0);
+assert.equal(restarted.busy, true);
+assert.equal(restarted.target, true);
+assert.equal(restarted.timeout, currentTimeout);
+restarted.down();
+await sleep(10);
+assert.equal(requests, 2);
+// Releasing the physical hold must not suppress the current request's failure.
+rejectNew?.(new Error('current request failed'));
+await sleep(0);
+assert.equal(restarted.busy, false);
+assert.equal(restarted.target, undefined);
+restarted.destroy();
+console.log(
+  'PASS: stale dispatch cannot release a newer operation; current failure still clears busy after key release.',
+);
