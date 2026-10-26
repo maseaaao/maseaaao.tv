@@ -947,6 +947,9 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
   let templateDirty: HTMLElement;
   let tagList: HTMLElement;
   let tagField: Field;
+  let titleError: HTMLElement;
+  let tagError: HTMLElement;
+  let addTagButton: HTMLButtonElement;
   let categorySearch: ReturnType<typeof buildCategorySearch>;
   let accountWarning: HTMLElement;
   let streamLink: HTMLAnchorElement;
@@ -1024,6 +1027,11 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
     previewSpan = el('span', 'template-preview-text');
     previewHolder.append(previewSpan);
     counterText = el('span', 'counter');
+    counterText.id = 'title-counter';
+    titleError = el('p', 'field-error');
+    titleError.id = 'title-error';
+    subtitleField.input.setAttribute('aria-describedby', 'title-counter title-error');
+    subtitleField.root.append(titleError);
     preview.append(previewNote, previewHolder, counterText);
 
     templateDirty = el('p', 'template-dirty');
@@ -1065,7 +1073,21 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
     tagList = el('div', 'tag-list');
     tagList.setAttribute('role', 'group');
     setAttribute(tagList, 'aria-label', 'Выбранные теги');
-    tagEditor.append(tagField.root, tagList);
+    const tagEntry = el('div', 'tag-entry');
+    const addTag = appButton('secondary', { ariaLabel: 'Добавить тег', label: 'Добавить' });
+    addTagButton = addTag.root;
+    addTagButton.addEventListener('click', () => {
+      controller.addTag();
+      tagField.input.focus();
+    });
+    tagEntry.append(tagField.root, addTagButton);
+    const tagHint = el('p', 'field-note');
+    tagHint.id = 'tag-hint';
+    setText(tagHint, 'Нажмите Enter или «Добавить», затем примените изменения.');
+    tagError = el('p', 'field-error');
+    tagError.id = 'tag-error';
+    tagField.input.setAttribute('aria-describedby', 'tag-hint tag-error');
+    tagEditor.append(tagEntry, tagHint, tagError, tagList);
     accountWarning = el('p', 'account-warning');
     cardEditor.append(tagEditor, accountWarning);
 
@@ -1173,6 +1195,15 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
     const chips = tags.map((tag) => chipNode(tag, removable));
     syncChildren(tagList, chips);
     patchField(tagField, form?.twitchTagDraft ?? '', cardBusy);
+    addTagButton.disabled = cardBusy || !form?.twitchTagDraft.trim();
+    const tagMessages: string[] = [
+      t('twitchTagsTooMany'),
+      t('twitchTagsInvalid'),
+      t('twitchTagsDuplicate'),
+    ];
+    const tagErrors = controller.errors().filter((message) => tagMessages.includes(message));
+    setText(tagError, tagErrors.join(' '));
+    setAttribute(tagField.input, 'aria-invalid', tagErrors.length > 0);
     if (form) {
       categorySearch.update({
         disabled: cardBusy,
@@ -1233,6 +1264,10 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
       previewSpan.replaceChildren(...previewNodes(template, form?.subtitle ?? ''));
     }
     setText(counterText, `${final.length} / 140`);
+    const titleMessages: string[] = [t('twitchTitleRequired'), t('twitchTitleTooLong')];
+    const titleErrors = controller.errors().filter((message) => titleMessages.includes(message));
+    setText(titleError, titleErrors.join(' '));
+    setAttribute(subtitleField.input, 'aria-invalid', titleErrors.length > 0);
     if (final.length > 140 !== counterText.classList.contains('invalid')) {
       counterText.classList.toggle('invalid', final.length > 140);
     }

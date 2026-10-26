@@ -271,10 +271,31 @@ textarea::placeholder {
   align-items: start;
 }
 
-@media (width < 390px) {
+@media (width < 480px) {
   .title-fields {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+.field-error {
+  font-size: 13px;
+  color: var(--color-danger);
+  overflow-wrap: anywhere;
+}
+.field-error:empty {
+  display: none;
+}
+[aria-invalid='true'] {
+  border-color: var(--color-danger);
+}
+.tag-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  align-items: end;
+}
+.tag-editor > .field-note,
+.tag-editor > .field-error {
+  margin-top: var(--space-2);
 }
 .title-preview {
   display: grid;

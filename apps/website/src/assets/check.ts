@@ -13,7 +13,7 @@ const STREAMS = {
       const parent = window.location.hostname;
 
       if (!parent) {
-        throw new Error('Twitch iframe requires a real hostname.');
+        throw new Error('Откройте страницу через веб-сервер, чтобы загрузить Twitch-плеер.');
       }
 
       const params = new URLSearchParams({
@@ -74,7 +74,7 @@ function setError(slot: Element, status: Element, message: string) {
     }),
   );
 
-  status.textContent = 'ошибка';
+  status.textContent = 'Не удалось загрузить плеер. Попробуйте убрать и загрузить его снова.';
 }
 
 function addPlayer(platform: Platform) {
@@ -82,7 +82,6 @@ function addPlayer(platform: Platform) {
   const { slot, status } = getElements(platform);
 
   if (slot.querySelector('iframe')) {
-    status.textContent = 'iframe уже создан';
     return;
   }
 
@@ -94,11 +93,21 @@ function addPlayer(platform: Platform) {
     iframe.allow = config.allow;
     iframe.allowFullscreen = true;
     iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+    iframe.addEventListener('load', () => {
+      if (iframe.parentElement === slot) {
+        status.textContent = 'Плеер открыт. Проверьте изображение и звук.';
+      }
+    });
+    iframe.addEventListener('error', () => {
+      if (iframe.parentElement === slot) {
+        setError(slot, status, 'Не удалось загрузить плеер. Нажмите «Загрузить плеер» повторно.');
+      }
+    });
 
     slot.replaceChildren(iframe);
-    status.textContent = 'iframe создан';
+    status.textContent = 'Загрузка плеера…';
   } catch (error) {
-    setError(slot, status, error instanceof Error ? error.message : 'Не удалось создать iframe');
+    setError(slot, status, error instanceof Error ? error.message : 'Не удалось загрузить плеер');
   }
 }
 
@@ -107,7 +116,7 @@ function removePlayer(platform: Platform) {
 
   slot.replaceChildren();
   setPlaceholder(slot, platform);
-  status.textContent = 'iframe не создан';
+  status.textContent = 'Плеер не загружен';
 }
 
 document.addEventListener('click', (event) => {

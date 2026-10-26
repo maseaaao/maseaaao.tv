@@ -1419,6 +1419,41 @@ describe('Stream Info DOM interactions', () => {
     await nextTick();
   });
 
+  it('adds a tag with the visible button and saves it through the API', async () => {
+    await boot();
+    expect(button('Добавить тег').disabled).toBe(true);
+    await setValue('Добавить тег', 'Rust');
+    await click('Добавить тег');
+    expect(field('Добавить тег').value).toBe('');
+    expect(document.activeElement).toBe(field('Добавить тег'));
+    expect(buttons(REMOVE_TAG_RE)).toHaveLength(2);
+    await click('Применить изменения');
+    await flush();
+    const update = mockStreamerbot.actionCalls.find((call) => call.args.command === 'updateTwitch');
+    expect(JSON.parse(textValue(update?.args.payloadJson)).tags).toContain('Rust');
+  });
+
+  it('links title and tag errors to their fields and clears them after correction', async () => {
+    await boot();
+    const title = await setValue('Название', 'x'.repeat(141));
+    expect(title.getAttribute('aria-invalid')).toBe('true');
+    expect(title.getAttribute('aria-describedby')).toContain('title-error');
+    expect(document.getElementById('title-error')?.textContent).toContain('140');
+    const tag = await setValue('Добавить тег', 'Invalid tag');
+    await click('Добавить тег');
+    expect(tag.getAttribute('aria-invalid')).toBe('true');
+    expect(tag.getAttribute('aria-describedby')).toContain('tag-error');
+    expect(document.getElementById('tag-error')?.textContent).toContain('без пробелов');
+    expect(button('Применить изменения').disabled).toBe(true);
+    await setValue('Название', 'Исправлено');
+    await click('Удалить тег: Invalid tag');
+    expect(title.hasAttribute('aria-invalid')).toBe(false);
+    expect(tag.hasAttribute('aria-invalid')).toBe(false);
+    expect(document.getElementById('title-error')?.textContent).toBe('');
+    expect(document.getElementById('tag-error')?.textContent).toBe('');
+    expect(button('Применить изменения').disabled).toBe(false);
+  });
+
   it('edits titles, categories and tags inline and applies them through mocks', async () => {
     await boot();
     await setValue('Добавить тег', 'Rust');
