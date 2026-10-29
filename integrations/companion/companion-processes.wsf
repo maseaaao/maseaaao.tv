@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <job>
-  <!-- Read-only Windows process query, invoked by start-companion.ts. -->
+  <!-- Read-only process query. URI-encoded paths keep redirected output ASCII without //U. -->
   <script language="JScript"><![CDATA[
     var processes = GetObject('winmgmts:{impersonationLevel=impersonate}!\\\\.\\root\\cimv2')
       .ExecQuery("SELECT ProcessId, ExecutablePath FROM Win32_Process WHERE Name = 'node.exe'");
     for (var entries = new Enumerator(processes); !entries.atEnd(); entries.moveNext()) {
       var item = entries.item();
-      if (item.ExecutablePath) WScript.Echo(item.ProcessId + '\t' + item.ExecutablePath);
+      if (item.ExecutablePath) WScript.Echo(item.ProcessId + '\t' + encodeURIComponent(item.ExecutablePath));
     }
   ]]></script>
 </job>

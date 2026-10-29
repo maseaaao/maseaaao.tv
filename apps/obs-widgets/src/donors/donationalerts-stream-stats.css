@@ -139,7 +139,7 @@ body {
   overflow: hidden;
   background: var(--color-surface);
   border: 1px solid var(--cm-line);
-  border-radius: var(--radius-surface);
+  border-radius: var(--radius-surface) var(--radius-surface) 0 0 !important;
 }
 .widget-stream-stats .stats-slider-wrapper {
   position: relative;

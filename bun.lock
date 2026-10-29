@@ -32,6 +32,8 @@
       },
       "devDependencies": {
         "@maseaaao/build-config": "workspace:*",
+        "@types/bun": "catalog:",
+        "playwright-core": "catalog:",
         "typescript": "catalog:",
         "vite": "catalog:",
       },

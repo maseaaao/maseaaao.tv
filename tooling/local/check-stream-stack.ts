@@ -35,8 +35,11 @@ const root = path.resolve(process.env.STREAMERBOT_ROOT);
 const jsonFile = async <T>(p: string): Promise<T> =>
   JSON.parse((await fs.readFile(p, 'utf8')).replace(UFEFF_RE, ''));
 const settings = await jsonFile<StreamerbotSettings>(path.join(root, 'data/settings.json'));
+const companionDirectory = path.resolve(
+  process.env.COMPANION_CONFIG_DIR || path.join(root, 'custom/companion/data'),
+);
 const companionConfig = await jsonFile<CompanionConfig>(
-  path.join(root, 'custom/companion/data/config.json'),
+  path.join(companionDirectory, 'config.json'),
 );
 const bindHost = (h: string | undefined) =>
   ['0.0.0.0', '::', '', undefined].includes(h) ? '127.0.0.1' : h;
@@ -173,7 +176,7 @@ try {
   let localStorageMatches = false;
   try {
     const { DatabaseSync } = await import('node:sqlite');
-    const db = new DatabaseSync(path.join(root, 'custom/companion/data/v5.0/db.sqlite'), {
+    const db = new DatabaseSync(path.join(companionDirectory, 'v5.0/db.sqlite'), {
       readOnly: true,
     });
     try {

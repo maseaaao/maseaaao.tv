@@ -30,6 +30,10 @@ const files = [
     'actions/donationalerts/DonationAlertsWatcher.cs',
   ],
   [
+    'integrations/streamerbot/donationalerts/DonationAlertsToggle.cs',
+    'actions/donationalerts/DonationAlertsToggle.cs',
+  ],
+  [
     'integrations/streamerbot/donationalerts/DonationChat.cs',
     'actions/donationalerts/DonationChat.cs',
   ],

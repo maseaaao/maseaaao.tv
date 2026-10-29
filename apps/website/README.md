@@ -55,8 +55,9 @@ UI Gallery и проверяет продукты. Затем `prepare:cloudflar
 
 ## Локальная подготовка
 
-В Linux/WSL2 `bun run build:cloudflare` с нуля экспортирует растры и собирает
-веб-набор. Если уже выполнены `bun run full` и `bun run build:ui`, достаточно
+`bun run build:cloudflare` с нуля экспортирует растры и собирает веб-набор;
+локально команду можно выполнять в Windows. Если уже выполнены `bun run full`
+и `bun run build:ui`, достаточно
 `bun run prepare:cloudflare`: продукты не пересобираются.
 `bun run deploy:website` публикует только готовые результаты и не запускает
 ни подготовку, ни сборку. Проверка без публикации:

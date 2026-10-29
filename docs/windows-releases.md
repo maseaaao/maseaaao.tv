@@ -93,8 +93,10 @@ bun windows-integrations/diagnostics/check-stream-stack-cli.ts --streamerbot-roo
 Публикуйте черновик после завершения workflow, а не во время загрузки файлов:
 обновление метаданных и вложений GitHub не является одной атомарной операцией.
 
-Для локальной подготовки без публикации (Linux/WSL2, Bun из `.bun-version`,
-.NET SDK 8, `tar` и Chromium) используйте свободный номер:
+Для локальной подготовки без публикации можно использовать Windows; нужны Bun
+из `.bun-version`, .NET SDK 8, совместимый `tar` и Chromium. Упаковка Companion
+зависит от реализации `tar`; при проблемах в Windows проверяйте её в Linux CI.
+Используйте свободный номер:
 
 ```bash
 bun tooling/prepare-release.ts 42

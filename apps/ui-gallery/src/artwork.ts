@@ -59,7 +59,7 @@ for (const [id, title, description] of groups) {
     const empty = document.createElement('p');
     empty.className = 'empty';
     empty.textContent =
-      'Готовых изображений пока нет. Выполните bun run render:all в согласованной Linux-среде, затем перезапустите или пересоберите галерею.';
+      'Готовых изображений пока нет. Выполните bun run render:all, затем перезапустите или пересоберите галерею.';
     panel.append(empty);
   }
   const grid = document.createElement('div');

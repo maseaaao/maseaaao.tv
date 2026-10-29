@@ -32,7 +32,7 @@ export function prepareModuleMetadata(directory: URL, request: string) {
     join(output, 'package.json'),
     JSON.stringify({
       name: id,
-      type: 'commonjs',
+      type: 'module',
       version,
       ...(request === 'request.json' ? { dependencies: {} } : {}),
     }),

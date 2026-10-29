@@ -46,9 +46,19 @@ bun tooling/local/check-stream-stack-cli.ts --streamerbot-root <путь>
 `companion-processes.wsf`; сам Companion использует комплектный Node.
 `--open-admin` открывает панель после готовности. Вместо пути можно задать `STREAMERBOT_ROOT`.
 Диагностика читает состояние и записывает отчёт в
-`custom/maintenance/stream-stack-latest.json`; JSON-интерфейс — `check-stream-stack.ts`.
+`logs/stream-stack-latest.json` установки Streamer.bot; JSON-интерфейс — `check-stream-stack.ts`.
 
 C# можно проверить командой `bun tooling/local/compile-streamerbot.ts` с
 `STREAMERBOT_ROOT`, против DLL установленного приложения; это не заменяет Execute Code.
 Не выполняйте Actions ради проверки и не редактируйте живые базы.
 Для отката верните ресурсы из backup, C# и модули — через штатное восстановление.
+
+Папка данных Companion может храниться отдельно от Streamer.bot. Задайте
+`COMPANION_CONFIG_DIR` с абсолютным путём к ней для запускателя и диагностики.
+`STREAMERBOT_ROOT` или `--streamerbot-root` задаёт установленный Streamer.bot;
+это другой каталог. Если `COMPANION_CONFIG_DIR` не задан, сохраняется прежний
+путь `custom/companion/data` внутри Streamer.bot. Отчёт диагностики записывается
+в `logs/stream-stack-latest.json` установки Streamer.bot.
+
+Для штатного `Companion.exe` задайте также `COMPANION_CONFIG_BASEDIR` с тем же
+прямым путём к данным. Не используйте архивную базу вместо текущей конфигурации.

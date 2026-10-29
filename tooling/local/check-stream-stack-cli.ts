@@ -42,7 +42,7 @@ export async function runDiagnostics(
   { env = process.env, runFile = execute, log = console.log }: DiagnosticOptions = {},
 ) {
   const root = diagnosticsRoot(argv, env);
-  const reportFile = path.join(root, 'custom/maintenance/stream-stack-latest.json');
+  const reportFile = path.join(root, 'logs/stream-stack-latest.json');
   log('Проверка Streamer.bot, Companion и OBS. Все три приложения должны быть запущены.');
   let output: CommandOutput;
   let code = 0;

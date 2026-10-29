@@ -25,9 +25,11 @@
 
 ## Разработка
 
-Linux/WSL2, Bun из `.bun-version`; отдельный Node.js не нужен.
-Для полной проверки нужны .NET SDK 8, системный `tar` и Chromium.
-В WSL используйте Linux-зависимости, не Windows `node_modules`.
+Локально можно разрабатывать и визуально проверять результаты в Windows;
+используйте Bun из `.bun-version`. Для полной проверки нужны .NET SDK 8,
+совместимый системный `tar` и Chromium. Отдельный Node.js для этих команд не нужен.
+Verify и Release выполняются в Linux (`ubuntu-24.04`); локальный рендер может
+отличаться от CI из-за среды и шрифтов.
 
 Версии внешних зависимостей задаются в `catalog` корневого `package.json`.
 В `dependencies`, `devDependencies` и `peerDependencies` используйте `catalog:`;
@@ -41,11 +43,16 @@ Biome запрещает исходники `.js`, `.jsx`, `.mjs` и `.cjs`; `bu
 
 ```bash
 bun install --frozen-lockfile
-bun run browser:install --with-deps
+bun run browser:install
 bun run full
 bun run check
 bun run test
 ```
+
+В Linux CI Chromium устанавливается с системными зависимостями через
+`bun run browser:install --with-deps`. Для упаковки Companion `tar` должен
+поддерживать используемые скриптом параметры; при проблемах с путями или
+форматом архива в Windows проверяйте упаковку и готовые TGZ в Linux CI.
 
 `bun install` автоматически подключает Lefthook через корневой `postinstall`.
 В CI и вне Git-клона установка хуков пропускается.
@@ -69,7 +76,7 @@ Lefthook запускается через Bun без отдельного Node.
 | ---------------------------- | ------------------------------------------------------------------------------ |
 | `bun run build`              | Собирает только сайт в `dist/website`                                          |
 | `bun run build:all`          | Собирает приложения, UI Gallery, HTML artwork и диагностику; без растров и TGZ |
-| `bun run build:cloudflare`   | С нуля экспортирует artwork и собирает веб-набор; только Linux/WSL2            |
+| `bun run build:cloudflare`   | С нуля экспортирует artwork и собирает веб-набор                               |
 | `bun run build:apps`         | Собирает приложения и диагностику без подготовки artwork                       |
 | `bun run dev`                | Запускает общий dev-запускатель всех браузерных продуктов                      |
 | `bun run dev:ui`             | Запускает dev-сервер витрины UI/UX                                             |
@@ -80,7 +87,7 @@ Lefthook запускается через Bun без отдельного Node.
 | `bun run package:companion`  | Упаковывает готовые модули Companion в TGZ                                     |
 | `bun run prepare:cloudflare` | Добавляет только маршруты и правила публикации в готовый `dist/`, без сборки   |
 | `bun run check`              | Запускает линтеры и проверки типов и исходников без сборки                     |
-| `bun run test`               | Запускает только внутренние тесты Stream Info, Tuna и Companion                |
+| `bun run test`               | Запускает внутренние тесты Artwork, OBS widgets, Stream Info, Tuna и Companion |
 | `bun run test:csharp`        | Вручную запускает C#-тесты Stream Info; нужен .NET SDK 8                       |
 | `bun run verify:companion`   | Проверяет готовые TGZ Companion без сборки и упаковки                          |
 
@@ -97,14 +104,15 @@ C# Actions и Companion запускателем не запускаются.
 
 Внешних тестов репозитория и тестовой обвязки для сборок, релизов и вёрстки нет.
 Тесты внутри продуктов, пакетов и `artwork` сохраняются; `bun run test` запускает
-внутренние тесты Stream Info, Tuna и Companion.
+внутренние тесты Artwork, OBS widgets, Stream Info, Tuna и Companion.
 C#-тесты Stream Info сохранены, но запускаются только вручную через
 `bun run test:csharp`: общий `test` и CI их не вызывают.
 `check` не требует готовых результатов и не запускает сборку или экспорт.
 В CI сборка и упаковка выполняются отдельными шагами перед проверками
 и внутренними тестами продуктов.
-Сборки, полный экспорт artwork, проверки кода и отдельные тесты используют локальный
-кеш Turborepo в `.turbo/cache`. При совпадении входов команда восстанавливает свои
+Сборки, полный экспорт artwork, проверки кода и отдельные тесты через Turbo используют локальный
+кеш Turborepo в `.turbo/cache`. Тесты Artwork и OBS widgets запускаются напрямую без кеша.
+При совпадении входов команда восстанавливает свои
 результаты из кеша; исходники, конфигурация, зависимости и версии Bun, Chromium,
 .NET и системного `tar` участвуют в ключе. Кеши разных ОС и архитектур разделены.
 Версия пакета artwork не влияет на рендер: изменение только номера релиза

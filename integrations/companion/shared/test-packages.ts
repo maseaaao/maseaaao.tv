@@ -7,6 +7,7 @@ import { join, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const MAP_RE = /\/$/;
+const NEWLINE_RE = /\r?\n/;
 
 interface ModuleManifest {
   id: string;
@@ -45,7 +46,7 @@ for (const [directory, helper, request, extra] of modules) {
   const names = tar(['-tzf', archive])
     .toString('utf8')
     .trim()
-    .split('\n')
+    .split(NEWLINE_RE)
     .map((name) => name.replace(MAP_RE, ''));
   const files = [
     'main.js',
@@ -64,7 +65,7 @@ for (const [directory, helper, request, extra] of modules) {
   for (const name of names) {
     assert(!(posix.isAbsolute(name) || name.split('/').includes('..')), 'unsafe path');
   }
-  for (const entry of tar(['-tvzf', archive]).toString('utf8').trim().split('\n')) {
+  for (const entry of tar(['-tvzf', archive]).toString('utf8').trim().split(NEWLINE_RE)) {
     assert(['-', 'd'].includes(entry[0]), 'archive links are forbidden');
   }
   for (const name of files) {
@@ -79,7 +80,7 @@ for (const [directory, helper, request, extra] of modules) {
   );
   assert.equal(packed.name, id);
   assert.equal(packed.version, version);
-  assert.equal(packed.type, 'commonjs');
+  assert.equal(packed.type, 'module');
   assert.deepEqual(
     tar(['-xOzf', archive, `${id}/package.json`]),
     readFileSync(join(module, 'package.json')),

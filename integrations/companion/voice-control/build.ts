@@ -9,11 +9,9 @@ import { prepareModuleMetadata } from '../shared/package-module';
 export async function buildModule() {
   const output = prepareModuleMetadata(new URL('./', import.meta.url), 'install.json');
   await build({
-    banner: { js: 'const __moduleUrl = require("node:url").pathToFileURL(__filename).href;' },
     bundle: true,
-    define: { 'import.meta.url': '__moduleUrl' },
     entryPoints: [fileURLToPath(new URL('./index.ts', import.meta.url))],
-    format: 'cjs',
+    format: 'esm',
     outfile: join(output, 'main.js'),
     platform: 'node',
     target: 'node22',

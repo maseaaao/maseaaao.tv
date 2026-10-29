@@ -117,6 +117,10 @@ function appendCompanionFlags(args: string[], config: CompanionConfig): void {
   }
 }
 
+function companionDataDirectory(root: string, env: NodeJS.ProcessEnv) {
+  return path.resolve(env.COMPANION_CONFIG_DIR || path.join(root, 'custom/companion/data'));
+}
+
 export async function startCompanion(argv: string[], dependencies: LauncherDependencies = {}) {
   const {
     env = process.env,
@@ -139,7 +143,7 @@ export async function startCompanion(argv: string[], dependencies: LauncherDepen
   root = path.resolve(root?.trim() || path.resolve(import.meta.dirname, '../../../Streamer.bot'));
   const install = path.join(env.ProgramFiles, 'Companion');
   const resources = path.join(install, 'resources');
-  const configDirectory = path.join(root, 'custom/companion/data');
+  const configDirectory = companionDataDirectory(root, env);
   const main = path.join(resources, 'main.js');
   await access(main);
   const config: CompanionConfig = JSON.parse(
@@ -169,15 +173,16 @@ export async function startCompanion(argv: string[], dependencies: LauncherDepen
   // WMI exposes executable paths; tasklist does not. Fail closed if WSH/WMI is unavailable.
   const { stdout } = await runFile(
     path.win32.join(env.SystemRoot || 'C:\\Windows', 'System32', 'cscript.exe'),
-    ['//Nologo', '//U', fileURLToPath(new URL('./companion-processes.wsf', import.meta.url))],
-    { encoding: 'utf16le', timeout: 10_000, windowsHide: true },
+    ['//Nologo', fileURLToPath(new URL('./companion-processes.wsf', import.meta.url))],
+    { encoding: 'utf8', timeout: 10_000, windowsHide: true },
   );
   const prefix = path.win32.resolve(install).toLowerCase() + '\\';
   const running = stdout
     .toString()
     .split(NEWLINE_SPLIT_RE)
     .find((line) => {
-      const [pid, filename] = line.split('\t');
+      const [pid, encodedFilename] = line.split('\t');
+      const filename = encodedFilename ? decodeURIComponent(encodedFilename) : undefined;
       return Number(pid) !== process.pid && filename?.toLowerCase().startsWith(prefix);
     });
   const showAdmin = async () => {

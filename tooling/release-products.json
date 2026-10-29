@@ -176,6 +176,10 @@
           "target": "actions/donationalerts/DonationAlertsWatcher.cs"
         },
         {
+          "source": "dist/windows-integrations/actions/donationalerts/DonationAlertsToggle.cs",
+          "target": "actions/donationalerts/DonationAlertsToggle.cs"
+        },
+        {
           "source": "dist/windows-integrations/actions/donationalerts/DonationChat.cs",
           "target": "actions/donationalerts/DonationChat.cs"
         },

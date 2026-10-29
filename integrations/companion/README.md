@@ -5,7 +5,7 @@ VoiceStream — Actions запуска/остановки. Исходники н
 
 ## Сборка и проверка
 
-Из корня, в Linux/WSL2 с Bun, .NET SDK 8 и системным `tar`:
+Из корня, с Bun, .NET SDK 8 и совместимым системным `tar`:
 
 ```bash
 bun run test:companion
@@ -19,11 +19,15 @@ bun run verify:companion
 Сборка, упаковка и проверка готовых TGZ выполняются отдельными командами. NuGet-зависимости
 закреплены в `packages.lock.json`. Установленный Streamer.bot для сборки не нужен;
 тесты используют подставные обработчики.
+Локально можно работать в Windows; CI собирает и проверяет пакеты в Linux.
+Упаковка вызывает `tar` с `--no-recursion`, `-czf` и `-C`; при проблемах
+с путями или форматом TGZ в Windows проверяйте её также в Linux CI.
 
 Готовые продукты находятся в корневом `dist/companion/system-microphone/` и
 `dist/companion/voice-control/`. В каждом каталоге — `main.js`, EXE помощника и
 его DLL, `companion/manifest.json`, `companion/HELP.md` и runtime `package.json`
-(`type: commonjs`). Помощник остаётся рядом с `main.js`; общие исходники и
+(`type: module`). Companion загружает ESM default export как конструктор модуля.
+Помощник остаётся рядом с `main.js`; общие исходники и
 JavaScript-зависимости включаются в bundle, поэтому результат не зависит от
 репозитория или соседнего продукта. Эти каталоги можно переносить целиком.
 
@@ -51,6 +55,11 @@ JavaScript-зависимости включаются в bundle, поэтому
 
 Не запускайте `main.js` или EXE помощников напрямую для проверки.
 Не подменяйте базы и JSON работающего приложения.
+
+Для отдельной проверки формата готовых entrypoint задайте `COMPANION_NODE_BIN`
+с путём к комплектному Node.js Companion и выполните
+`bun integrations/companion/shared/test-entrypoints.ts` из корня. Проверка только
+импортирует классы: не создаёт экземпляры, не вызывает `init` и не запускает помощники.
 
 Настройки модулей: [SystemMicrophone](system-microphone/companion/HELP.md),
 [VoiceStream](voice-control/companion/HELP.md).

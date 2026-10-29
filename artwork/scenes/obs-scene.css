@@ -13,21 +13,6 @@
 .canvas.tile {
   background: transparent;
 }
-.identity {
-  position: absolute;
-  display: flex;
-  gap: 24px;
-  align-items: center;
-  font: 400 32px / 1.5 var(--font-display);
-  letter-spacing: -0.035em;
-  background: var(--color-surface);
-}
-.identity img {
-  object-fit: contain;
-}
-.vertical .identity {
-  font-size: 28px;
-}
 .header-rule {
   position: absolute;
   background: var(--color-border);
@@ -54,6 +39,16 @@
   background: var(--color-field);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-surface);
+}
+.status .panel {
+  border-radius: 0;
+}
+.social-bar {
+  position: absolute;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-surface) var(--radius-surface);
 }
 .qr {
   position: absolute;

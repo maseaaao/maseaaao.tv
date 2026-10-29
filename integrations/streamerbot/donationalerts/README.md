@@ -12,12 +12,13 @@ YouTube с доступным чатом. Голосовой донат обоз
 
 C# устанавливается в Execute Code существующих Actions с сохранением ID:
 
-| Action / модуль                                         | Исходник и назначение                                           |
-| ------------------------------------------------------- | --------------------------------------------------------------- |
-| `-- DonationAlerts Code` / `DonationAlerts Integration` | `DonationAlertsIntegration.cs`: подключение и обработка событий |
-| `-- DonationAlerts Authorization`                       | `DonationAlertsAuthorization.cs`: OAuth через браузер           |
-| `-- DonationAlerts Background Watcher`                  | `DonationAlertsWatcher.cs`: запуск слушателя                    |
-| `DonationHandler_After`                                 | `DonationChat.cs`: отправка сообщения                           |
+| Action / модуль                                         | Исходник и назначение                                                                   |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `-- DonationAlerts Code` / `DonationAlerts Integration` | `DonationAlertsIntegration.cs`: подключение и обработка событий                         |
+| `-- DonationAlerts Authorization`                       | `DonationAlertsAuthorization.cs`: OAuth через браузер                                   |
+| `-- DonationAlerts Background Watcher`                  | `DonationAlertsWatcher.cs`: запуск слушателя                                            |
+| `DonationHandler_After`                                 | `DonationChat.cs`: отправка сообщения                                                   |
+| `OBS \| DonationAlerts \| Toggle`                       | `DonationAlertsToggle.cs` + `../obs-health/CompanionEndpoint.cs`: скрытие и звук alerts |
 
 `WebSocketMessages.cs` — общий код чтения WebSocket, учитывайте его при обновлении
 C#. Watcher вызывается при старте Streamer.bot; используйте отдельную блокирующую
@@ -38,6 +39,32 @@ C#. Watcher вызывается при старте Streamer.bot; исполь�
 `TestMessages.cs` и `TestSocketService.cs` используют подставные сервисы.
 Проверка компиляции описана в инструкции подключения из исходников репозитория;
 она не доказывает доставку настоящего доната. Не отправляйте сообщения ради проверки.
+
+## Аварийное отключение alerts
+
+`DonationAlertsToggle.cs` устанавливается вместе с `CompanionEndpoint.cs` в один
+Execute C# Code. Action должен использовать отдельную блокирующую очередь,
+без триггеров и без concurrent execution. Companion вызывает его через существующее
+HTTP-соединение Streamer.bot: `POST /DoAction`, имя `OBS | DonationAlerts | Toggle`.
+
+Первое нажатие сохраняет состояние, отключает звук эфира и мониторинг, затем скрывает
+все экземпляры источника `8️⃣ДОНАТЫ`, включая группы. Второе возвращает сохранённые
+видимость, mute и мониторинг. Источник определяется по UUID в исходнике; при переносе
+в другую коллекцию его необходимо проверить. Каждая запись OBS проверяется чтением.
+Состояние восстановления сохраняется в постоянной глобальной переменной
+`donationalerts.panic.snapshot.v1`. При ошибке оно не удаляется.
+
+Браузер должен продолжать работать, когда скрыт (`Shutdown source when not visible`
+выключен). Кнопка не отменяет донат у провайдера: раннее включение может вернуть
+оставшуюся часть текущего оповещения. Она не скрывает список донатеров и не блокирует
+отдельную отправку донатов в чат.
+
+В Companion нужны постоянные custom variables `da_alerts_label` и `da_alerts_blocked`.
+Подпись кнопки — `$(custom:da_alerts_label)`; значение `da_alerts_blocked=1` означает
+выключенное состояние либо ошибку. `Init` только читает OBS и синхронизирует подпись;
+внешние ручные изменения OBS между нажатиями автоматически не отслеживаются.
+`TestDonationAlertsToggle.cs` проверяет отключение, восстановление, ошибки записи,
+обратную связь и read-only инициализацию на подставных OBS/HTTP-обработчиках.
 
 Основа: [play-code-live/streamer.bot-donationAlerts](https://github.com/play-code-live/streamer.bot-donationAlerts).
 Сохраняйте [лицензию MIT](LICENSE).

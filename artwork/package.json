@@ -8,7 +8,8 @@
     "./pages/*": "./*"
   },
   "scripts": {
-    "build": "bun ../tooling/build-artwork.ts"
+    "build": "bun ../tooling/build-artwork.ts",
+    "test": "bun test scenes/status.test.ts scenes/camera.test.ts scenes/donor-camera.test.ts scenes/gameplay.test.ts"
   },
   "dependencies": {
     "@maseaaao/design": "workspace:*"

@@ -29,21 +29,20 @@ body {
   color: var(--color-brand);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 0 0 12px 12px;
 }
 .logos {
   display: flex;
   flex: none;
-  gap: 14px;
+  gap: 16px;
   align-items: center;
-  height: 50px;
+  height: 66px;
   padding: 0 4px;
 }
 .logo {
   display: block;
   flex: none;
-  width: 28px;
-  height: 28px;
+  width: clamp(24px, 3.6vw, 38px);
+  height: clamp(24px, 3.6vw, 38px);
   opacity: var(--social-rest-opacity);
   transform: translateY(0) scale(1);
   animation: var(--social-animation) 30s ease-in-out 1.5s infinite;
@@ -62,7 +61,7 @@ body {
 }
 .name {
   font:
-    400 32px / 1.15 Unbounded,
+    400 clamp(26px, 5vw, 48px) / 1.1 Unbounded,
     Arial,
     sans-serif;
   color: var(--color-text);
@@ -70,7 +69,7 @@ body {
 }
 .divider {
   width: 1px;
-  height: 28px;
+  height: clamp(24px, 2.7vw, 36px);
   background: var(--color-border);
 }
 .logo svg {
@@ -114,17 +113,27 @@ body {
     gap: 8px;
   }
   .logos {
-    gap: 8px;
-    height: 40px;
+    gap: 10px;
+    height: 48px;
   }
   .logo {
-    width: 18px;
-    height: 18px;
+    width: 26px;
+    height: 26px;
   }
   .name {
-    font-size: clamp(20px, 5.8vw, 32px);
+    font-size: clamp(22px, 6vw, 40px);
   }
   .divider {
-    height: 24px;
+    height: 28px;
+  }
+}
+
+@media (480px <= width < 540px) {
+  .logo {
+    width: 30px;
+    height: 30px;
+  }
+  .name {
+    font-size: 30px;
   }
 }

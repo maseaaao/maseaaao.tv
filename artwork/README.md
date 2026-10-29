@@ -12,11 +12,14 @@ HTML/CSS композиций — исходники; корневые `dist/art
 | `bun run render:scenes`           | Сцены OBS из `scenes/layout.json`                                          |
 | `bun run render:artwork <группа>` | `banners`, `panels`, `wallpapers`, `brand` или `favicon`; без группы — все |
 | `bun run render:all`              | Полный экспорт изображений                                                 |
+| `bun run --cwd artwork test`      | Внутренние тесты сцен и геометрии без экспорта                             |
 
 Рендер готовит HTML сам; `--prepared` пропускает подготовку, если она уже выполнена.
 `dist/artwork/brand/website` — источник изображений сайта для `build:website`.
 `logo/logo.png` и `apps/website/public/assets/maseaaao.tv.png` — защищённые оригиналы;
 `render:logo` не генерирует QR. Сохраняйте утверждённые аватар и QR.
 
-Растры сверяются в Linux-среде CI; изменения нужно просматривать.
+CI выполняет экспорт в Linux; локально изображения можно экспортировать и
+просматривать в Windows. Учитывайте возможные различия рендера между средами
+и просматривайте изменения.
 [Подключение сцен](scenes/SETUP.md) · [Дизайн](../docs/design.md).

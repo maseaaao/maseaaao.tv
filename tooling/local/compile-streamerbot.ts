@@ -26,6 +26,10 @@ const sources = {
   ],
   DonationAuthorization: ['integrations/streamerbot/donationalerts/DonationAlertsAuthorization.cs'],
   DonationChat: ['integrations/streamerbot/donationalerts/DonationChat.cs'],
+  DonationToggle: [
+    'integrations/streamerbot/donationalerts/DonationAlertsToggle.cs',
+    'integrations/streamerbot/obs-health/CompanionEndpoint.cs',
+  ],
   DonationWatcher: ['integrations/streamerbot/donationalerts/DonationAlertsWatcher.cs'],
   ObsHealth: [
     'integrations/streamerbot/obs-health/Check.cs',

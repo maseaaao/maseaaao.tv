@@ -10,14 +10,17 @@
   },
   "scripts": {
     "build": "bun ../../tooling/build-widgets.ts",
-    "check": "tsc --noEmit && tsc -p tsconfig.tools.json",
-    "dev": "bun --bun vite --configLoader native --mode social-strip --host 127.0.0.1"
+    "check": "tsc --noEmit && tsc -p tsconfig.tools.json && tsc -p tsconfig.tests.json",
+    "dev": "bun --bun vite --configLoader native --mode social-strip --host 127.0.0.1",
+    "test": "bun test"
   },
   "dependencies": {
     "@maseaaao/design": "workspace:*"
   },
   "devDependencies": {
     "@maseaaao/build-config": "workspace:*",
+    "@types/bun": "catalog:",
+    "playwright-core": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:"
   }
