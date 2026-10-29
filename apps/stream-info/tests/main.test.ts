@@ -1321,8 +1321,24 @@ describe('Stream Info DOM interactions', () => {
     const card = required(document.querySelector('section[aria-label="Twitch"]'));
     const savePanel = required(button('Применить изменения').closest('.save-panel'));
     expect(savePanel.parentElement).toBe(document.querySelector('.dock-shell'));
+    expect(
+      button('Применить изменения').nextElementSibling?.classList.contains('save-status'),
+    ).toBe(true);
     // biome-ignore lint/suspicious/noBitwiseOperators: Packed RGB channels and binary protocol fields require bitwise operations.
     expect(card.compareDocumentPosition(savePanel) & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
+  });
+
+  it('keeps presets collapsed while the form updates', async () => {
+    await boot();
+    const presets = required(document.querySelector<HTMLDetailsElement>('details.preset-panel'));
+    expect(presets.querySelector('summary')?.textContent).toContain('Пресеты');
+    expect(presets.open).toBe(true);
+    presets.open = false;
+    await setValue('Название', 'Новый эфир');
+    expect(presets.isConnected).toBe(true);
+    expect(presets.open).toBe(false);
+    presets.open = true;
+    expect(presets.querySelector('[data-preset-id]')).not.toBeNull();
   });
 
   it('announces edits immediately, confirms saving and clears confirmation on the next edit', async () => {

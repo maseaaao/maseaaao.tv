@@ -133,6 +133,30 @@ textarea::placeholder {
   align-items: baseline;
   justify-content: space-between;
 }
+.preset-summary {
+  align-items: center;
+  cursor: pointer;
+  list-style: none;
+}
+.preset-summary::-webkit-details-marker {
+  display: none;
+}
+.preset-summary h2 {
+  margin: 0;
+}
+.preset-summary .preset-count {
+  margin-left: auto;
+}
+.preset-panel[open] .preset-summary {
+  margin-bottom: var(--space-4);
+}
+.preset-chevron {
+  color: var(--color-muted);
+  transition: transform var(--motion-feedback) var(--motion-ease-state);
+}
+.preset-panel[open] .preset-chevron {
+  transform: rotate(180deg);
+}
 .preset-count,
 .field-note,
 .counter,
@@ -166,20 +190,15 @@ textarea::placeholder {
   border-top: 1px solid var(--color-border);
 }
 .save-status {
-  padding: var(--space-3);
-  font-size: 14px;
+  font-size: 13px;
   color: var(--color-muted);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-field);
   transition: color var(--motion-feedback) var(--motion-ease-state);
 }
 .save-status.is-dirty {
   color: var(--color-warning);
-  border-left: 3px solid var(--color-warning);
 }
 .save-status.is-saved {
   color: var(--color-success);
-  border-left: 3px solid var(--color-success);
 }
 .form-errors {
   font-size: 13px;

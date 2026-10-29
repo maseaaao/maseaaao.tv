@@ -1,4 +1,5 @@
 import braces from 'lucide-static/icons/braces.svg?raw';
+import chevronDown from 'lucide-static/icons/chevron-down.svg?raw';
 import check from 'lucide-static/icons/circle-check.svg?raw';
 import error from 'lucide-static/icons/circle-x.svg?raw';
 import copy from 'lucide-static/icons/copy.svg?raw';
@@ -22,6 +23,7 @@ const TITLE_TITLE_RE = /<title>.*?<\/title>/;
 const uiSources = {
   braces,
   check,
+  chevronDown,
   close,
   copy,
   dashboard,

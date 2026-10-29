@@ -137,3 +137,20 @@ body {
     font-size: 30px;
   }
 }
+
+@media (width: 480px) and (height <= 60px) {
+  .logos {
+    gap: 8px;
+    height: 36px;
+  }
+  .logo {
+    width: 24px;
+    height: 24px;
+  }
+  .name {
+    font-size: 24px;
+  }
+  .divider {
+    height: 24px;
+  }
+}

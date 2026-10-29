@@ -12,15 +12,11 @@ const scenes = await Promise.all(
     html: await readFile(`${directory}/${scene.file}`, 'utf8'),
   })),
 );
-const oldIdentity = /class="identity"|\.\.\/logo\/logo\.png|>\s*maseaaao\s*</i;
-
-test('status scenes have no separate upper nickname or avatar', () => {
+test('status scenes retain the text nickname without an avatar', () => {
   expect(scenes).toHaveLength(6);
   for (const scene of scenes) {
-    const body = scene.html.split('<body>')[1]?.split('</body>')[0];
-    expect(body, scene.file).toBeDefined();
-    expect(body, scene.file).not.toMatch(oldIdentity);
-    expect(layout[scene.map].identity, scene.map).toBeUndefined();
+    expect(scene.html, scene.file).toContain('>maseaaao</p>');
+    expect(scene.html, scene.file).not.toContain('../logo/logo.png');
   }
 });
 
@@ -49,6 +45,26 @@ for (const scene of scenes) {
       await page.addStyleTag({
         content: await readFile(`${directory}/../../packages/design/tokens.css`, 'utf8'),
       });
+      expect(
+        await page.locator('.canvas.status').evaluate((el) => getComputedStyle(el).backgroundColor),
+      ).toBe('rgb(22, 22, 217)');
+      expect(
+        await page.locator('.title-field').evaluate((el) => getComputedStyle(el).backgroundColor),
+      ).toBe('rgb(244, 243, 236)');
+      expect(await page.locator('h1').evaluate((el) => getComputedStyle(el).color)).toBe(
+        'rgb(32, 32, 30)',
+      );
+      expect(await page.locator('.identity').evaluate((el) => getComputedStyle(el).color)).toBe(
+        'rgb(255, 255, 255)',
+      );
+      const identityBounds = await page.locator('.identity').boundingBox();
+      const lineBounds = await page.locator('.header-rule').boundingBox();
+      expect(identityBounds).not.toBeNull();
+      expect(lineBounds).not.toBeNull();
+      if (!(identityBounds && lineBounds)) {
+        throw new Error('Missing nickname or header line');
+      }
+      expect(identityBounds.y + identityBounds.height).toBeLessThan(lineBounds.y);
       const zones = await page.locator('[data-zone]').evaluateAll((elements) =>
         Object.fromEntries(
           elements.map((element) => {

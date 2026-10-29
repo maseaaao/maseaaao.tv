@@ -8,10 +8,29 @@
 .canvas.blank {
   background: var(--color-canvas);
 }
+.canvas.status {
+  background: var(--color-brand);
+}
+.status .title-field {
+  background: var(--color-surface);
+}
+.canvas.status h1 {
+  color: var(--color-text);
+}
 .canvas.camera,
 .canvas.gameplay,
 .canvas.tile {
   background: transparent;
+}
+.status .identity {
+  position: absolute;
+  margin: 0;
+  font: 400 48px / 1.2 var(--font-display);
+  color: #fff;
+  letter-spacing: -0.035em;
+}
+.status.vertical .identity {
+  font-size: 42px;
 }
 .header-rule {
   position: absolute;

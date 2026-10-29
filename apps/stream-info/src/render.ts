@@ -1103,19 +1103,20 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
     cardFooter.append(streamLink, dashboardLink);
     card.append(cardEditor, cardFooter);
 
-    cardSection = el('section', 'preset-panel dock-section');
-    cardSection.setAttribute('aria-labelledby', 'presets-title');
-    const panelHeading = el('div', 'panel-heading');
+    const details = el('details', 'preset-panel dock-section');
+    details.open = true;
+    cardSection = details;
+    const summary = el('summary', 'panel-heading preset-summary');
     const presetsTitle = el('h2');
     presetsTitle.id = 'presets-title';
     setText(presetsTitle, t('presets'));
     presetCount = el('span', 'preset-count');
-    panelHeading.append(presetsTitle, presetCount);
+    summary.append(presetsTitle, presetCount, icon('chevronDown', 'preset-chevron'));
     presetList = el('div', 'preset-list');
     presetHint = el('p', 'panel-hint');
     presetHint.innerHTML =
       'Добавьте Action в группу <code>STREAM INFO</code> и назовите его <code>PRESET | Название игры</code>.';
-    cardSection.append(panelHeading, presetList, presetHint);
+    details.append(summary, presetList, presetHint);
 
     root.append(card, cardSection);
     return root;
@@ -1421,7 +1422,7 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
     });
     errorsHost = el('div', 'form-errors');
     errorsHost.setAttribute('role', 'status');
-    root.append(saveStatus, applyButton, errorsHost);
+    root.append(applyButton, saveStatus, errorsHost);
     return root;
   }
 

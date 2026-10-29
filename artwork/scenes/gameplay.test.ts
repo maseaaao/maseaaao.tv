@@ -9,7 +9,7 @@ test('social source viewports match every planned scene without stretching or st
   const sources = layout.socialSources;
   expect(sources).toEqual({
     'horizontal-camera': { fragment: '', viewport: [1080, 88] },
-    'horizontal-gameplay': { fragment: '', viewport: [480, 88] },
+    'horizontal-gameplay': { fragment: '', viewport: [480, 54] },
     'horizontal-status': { fragment: '', viewport: [640, 88] },
     'vertical-camera-gameplay': { fragment: '', viewport: [1080, 88] },
     'vertical-status': { fragment: '', viewport: [720, 88] },
@@ -19,15 +19,11 @@ test('social source viewports match every planned scene without stretching or st
     [layout['vertical-status'], sources['vertical-status']],
     [layout['vertical-camera'], sources['vertical-camera-gameplay']],
     [layout.gameplay.vertical, sources['vertical-camera-gameplay']],
-    ...layout.gameplay.horizontal.scenes.map((scene: { social: number[] }) => [
-      scene,
-      sources['horizontal-gameplay'],
-    ]),
   ]) {
     expect(map.social.slice(2)).toEqual(source.viewport);
   }
   expect(layout.horizontalCameraStrip).toEqual({
-    display: [1280, 104.3],
+    display: [1280, (88 * 1280) / 1080],
     source: [1080, 88],
   });
 });
@@ -79,17 +75,18 @@ test('gameplay scenes use exact source viewports and aligned donor-camera-social
     expect([donors[2], camera[2], social[2]]).toEqual([480, 480, 480]);
     expect(donors[3]).toBeCloseTo(134 * 0.48, 4);
     expect(donors[1] + donors[3]).toBeCloseTo(camera[1], 4);
-    expect(camera[3]).toBeCloseTo(272.8, 4);
+    expect(camera[3]).toBeCloseTo(270, 4);
     expect(camera[1] + camera[3]).toBeCloseTo(social[1], 4);
-    expect(social[3]).toBe(88);
-    expect(donors[1]).toBeGreaterThanOrEqual(0);
+    expect(social.slice(2)).toEqual(game.horizontal.socialSource);
+    expect(social[3]).toBeLessThanOrEqual(scene.donorVisible[3]);
+    expect(social[1] + social[3]).toBeCloseTo(scene.music[1], 4);
+    expect(donors[1]).toBeGreaterThanOrEqual(32);
     expect(social[1] + social[3]).toBeLessThanOrEqual(1440);
     expect(scene.donorVisible[1]).toBeCloseTo(donors[1] + 20 * 0.48, 4);
     expect(scene.donorVisible[3]).toBeCloseTo(114 * 0.48, 4);
     expect([scene.donorVisible[0], scene.donorVisible[2]]).toEqual([donors[0], donors[2]]);
     expect(scene.donorVisible[1] + scene.donorVisible[3]).toBeCloseTo(camera[1], 4);
-    // Полоса стала выше на 24 px и заходит в верхнюю часть зоны музыки: полоса не должна
-    // перекрывать донатеров и не должна свисать ниже нижнего края музыки.
+    // Полоса и музыка остаются без перекрытия.
     const stripBottom = social[1] + social[3];
     expect(
       scene.music[1] + scene.music[3] <= donors[1] ||
@@ -97,19 +94,19 @@ test('gameplay scenes use exact source viewports and aligned donor-camera-social
     ).toBe(true);
   }
   expect(game.horizontal.donorSource).toEqual([1000, 134]);
-  expect(game.horizontal.socialSource).toEqual([480, 88]);
+  expect(game.horizontal.socialSource).toEqual([480, 54]);
 });
 
 test('vertical ANY keeps crop, moves the capture below the social strip, same displayed size', () => {
   const game = layout.gameplay.vertical;
   expect(game.sceneUuid).toBe('2a3a2334-10bd-4ac6-80e8-392e7aa30f14');
   expect(game.gameCapture).toEqual({
-    bounds: [1080, 861.28],
+    bounds: [1080, 861.78],
     crop: [340, 0, 340, 0],
-    position: [0, 840.72],
+    position: [0, 840.22],
   });
   const [, socialTop, , socialHeight] = game.social;
-  expect(game.gameCapture.position[1]).toBe(socialTop + socialHeight);
+  expect(game.gameCapture.position[1]).toBeCloseTo(socialTop + socialHeight, 4);
   const gameBottom = game.gameCapture.position[1] + game.gameCapture.bounds[1];
   expect(gameBottom).toBeLessThanOrEqual(game.music[1]);
   expect(game.donorSource).toEqual([1000, 134]);

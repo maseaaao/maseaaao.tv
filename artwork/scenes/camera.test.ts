@@ -6,7 +6,7 @@ import { launchBrowser } from '../../tooling/artwork/browser.ts';
 const directory = import.meta.dir;
 const layout = JSON.parse(await readFile(`${directory}/layout.json`, 'utf8'));
 
-test('vertical camera has a light lower field beneath its higher widget layers', async () => {
+test('vertical camera has a blue lower field beneath its higher widget layers', async () => {
   const browser = await launchBrowser();
   try {
     const page = await browser.newPage({ viewport: { height: 1920, width: 1080 } });
@@ -54,7 +54,7 @@ test('vertical camera has a light lower field beneath its higher widget layers',
         ),
       },
     );
-    expect(result.field).toEqual([244, 243, 236, 255]);
+    expect(result.field).toEqual([22, 22, 217, 255]);
     expect(result.chat).toEqual(result.field);
     expect(result.top[3]).toBe(0);
   } finally {
