@@ -38,10 +38,6 @@ files.set(
   'logo/original.png',
   fileURLToPath(new URL('../../artwork/logo/logo.png', import.meta.url)),
 );
-files.set(
-  'brand/favicon-mask.svg',
-  fileURLToPath(new URL('../../artwork/brand/favicon-mask.svg', import.meta.url)),
-);
 
 const config = standaloneConfig({
   fileName: 'index.html',

@@ -36,7 +36,7 @@ p {
 }
 h1,
 h2 {
-  font-family: Unbounded, Arial, sans-serif;
+  font-family: var(--font-display);
   font-weight: 400;
 }
 code,
@@ -63,9 +63,13 @@ pre {
   color: var(--color-surface);
 }
 .wordmark {
-  font-family: Unbounded, Arial, sans-serif;
+  font-family: var(--font-display);
   font-size: 17px;
   text-decoration: none;
+}
+.wordmark__name {
+  font-family: var(--font-nickname);
+  font-weight: var(--font-nickname-weight);
 }
 .wordmark span {
   opacity: 0.65;
@@ -103,6 +107,10 @@ pre {
   text-decoration: none;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-tag);
+  transition:
+    color var(--motion-feedback) var(--motion-ease-state),
+    background-color var(--motion-feedback) var(--motion-ease-state),
+    border-color var(--motion-feedback) var(--motion-ease-state);
 }
 .section-nav a:hover {
   color: var(--color-brand);
@@ -247,11 +255,15 @@ h2 {
 }
 .display-sample {
   margin-top: 12px;
-  font-family: Unbounded, Arial, sans-serif;
+  font-family: var(--font-display);
   font-size: clamp(24px, 3vw, 42px);
   font-weight: 400;
   line-height: 1.3;
   overflow-wrap: anywhere;
+}
+.nickname-sample {
+  font-family: var(--font-nickname);
+  font-weight: var(--font-nickname-weight);
 }
 .body-sample {
   max-width: 560px;
@@ -482,9 +494,22 @@ h2 {
 .motion-reduced .motion-playing[data-motion] .motion-object {
   animation: none;
 }
+/* Системная настройка выключает предпросмотр, но витрина движения должна
+   оставаться проверяемой: явный переключатель «вопреки системе» сильнее. */
 @media (prefers-reduced-motion: reduce) {
-  .motion-playing[data-motion] .motion-object {
+  .motion-grid:not([data-motion-override='force'])
+    .motion-playing[data-motion]
+    .motion-object {
     animation: none;
+  }
+  /* accessibility.css глушит длительности через !important — витрине нужны настоящие. */
+  .motion-grid[data-motion-override='force']
+    .motion-playing[data-motion]
+    .motion-object {
+    animation-duration: calc(
+      var(--preview-duration) *
+      var(--motion-speed)
+    ) !important;
   }
 }
 .gallery-tabs {
@@ -502,6 +527,15 @@ h2 {
   background: transparent;
   border: 1px solid var(--color-border-control);
   border-radius: var(--radius-tag);
+  transition:
+    color var(--motion-feedback) var(--motion-ease-state),
+    background-color var(--motion-feedback) var(--motion-ease-state),
+    border-color var(--motion-feedback) var(--motion-ease-state),
+    transform var(--motion-feedback) var(--motion-ease-spring);
+}
+.gallery-tabs button:active {
+  transform: scale(var(--motion-press-scale));
+  transition-duration: var(--motion-press);
 }
 .gallery-tabs button[aria-selected='true'] {
   color: var(--color-surface);
@@ -576,8 +610,16 @@ h2 {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-field);
 }
+#artwork-dialog[open] {
+  animation:
+    motion-pop-in var(--motion-enter) var(--motion-ease-spring),
+    motion-focus-in var(--motion-focus) ease-out;
+}
 #artwork-dialog::backdrop {
   background: rgb(0 0 0 / 65%);
+}
+#artwork-dialog[open]::backdrop {
+  animation: motion-fade-in var(--motion-feedback) var(--motion-ease-enter);
 }
 .dialog-toolbar {
   display: flex;
@@ -661,6 +703,9 @@ pre {
   color: var(--color-surface);
   background: var(--color-text);
   border-radius: var(--radius-field);
+  animation:
+    motion-rise-in var(--motion-feedback) var(--motion-ease-enter),
+    motion-focus-in var(--motion-focus) ease-out;
 }
 .empty {
   padding: 32px 0;

@@ -9,3 +9,16 @@
   border: 0;
   clip-path: inset(50%);
 }
+
+/* Конечное состояние важнее декора: необязательное движение выключается.
+   Короткая длительность вместо none сохраняет события animationend. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

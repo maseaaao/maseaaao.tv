@@ -3,11 +3,18 @@
 Палитра, типографика и токены движения для браузерных продуктов. Добавьте
 `@maseaaao/design` как `workspace:*` зависимость потребителя.
 
+Живые значения и состояния — [maseaaao.tv/ui](https://maseaaao.tv/ui/):
+[палитра](https://maseaaao.tv/ui/#palette),
+[типографика](https://maseaaao.tv/ui/#type),
+[геометрия](https://maseaaao.tv/ui/#geometry),
+[движение](https://maseaaao.tv/ui/#motion).
+
 ```css
 @import '@maseaaao/design/brand.css';
 ```
 
-`brand.css` подключает токены, Unbounded Variable и правило `[hidden]`.
+`brand.css` подключает токены, общие примитивы движения, Unbounded Variable и
+правило `[hidden]`.
 Для точечного подключения:
 
 ```css
@@ -16,8 +23,11 @@
 ```
 
 - `tokens.css` — семантические цвета, размеры и движение.
+- `motion.css` — общие keyframes и классы движения; подключается после токенов.
 - `fonts.css` — один Unbounded Variable WOFF2 с диапазоном весов 200–900.
-  Конкретный вес задаётся через `font-weight` в стилях потребителя.
+  Заголовки и акценты используют `--font-display` с весом 400.
+  Только фирменный никнейм использует `--font-nickname` с весом 600
+  из `--font-nickname-weight`. Основной текст — `--font-body` (Arial).
 - `fonts/*` — каноничный variable WOFF2. Arial берётся из системы и не распространяется.
 - `license` — публичный export [Unbounded OFL](licenses/Unbounded-OFL.txt).
 

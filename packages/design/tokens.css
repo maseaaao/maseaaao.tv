@@ -1,18 +1,18 @@
 :root {
-  --color-brand: #1616d9;
+  --color-brand: #1c18d9;
   --color-canvas: var(--color-brand);
-  --color-surface: #f4f3ec;
-  --color-field: #fffef8;
-  --color-text: #20201e;
-  --color-muted: #60605a;
-  --color-border: #d2d1c9;
-  --color-border-control: #83837b;
+  --color-surface: #f8f9f4;
+  --color-field: #fffff9;
+  --color-text: #212120;
+  --color-muted: #61615c;
+  --color-border: #d3d2cb;
+  --color-border-control: #84847d;
   --color-focus: var(--color-brand);
-  --color-action-hover: #1010a9;
-  --color-success: #176548;
-  --color-danger: #a42a36;
-  --color-warning: #815005;
-  --color-accent-soft: #e8e8fc;
+  --color-action-hover: #1512a9;
+  --color-success: #18664a;
+  --color-danger: #a52c35;
+  --color-warning: #815107;
+  --color-accent-soft: #dfe9fe;
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -27,19 +27,64 @@
   --radius-field: 0.75rem;
   --radius-surface: 1.5rem;
   --control-height: 2.75rem;
+  --font-nickname: var(--font-display);
+  --font-nickname-weight: 600;
   --font-display: 'Unbounded', Arial, sans-serif;
   --font-body: Arial, sans-serif;
 
-  /* Purpose, not platform imitation: immediate response, quiet settling. */
-  --motion-press: 80ms;
+  /*
+   * Движение: шкала Windows 11 (83/167/250/333 мс) и упругая доводка iOS.
+   * Значения — по назначению, а не по конкретному компоненту.
+   * Подробности: docs/motion.md.
+   */
+  --motion-press: 83ms;
   --motion-focus: 120ms;
-  --motion-ease-spring: cubic-bezier(0.2, 1.22, 0.36, 1);
-  --motion-feedback: 160ms;
-  --motion-enter: 240ms;
-  --motion-exit: 140ms;
-  --motion-scene: 360ms;
-  --motion-ease-enter: cubic-bezier(0.22, 1, 0.36, 1);
-  --motion-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --motion-feedback: 167ms;
+  --motion-enter: 250ms;
+  --motion-exit: 167ms;
+  --motion-scene: 333ms;
+  --motion-rise: 8px;
+  --motion-nudge: 4px;
+  --motion-shift: 12px;
+  --motion-press-scale: 0.985;
+  --motion-enter-scale: 0.97;
+  --motion-blur: 2px;
   --motion-ease-state: cubic-bezier(0.2, 0, 0, 1);
+  --motion-ease-enter: cubic-bezier(0, 0, 0, 1);
+  --motion-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --motion-ease-spring: cubic-bezier(0.2, 1.22, 0.36, 1);
   color-scheme: light;
+}
+
+/* iOS-подобная пружина: 8% перелёта, затухание к 100% за 333 мс. */
+@supports (animation-timing-function: linear(0, 1)) {
+  :root {
+    --motion-ease-spring: linear(
+      0,
+      0.1127,
+      0.3506,
+      0.6045,
+      0.815,
+      0.9605,
+      1.0432,
+      1.0768,
+      1.0783,
+      1.0632,
+      1.0425,
+      1.0231,
+      1.0084,
+      0.9991,
+      0.9944,
+      0.993,
+      0.9937,
+      0.9952,
+      0.9969,
+      0.9983,
+      0.9993,
+      0.9998,
+      1.0001,
+      1.0001,
+      1
+    );
+  }
 }

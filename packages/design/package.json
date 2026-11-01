@@ -8,6 +8,7 @@
   "exports": {
     "./brand.css": "./brand.css",
     "./fonts.css": "./fonts.css",
+    "./motion.css": "./motion.css",
     "./tokens.css": "./tokens.css",
     "./fonts/*": "./fonts/*",
     "./license": "./licenses/Unbounded-OFL.txt"

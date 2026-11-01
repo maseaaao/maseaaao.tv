@@ -4,8 +4,11 @@
 `@maseaaao/design` как `workspace:*` зависимости потребителя; импортируйте
 только через публичные exports, а не файлы напрямую.
 
-Живые примеры всех общих компонентов и их состояний —
-[UI Gallery](../../apps/ui-gallery/README.md), запуск из корня: `bun run dev:ui`.
+Живые примеры всех общих компонентов и их состояний — публичная витрина
+[maseaaao.tv/ui](https://maseaaao.tv/ui/): [кнопки](https://maseaaao.tv/ui/#buttons),
+[поля](https://maseaaao.tv/ui/#fields), [статусы](https://maseaaao.tv/ui/#badges),
+[инвертированная тема](https://maseaaao.tv/ui/#inverted). Локальный запуск из
+корня — `bun run dev:ui`, источник — [UI Gallery](../../apps/ui-gallery/README.md).
 
 ## API
 

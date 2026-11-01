@@ -1,0 +1,88 @@
+/*
+ * Общие примитивы движения. Подключаются после tokens.css.
+ * Только opacity/transform в постоянных переходах; blur — короткая доводка
+ * мелких слоёв, не больших поверхностей. Смысл и правила: docs/motion.md.
+ */
+
+@keyframes motion-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes motion-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-rise, 8px));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes motion-rise-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(calc(var(--motion-rise, 8px) * -0.5));
+  }
+}
+
+@keyframes motion-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-rise, 8px))
+      scale(var(--motion-enter-scale, 0.97));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes motion-focus-in {
+  from {
+    filter: blur(var(--motion-blur, 2px));
+  }
+  to {
+    filter: blur(0);
+  }
+}
+
+@keyframes motion-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Готовые классы для разметки, которой не нужен собственный keyframe. */
+.motion-fade-in {
+  animation: motion-fade-in var(--motion-feedback) var(--motion-ease-enter) both;
+}
+
+.motion-rise-in {
+  animation: motion-rise-in var(--motion-enter) var(--motion-ease-enter) both;
+}
+
+.motion-pop-in {
+  animation: motion-pop-in var(--motion-enter) var(--motion-ease-spring) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-fade-in,
+  .motion-rise-in,
+  .motion-pop-in {
+    animation: none;
+  }
+}

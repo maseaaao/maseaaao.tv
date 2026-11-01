@@ -14,7 +14,9 @@
   <body>
     <a class="skip-link" href="#content">К содержимому</a>
     <header class="masthead">
-      <a class="wordmark" href="#content">maseaaao.tv <span>/ ui</span></a>
+      <a class="wordmark" href="#content"
+        ><b class="wordmark__name">maseaaao</b><span>.tv / ui</span></a
+      >
     </header>
     <div class="layout">
       <aside class="sidebar">
@@ -97,12 +99,16 @@
               <span class="source-label">design / fonts.css</span>
             </div>
             <p class="description">
-              Unbounded — заголовки и акценты, Arial — основной текст. Локальный variable-шрифт,
-              веса 200–900.
+              Unbounded 400 — заголовки и акценты по всему проекту; 600 — только фирменный никнейм.
+              Arial — основной текст.
             </p>
             <div class="type-specimen">
               <span class="eyebrow">--font-display / 400</span>
               <p class="display-sample">Привет, это эфир.<br>Аа Бб Вв 012345</p>
+            </div>
+            <div class="type-specimen">
+              <span class="eyebrow">--font-nickname / 600</span>
+              <p class="display-sample nickname-sample">maseaaao</p>
             </div>
             <div class="type-specimen">
               <span class="eyebrow">--font-body / 400</span>
@@ -143,6 +149,11 @@
               >
               <label class="motion-reduce"
                 ><input id="motion-reduce" type="checkbox">Без движения</label
+              >
+              <label
+                class="motion-reduce"
+                title="Нужно, если в Windows выключены эффекты анимации: продукты уважают эту настройку, витрина — нет"
+                ><input id="motion-force" type="checkbox">Вопреки системе</label
               >
             </div>
             <p class="description" id="motion-status" role="status"></p>
