@@ -6,8 +6,7 @@ const websiteImages = [
   'apple-touch-icon-1024x1024.png',
   'apple-touch-icon.png',
   'assets/avatar-master.png',
-  'assets/subscribe-512.png',
-  'assets/subscribe-background-ai.png',
+  'assets/subscribe-512.png', // ручной промо-ассет владельца (Телеграм), страницы сайта его не используют
   ...[16, 32, 48].map((size) => `favicon-${size}x${size}.png`),
   'favicon.ico',
   'og-image.jpg',

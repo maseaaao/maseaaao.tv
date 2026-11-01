@@ -213,7 +213,6 @@
         "$TURBO_ROOT$/packages/build-config/**",
         "$TURBO_ROOT$/dist/artwork/**",
         "$TURBO_ROOT$/artwork/logo/logo.png",
-        "$TURBO_ROOT$/artwork/brand/favicon-mask.svg",
         "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
         "!$TURBO_ROOT$/**/.DS_Store"
       ],

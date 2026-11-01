@@ -1,19 +1,23 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
+import { generateQrWithLogo } from './generate-qr-with-logo.ts';
+import { logoMasterPng, readToken } from './logo-master.ts';
 
 const AVATAR_DOTWEBP_RE = /^avatar-.*\.webp$/;
+const QR_TEXT = 'https://maseaaao.tv';
 
 const root = path.resolve(import.meta.dirname, '../..');
-const logoDir = path.join(root, 'artwork/logo');
 const output = path.join(root, 'dist/artwork/logo');
 const assets = path.join(root, 'dist/artwork/brand/website/assets');
+const websiteQr = path.join(root, 'apps/website/public/assets/maseaaao.tv.png');
 await fs.mkdir(assets, { recursive: true });
-const logo = await fs.readFile(path.join(logoDir, 'logo.png'));
 await fs.mkdir(output, { recursive: true });
-// Preserve the approved original, including its colour and background.
-// Display-driven website variants are derived from the master by the website
-// build (@11ty/eleventy-img), not by this script.
+// Векторный мастер — источник всех растров аватара; цвета берутся из палитры.
+const logo = await logoMasterPng(1024);
+// PNG рядом с мастером пересобирается тем же прогоном: HTML-витрины и обои
+// читают его, поэтому цвет в них тоже следует палитре.
+await fs.writeFile(path.join(root, 'artwork/logo/logo.png'), await logoMasterPng(1254));
 // biome-ignore lint/performance/noAwaitInLoops: Process assets sequentially to bound Chromium and image encoder memory.
 for (const name of (await fs.readdir(assets)).filter((nameLocal) =>
   AVATAR_DOTWEBP_RE.test(nameLocal),
@@ -54,4 +58,16 @@ for (const size of [1024, 512, 256]) {
     );
   }
 }
-console.log('Avatar derivatives refreshed; approved logo and QR originals preserved.');
+// QR со знаком в центре: цвета и плитка из палитры, читаемость проверяет генератор.
+const qr = await generateQrWithLogo({
+  color: { dark: await readToken('color-text'), light: await readToken('color-surface') },
+  logo: await logoMasterPng(256),
+  text: QR_TEXT,
+  tile: { fill: await readToken('color-field'), stroke: await readToken('color-accent-soft') },
+  width: 800,
+});
+await fs.writeFile(path.join(output, 'qr.png'), qr.buffer);
+await fs.writeFile(websiteQr, qr.buffer);
+console.log(
+  `Avatar derivatives refreshed from artwork/logo/mark.svg; QR ${qr.width}px written for ${qr.decoded}.`,
+);

@@ -63,39 +63,9 @@
       "copy": "конец"
     },
     {
-      "name": "04-camera-horizontal",
-      "file": "04-camera-horizontal.html",
-      "rendered": "04-camera-horizontal.webp",
-      "width": 2560,
-      "height": 1440,
-      "kind": "camera",
-      "map": "horizontal-camera",
-      "copy": ""
-    },
-    {
-      "name": "04-camera-vertical",
-      "file": "04-camera-vertical.html",
-      "rendered": "04-camera-vertical.webp",
-      "width": 1080,
-      "height": 1920,
-      "kind": "camera",
-      "map": "vertical-camera",
-      "copy": ""
-    },
-    {
       "name": "00-blank",
       "file": "00-blank.html",
       "rendered": "00-blank.webp",
-      "width": 2560,
-      "height": 1440,
-      "kind": "blank",
-      "map": "horizontal",
-      "copy": ""
-    },
-    {
-      "name": "background",
-      "file": "background.html",
-      "rendered": "background.webp",
       "width": 2560,
       "height": 1440,
       "kind": "blank",
@@ -111,16 +81,6 @@
       "kind": "gameplay",
       "map": "vertical-gameplay",
       "copy": ""
-    },
-    {
-      "name": "cam-frame",
-      "file": "cam-frame.html",
-      "rendered": "cam-frame.webp",
-      "width": 600,
-      "height": 341,
-      "kind": "tile",
-      "map": "horizontal",
-      "copy": ""
     }
   ],
   "horizontal": {
@@ -133,13 +93,14 @@
     "social": [0, 0, 2560, 53.333333333333336],
     "camera": [32, 32, 2496, 1376],
     "header": [120, 220, 1400, 1],
-    "titleField": [88, 400, 1432, 264],
-    "title": [120, 440],
+    "titleField": [120, 439, 1400, 200],
+    "titleLogo": [152, 491, 96],
+    "title": [296, 440],
     "titleSize": 160
   },
   "vertical-status": {
     "canvas": [1080, 1920],
-    "title": [120, 300],
+    "title": [231.2, 300],
     "music": [120, 1260, 720, 144],
     "chat": [120, 636, 720, 524],
     "donors": [120, 539.52, 720, 96.48],
@@ -147,27 +108,12 @@
     "qr": [120, 1540, 260, 260],
     "social": [120, 1160, 720, 88],
     "header": [120, 244, 720, 1],
-    "titleField": [88, 268, 784, 176],
+    "titleField": [120, 300, 720, 110],
+    "titleLogo": [152, 328.6, 52.8],
     "titleSize": 88
-  },
-  "vertical-camera": {
-    "canvas": [1080, 1920],
-    "camera": [0, 144.72, 1080, 607.5],
-    "chat": [120, 850, 720, 524],
-    "music": [120, 1410, 720, 144],
-    "donors": [0, 0, 1080, 144.72],
-    "alerts": [120, 1620, 720, 240],
-    "social": [0, 752.22, 1080, 88],
-    "lowerBackground": [0, 817, 1080, 1103]
   },
   "chatFit": {
     "horizontal": {
-      "sourceViewport": [1100, 800],
-      "boundsType": "OBS_BOUNDS_SCALE_INNER",
-      "alignment": 5,
-      "boundsAlignment": 9
-    },
-    "vertical-camera": {
       "sourceViewport": [1100, 800],
       "boundsType": "OBS_BOUNDS_SCALE_INNER",
       "alignment": 5,
@@ -178,7 +124,7 @@
     "horizontal": {
       "canvas": [2560, 1440],
       "donorSource": [1000, 134],
-      "socialSource": [480, 54],
+      "socialSource": [480, 36],
       "musicSource": [1000, 200],
       "sharedGameSceneUuid": "f6464937-3fba-4dbf-8983-e1ec25398c5b",
       "sharedSocialItemId": 18,
@@ -189,10 +135,10 @@
           "cameraItemId": 33,
           "donorItemId": 30,
           "musicItemId": 31,
-          "donors": [2048, 923.68, 480, 64.32],
-          "donorVisible": [2048, 933.28, 480, 54.72],
-          "camera": [2048, 988.0, 480, 270],
-          "social": [2048, 1258.0, 480, 54],
+          "donors": [2048, 941.68, 480, 64.32],
+          "donorVisible": [2048, 951.28, 480, 54.72],
+          "camera": [2048, 1006.0, 480, 270],
+          "social": [2048, 1276.0, 480, 36],
           "music": [2048, 1312.0, 480, 96]
         },
         {
@@ -201,10 +147,10 @@
           "cameraItemId": 32,
           "donorItemId": 29,
           "musicItemId": 28,
-          "donors": [32, 923.68, 480, 64.32],
-          "donorVisible": [32, 933.28, 480, 54.72],
-          "camera": [32, 988.0, 480, 270],
-          "social": [32, 1258.0, 480, 54],
+          "donors": [32, 941.68, 480, 64.32],
+          "donorVisible": [32, 951.28, 480, 54.72],
+          "camera": [32, 1006.0, 480, 270],
+          "social": [32, 1276.0, 480, 36],
           "music": [32, 1312.0, 480, 96]
         },
         {
@@ -213,11 +159,11 @@
           "cameraItemId": 32,
           "donorItemId": 29,
           "musicItemId": 28,
-          "donors": [2048, 477.84, 480, 64.32],
-          "donorVisible": [2048, 487.44, 480, 54.72],
-          "camera": [2048, 542.16, 480, 270],
-          "social": [2048, 812.16, 480, 54],
-          "music": [2048, 866.16, 480, 96]
+          "donors": [2048, 486.84, 480, 64.32],
+          "donorVisible": [2048, 496.44, 480, 54.72],
+          "camera": [2048, 551.16, 480, 270],
+          "social": [2048, 821.16, 480, 36],
+          "music": [2048, 857.16, 480, 96]
         },
         {
           "uuid": "4e3c5765-5350-455b-b6eb-2ff98ca96bf7",
@@ -225,11 +171,11 @@
           "cameraItemId": 36,
           "donorItemId": 33,
           "musicItemId": 32,
-          "donors": [32, 477.84, 480, 64.32],
-          "donorVisible": [32, 487.44, 480, 54.72],
-          "camera": [32, 542.16, 480, 270],
-          "social": [32, 812.16, 480, 54],
-          "music": [32, 866.16, 480, 96]
+          "donors": [32, 486.84, 480, 64.32],
+          "donorVisible": [32, 496.44, 480, 54.72],
+          "camera": [32, 551.16, 480, 270],
+          "social": [32, 821.16, 480, 36],
+          "music": [32, 857.16, 480, 96]
         },
         {
           "uuid": "f8513e73-7ce5-433f-b671-713c19e2f8cb",
@@ -240,8 +186,8 @@
           "donors": [2048, 32, 480, 64.32],
           "donorVisible": [2048, 41.6, 480, 54.72],
           "camera": [2048, 96.32, 480, 270],
-          "social": [2048, 366.32, 480, 54],
-          "music": [2048, 420.32, 480, 96]
+          "social": [2048, 366.32, 480, 36],
+          "music": [2048, 402.32, 480, 96]
         },
         {
           "uuid": "fe5038c9-c957-4972-b998-7cf146c91f1e",
@@ -252,8 +198,8 @@
           "donors": [32, 32, 480, 64.32],
           "donorVisible": [32, 41.6, 480, 54.72],
           "camera": [32, 96.32, 480, 270],
-          "social": [32, 366.32, 480, 54],
-          "music": [32, 420.32, 480, 96]
+          "social": [32, 366.32, 480, 36],
+          "music": [32, 402.32, 480, 96]
         }
       ],
       "socialScale": 1
@@ -275,15 +221,15 @@
       "logo": [24, 168.72, 128, 128],
       "alerts": [81, 446.72, 918, 306],
       "gameCapture": {
-        "position": [0, 840.22],
-        "bounds": [1080, 861.78],
+        "position": [0, 840],
+        "bounds": [1080, 918],
         "crop": [340, 0, 340, 0]
       }
     }
   },
   "socialSources": {
     "horizontal-status": {
-      "viewport": [640, 88],
+      "viewport": [640, 55],
       "fragment": ""
     },
     "vertical-status": {
@@ -291,7 +237,7 @@
       "fragment": ""
     },
     "horizontal-gameplay": {
-      "viewport": [480, 54],
+      "viewport": [480, 36],
       "fragment": ""
     },
     "vertical-camera-gameplay": {
@@ -299,38 +245,29 @@
       "fragment": ""
     },
     "horizontal-camera": {
-      "viewport": [1080, 88],
+      "viewport": [1080, 55],
       "fragment": ""
     }
   },
   "horizontal-status": {
     "canvas": [2560, 1440],
     "chat": [1740, 336, 640, 465],
-    "music": [1740, 890, 640, 128],
+    "music": [1740, 857, 640, 128],
     "donors": [1740, 250.24, 640, 85.76],
     "alerts": [120, 824, 1100, 366.67],
-    "qr": [2180, 1160, 250, 250],
-    "social": [1740, 801, 640, 88],
+    "qr": [2140, 1160, 250, 250],
+    "social": [1740, 801, 640, 55],
     "header": [120, 220, 1400, 1],
-    "titleField": [88, 400, 1432, 264],
-    "title": [120, 440],
+    "titleField": [120, 439, 1400, 200],
+    "titleLogo": [152, 491, 96],
+    "title": [296, 440],
     "titleSize": 160
-  },
-  "horizontal-camera": {
-    "canvas": [2560, 1440],
-    "camera": [120, 300, 1280, 720],
-    "donors": [120, 128.48, 1280, 171.52],
-    "social": [120, 1020, 1280, 104.29629629629629],
-    "chat": [1740, 336, 640, 465],
-    "music": [1740, 890, 640, 128],
-    "alerts": [120, 1140, 900, 300],
-    "qr": [2180, 1160, 250, 250]
   },
   "vertical-gameplay": {
     "canvas": [1080, 1920]
   },
   "horizontalCameraStrip": {
-    "display": [1280, 104.29629629629629],
-    "source": [1080, 88]
+    "display": [1280, 65.18518518518519],
+    "source": [1080, 55]
   }
 }

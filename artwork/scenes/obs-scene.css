@@ -25,7 +25,7 @@
 .status .identity {
   position: absolute;
   margin: 0;
-  font: 400 48px / 1.2 var(--font-display);
+  font: var(--font-nickname-weight) 48px / 1.2 var(--font-nickname);
   color: #fff;
   letter-spacing: -0.035em;
 }
@@ -40,6 +40,17 @@
   position: absolute;
   background: var(--color-brand);
   border-radius: var(--radius-surface);
+}
+.status .title-field {
+  border-radius: 44px;
+}
+.status.vertical .title-field {
+  border-radius: var(--radius-surface);
+}
+.status .title-logo {
+  position: absolute;
+  display: block;
+  border-radius: 25%;
 }
 .canvas h1 {
   position: absolute;
@@ -74,7 +85,6 @@
   display: block;
   object-fit: contain;
   image-rendering: pixelated;
-  background: var(--color-surface);
 }
 .lower-background {
   position: absolute;

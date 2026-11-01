@@ -20,7 +20,9 @@
 }
 .og h1 {
   margin: 0;
+  font-family: var(--font-nickname);
   font-size: 108px;
+  font-weight: var(--font-nickname-weight);
   line-height: 1.25;
   letter-spacing: -0.055em;
 }
@@ -42,27 +44,30 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  /* Строка домена держит полустроку запаса снизу, без компенсации блок читается приподнятым. */
+  padding-top: 6px;
 }
 .subscribe img {
-  width: 144px;
-  height: 144px;
-  margin-bottom: 32px;
+  width: 156px;
+  height: 156px;
+  margin-bottom: 34px;
   border-radius: var(--radius-surface);
 }
 .subscribe h1 {
   margin: 0;
-  font-size: 22px;
+  font-size: 24px;
+  line-height: 1.3;
   letter-spacing: -0.03em;
 }
-.subscribe p {
-  margin: 12px 0 32px;
-  font-size: 20px;
-  color: var(--color-muted);
-}
 .subscribe strong {
-  font-size: 28px;
+  margin-top: 14px;
+  font-family: var(--font-nickname);
+  font-size: 32px;
+  font-weight: var(--font-nickname-weight);
+  line-height: 1.25;
   color: var(--color-brand);
-  letter-spacing: -0.04em;
+  /* Плотное отрицательное значение склеивает округлые «а» в «maseaaao». */
+  letter-spacing: -0.02em;
 }
 .icon {
   width: 100%;
@@ -75,7 +80,7 @@
   height: 100%;
   object-fit: contain;
 }
-.background {
-  position: absolute;
-  inset: 24px;
+.subscribe strong span {
+  font-family: var(--font-display);
+  font-weight: 400;
 }

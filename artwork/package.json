@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "bun ../tooling/build-artwork.ts",
-    "test": "bun test scenes/status.test.ts scenes/camera.test.ts scenes/donor-camera.test.ts scenes/gameplay.test.ts"
+    "test": "bun test scenes/status.test.ts scenes/donor-camera.test.ts scenes/gameplay.test.ts logo/master.test.ts"
   },
   "dependencies": {
     "@maseaaao/design": "workspace:*"

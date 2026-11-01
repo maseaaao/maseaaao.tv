@@ -8,7 +8,7 @@ HTML/CSS композиций — исходники; корневые `dist/art
 | Команда                           | Результат                                                                  |
 | --------------------------------- | -------------------------------------------------------------------------- |
 | `bun run build:artwork`           | Автономные HTML в `dist/artwork/html`, без растров                         |
-| `bun run render:logo`             | Производные аватара                                                        |
+| `bun run render:logo`             | Производные аватара и QR со знаком в центре                                |
 | `bun run render:scenes`           | Сцены OBS из `scenes/layout.json`                                          |
 | `bun run render:artwork <группа>` | `banners`, `panels`, `wallpapers`, `brand` или `favicon`; без группы — все |
 | `bun run render:all`              | Полный экспорт изображений                                                 |
@@ -16,8 +16,14 @@ HTML/CSS композиций — исходники; корневые `dist/art
 
 Рендер готовит HTML сам; `--prepared` пропускает подготовку, если она уже выполнена.
 `dist/artwork/brand/website` — источник изображений сайта для `build:website`.
-`logo/logo.png` и `apps/website/public/assets/maseaaao.tv.png` — защищённые оригиналы;
-`render:logo` не генерирует QR. Сохраняйте утверждённые аватар и QR.
+`logo/mark.svg` — векторный мастер знака 512×512. Заливки прописаны конкретными
+цветами (файл открывается и просматривается сам по себе), а роли
+`data-fill="brand"` / `data-fill="surface"` позволяют `tooling/artwork/logo-master.ts`
+перекрашивать их токенами `@maseaaao/design`. Из мастера собираются `logo/logo.png`,
+аватар, иконки сайта и центр QR — цвет везде следует палитре.
+`logo/logo-reference.png` — утверждённый растр-эталон формы: `logo/master.test.ts`
+сверяет с ним мастер. QR генерируется из `https://maseaaao.tv` пакетом `qrcode`
+со знаком в центре; читаемость проверяется при экспорте.
 
 CI выполняет экспорт в Linux; локально изображения можно экспортировать и
 просматривать в Windows. Учитывайте возможные различия рендера между средами

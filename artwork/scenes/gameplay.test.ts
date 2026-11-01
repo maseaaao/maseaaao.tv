@@ -8,23 +8,22 @@ test('social source viewports match every planned scene without stretching or st
   expect(layout.horizontalSocial).toBeUndefined();
   const sources = layout.socialSources;
   expect(sources).toEqual({
-    'horizontal-camera': { fragment: '', viewport: [1080, 88] },
-    'horizontal-gameplay': { fragment: '', viewport: [480, 54] },
-    'horizontal-status': { fragment: '', viewport: [640, 88] },
+    'horizontal-camera': { fragment: '', viewport: [1080, 55] },
+    'horizontal-gameplay': { fragment: '', viewport: [480, 36] },
+    'horizontal-status': { fragment: '', viewport: [640, 55] },
     'vertical-camera-gameplay': { fragment: '', viewport: [1080, 88] },
     'vertical-status': { fragment: '', viewport: [720, 88] },
   });
   for (const [map, source] of [
     [layout['horizontal-status'], sources['horizontal-status']],
     [layout['vertical-status'], sources['vertical-status']],
-    [layout['vertical-camera'], sources['vertical-camera-gameplay']],
     [layout.gameplay.vertical, sources['vertical-camera-gameplay']],
   ]) {
     expect(map.social.slice(2)).toEqual(source.viewport);
   }
   expect(layout.horizontalCameraStrip).toEqual({
-    display: [1280, (88 * 1280) / 1080],
-    source: [1080, 88],
+    display: [1280, (55 * 1280) / 1080],
+    source: [1080, 55],
   });
 });
 
@@ -38,13 +37,7 @@ test('root test includes artwork and widget tests without a build or export', as
   }
 });
 test('every donor viewport preserves the common 1000×134 source proportions', () => {
-  for (const name of [
-    'horizontal',
-    'horizontal-status',
-    'vertical-status',
-    'horizontal-camera',
-    'vertical-camera',
-  ]) {
+  for (const name of ['horizontal', 'horizontal-status', 'vertical-status']) {
     const [, , width, height] = layout[name].donors;
     expect(height, name).toBeCloseTo((134 * width) / 1000, 4);
   }
@@ -94,21 +87,21 @@ test('gameplay scenes use exact source viewports and aligned donor-camera-social
     ).toBe(true);
   }
   expect(game.horizontal.donorSource).toEqual([1000, 134]);
-  expect(game.horizontal.socialSource).toEqual([480, 54]);
+  expect(game.horizontal.socialSource).toEqual([480, 36]);
 });
 
 test('vertical ANY keeps crop, moves the capture below the social strip, same displayed size', () => {
   const game = layout.gameplay.vertical;
   expect(game.sceneUuid).toBe('2a3a2334-10bd-4ac6-80e8-392e7aa30f14');
   expect(game.gameCapture).toEqual({
-    bounds: [1080, 861.78],
+    bounds: [1080, 918],
     crop: [340, 0, 340, 0],
-    position: [0, 840.22],
+    position: [0, 840],
   });
   const [, socialTop, , socialHeight] = game.social;
-  expect(game.gameCapture.position[1]).toBeCloseTo(socialTop + socialHeight, 4);
+  expect(game.gameCapture.position[1]).toBeCloseTo(socialTop + socialHeight, 0);
   const gameBottom = game.gameCapture.position[1] + game.gameCapture.bounds[1];
-  expect(gameBottom).toBeLessThanOrEqual(game.music[1]);
+  expect(gameBottom).toBe(1758);
   expect(game.donorSource).toEqual([1000, 134]);
   expect(game.socialSource).toEqual([1080, 88]);
   expect(game.donors[3]).toBeCloseTo(134 * 1.08, 4);

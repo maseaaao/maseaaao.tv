@@ -4,6 +4,7 @@ import pngToIco from 'png-to-ico';
 import sharp from 'sharp';
 import { buildArtwork } from '../build-artwork.ts';
 import { launchBrowser } from './browser.ts';
+import { logoMasterPng } from './logo-master.ts';
 import { renderImage } from './render-image.ts';
 
 const ARTWORK_RE_2 = /^artwork\//;
@@ -58,36 +59,38 @@ try {
     )) {
       await render(
         'artwork/twitch-description/' + name,
-        'artwork/twitch-description/' + name.replace('.html', '.jpeg'),
-        320,
-        64,
-        'jpeg',
+        'artwork/twitch-description/' + name.replace('.html', '.png'),
+        640,
+        128,
+        'png',
       );
     }
   }
   if (requested === 'all' || requested === 'brand') {
     await render('artwork/brand/og.html', 'artwork/brand/website/og-image.jpg', 1200, 630, 'jpeg');
+    // Ручной ассет: карточку «Оставайся на связи» владелец забирает из dist для промо
+    // (например, в Телеграме). Страницы сайта на неё не ссылаются — не считать неиспользуемой.
     await render(
       'artwork/brand/subscribe.html',
       'artwork/brand/website/assets/subscribe-512.png',
       512,
       512,
     );
-    await render(
-      'artwork/brand/background.html',
-      'artwork/brand/website/assets/subscribe-background-ai.png',
-      512,
-      512,
-    );
   }
   if (['all', 'brand', 'favicon'].includes(requested)) {
-    await render('artwork/brand/icon.html', 'artwork/brand/website/icon-master.png', 512, 512);
-    const master = await fs.readFile(path.join(root, 'dist/artwork/brand/website/icon-master.png'));
+    // Знак для иконок собирается из векторного мастера, цвета — из палитры.
+    const iconMaster = path.join(root, 'dist/artwork/brand/website/icon-master.png');
+    await fs.writeFile(iconMaster, await logoMasterPng(512));
+    const master = await fs.readFile(iconMaster);
     const favicon = await sharp(master)
       .composite([
         {
           blend: 'dest-in',
-          input: await fs.readFile(path.join(root, 'artwork/brand/favicon-mask.svg')),
+          // Скругление (12.5% стороны) нужно только favicon: iOS и Android накладывают
+          // свою маску сами, поэтому apple-touch-icon и android-chrome остаются квадратными.
+          input: Buffer.from(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><rect width="512" height="512" rx="64" fill="white"/></svg>',
+          ),
         },
       ])
       .png()

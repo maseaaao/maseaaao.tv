@@ -79,7 +79,7 @@ export async function renderImage(
     const bytes = await (() => {
       if (format === 'jpeg') {
         return image
-          .flatten({ background: '#f4f3ec' })
+          .flatten({ background: '#f5f4ee' })
           .jpeg({ chromaSubsampling: '4:4:4', quality: 92 });
       }
       if (format === 'webp') {
