@@ -73,7 +73,7 @@ try {
   await client.doAction({ id: action.id }, { command: 'getState', payloadJson: '{}', requestId });
   const response = await reply;
 
-  if (response.ok !== true || response.apiVersion !== 4 || !response.data) {
+  if (response.ok !== true || response.apiVersion !== 5 || !response.data) {
     throw new Error(`Unexpected Action response: ${JSON.stringify(response)}`);
   }
 

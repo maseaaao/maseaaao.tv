@@ -10,7 +10,7 @@ import { createStreamInfo, type Notice, type PresetAction } from './controller';
 import { type AppIcon, anyIcon, uiIcon } from './icons';
 import { t } from './messages';
 import { subscribe } from './reactive';
-import { isTemplateValid } from './templates';
+import { isTemplateValid, splitTemplate, TEMPLATE_TOKEN, templateHasToken } from './templates';
 import type { TwitchCategory } from './types';
 
 export interface Dock {
@@ -638,13 +638,13 @@ function buildTemplateField(onInput: (value: string) => void): TemplateField {
   }
 
   function syncHighlight(template: string): void {
-    const parts = template.split(/(%subtitle%)/g);
+    const parts = splitTemplate(template);
     const next: Node[] = [];
     for (const part of parts) {
       if (!part) {
         continue;
       }
-      if (part === '%subtitle%') {
+      if (part === TEMPLATE_TOKEN) {
         const mark = el('mark');
         setText(mark, part);
         next.push(mark);
@@ -675,6 +675,9 @@ function buildTemplateField(onInput: (value: string) => void): TemplateField {
       if (input.value !== template) {
         input.value = template;
       }
+      // Без токена название некуда подставлять: подпись сразу показывает,
+      // какой токен ожидается, а поле получает состояние ошибки.
+      setText(label, templateHasToken(template) ? t('twitchTemplate') : t('twitchTemplateToken'));
       syncHighlight(template);
       setAttribute(input, 'disabled', disabled);
       syncEditorClasses(disabled, errorText);
@@ -711,6 +714,9 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
   host.append(shell);
 
   // Header -----------------------------------------------------------------
+  // Подключение к Streamer.bot — служебное состояние, поэтому индикатор живёт
+  // в нижней закреплённой панели рядом с «Данные загружены». В состояниях без
+  // этой панели (авторизация, установка Action) он возвращается в шапку.
   const statusDot = el('span', 'icon-indicator__dot');
   statusDot.setAttribute('aria-hidden', 'true');
   const statusText = el('span', 'icon-indicator__label');
@@ -731,19 +737,20 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
   settingsButton.root.addEventListener('click', () => {
     controller.openSettings();
   });
+  // Ссылки на стрим и дашборд — такие же иконочные действия, как обновление и
+  // настройки, поэтому живут в шапке, а не в подвале карточки.
+  const streamLink = iconLink(t('openStream'), 'external');
+  const dashboardLink = iconLink(t('openDashboard'), 'dashboard');
   const headerActions = el('div', 'header-actions');
-  headerActions.append(refresh.root, settingsButton.root);
+  headerActions.append(streamLink, dashboardLink, refresh.root, settingsButton.root);
   const header = el('header', 'dock-header');
   header.append(titleHolder, headerActions);
 
-  // Footer -----------------------------------------------------------------
-  const versionText = el('span');
-  const updatedText = el('span');
-  const footer = el('footer', 'dock-footer');
-  footer.append(versionText, updatedText);
-
-  const noticesHost = el('div', 'notices');
-  scrollEl.append(header, footer, noticesHost);
+  // Уведомления — липкий слой внизу области прокрутки: он заметен при любой
+  // прокрутке и не закрывает панель «Применить изменения». Версия и время
+  // обновления живут в модалке «Настройки», поэтому отдельного футера нет.
+  const noticesHost = el('div', 'notices notices--dock');
+  scrollEl.append(header, noticesHost);
   shell.append(scrollEl);
 
   // Region switch -----------------------------------------------------------
@@ -751,6 +758,7 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
   let mainKind: MainKind = null;
   let mainEl: HTMLElement | null = null;
   let savePanel: HTMLElement | null = null;
+  let saveMeta: HTMLElement | null = null;
   let saveStatus: HTMLParagraphElement | null = null;
   let applyButton: HTMLButtonElement | null = null;
   let errorsHost: HTMLDivElement | null = null;
@@ -764,6 +772,7 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
     remember: HTMLInputElement;
   } | null = null;
   let modalNoticesHost: HTMLDivElement | null = null;
+  let modalMeta: HTMLParagraphElement | null = null;
   let modalExitTimer: number | null = null;
   let returnFocus: HTMLElement | null = null;
 
@@ -775,7 +784,7 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
     if (kind !== mainKind) {
       mainEl?.remove();
       mainEl = build();
-      scrollEl.insertBefore(mainEl, footer);
+      scrollEl.insertBefore(mainEl, noticesHost);
       mainKind = kind;
     }
     update();
@@ -952,8 +961,6 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
   let addTagButton: HTMLButtonElement;
   let categorySearch: ReturnType<typeof buildCategorySearch>;
   let accountWarning: HTMLElement;
-  let streamLink: HTMLAnchorElement;
-  let dashboardLink: HTMLAnchorElement;
   let presetCount: HTMLElement;
   let presetList: HTMLElement;
   let presetHint: HTMLElement;
@@ -983,10 +990,10 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
     const accountHeading = el('div', 'account-heading');
     accountHeading.append(icon('twitch', 'account-icon'));
     const accountTexts = el('div');
-    const accountTitle = el('h2');
-    setText(accountTitle, 'Twitch');
-    cardAccountName = el('p');
-    accountTexts.append(accountTitle, cardAccountName);
+    // Подписи платформы нет: заголовок карточки — никнейм подключённого
+    // аккаунта (его идентичность передаёт иконка Twitch).
+    cardAccountName = el('h2', 'account-name');
+    accountTexts.append(cardAccountName);
     accountHeading.append(accountTexts);
     const badge = el('span', 'live-status-badge');
     cardBadge = badge;
@@ -1090,18 +1097,7 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
     tagEditor.append(tagEntry, tagHint, tagError, tagList);
     accountWarning = el('p', 'account-warning');
     cardEditor.append(tagEditor, accountWarning);
-
-    const cardFooter = el('footer', 'card-footer');
-    streamLink = el('a');
-    streamLink.className = 'app-button app-button--press app-button--icon';
-    setAttribute(streamLink, 'aria-label', t('openStream'));
-    appendIconToLink(streamLink, 'external');
-    dashboardLink = el('a');
-    dashboardLink.className = 'app-button app-button--press app-button--icon';
-    setAttribute(dashboardLink, 'aria-label', t('openDashboard'));
-    appendIconToLink(dashboardLink, 'dashboard');
-    cardFooter.append(streamLink, dashboardLink);
-    card.append(cardEditor, cardFooter);
+    card.append(cardEditor);
 
     const details = el('details', 'preset-panel dock-section');
     details.open = true;
@@ -1126,6 +1122,14 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
     iconBox.setAttribute('aria-hidden', 'true');
     iconBox.innerHTML = anyIcon(name);
     link.append(iconBox, el('span', 'app-button__label'));
+  }
+
+  function iconLink(label: string, name: AppIcon): HTMLAnchorElement {
+    const link = el('a');
+    link.className = 'app-button app-button--press app-button--icon';
+    setAttribute(link, 'aria-label', label);
+    appendIconToLink(link, name);
+    return link;
   }
 
   function chipNode(label: string, removable: boolean): HTMLElement {
@@ -1319,26 +1323,20 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
     setAttribute(cardEditor, 'disabled', cardBusy);
     syncTitleEditor();
     syncTagsAndCategory();
-    const login = stream.twitch.login || '';
-    patchLink(streamLink, login ? `https://www.twitch.tv/${encodeURIComponent(login)}` : null);
-    patchLink(
-      dashboardLink,
-      login ? `https://dashboard.twitch.tv/u/${encodeURIComponent(login)}/stream-manager` : null,
-    );
     syncPresets();
   }
 
   function finalPreview(template: string, subtitle: string): string {
     const value = subtitle.trim();
-    const parts = template.split('%subtitle%');
-    const separator = value || '%subtitle%';
+    const parts = template.split(TEMPLATE_TOKEN);
+    const separator = value || TEMPLATE_TOKEN;
     return parts.join(separator);
   }
 
   function previewNodes(template: string, subtitle: string): Node[] {
     const nodes: Node[] = [];
     const value = subtitle.trim();
-    const parts = template.split('%subtitle%');
+    const parts = template.split(TEMPLATE_TOKEN);
     for (const [index, part] of parts.entries()) {
       if (part) {
         nodes.push(document.createTextNode(part));
@@ -1346,7 +1344,7 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
       if (index < parts.length - 1) {
         const mark = document.createElement('mark');
         mark.className = value ? 'template-value' : 'template-token';
-        setText(mark, value || '%subtitle%');
+        setText(mark, value || TEMPLATE_TOKEN);
         nodes.push(mark);
       }
     }
@@ -1415,6 +1413,8 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
     saveStatus = el('p', 'save-status');
     saveStatus.setAttribute('role', 'status');
     saveStatus.setAttribute('aria-live', 'polite');
+    saveMeta = el('div', 'save-meta');
+    saveMeta.append(saveStatus);
     const apply = appButton('primary', { label: t('applyChanges') });
     applyButton = apply.root;
     applyButton.addEventListener('click', () => {
@@ -1422,8 +1422,16 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
     });
     errorsHost = el('div', 'form-errors');
     errorsHost.setAttribute('role', 'status');
-    root.append(applyButton, saveStatus, errorsHost);
+    root.append(applyButton, saveMeta, errorsHost);
     return root;
+  }
+
+  // Индикатор подключения держится в нижней панели, пока она есть, иначе — в шапке.
+  function mountIndicator(): void {
+    const home = saveMeta ?? titleHolder;
+    if (indicator.parentElement !== home) {
+      home.append(indicator);
+    }
   }
 
   function syncSave(): void {
@@ -1523,6 +1531,15 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
 
   // Settings modal -------------------------------------------------------------
   function buildModal(): void {
+    // Модалка могла закрываться, когда пользователь уже открыл следующую:
+    // уходящая подложка не должна перекрывать новую.
+    for (const stale of host.querySelectorAll('.modal-backdrop')) {
+      stale.remove();
+    }
+    if (modalExitTimer !== null) {
+      window.clearTimeout(modalExitTimer);
+      modalExitTimer = null;
+    }
     // Фокус уже в открывателе, когда предыдущий бэкдроп закрывается; не
     // считать его активный элемент «настоящим» открывателем.
     const candidate =
@@ -1539,12 +1556,10 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
 
     const modalHeader = el('header', 'modal-header');
     const titleBox = el('div');
-    const eyebrow = el('span', 'eyebrow');
-    setText(eyebrow, t('connection'));
     const modalTitle = el('h2');
     modalTitle.id = 'settings-title';
     setText(modalTitle, t('settings'));
-    titleBox.append(eyebrow, modalTitle);
+    titleBox.append(modalTitle);
     const close = appButton('icon', { ariaLabel: t('close'), icon: 'close' });
     close.root.addEventListener('click', () => controller.closeSettings());
     modalHeader.append(titleBox, close.root);
@@ -1597,7 +1612,9 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
     const modalFooter = el('footer', 'modal-footer');
     const save = appButton('primary', { label: t('saveConnection') });
     save.root.addEventListener('click', () => controller.saveConnection());
-    modalFooter.append(save.root);
+    modalMeta = el('p', 'settings-meta');
+    modalMeta.setAttribute('role', 'status');
+    modalFooter.append(save.root, modalMeta);
 
     dialog.append(modalHeader, modalBody, modalFooter);
     backdrop.append(dialog);
@@ -1632,6 +1649,10 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
     // Инертная оболочка не должна накрывать сам модал: монтируем backdrop
     // рядом с shell, а не внутри.
     host.append(backdrop);
+    backdrop.classList.add('settings-enter-active', 'settings-enter-from');
+    // Синхронный пересчёт фиксирует стартовую позу до включения перехода.
+    backdrop.getBoundingClientRect();
+    backdrop.classList.remove('settings-enter-from');
     dialog.querySelector<HTMLElement>('button, input, textarea')?.focus();
   }
 
@@ -1659,6 +1680,7 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
     modalBackdrop = null;
     modalKeys = null;
     modalNoticesHost = null;
+    modalMeta = null;
     if (!backdrop) {
       return;
     }
@@ -1677,13 +1699,19 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
     };
     backdrop.setAttribute('inert', '');
     backdrop.setAttribute('aria-hidden', 'true');
-    const raw = window.getComputedStyle(backdrop).getPropertyValue('--motion-exit');
-    const exit = Number.parseFloat(raw);
+    backdrop.classList.remove('settings-enter-active', 'settings-enter-from');
+    backdrop.classList.add('settings-leave-active', 'settings-leave-to');
+    // Ждём фактическую длительность перехода: при reduced-motion или в среде
+    // без таблицы стилей она нулевая и подложка снимается сразу.
+    const exit = Number.parseFloat(window.getComputedStyle(backdrop).transitionDuration);
     if (Number.isFinite(exit) && exit > 0) {
-      modalExitTimer = window.setTimeout(() => {
-        modalExitTimer = null;
-        finish();
-      }, exit + 1);
+      modalExitTimer = window.setTimeout(
+        () => {
+          modalExitTimer = null;
+          finish();
+        },
+        exit * 1000 + 1,
+      );
     } else {
       finish();
     }
@@ -1721,11 +1749,13 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
     } else if (!wantSave && savePanel) {
       savePanel.remove();
       savePanel = null;
+      saveMeta = null;
       saveStatus = null;
       applyButton = null;
       errorsHost = null;
       errorsJoined = '';
     }
+    mountIndicator();
     if (savePanel) {
       syncSave();
     }
@@ -1744,17 +1774,47 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
     }
     if (modalBackdrop) {
       syncModalFields();
+      syncModalMeta();
       if (modalNoticesHost) {
         syncNotices(modalNoticesHost);
       }
     }
   }
 
+  // Версия и время последнего обновления — служебные сведения, поэтому они
+  // живут в модалке «Настройки», а не в постоянном футере дока.
+  function syncModalMeta(): void {
+    if (!modalMeta) {
+      return;
+    }
+    const updated =
+      state.lastUpdated?.toLocaleTimeString('ru-RU', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      }) ?? '—';
+    setText(modalMeta, `Stream Info ${controller.version} · ${t('updated')} ${updated}`);
+  }
+
   // Render pass -----------------------------------------------------------------
+  function syncHeaderLinks(): void {
+    const login = state.stream?.twitch.login || '';
+    patchLink(streamLink, login ? `https://www.twitch.tv/${encodeURIComponent(login)}` : null);
+    patchLink(
+      dashboardLink,
+      login ? `https://dashboard.twitch.tv/u/${encodeURIComponent(login)}/stream-manager` : null,
+    );
+    // Без логина ссылки некуда вести: скрываем их, чтобы не оставлять в шапке
+    // нерабочие кнопки.
+    setAttribute(streamLink, 'hidden', !login);
+    setAttribute(dashboardLink, 'hidden', !login);
+  }
+
   function render(): void {
     setAttribute(statusDot, 'data-status', state.connection);
     setText(statusText, controller.connectionText());
     setAttribute(refresh.root, 'disabled', state.connection !== 'connected');
+    syncHeaderLinks();
 
     let kind: Exclude<MainKind, null>;
     if (state.authNeeded) {
@@ -1777,17 +1837,6 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
     }
 
     syncSavePanel();
-    setText(versionText, `Stream Info ${controller.version}`);
-    setText(
-      updatedText,
-      `${t('updated')} ${
-        state.lastUpdated?.toLocaleTimeString('ru-RU', {
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-        }) ?? '—'
-      }`,
-    );
     if (state.modal === null) {
       syncNotices(noticesHost);
     }

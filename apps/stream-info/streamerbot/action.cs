@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 
 public class CPHInline
 {
-    private const int ApiVersion = 4;
+    private const int ApiVersion = 5;
     private static readonly ShortLivedCache<JObject> StateCache =
         new ShortLivedCache<JObject>(TimeSpan.FromSeconds(5));
     private static readonly TwitchCategorySearchService CategorySearch = new TwitchCategorySearchService();
@@ -19,7 +19,11 @@ public class CPHInline
         Timeout = TimeSpan.FromSeconds(10)
     };
     private const string ReplyEvent = "stream_info_api_response";
-    private const string DefaultTwitchTemplate = "🔴 %subtitle%| !tg !yt !tw !donate";
+    // Токен подстановки названия в шаблоне: короткий, чтобы не загромождать шаблон.
+    private const string TemplateToken = "$s";
+    // Шаблоны, сохранённые до перехода на `$s`, продолжают работать.
+    private const string LegacyTemplateToken = "%subtitle%";
+    private const string DefaultTwitchTemplate = "🔴 $s| !tg !yt !tw !donate";
     private const string TwitchTemplateKey = "stream_info.template.twitch";
     private const string SubtitleKey = "stream_info.template.subtitle";
     private const string TwitchCategoryKey = "stream_info.preset.twitchCategoryId";
@@ -101,7 +105,7 @@ public class CPHInline
 
     private JObject GetTemplates()
     {
-        string twitchTemplate = CPH.GetGlobalVar<string>(TwitchTemplateKey, true);
+        string twitchTemplate = MigrateLegacyToken(CPH.GetGlobalVar<string>(TwitchTemplateKey, true));
         string subtitle = CPH.GetGlobalVar<string>(SubtitleKey, true);
         bool configured = twitchTemplate != null || subtitle != null;
 
@@ -115,10 +119,10 @@ public class CPHInline
 
     private JObject SaveTemplates(JObject payload)
     {
-        string twitchTemplate = payload.Value<string>("twitchTemplate") ?? DefaultTwitchTemplate;
+        string twitchTemplate = MigrateLegacyToken(payload.Value<string>("twitchTemplate")) ?? DefaultTwitchTemplate;
         string subtitle = (payload.Value<string>("subtitle") ?? "").Trim();
 
-        Ensure(HasAtMostOneSubtitle(twitchTemplate), "В каждом шаблоне разрешён только один %subtitle%.");
+        Ensure(HasExactlyOneSubtitle(twitchTemplate), "Шаблон Twitch: нужен ровно один " + TemplateToken + ".");
         CPH.SetGlobalVar(TwitchTemplateKey, twitchTemplate, true);
         CPH.SetGlobalVar(SubtitleKey, subtitle, true);
         StateCache.Invalidate();
@@ -170,22 +174,30 @@ public class CPHInline
         return tags;
     }
 
-    private static bool HasAtMostOneSubtitle(string template)
+    // Шаблон прежнего формата переводим в `$s`, чтобы старые сохранения не ломали заголовок.
+    private static string MigrateLegacyToken(string template)
     {
-        int first = (template ?? "").IndexOf("%subtitle%", StringComparison.Ordinal);
-        return first < 0 || (template ?? "").IndexOf("%subtitle%", first + "%subtitle%".Length, StringComparison.Ordinal) < 0;
+        return template != null && template.IndexOf(LegacyTemplateToken, StringComparison.Ordinal) >= 0
+            ? template.Replace(LegacyTemplateToken, TemplateToken)
+            : template;
+    }
+
+    private static bool HasExactlyOneSubtitle(string template)
+    {
+        string source = template ?? "";
+        int first = source.IndexOf(TemplateToken, StringComparison.Ordinal);
+        return first >= 0 && source.IndexOf(TemplateToken, first + TemplateToken.Length, StringComparison.Ordinal) < 0;
     }
 
     private static string TitleFromTemplate(string template, string subtitle)
     {
         string source = template ?? "";
         string value = (subtitle ?? "").Trim();
-        if (value.Length > 0) return source.Replace("%subtitle%", value).Trim();
-
-        int marker = source.IndexOf("%subtitle%", StringComparison.Ordinal);
+        int marker = source.IndexOf(TemplateToken, StringComparison.Ordinal);
         if (marker < 0) return source.Trim();
         string before = source.Substring(0, marker);
-        string after = source.Substring(marker + "%subtitle%".Length);
+        string after = source.Substring(marker + TemplateToken.Length);
+        if (value.Length > 0) return (before + value + after).Trim();
         if (before.Length > 0 && after.Length > 0 && char.IsWhiteSpace(before[before.Length - 1]) && char.IsWhiteSpace(after[0]))
             return (before.Substring(0, before.Length - 1) + after).Trim();
         return (before + after).Trim();

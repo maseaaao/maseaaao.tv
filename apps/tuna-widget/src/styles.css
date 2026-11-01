@@ -188,7 +188,7 @@ html[data-reveal='soft'] .track-text {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-family: Unbounded, Arial, sans-serif;
+  font-family: var(--font-display);
   font-size: var(--title);
   font-weight: 400;
   line-height: 1.3;

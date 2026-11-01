@@ -47,6 +47,7 @@ const host = '127.0.0.1';
 const launcherPort = 5180;
 const running: ViteDevServer[] = [];
 const info: ProjectInfo[] = [];
+const projectPages = new Map<string, () => ProjectPage[]>();
 const devEnvironment: ConfigEnv = { command: 'serve', isPreview: false, mode: 'development' };
 
 const importDefaultConfig = async (app: string, env: ConfigEnv = devEnvironment) => {
@@ -64,7 +65,6 @@ const artworkViewports: Record<string, readonly [number, number]> = {
   'banners/offline.html': [1920, 1080],
   'banners/twitch.html': [1200, 480],
   'banners/youtube.html': [2560, 1440],
-  'brand/background.html': [512, 512],
   'brand/icon.html': [512, 512],
   'brand/og.html': [1200, 630],
   'brand/subscribe.html': [512, 512],
@@ -80,7 +80,7 @@ const pageSize = (
   if (match) {
     return { height: Number(match[2]), width: Number(match[1]) };
   }
-  const viewport = name.startsWith('twitch-description/') ? [320, 64] : artworkViewports[name];
+  const viewport = name.startsWith('twitch-description/') ? [640, 128] : artworkViewports[name];
   return viewport ? { height: viewport[1], width: viewport[0] } : { height: null, width: null };
 };
 const artworkPages = (): GuestPage[] => {
@@ -228,6 +228,16 @@ const definitions: ProjectDefinition[] = [
 
 const projectsData = (): PluginOption => ({
   configureServer(server) {
+    server.watcher.add(artworkRoot);
+    server.watcher.on('all', (event, file) => {
+      if (
+        ['add', 'change', 'unlink'].includes(event) &&
+        file.endsWith('.html') &&
+        normalizePath(file).startsWith(normalizePath(artworkRoot) + '/')
+      ) {
+        server.ws.send({ event: 'projects-changed', type: 'custom' });
+      }
+    });
     server.middlewares.use((request, response, next) => {
       const target = new URL(request.url || '/', 'http://localhost');
       if (target.pathname !== '/projects.json') {
@@ -236,7 +246,11 @@ const projectsData = (): PluginOption => ({
       }
       response.setHeader('Content-Type', 'application/json');
       response.setHeader('Cache-Control', 'no-store');
-      response.end(JSON.stringify({ projects: info }));
+      const projects = info.map((project) => ({
+        ...project,
+        pages: projectPages.get(project.id)?.() ?? project.pages,
+      }));
+      response.end(JSON.stringify({ projects }));
     });
   },
   name: 'dev-launcher-projects',
@@ -254,13 +268,15 @@ const startProject = async (definition: ProjectDefinition): Promise<void> => {
   try {
     const config = await definition.importConfig();
     const url = await listen(config, definition.port);
-    const guests = definition.guestPages?.() ?? [];
-    const pages = guests.map((guest) => ({
-      height: guest.height,
-      label: guest.label,
-      url: new URL(guest.path, url ?? 'http://localhost/').href,
-      width: guest.width,
-    }));
+    const readPages = () =>
+      (definition.guestPages?.() ?? []).map((guest) => ({
+        height: guest.height,
+        label: guest.label,
+        url: new URL(guest.path, url ?? 'http://localhost/').href,
+        width: guest.width,
+      }));
+    projectPages.set(definition.id, readPages);
+    const pages = readPages();
     const shown = definition.pageOnly
       ? null
       : url && (definition.demo ? new URL('?demo=1', url).href : url);

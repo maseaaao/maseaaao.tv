@@ -3,7 +3,12 @@ import packageJson from '../package.json';
 import { rankCategories } from './category-search';
 import { t } from './messages';
 import { reactive } from './reactive';
-import { DEFAULT_TWITCH_TEMPLATE, isTemplateValid, titleFromTemplate } from './templates';
+import {
+  DEFAULT_TWITCH_TEMPLATE,
+  isTemplateValid,
+  migrateTemplateToken,
+  titleFromTemplate,
+} from './templates';
 import type {
   ActionResponse,
   ActionSummary,
@@ -16,7 +21,7 @@ import type {
   TwitchState,
 } from './types';
 
-const API_VERSION = 4;
+const API_VERSION = 5;
 const APP_VERSION = packageJson.version;
 const ACTION_GROUP = 'STREAM INFO';
 const ACTION_NAME = 'STREAM INFO | API';
@@ -161,7 +166,7 @@ function restoreTemplateDraft(): Pick<TemplateDraft, 'twitchTemplate'> | null {
     if (typeof draft.twitchTemplate !== 'string') {
       return null;
     }
-    return { twitchTemplate: draft.twitchTemplate };
+    return { twitchTemplate: migrateTemplateToken(draft.twitchTemplate) };
   } catch {
     return null;
   }
@@ -264,10 +269,11 @@ export function createStreamInfo(options: { demo?: boolean } = {}): StreamInfo {
       templates: {
         configured: true,
         subtitle: 'Ranked with chat',
-        twitchTemplate: '🔴 %subtitle% | !tg !yt !tw !donate',
+        twitchTemplate: '🔴 $s | !tg !yt !tw !donate',
       },
       twitch: {
-        accountName: 'Maseaaao',
+        // Значение повторяет реальный ответ Streamer.bot: display name канала.
+        accountName: 'MASEAAAO',
         categoryId: '493057',
         categoryImageUrl: '',
         categoryName: 'PUBG: BATTLEGROUNDS',
@@ -447,7 +453,7 @@ export function createStreamInfo(options: { demo?: boolean } = {}): StreamInfo {
       subtitle: typeof raw.subtitle === 'string' ? raw.subtitle : '',
       twitchTemplate:
         typeof raw.twitchTemplate === 'string' && raw.twitchTemplate
-          ? raw.twitchTemplate
+          ? migrateTemplateToken(raw.twitchTemplate)
           : DEFAULT_TWITCH_TEMPLATE,
     };
   }

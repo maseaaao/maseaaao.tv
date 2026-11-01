@@ -79,7 +79,7 @@ body {
 }
 .widget-stream-stats .stats-item-main-row,
 .widget-stream-stats > .stats-main-row {
-  font-family: Unbounded, Arial, sans-serif !important;
+  font-family: var(--font-display) !important;
   font-size: clamp(36px, 4.4vw, 44px) !important;
   font-weight: 400 !important;
   line-height: 1.1;
@@ -201,8 +201,4 @@ body {
   border-color: transparent;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  :root {
-    --cm-roll-duration: 0.001s;
-  }
-}
+/* Keep the broadcast roll even when the operator disables desktop animations. */

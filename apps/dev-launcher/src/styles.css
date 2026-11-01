@@ -5,6 +5,11 @@
   --text: #e7e7ee;
   --muted: #9a9cab;
   --accent: #ff9fc6;
+  /* Та же шкала, что в design/tokens.css; у лаунчера своя тёмная тема. */
+  --ui-motion-press: 83ms;
+  --ui-motion-feedback: 167ms;
+  --ui-motion-ease: cubic-bezier(0.2, 0, 0, 1);
+  --ui-motion-spring: cubic-bezier(0.2, 1.22, 0.36, 1);
   color-scheme: dark;
 }
 
@@ -67,6 +72,15 @@ body {
   background: transparent;
   border: 1px solid transparent;
   border-radius: 8px;
+  transition:
+    color var(--ui-motion-feedback) var(--ui-motion-ease),
+    background-color var(--ui-motion-feedback) var(--ui-motion-ease),
+    border-color var(--ui-motion-feedback) var(--ui-motion-ease),
+    transform var(--ui-motion-feedback) var(--ui-motion-spring);
+}
+.item > button:active:not(:disabled) {
+  transform: scale(0.985);
+  transition-duration: var(--ui-motion-press);
 }
 
 .item > button:hover {
@@ -74,6 +88,13 @@ body {
 }
 
 .item > button.active {
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* У проекта с подстраницами активный заголовок только помечает группу,
+   а саму страницу выделяет пункт списка ниже. */
+.item > button.active[data-url] {
   background: #242631;
   border-color: var(--line);
 }
@@ -91,7 +112,7 @@ body {
   list-style: none;
 }
 
-.subitems > button {
+.subitems > li > button {
   width: 100%;
   padding: 5px 9px;
   font: inherit;
@@ -102,15 +123,33 @@ body {
   background: transparent;
   border: 0;
   border-radius: 6px;
+  transition:
+    color var(--ui-motion-feedback) var(--ui-motion-ease),
+    background-color var(--ui-motion-feedback) var(--ui-motion-ease),
+    box-shadow var(--ui-motion-feedback) var(--ui-motion-ease),
+    transform var(--ui-motion-feedback) var(--ui-motion-spring);
+}
+.subitems > li > button:active {
+  transform: scale(0.985);
+  transition-duration: var(--ui-motion-press);
 }
 
-.subitems > button:hover {
+.subitems > li > button:hover {
   color: var(--text);
   background: #1e2028;
 }
 
-.subitems > button.active {
+.subitems > li > button.active {
   color: var(--text);
+  background: #2a2230;
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.subitems > li > button:focus-visible,
+.item > button:focus-visible,
+#zoom button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 #hint {
@@ -154,6 +193,14 @@ body {
   background: transparent;
   border: 1px solid var(--line);
   border-radius: 8px;
+  transition:
+    color var(--ui-motion-feedback) var(--ui-motion-ease),
+    background-color var(--ui-motion-feedback) var(--ui-motion-ease),
+    transform var(--ui-motion-feedback) var(--ui-motion-spring);
+}
+#zoom button:active {
+  transform: scale(0.985);
+  transition-duration: var(--ui-motion-press);
 }
 
 #zoom button:hover {
@@ -175,6 +222,7 @@ body {
   font-size: 13px;
   color: var(--muted);
   text-decoration: none;
+  transition: color var(--ui-motion-feedback) var(--ui-motion-ease);
 }
 
 #open:hover {
@@ -192,13 +240,31 @@ body {
   width: 100%;
   height: 100%;
   margin: auto;
+  /* Шахматка показывает прозрачные области страницы: фон страницы прозрачный,
+     поэтому видно подложку канвы, а не белый прямоугольник. */
+  background:
+    repeating-conic-gradient(#4b5162 0 25%, #2a2d38 0 50%) 0 0 / 16px 16px;
 }
 
 #frame {
   display: block;
   width: 100%;
   height: 100%;
+  /* Без своего color-scheme Chromium заливает прозрачный iframe белым,
+     когда у лаунчера тёмная тема: шахматка под страницей перестаёт быть видна. */
+  color-scheme: normal;
   background: transparent;
   border: 0;
 }
 /* hmr-check */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

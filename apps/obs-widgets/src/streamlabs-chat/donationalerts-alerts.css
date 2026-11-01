@@ -40,7 +40,7 @@ body {
 }
 .alert-container #donation-alert .title {
   padding: 0 0 8px !important;
-  font-family: Unbounded, Arial, sans-serif !important;
+  font-family: var(--font-display) !important;
   font-size: clamp(24px, 2.7vw, 32px) !important;
   font-weight: 400 !important;
   line-height: 1.2 !important;
@@ -72,7 +72,7 @@ body {
 /* Embedded fonts load once per widget document without external requests.
    Enforce typography on provider spans as well as their parent rows. */
 .alert-container #donation-alert .title * {
-  font-family: Unbounded, Arial, sans-serif !important;
+  font-family: var(--font-display) !important;
   font-weight: 400 !important;
 }
 .alert-container #donation-alert .message * {

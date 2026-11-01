@@ -23,6 +23,9 @@
     "apps/dev-launcher": {
       "name": "@maseaaao/dev-launcher",
       "version": "1.0.0",
+      "devDependencies": {
+        "vite": "catalog:",
+      },
     },
     "apps/obs-widgets": {
       "name": "@maseaaao/obs-widgets",
@@ -112,7 +115,7 @@
     },
     "integrations/companion/system-microphone": {
       "name": "companion-module-local-system-microphone",
-      "version": "1.3.1",
+      "version": "1.3.2",
       "dependencies": {
         "@companion-module/base": "catalog:",
       },

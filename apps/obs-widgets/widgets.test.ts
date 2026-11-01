@@ -36,6 +36,68 @@ afterAll(async () => {
   await server?.close();
 });
 
+test.each([
+  [480, 36, 24],
+  [640, 55, 32],
+  [1080, 55, 48],
+])('shorter horizontal strip %i×%i preserves %i px text', async (width, height, size) => {
+  const page = await browser.newPage({ viewport: { height, width } });
+  try {
+    await page.goto(`${server.resolvedUrls?.local[0]}src/social-strip/index.html`);
+    expect(await page.locator('.name').evaluate((el) => getComputedStyle(el).fontSize)).toBe(
+      `${size}px`,
+    );
+    const bounds = await page.locator('.name').boundingBox();
+    expect(bounds).not.toBeNull();
+    if (!bounds) {
+      throw new Error('Missing nickname');
+    }
+    expect(bounds.y).toBeGreaterThanOrEqual(1);
+    expect(bounds.y + bounds.height).toBeLessThanOrEqual(height - 1);
+  } finally {
+    await page.close();
+  }
+});
+
+test('accent typography stays Unbounded 400 while the brand nickname uses 600', async () => {
+  const page = await browser.newPage();
+  try {
+    await page.goto(`${server.resolvedUrls?.local[0]}src/social-strip/index.html`);
+    const nickname = await page.locator('.name').evaluate((element) => {
+      const style = getComputedStyle(element);
+      return [style.fontFamily, style.fontWeight];
+    });
+    expect(nickname[0]).toContain('Unbounded');
+    expect(nickname[1]).toBe('600');
+
+    await page.setContent(
+      `<style>${donorCss}</style><div class="widget-stream-stats"><div class="stats-list"><div class="stats-list-item"><div class="stats-item-main-row">Донатер</div><div class="stats-item-additional-row">100 RUB</div></div></div></div><p id="accent" style="font:400 24px var(--font-display)">Заголовок</p><p id="body" style="font:400 16px var(--font-body)">Основной текст</p>`,
+    );
+    const typography = await page
+      .locator('.stats-item-main-row, #accent, #body')
+      .evaluateAll((elements) =>
+        elements.map((element) => {
+          const style = getComputedStyle(element);
+          return {
+            body: element.id === 'body',
+            family: style.fontFamily,
+            weight: style.fontWeight,
+          };
+        }),
+      );
+    expect(typography).toHaveLength(3);
+    for (const style of typography) {
+      expect(style.family).toContain(style.body ? 'Arial' : 'Unbounded');
+      if (style.body) {
+        expect(style.family).not.toContain('Unbounded');
+      }
+      expect(style.weight).toBe('400');
+    }
+  } finally {
+    await page.close();
+  }
+});
+
 test('strip keeps square corners everywhere', async () => {
   const page = await browser.newPage({ viewport: { height: 88, width: 720 } });
   try {
@@ -113,53 +175,39 @@ test('480px gameplay social strip is readable without clipping', async () => {
   }
 });
 
-test('social animation keeps its period, stagger and movement', async () => {
-  const page = await browser.newPage({
-    reducedMotion: 'no-preference',
-    viewport: { height: 64, width: 720 },
-  });
-  try {
-    await page.goto(`${server.resolvedUrls?.local[0]}src/social-strip/index.html`);
-    const details = await page.locator('.logo').evaluateAll((elements) =>
-      elements.map((element) => {
-        const style = getComputedStyle(element);
-        return [
-          style.animationName,
-          style.animationDuration,
-          style.animationDelay,
-          style.animationIterationCount,
-        ];
-      }),
-    );
-    expect(details).toEqual(
-      ['1.5s', '1.65s', '1.8s', '1.95s', '2.1s'].map((delay) => [
-        'social-wave',
-        '30s',
-        delay,
-        'infinite',
-      ]),
-    );
-    const positions = await page
-      .locator('.logo')
-      .first()
-      .evaluate(async (element) => {
-        const [animation] = element.getAnimations();
-        if (!animation) {
-          throw new Error('Missing social animation');
-        }
-        animation.pause();
-        await animation.ready;
-        return [1500, 1920, 31_500].map((time) => {
-          animation.currentTime = time;
-          return getComputedStyle(element).transform;
-        });
-      });
-    expect(positions[0]).not.toBe(positions[1]);
-    expect(positions[0]).toBe(positions[2]);
-  } finally {
-    await page.close();
-  }
-});
+test.each(['no-preference', 'reduce'] as const)(
+  'social icons stay still regardless of OS motion setting %s',
+  async (reducedMotion) => {
+    const page = await browser.newPage({
+      reducedMotion,
+      viewport: { height: 64, width: 720 },
+    });
+    try {
+      await page.goto(`${server.resolvedUrls?.local[0]}src/social-strip/index.html`);
+      const icons = await page.locator('.logo').evaluateAll((elements) =>
+        elements.map((element) => {
+          const style = getComputedStyle(element);
+          return {
+            animations: element.getAnimations().length,
+            name: style.animationName,
+            opacity: style.opacity,
+            transform: style.transform,
+          };
+        }),
+      );
+      expect(icons).toEqual(
+        Array.from({ length: 5 }, () => ({
+          animations: 0,
+          name: 'none',
+          opacity: '0.82',
+          transform: 'none',
+        })),
+      );
+    } finally {
+      await page.close();
+    }
+  },
+);
 
 test.each([
   [720, 'list'],
@@ -168,7 +216,7 @@ test.each([
   [1100, 'slider'],
 ] as const)('long donor fits %i px %s and keeps roll timing', async (width, mode) => {
   const page = await browser.newPage({
-    reducedMotion: 'no-preference',
+    reducedMotion: 'reduce',
     viewport: { height: 134, width },
   });
   try {

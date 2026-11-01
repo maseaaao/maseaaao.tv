@@ -41,9 +41,23 @@ const stage: HTMLDivElement = requireElement('stage');
 const zoomControls: HTMLDivElement = requireElement('zoom');
 const zoomRange: HTMLInputElement = requireElement('zoom-range');
 const zoomValue: HTMLOutputElement = requireElement('zoom-value');
+const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
+
+// Новый документ мягко проявляется; старый остаётся видимым до загрузки,
+// поэтому навигация не показывает пустой белый кадр.
+frame.addEventListener('load', () => {
+  if (motionPreference.matches || typeof frame.animate !== 'function') {
+    return;
+  }
+  frame.animate([{ opacity: 0.65 }, { opacity: 1 }], {
+    duration: 167,
+    easing: 'cubic-bezier(0, 0, 0, 1)',
+  });
+});
 
 let projects: ProjectInfo[] = [];
 let currentId: string | null = null;
+let currentUrl: string | null = null;
 let currentSize: CanvasSize | null = null;
 let zoomMode: ZoomMode = 'fit';
 let freeScale = 1;
@@ -84,21 +98,38 @@ const syncZoom = () => {
   zoomRange.value = String(Math.round(Math.min(200, Math.max(25, applied * 100))));
 };
 
-const setActiveUrl = (url: string) => {
-  const matches = items.querySelectorAll<HTMLButtonElement>('button[data-url]');
-  for (const element of matches) {
-    element.classList.toggle('active', element.dataset.url === url);
+const selectProject = (project: ProjectInfo) => {
+  currentId = project.id;
+  location.hash = `#${project.id}`;
+};
+
+const syncActive = () => {
+  let current: HTMLButtonElement | null = null;
+  for (const button of items.querySelectorAll<HTMLButtonElement>('button[data-project]')) {
+    const page = button.dataset.url;
+    const active =
+      button.dataset.project === currentId && (page === undefined || page === currentUrl);
+    button.classList.toggle('active', active);
+    if (active && page !== undefined) {
+      button.setAttribute('aria-current', 'page');
+      current = button;
+    } else {
+      button.removeAttribute('aria-current');
+    }
   }
+  // Держим текущую страницу в поле зрения длинного списка сцен.
+  current?.scrollIntoView({ block: 'nearest' });
 };
 
 const openUrl = (url: string, size: CanvasSize | null = null) => {
+  currentUrl = url;
   currentSize = size;
   zoomMode = 'fit';
   freeScale = 1;
   frame.src = url;
   openLink.href = url;
   openLink.hidden = false;
-  setActiveUrl(url);
+  syncActive();
   syncZoom();
 };
 
@@ -117,7 +148,14 @@ const openDefaultPage = (project: ProjectInfo) => {
   const [page] = project.pages;
   if (page) {
     openPage(page);
+    return;
   }
+  currentUrl = null;
+  currentSize = null;
+  frame.src = 'about:blank';
+  openLink.hidden = true;
+  syncActive();
+  syncZoom();
 };
 
 const buildMenu = () => {
@@ -128,22 +166,18 @@ const buildMenu = () => {
     const button = document.createElement('button');
     button.type = 'button';
     button.textContent = project.label;
+    button.dataset.project = project.id;
     if (project.url) {
-      button.dataset.url = project.url;
       const { url } = project;
+      button.dataset.url = url;
       button.addEventListener('click', () => {
-        currentId = project.id;
-        location.hash = `#${project.id}`;
+        selectProject(project);
         openUrl(url);
       });
     } else if (project.pages.length) {
-      const [page] = project.pages;
       button.addEventListener('click', () => {
-        currentId = project.id;
-        location.hash = `#${project.id}`;
-        if (page) {
-          openPage(page);
-        }
+        selectProject(project);
+        openDefaultPage(project);
       });
     } else {
       button.disabled = true;
@@ -152,32 +186,52 @@ const buildMenu = () => {
       }
     }
     item.append(button);
-    for (const page of project.pages) {
-      const subitem = document.createElement('li');
-      subitem.className = 'subitem';
-      const pageButton = document.createElement('button');
-      pageButton.type = 'button';
-      pageButton.dataset.url = page.url;
-      pageButton.textContent = page.label;
-      pageButton.addEventListener('click', () => {
-        currentId = project.id;
-        location.hash = `#${project.id}`;
-        openPage(page);
-      });
-      subitem.append(pageButton);
-      item.append(subitem);
+    if (project.pages.length) {
+      const subitems = document.createElement('ul');
+      subitems.className = 'subitems';
+      for (const page of project.pages) {
+        const subitem = document.createElement('li');
+        const pageButton = document.createElement('button');
+        pageButton.type = 'button';
+        pageButton.dataset.project = project.id;
+        pageButton.dataset.url = page.url;
+        pageButton.textContent = page.label;
+        pageButton.addEventListener('click', () => {
+          selectProject(project);
+          openPage(page);
+        });
+        subitem.append(pageButton);
+        subitems.append(subitem);
+      }
+      item.append(subitems);
     }
     list.append(item);
   }
   items.replaceChildren(list);
 };
 
-const response = await fetch('/projects.json');
-const document_: ProjectsDocument = response.ok
-  ? ((await response.json()) as ProjectsDocument)
-  : { projects: [] };
-({ projects } = document_);
-buildMenu();
+const refreshProjects = async () => {
+  const response = await fetch('/projects.json');
+  if (!response.ok) {
+    return;
+  }
+  const document_: ProjectsDocument = await response.json();
+  ({ projects } = document_);
+  buildMenu();
+  const project = projects.find((entry) => entry.id === currentId);
+  const page = project?.pages.find((entry) => entry.url === currentUrl);
+  if (project && page) {
+    currentSize = pageCanvas(page);
+    syncZoom();
+  } else if (project && project.url !== currentUrl) {
+    openDefaultPage(project);
+  }
+  // buildMenu пересоздаёт кнопки, поэтому подсветку восстанавливаем всегда.
+  syncActive();
+};
+
+import.meta.hot?.on('projects-changed', refreshProjects);
+await refreshProjects();
 
 const requested = readHashId();
 const requestedId =

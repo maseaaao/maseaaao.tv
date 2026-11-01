@@ -40,7 +40,6 @@
     "deploy:website": "bunx --bun wrangler deploy",
     "dev": "bun tooling/dev.ts",
     "dev:ui": "bun run --filter ./apps/ui-gallery dev",
-    "fix:all": "biome check --write .",
     "format": "biome format --write .",
     "full": "bun run --sequential render:all build:apps",
     "hooks:install": "bun run --bun -- lefthook install",

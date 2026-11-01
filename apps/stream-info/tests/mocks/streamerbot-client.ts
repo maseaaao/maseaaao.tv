@@ -24,8 +24,8 @@ const presetAction: ActionShape = {
 
 function defaultState() {
   return {
-    apiVersion: 4,
-    templates: { configured: true, subtitle: 'Старт', twitchTemplate: '🔴 %subtitle%| !tg' },
+    apiVersion: 5,
+    templates: { configured: true, subtitle: 'Старт', twitchTemplate: '🔴 $s| !tg' },
     twitch: {
       accountName: 'Twitch account',
       categoryId: '493057',
@@ -169,7 +169,7 @@ export class StreamerbotClient {
       data = { templates: mockStreamerbot.state.templates };
     }
     const response = {
-      apiVersion: 4,
+      apiVersion: 5,
       command,
       data,
       error: null,

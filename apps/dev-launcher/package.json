@@ -5,5 +5,8 @@
   "type": "module",
   "scripts": {
     "check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "vite": "catalog:"
   }
 }

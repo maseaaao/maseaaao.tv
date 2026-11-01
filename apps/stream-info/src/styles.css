@@ -1,5 +1,6 @@
 @import '@maseaaao/design/fonts.css';
 @import '@maseaaao/design/tokens.css';
+@import '@maseaaao/design/motion.css';
 @import '@maseaaao/ui/accessibility.css';
 @import '@maseaaao/ui/components.css';
 
@@ -51,7 +52,7 @@ p {
 h1,
 h2,
 h3 {
-  font-family: Unbounded, Arial, sans-serif;
+  font-family: var(--font-display);
   font-weight: 400;
 }
 input,
@@ -90,23 +91,30 @@ textarea::placeholder {
   border-radius: 20px;
 }
 .dock-scroll {
+  --dock-pad-block: 28px;
+  --dock-pad-inline: 28px;
   flex: 1;
   min-height: 0;
-  padding: 28px;
+  padding: var(--dock-pad-block) var(--dock-pad-inline);
   overflow-y: auto;
   scroll-padding-block: var(--space-4);
+}
+.dock-scroll > main {
+  animation:
+    motion-rise-in var(--motion-enter) var(--motion-ease-enter),
+    motion-focus-in var(--motion-focus) ease-out;
 }
 .dock-header {
   display: flex;
   gap: var(--space-3);
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   padding-bottom: var(--space-5);
 }
 .dock-header h1 {
-  font-size: clamp(26px, 6vw, 38px);
-  line-height: 1.15;
-  letter-spacing: -0.055em;
+  font-size: 15px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 .dock-header > div {
   min-width: 0;
@@ -115,6 +123,10 @@ textarea::placeholder {
   display: flex;
   flex: none;
   gap: var(--space-2);
+  margin-left: auto;
+}
+.header-actions [hidden] {
+  display: none;
 }
 .dock-section {
   min-width: 0;
@@ -182,16 +194,32 @@ textarea::placeholder {
 .save-panel {
   display: grid;
   flex: none;
-  gap: var(--space-3);
+  gap: var(--space-2);
   max-height: 45dvh;
   padding: var(--space-4) 28px max(var(--space-4), env(safe-area-inset-bottom));
   overflow-y: auto;
   background: var(--color-surface);
   border-top: 1px solid var(--color-border);
+  animation:
+    motion-rise-in var(--motion-enter) var(--motion-ease-enter),
+    motion-focus-in var(--motion-focus) ease-out;
+}
+.save-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+}
+.save-meta .icon-indicator {
+  gap: var(--space-2);
+  min-height: 0;
+  font-size: 12px;
 }
 .save-status {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--color-muted);
+  text-align: center;
   transition: color var(--motion-feedback) var(--motion-ease-state);
 }
 .save-status.is-dirty {
@@ -203,15 +231,6 @@ textarea::placeholder {
 .form-errors {
   font-size: 13px;
   overflow-wrap: anywhere;
-}
-.dock-footer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  justify-content: space-between;
-  padding-top: var(--space-3);
-  font-size: 12px;
-  color: var(--color-muted);
 }
 .auth-panel,
 .setup-card {
@@ -259,12 +278,10 @@ textarea::placeholder {
 }
 .card-heading h2 {
   margin: 0;
-  font-size: 19px;
-}
-.account-heading p {
-  margin-top: var(--space-1);
-  font-size: 12px;
-  color: var(--color-muted);
+  font-family: var(--font-nickname);
+  font-size: 18px;
+  font-weight: var(--font-nickname-weight);
+  overflow-wrap: anywhere;
 }
 .inline-editor {
   display: grid;
@@ -275,8 +292,8 @@ textarea::placeholder {
   border: 0;
 }
 .account-icon {
-  width: 36px;
-  height: 36px;
+  width: 24px;
+  height: 24px;
   color: var(--color-brand);
 }
 .account-heading > div {
@@ -334,12 +351,6 @@ textarea::placeholder {
   gap: var(--space-2);
   margin-top: var(--space-3);
 }
-.card-footer {
-  display: flex;
-  gap: var(--space-2);
-  justify-content: flex-end;
-  margin-top: var(--space-4);
-}
 .account-warning {
   font-size: 13px;
   color: var(--color-warning);
@@ -348,10 +359,10 @@ textarea::placeholder {
   border-color: var(--color-danger);
 }
 .card-success {
-  animation: success 3s;
+  animation: success 3s var(--motion-ease-state);
 }
 .card-flash-error {
-  animation: failure 5s;
+  animation: failure 5s var(--motion-ease-state);
 }
 
 @keyframes success {
@@ -396,7 +407,7 @@ textarea::placeholder {
 }
 .settings-enter-active,
 .settings-leave-active {
-  transition: opacity var(--motion-enter) var(--motion-ease-enter);
+  transition: background-color var(--motion-enter) var(--motion-ease-enter);
 }
 .settings-enter-active .settings-modal,
 .settings-leave-active .settings-modal {
@@ -413,7 +424,7 @@ textarea::placeholder {
 }
 .settings-enter-from,
 .settings-leave-to {
-  opacity: 0;
+  background-color: transparent;
 }
 .settings-enter-from .settings-modal {
   filter: blur(2px);
@@ -431,12 +442,7 @@ textarea::placeholder {
   padding: var(--space-5);
 }
 .modal-header h2 {
-  margin-top: var(--space-1);
   font-size: 23px;
-}
-.eyebrow {
-  font-size: 12px;
-  color: var(--color-muted);
 }
 .modal-body {
   padding: 0 var(--space-5) var(--space-5);
@@ -444,8 +450,15 @@ textarea::placeholder {
 }
 .modal-footer {
   display: grid;
+  gap: var(--space-3);
   padding: var(--space-4) var(--space-5);
   border-top: 1px solid var(--color-border);
+}
+.settings-meta {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-muted);
+  text-align: center;
 }
 
 @media (width < 390px) {
@@ -601,6 +614,9 @@ textarea::placeholder {
   margin-bottom: var(--space-2);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-field);
+  animation:
+    motion-rise-in var(--motion-feedback) var(--motion-ease-enter),
+    motion-focus-in var(--motion-focus) ease-out;
 }
 .selected-category strong,
 .category-option strong {
@@ -625,7 +641,9 @@ textarea::placeholder {
   background: var(--color-field);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-field);
-  animation: dock-arrival var(--motion-enter) var(--motion-ease-enter);
+  animation:
+    motion-pop-in var(--motion-enter) var(--motion-ease-spring),
+    motion-focus-in var(--motion-focus) ease-out;
 }
 .autocomplete-list {
   max-height: 290px;
@@ -642,7 +660,9 @@ textarea::placeholder {
   background: transparent;
   border: 0;
   border-bottom: 1px solid var(--color-border);
-  transition: background-color var(--motion-feedback) var(--motion-ease-state);
+  transition:
+    background-color var(--motion-feedback) var(--motion-ease-state),
+    color var(--motion-feedback) var(--motion-ease-state);
 }
 .category-option:hover,
 .category-option[aria-selected='true'] {
@@ -677,6 +697,9 @@ textarea::placeholder {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  animation:
+    motion-fade-in var(--motion-feedback) var(--motion-ease-enter),
+    motion-focus-in var(--motion-focus) ease-out;
 }
 
 /* ChipTag ------------------------------------------------------------------- */
@@ -693,7 +716,13 @@ textarea::placeholder {
   background: var(--color-field);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-tag);
-  animation: dock-arrival var(--motion-enter) var(--motion-ease-enter);
+  transition:
+    background-color var(--motion-feedback) var(--motion-ease-state),
+    border-color var(--motion-feedback) var(--motion-ease-state),
+    color var(--motion-feedback) var(--motion-ease-state);
+  animation:
+    motion-pop-in var(--motion-enter) var(--motion-ease-spring),
+    motion-focus-in var(--motion-focus) ease-out;
 }
 .chip-tag__label {
   min-width: 0;
@@ -716,6 +745,7 @@ textarea::placeholder {
   background: transparent;
   border: 0;
   border-radius: var(--radius-tag);
+  transition: background-color var(--motion-feedback) var(--motion-ease-state);
 }
 .chip-tag__remove:hover {
   background: var(--color-accent-soft);
@@ -812,18 +842,32 @@ textarea::placeholder {
   padding-top: var(--space-4);
 }
 .notices > * {
-  animation: dock-arrival var(--motion-enter) var(--motion-ease-spring);
+  animation:
+    motion-rise-in var(--motion-enter) var(--motion-ease-spring),
+    motion-focus-in var(--motion-focus) ease-out;
 }
 
-@keyframes dock-arrival {
-  from {
-    opacity: 0.6;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+/* Липкая панель уведомлений дока: видна при любой прокрутке ----------------- */
+.notices--dock {
+  --dock-fade: 14px;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  padding-inline: var(--dock-pad-inline);
+  margin-inline: calc(var(--dock-pad-inline) * -1);
+}
+.notices--dock:empty {
+  display: none;
+}
+.notices--dock:not(:empty) {
+  max-height: 60dvh;
+  padding-block: var(--dock-fade) var(--dock-pad-block);
+  overflow-y: auto;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--color-surface) 0%, transparent),
+    var(--color-surface) var(--dock-fade)
+  );
 }
 
 @keyframes spin {
@@ -841,7 +885,8 @@ textarea::placeholder {
     border-radius: 16px;
   }
   .dock-scroll {
-    padding: 22px 18px;
+    --dock-pad-block: 22px;
+    --dock-pad-inline: 18px;
   }
   .save-panel {
     padding-inline: 18px;
