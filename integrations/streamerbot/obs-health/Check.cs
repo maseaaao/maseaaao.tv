@@ -49,6 +49,14 @@ public class CPHInline
     {
         try
         {
+            // Attach OBS Streaming Stopped as well as the ten-second timer.
+            // OBS may close before the timer can observe outputActive=false.
+            if (CPH.GetEventType().ToString() == "ObsStreamingStopped")
+            {
+                SetIdle();
+                return true;
+            }
+
             if (!CPH.ObsIsConnected(ObsConnection))
             {
                 CPH.SetGlobalVar("obs.health.wasDisconnected", true, false);
@@ -70,10 +78,7 @@ public class CPHInline
             }
             if (!CPH.ObsIsStreaming(ObsConnection))
             {
-                CPH.SetGlobalVar("obs.health.lastStreaming", false, false);
-                ResetRuntimeMetrics();
-                CPH.SetGlobalVar("obs.health.signature", string.Empty, false);
-                PublishCompanionState("IDLE", "IDLE", GetSoundEnabled());
+                SetIdle();
                 return true;
             }
 
@@ -81,10 +86,7 @@ public class CPHInline
             bool outputActive = ReadBoolean(streamStatus, "outputActive");
             if (!outputActive)
             {
-                CPH.SetGlobalVar("obs.health.lastStreaming", false, false);
-                ResetRuntimeMetrics();
-                CPH.SetGlobalVar("obs.health.signature", string.Empty, false);
-                PublishCompanionState("IDLE", "IDLE", GetSoundEnabled());
+                SetIdle();
                 return true;
             }
 
@@ -112,6 +114,15 @@ public class CPHInline
         }
 
         return true;
+    }
+
+    private void SetIdle()
+    {
+        CPH.SetGlobalVar("obs.health.lastStreaming", false, false);
+        CPH.SetGlobalVar("obs.health.connection.failures", 0, false);
+        CPH.SetGlobalVar("obs.health.signature", string.Empty, false);
+        ResetRuntimeMetrics();
+        PublishCompanionState("IDLE", "IDLE", GetSoundEnabled());
     }
 
     private void CheckMicrophone(StringBuilder problemCodes, StringBuilder problemMessages, ref int problemCount)

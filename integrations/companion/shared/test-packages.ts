@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { tarArgs } from './tar.ts';
 
 const MAP_RE = /\/$/;
 const NEWLINE_RE = /\r?\n/;
@@ -42,7 +43,8 @@ for (const [directory, helper, request, extra] of modules) {
   assert.equal(manifest.runtime.type, 'node22');
   assert.equal(manifest.runtime.entrypoint, '../main.js');
   const archive = join(module, `${id}-${version}.tgz`);
-  const tar = (args: string[]) => execFileSync('tar', args, { maxBuffer: 64 * 1024 * 1024 });
+  const tar = (args: string[]) =>
+    execFileSync('tar', tarArgs(args), { maxBuffer: 64 * 1024 * 1024 });
   const names = tar(['-tzf', archive])
     .toString('utf8')
     .trim()

@@ -11,6 +11,7 @@ import {
 import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { tarArgs } from './tar.ts';
 
 const DIGIT_DOTDIGIT_DOTDIGIT_RE = /^\d+\.\d+\.\d+$/;
 const KEBAB_CASE_RE = /^[a-z][a-z0-9-]*$/;
@@ -79,7 +80,7 @@ export function packageModule(
     // Explicit entries preserve the existing archive layout (no extra companion/ directory).
     execFileSync(
       'tar',
-      [
+      tarArgs([
         '--no-recursion',
         '-czf',
         archive,
@@ -87,7 +88,7 @@ export function packageModule(
         staging,
         `${id}/`,
         ...files.map((name) => `${id}/${name}`),
-      ],
+      ]),
       {
         env: { ...process.env, COPYFILE_DISABLE: '1' },
         stdio: 'inherit',

@@ -32,6 +32,9 @@ bun run sync:local --product stream-info --obs-root <каталог-OBS>
 Для Stream Info используйте `dist/stream-info/streamerbot-import.txt`: HTML не заменяет API.
 Звуки лежат рядом с C# в `integrations/streamerbot/chat-sound/` и `obs-health/`;
 пути в C# рассчитаны на checkout рядом с папкой Streamer.bot.
+У `OBS | HEALTH | Check` нужны оба триггера: таймер каждые 10 секунд и
+`OBS Studio → Streaming Stopped` для того же соединения OBS. Событие остановки
+сразу сбрасывает тревогу, даже если OBS закрывают до следующего тика таймера.
 DonationAlerts требует приватную глобальную `daClientSecret`.
 
 [Сборка, настройки и импорт Companion](../integrations/companion/README.md).

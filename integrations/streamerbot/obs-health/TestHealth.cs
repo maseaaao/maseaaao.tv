@@ -6,7 +6,8 @@ using System.Text;
 public static class CompanionEndpoint { public static string Get(){return "audit://companion";} }
 public class FakeCph {
  public Dictionary<string,object> Values=new Dictionary<string,object>();
- public bool Connected,Streaming;public int Alerts,RawRequests;
+ public bool Connected,Streaming;public int Alerts,RawRequests;public string EventType="TimedAction";
+ public string GetEventType(){return EventType;}
  public T GetGlobalVar<T>(string key,bool persist){object v;return Values.TryGetValue(key,out v)?(T)v:default(T);}
  public void SetGlobalVar<T>(string key,T value,bool persist){Values[key]=value;}
  public void UnsetGlobalVar(string key,bool persist){Values.Remove(key);}
@@ -43,6 +44,19 @@ public class TestHealth {
   c.Values["obs.health.companion.obs_health_state.sentAt"]=0L;code.Execute();Assert(AuditRequest.Calls>sent,"expired cache reconciled");
   c.Connected=false;code.Execute();Assert(c.Alerts==0,"first disconnect debounced");code.Execute();Assert(c.Alerts==1,"sustained disconnect alarm");code.Execute();Assert(c.Alerts==1,"no repeated notification");
   c.Connected=true;c.Streaming=false;code.Execute();Assert(AuditRequest.Values["/api/custom-variable/obs_health_state/value"]=="IDLE","known stopped after recovery");
+  // Stop and close OBS before the next ten-second timer tick.
+  c.Streaming=true;code.Execute();int alerts=c.Alerts;int requests=c.RawRequests;
+  c.Connected=false;c.EventType="ObsStreamingStopped";code.Execute();
+  Assert(!c.GetGlobalVar<bool>("obs.health.lastStreaming",false),"stop event clears remembered stream even after OBS closes");
+  Assert(AuditRequest.Values["/api/custom-variable/obs_health_state/value"]=="IDLE","stop event publishes idle");
+  Assert(c.RawRequests==requests,"stop event does not query closed OBS");
+  c.EventType="TimedAction";for(int i=0;i<8;i++)code.Execute();
+  Assert(c.Alerts==alerts,"no connection alarm after normal stop and close");
+  Assert(c.GetGlobalVar<string>("obs.health.signature",false)==string.Empty,"no stale warning after stop");
+  Assert(c.GetGlobalVar<long>("obs.health.lastSoundAt",false)==0,"sound cooldown reset after stop");
+  c.Connected=true;c.Streaming=true;code.Execute();c.Connected=false;
+  code.Execute();Assert(c.Alerts==alerts,"next stream disconnect remains debounced");
+  code.Execute();Assert(c.Alerts==alerts+1,"real connection failure still alerts on next stream");
   Console.WriteLine("PASS: OBS offline/idle/stream, debounce, one alarm, cache refresh, recovery; all OBS/HTTP/notifications mocked.");
  }
 }

@@ -12,6 +12,23 @@ public static class SystemAudioHelper
     static readonly AutoResetEvent Wake = new AutoResetEvent(false);
     static volatile bool ended;
 
+    /// <summary>
+    /// A pinned endpoint disappears after a driver reinstall, a Windows update or a USB
+    /// port change; keep working with the system default until the pinned device returns.
+    /// </summary>
+    static MMDevice Resolve(MMDeviceEnumerator enumerator, string pinned, DataFlow flow, Role role) {
+        if (!string.IsNullOrWhiteSpace(pinned)) {
+            try {
+                MMDevice pinnedDevice = enumerator.GetDevice(pinned);
+                if (pinnedDevice.State == DeviceState.Active && pinnedDevice.DataFlow == flow) return pinnedDevice;
+                pinnedDevice.Dispose();
+            } catch {
+                // Stale identifier: the endpoint no longer exists, use the system default.
+            }
+        }
+        return enumerator.GetDefaultAudioEndpoint(flow, role);
+    }
+
     public static void Main(string[] args)
     {
         Console.OutputEncoding = new System.Text.UTF8Encoding(false);
@@ -42,8 +59,7 @@ public static class SystemAudioHelper
                     // Cached endpoint; reconcile default output / reconnect once a second.
                     if (device == null || command != null || clock.ElapsedMilliseconds - checkedAt >= 1000) {
                         checkedAt = clock.ElapsedMilliseconds;
-                        MMDevice current = string.IsNullOrWhiteSpace(pinned)
-                            ? enumerator.GetDefaultAudioEndpoint(flow, role) : enumerator.GetDevice(pinned);
+                        MMDevice current = Resolve(enumerator, pinned, flow, role);
                         if (current.State != DeviceState.Active || current.DataFlow != flow) {
                             current.Dispose(); throw new InvalidOperationException();
                         }
