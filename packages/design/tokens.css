@@ -1,5 +1,5 @@
 :root {
-  --color-brand: #1c18d9;
+  --color-brand: #1616d9;
   --color-canvas: var(--color-brand);
   --color-surface: #f8f9f4;
   --color-field: #fffff9;
@@ -8,7 +8,7 @@
   --color-border: #d3d2cb;
   --color-border-control: #84847d;
   --color-focus: var(--color-brand);
-  --color-action-hover: #1512a9;
+  --color-action-hover: #1010a9;
   --color-success: #18664a;
   --color-danger: #a52c35;
   --color-warning: #815107;
