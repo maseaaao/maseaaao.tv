@@ -70,22 +70,27 @@
   opacity: 0.7;
 }
 
+/* Hover переворачивает кнопку: чёрная заливка, синий текст. Тень тоже уходит
+   в чёрный, иначе на тёмной поверхности она не читается. */
 @media (hover: hover) {
   .app-button:hover:not(:disabled, [aria-disabled='true']) {
-    color: var(--color-brand);
-    background: var(--color-accent-soft);
-    border-color: var(--color-brand);
+    color: var(--color-action-text);
+    background: var(--color-action-surface);
+    border-color: var(--color-action-surface);
     box-shadow: 0 2px 10px
-      color-mix(in srgb, var(--color-brand) 12%, transparent);
+      color-mix(in srgb, var(--color-action-surface) 22%, transparent);
   }
   .app-button--primary:hover:not(:disabled, [aria-disabled='true']) {
-    color: var(--color-surface);
-    background: var(--color-action-hover);
-    border-color: var(--color-action-hover);
+    color: var(--color-action-text);
+    background: var(--color-action-surface);
+    border-color: var(--color-action-surface);
     box-shadow: 0 2px 12px
-      color-mix(in srgb, var(--color-brand) 24%, transparent);
+      color-mix(in srgb, var(--color-action-surface) 26%, transparent);
   }
   .app-button--inverted:hover:not(:disabled, [aria-disabled='true']) {
+    color: var(--color-action-text);
+    background: var(--color-action-surface);
+    border-color: var(--color-action-surface);
     box-shadow: none;
   }
 }

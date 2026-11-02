@@ -8,7 +8,14 @@
   --color-border: #d3d2cb;
   --color-border-control: #84847d;
   --color-focus: var(--color-brand);
-  --color-action-hover: #1010a9;
+  /* Hover любой кнопки — чёрная заливка и синий текст. Чистый бренд на чёрном
+     даёт 1.6:1, поэтому текст осветлён до 5.8:1 и держит AA. */
+  --color-action-surface: var(--color-text);
+  --color-action-text: color-mix(
+    in srgb,
+    var(--color-brand) 45%,
+    var(--color-surface)
+  );
   --color-success: #18664a;
   --color-danger: #a52c35;
   --color-warning: #815107;

@@ -22,6 +22,9 @@ a,
 button {
   touch-action: manipulation;
 }
+button {
+  font-family: var(--font-display);
+}
 a {
   color: var(--color-brand);
   text-underline-offset: 0.2em;
@@ -226,17 +229,40 @@ button:focus-visible,
 .tile--donationalerts {
   border-color: var(--color-border-control);
 }
+/* Ряд платформ: иконки в одну линию на широком экране, дальше по адаптиву. */
 .tiles--secondary {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
 }
 .tiles--secondary .tile {
-  min-height: 56px;
-  padding: 14px 16px;
-  border-radius: 8px;
+  justify-content: center;
+  min-height: 0;
+  aspect-ratio: 1;
+  padding: 0;
 }
-.tiles--secondary .tile__title {
-  font: 15px / 1.5 var(--font-body);
+/* Заливные бренд-знаки плотнее контурных, поэтому контур получает больший
+   размер и штрих: значок и строка иконок должны читаться с одним весом. */
+.tile__icon {
+  display: block;
+  flex: none;
+  width: 38%;
+  min-width: 18px;
+  max-width: 38px;
+  aspect-ratio: 1;
+  fill: currentcolor;
+}
+.tile__icon--stroke {
+  width: 46%;
+  max-width: 46px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* Стрелка внешней ссылки перекрывала бы саму иконку платформы. */
+.tiles--secondary .tile::after {
+  display: none;
 }
 .collab {
   display: grid;
@@ -263,7 +289,7 @@ button:focus-visible,
   min-height: 48px;
   padding: 12px 30px;
   overflow: hidden;
-  font-size: 15px;
+  font: 400 15px / 1.4 var(--font-display);
   color: var(--color-text);
   overflow-wrap: anywhere;
   text-decoration: none;
@@ -312,15 +338,11 @@ button:focus-visible,
 
 @media (hover: hover) {
   .tile:hover,
-  .collab__link:hover {
-    color: var(--color-brand);
-    background: var(--color-field);
-    border-color: var(--color-brand);
-  }
+  .collab__link:hover,
   .tile--twitch:hover {
-    color: var(--color-surface);
-    background: var(--color-action-hover);
-    border-color: var(--color-brand);
+    color: var(--color-action-text);
+    background: var(--color-action-surface);
+    border-color: var(--color-action-surface);
   }
 }
 
@@ -370,8 +392,19 @@ button:focus-visible,
   .collab__link:hover::after {
     transform: translate(0, -50%);
   }
+  /* На чёрной поверхности блик и тень тоже уходят на светлую сторону. */
   .tile:hover,
   .collab__link:hover {
+    --tile-reveal: color-mix(
+      in srgb,
+      var(--color-action-text) 24%,
+      transparent
+    );
+    --tile-shadow: color-mix(
+      in srgb,
+      var(--color-action-surface) 32%,
+      transparent
+    );
     box-shadow: 0 5px 16px var(--tile-shadow);
   }
 }
@@ -573,7 +606,8 @@ button:focus-visible,
     grid-template-columns: minmax(0, 1fr);
   }
   .tiles--secondary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 10px;
   }
   .collab {
     grid-template-columns: 1fr;
@@ -618,12 +652,9 @@ button:focus-visible,
   .tile__title {
     font-size: 17px;
   }
-  .tiles--secondary .tile__title {
-    font-size: 15px;
-  }
-  .tiles--secondary .tile--lobby,
-  .tiles--secondary .tile--archives {
-    grid-column: 1 / -1;
+  .tiles--secondary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
   }
   .collab__links {
     grid-template-columns: 1fr;

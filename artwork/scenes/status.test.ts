@@ -4,6 +4,14 @@ import { pathToFileURL } from 'node:url';
 import { launchBrowser } from '../../tooling/artwork/browser.ts';
 
 const directory = import.meta.dir;
+const tokensCss = await readFile(`${directory}/../../packages/design/tokens.css`, 'utf8');
+// Сцена обязана следовать палитре, поэтому ожидание берётся из токена, а не
+// из литерала: смена бренда не должна переписывать проверки геометрии.
+const brandHex = tokensCss.match(/--color-brand:\s*(#[0-9a-f]{6})/i)?.[1];
+if (!brandHex) {
+  throw new Error('Missing --color-brand token');
+}
+const brandRgb = `rgb(${Number.parseInt(brandHex.slice(1, 3), 16)}, ${Number.parseInt(brandHex.slice(3, 5), 16)}, ${Number.parseInt(brandHex.slice(5, 7), 16)})`;
 const layout = JSON.parse(await readFile(`${directory}/layout.json`, 'utf8'));
 const statusScenes = layout.files.filter((scene: { kind: string }) => scene.kind === 'status');
 const scenes = await Promise.all(
@@ -50,7 +58,7 @@ for (const scene of scenes) {
       });
       expect(
         await page.locator('.canvas.status').evaluate((el) => getComputedStyle(el).backgroundColor),
-      ).toBe('rgb(28, 24, 217)');
+      ).toBe(brandRgb);
       expect(
         await page.locator('.title-field').evaluate((el) => getComputedStyle(el).backgroundColor),
       ).toBe('rgb(248, 249, 244)');

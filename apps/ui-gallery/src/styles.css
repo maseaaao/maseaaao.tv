@@ -25,6 +25,10 @@ textarea,
 select {
   font: inherit;
 }
+/* Текст кнопок — акцентный Unbounded, даже когда витрина сбрасывает шрифт. */
+button {
+  font-family: var(--font-display);
+}
 :focus-visible {
   outline: 3px solid var(--color-focus);
   outline-offset: 4px;
@@ -541,6 +545,15 @@ h2 {
   color: var(--color-surface);
   background: var(--color-brand);
   border-color: var(--color-brand);
+}
+/* Выбранная вкладка остаётся брендовой, остальные кнопки переворачиваются. */
+@media (hover: hover) {
+  .gallery-tabs button:not([aria-selected='true']):hover,
+  .copy-button:hover {
+    color: var(--color-action-text);
+    background: var(--color-action-surface);
+    border-color: var(--color-action-surface);
+  }
 }
 
 .artwork-panel {

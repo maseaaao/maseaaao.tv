@@ -27,6 +27,10 @@ input,
 textarea {
   font: inherit;
 }
+/* Текст кнопок — акцентный Unbounded, даже когда продукт сбрасывает шрифт. */
+button {
+  font-family: var(--font-display);
+}
 button,
 a {
   touch-action: manipulation;
