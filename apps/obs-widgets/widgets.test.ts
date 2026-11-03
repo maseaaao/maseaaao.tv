@@ -304,3 +304,173 @@ test('donor shell rounds only the upper corners', async () => {
     await page.close();
   }
 });
+
+test('goal strip shows the follower goal and progress', async () => {
+  const page = await browser.newPage({ viewport: { height: 36, width: 480 } });
+  try {
+    await page.goto(`${server.resolvedUrls?.local[0]}src/social-strip/index.html?goal=1&demo=1`);
+    expect(await page.locator('.goal-count').textContent()).toBe('18/20');
+    const progress = await page.locator('.goal-line i').evaluate((element) => {
+      const line = element.parentElement;
+      return line ? element.getBoundingClientRect().width / line.getBoundingClientRect().width : 0;
+    });
+    expect(progress).toBeCloseTo(0.9, 2);
+    expect(await page.locator('.goal-block').isHidden()).toBe(true);
+  } finally {
+    await page.close();
+  }
+});
+
+test('goal block shows current, target, remaining and progress', async () => {
+  const page = await browser.newPage({ viewport: { height: 90, width: 720 } });
+  try {
+    await page.goto(
+      `${server.resolvedUrls?.local[0]}src/social-strip/index.html?layout=goal&demo=1`,
+    );
+    expect(await page.locator('.strip').isHidden()).toBe(true);
+    expect(await page.locator('.goal-block__current').textContent()).toBe('18');
+    expect(await page.locator('.goal-block__target').textContent()).toBe('/20');
+    expect(await page.locator('.goal-block__left').textContent()).toBe('ОСТАЛОСЬ 2');
+    const progress = await page.locator('.goal-block__bar i').evaluate((element) => {
+      const bar = element.parentElement;
+      return bar ? element.getBoundingClientRect().width / bar.getBoundingClientRect().width : 0;
+    });
+    expect(progress).toBeCloseTo(0.9, 2);
+  } finally {
+    await page.close();
+  }
+});
+
+test('goal stays hidden without the goal flag', async () => {
+  const page = await browser.newPage({ viewport: { height: 88, width: 720 } });
+  try {
+    await page.goto(`${server.resolvedUrls?.local[0]}src/social-strip/index.html`);
+    expect(await page.locator('.goal-count').isHidden()).toBe(true);
+    expect(await page.locator('.goal-line').isHidden()).toBe(true);
+    expect(await page.locator('.goal-block').isHidden()).toBe(true);
+  } finally {
+    await page.close();
+  }
+});
+
+test('goal block stays hidden until Streamer.bot supplies a valid goal', async () => {
+  const page = await browser.newPage({ viewport: { height: 90, width: 720 } });
+  try {
+    await page.routeWebSocket('ws://127.0.0.1:8080', () => {
+      // Connected, but no goal has arrived yet.
+    });
+    await page.goto(`${server.resolvedUrls?.local[0]}src/social-strip/index.html?layout=goal`);
+    expect(await page.locator('.goal-block').isHidden()).toBe(true);
+  } finally {
+    await page.close();
+  }
+});
+
+test('goal ignores unsupported password query without sending authentication', async () => {
+  const page = await browser.newPage();
+  const requests: string[] = [];
+  try {
+    await page.clock.install();
+    let polls = 0;
+    await page.routeWebSocket('ws://127.0.0.1:8080', (socket) => {
+      socket.onMessage((message) => {
+        requests.push(String(message));
+        if (JSON.parse(String(message)).request === 'GetGlobals') {
+          polls += 1;
+          socket.send(
+            JSON.stringify({ variables: { twitchGoal: { current: polls, target: 20 } } }),
+          );
+        }
+      });
+    });
+    await page.goto(
+      `${server.resolvedUrls?.local[0]}src/social-strip/index.html?goal=1&password=fixture-only`,
+    );
+    await page.waitForFunction(() => document.querySelector('.goal-current')?.textContent === '1');
+    await page.clock.fastForward(30_000);
+    await page.waitForFunction(() => document.querySelector('.goal-current')?.textContent === '2');
+    expect(requests.some((message) => JSON.parse(message).request === 'Authentication')).toBe(
+      false,
+    );
+    expect(requests.join('\n')).not.toContain('fixture-only');
+    expect(requests.map((message) => JSON.parse(message).request)).toEqual([
+      'DoAction',
+      'GetGlobals',
+      'DoAction',
+      'GetGlobals',
+    ]);
+  } finally {
+    await page.close();
+  }
+});
+
+test.each([
+  [480, 36, 'goal=1'],
+  [1080, 55, 'goal=1'],
+  [1080, 88, 'goal=1'],
+  [560, 90, 'layout=goal'],
+  [720, 90, 'layout=goal'],
+] as const)(
+  'live goal response renders at %i×%i (%s)',
+  async (width: number, height: number, query: string) => {
+    const page = await browser.newPage({ viewport: { height, width } });
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    try {
+      await page.clock.install();
+      let goal = JSON.stringify({ current: 7, target: 25, type: 'follower' });
+      await page.routeWebSocket('ws://127.0.0.1:8080', (socket) => {
+        socket.onMessage((message) => {
+          const request = JSON.parse(String(message));
+          if (request.request === 'GetGlobals') {
+            socket.send(
+              JSON.stringify({
+                id: request.id,
+                status: 'ok',
+                variables: { twitchGoal: { name: 'twitchGoal', value: goal } },
+              }),
+            );
+          }
+        });
+      });
+      await page.goto(`${server.resolvedUrls?.local[0]}src/social-strip/index.html?${query}`);
+      const current = query === 'goal=1' ? '.goal-current' : '.goal-block__current';
+      const target = query === 'goal=1' ? '.goal-target' : '.goal-block__target';
+      await page.waitForFunction(
+        (selector) => document.querySelector(selector)?.textContent === '7',
+        current,
+      );
+      expect(await page.locator(target).textContent()).toBe('/25');
+      await page.evaluate(() => document.fonts.ready);
+      const root = query === 'goal=1' ? '.strip' : '.goal-block';
+      const metrics = await page.locator(root).evaluate((element) => ({
+        children: Array.from(element.children)
+          .filter((child) => child.getBoundingClientRect().height > 0)
+          .map((child) => child.getBoundingClientRect().toJSON()),
+        scrollWidth: element.scrollWidth,
+        width: element.clientWidth,
+      }));
+      expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.width);
+      for (const child of metrics.children) {
+        expect(child.top).toBeGreaterThanOrEqual(0);
+        expect(child.bottom).toBeLessThanOrEqual(height);
+      }
+      goal = JSON.stringify({ current: 8, target: 25, type: 'follower' });
+      await page.clock.fastForward(30_000);
+      await page.waitForFunction(
+        (selector) => document.querySelector(selector)?.textContent === '8',
+        current,
+      );
+      goal = '';
+      await page.clock.fastForward(30_000);
+      await page.waitForFunction(
+        (selector) => document.querySelector<HTMLElement>(selector)?.hidden,
+        query === 'goal=1' ? '.goal-count' : '.goal-block',
+      );
+      expect(await page.locator('.goal-line').isHidden()).toBe(true);
+      expect(errors).toEqual([]);
+    } finally {
+      await page.close();
+    }
+  },
+);

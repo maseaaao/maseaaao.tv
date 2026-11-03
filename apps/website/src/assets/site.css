@@ -703,3 +703,211 @@ button:focus-visible,
   min-height: 44px;
   overflow-wrap: anywhere;
 }
+
+/* Landing: синяя сцена слева и костяной лист ссылок справа.
+   Радиусы общие с эфиром: панели 24, кнопки 12. */
+.landing {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 560px;
+  width: 100%;
+  min-height: 100svh;
+  padding: 24px;
+  background: var(--color-canvas);
+}
+.stage {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 40px;
+}
+.stage__inner {
+  width: 100%;
+  max-width: 840px;
+}
+.stage h1 {
+  margin: 0;
+  font-family: var(--font-nickname);
+  font-size: clamp(40px, 8.2vw, 118px);
+  font-weight: var(--font-nickname-weight);
+  line-height: 1.05;
+  color: var(--color-surface);
+  letter-spacing: -0.06em;
+  overflow-wrap: anywhere;
+}
+.stage__rule {
+  height: 1px;
+  margin-top: clamp(20px, 3vw, 32px);
+  background: color-mix(in srgb, var(--color-surface) 30%, transparent);
+}
+.stage__actions {
+  display: flex;
+  gap: 12px;
+  margin-top: clamp(24px, 4vw, 48px);
+}
+.cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 84px;
+  padding: 0 32px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1;
+  text-align: center;
+  letter-spacing: -0.025em;
+  text-decoration: none;
+  border-radius: 12px;
+}
+.cta--primary {
+  min-width: 336px;
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+.cta--ghost {
+  min-width: 224px;
+  color: var(--color-surface);
+  border: 1px solid color-mix(in srgb, var(--color-surface) 50%, transparent);
+}
+.stage a:focus-visible {
+  outline-color: var(--color-surface);
+}
+@media (hover: hover) {
+  .cta--primary:hover,
+  .cta--ghost:hover {
+    color: var(--color-action-text);
+    background: var(--color-action-surface);
+    border-color: var(--color-action-surface);
+  }
+}
+.sheet {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding: 32px 48px 24px;
+  background: var(--color-surface);
+  border-radius: 24px;
+}
+.index {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.index-row {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  min-height: 84px;
+  color: var(--color-text);
+  text-decoration: none;
+  border-bottom: 1px solid var(--color-border);
+}
+.index-row:last-child {
+  border-bottom: 0;
+}
+.row__icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  fill: currentcolor;
+}
+.row__icon--stroke {
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.index-row__name {
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
+}
+.index-row__out {
+  font-size: 13px;
+  color: var(--color-muted);
+}
+@media (hover: hover) {
+  .index-row:hover {
+    color: var(--color-brand);
+  }
+}
+.contact {
+  padding-top: 24px;
+  margin-top: 28px;
+  border-top: 1px solid var(--color-border);
+}
+.contact__label {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+}
+.contact__links {
+  display: grid;
+  gap: 4px;
+}
+.contact__links a {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--color-brand);
+  text-underline-offset: 0.18em;
+}
+.domain {
+  margin-top: 18px;
+  font-family: var(--font-body);
+  font-size: 10px;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+@media (width <= 900px) {
+  .landing {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    min-height: 0;
+    padding: 12px;
+  }
+  .stage {
+    align-items: flex-start;
+    padding: 16px 8px 20px;
+  }
+  .stage h1 {
+    font-size: 46px;
+  }
+  .stage__actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .cta {
+    min-width: 100%;
+    min-height: 64px;
+    font-size: 17px;
+  }
+  .sheet {
+    padding: 12px 20px 24px;
+    border-radius: 18px;
+  }
+  .index-row {
+    min-height: 62px;
+  }
+  .index-row__name {
+    font-size: 17px;
+  }
+}
+@media (forced-colors: active) {
+  .cta,
+  .index-row {
+    border: 1px solid ButtonText;
+  }
+}

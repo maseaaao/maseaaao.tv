@@ -31,3 +31,22 @@ C#-тесты запускайте отдельно через `bun run test:csh
 Они не входят в общий `bun run test` и обязательные проверки CI.
 
 [Подключение](../../docs/local-installation.md).
+
+## Цель на фолловеров
+
+`streamerbot/creator-goal.cs` — отдельное действие Streamer.bot `Creator Goal`
+(Execute Code). Оно читает активную цель через Creator Goals API и пишет её
+в persistent global `twitchGoal`:
+
+```json
+{ "type": "follower", "current": 18, "target": 20, "description": "…", "updated": 1760000000 }
+```
+
+1. Импортируйте C# как действие `Creator Goal` (сохраняйте существующие ID).
+2. Нужен scope `channel:read:goals` у broadcaster-токена. Если Helix отвечает
+   401 — переподключите Twitch в Streamer.bot.
+3. Виджет соцполосы сам вызывает действие по WebSocket при загрузке и раз в
+   30 секунд, затем читает `twitchGoal` через `GetGlobals`.
+
+Нет активной цели — global пустой, виджеты скрывают счётчик. Цель и её текущее
+значение берутся только из Twitch; в виджете ничего не хардкодится.

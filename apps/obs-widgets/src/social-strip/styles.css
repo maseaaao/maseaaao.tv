@@ -101,3 +101,97 @@ body {
     height: 24px;
   }
 }
+
+/* Цель Twitch: счётчик живёт в полосе, блок — на статусных сценах. */
+.goal-count {
+  flex: none;
+  margin-left: -2px;
+  font:
+    400 calc(var(--social-name-size) * 0.62) / 1 Arial,
+    sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.goal-count .goal-target {
+  color: var(--color-muted);
+}
+.goal-line {
+  position: absolute;
+  inset: auto 0 0;
+  height: 2px;
+  background: color-mix(in srgb, var(--color-brand) 16%, transparent);
+}
+.goal-line i {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--color-brand);
+}
+@media (min-height: 80px) {
+  .goal-line {
+    height: 3px;
+  }
+}
+.goal-block {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--color-surface);
+}
+.strip[hidden],
+.goal-block[hidden],
+.goal-count[hidden],
+.goal-line[hidden] {
+  display: none;
+}
+.goal-block__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font:
+    400 14px / 1 Arial,
+    sans-serif;
+  color: color-mix(in srgb, var(--color-surface) 74%, transparent);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+.goal-block__sum {
+  margin-top: 8px;
+  font-family: var(--font-display);
+  font-size: clamp(32px, 7vw, 44px);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.045em;
+  white-space: nowrap;
+}
+.goal-block__target {
+  font-size: 0.62em;
+  color: color-mix(in srgb, var(--color-surface) 50%, transparent);
+  letter-spacing: -0.02em;
+}
+.goal-block__bar {
+  height: 8px;
+  margin-top: 12px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--color-surface) 22%, transparent);
+  border-radius: 4px;
+}
+.goal-block__bar i {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--color-surface);
+  border-radius: 4px;
+}
+@media (min-width: 640px) {
+  .goal-block__top {
+    font-size: 16px;
+  }
+  .goal-block__bar {
+    height: 10px;
+  }
+}

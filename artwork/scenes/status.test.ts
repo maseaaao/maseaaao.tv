@@ -20,13 +20,13 @@ const scenes = await Promise.all(
     html: await readFile(`${directory}/${scene.file}`, 'utf8'),
   })),
 );
-test('status scenes keep the text nickname and the rounded mark inside the title card', () => {
+test('status scenes keep the text nickname and no separate mark inside the title card', () => {
   expect(scenes).toHaveLength(6);
   for (const scene of scenes) {
     expect(scene.html, scene.file).toContain('>maseaaao</p>');
-    // The header identity stays text; the brand mark is a rounded square inside the title card.
-    expect(scene.html, scene.file).toContain('class="title-logo"');
-    expect(scene.html, scene.file).toContain('src="../logo/logo.png"');
+    // The nickname is the only identity mark: the plate hugs the state word.
+    expect(scene.html, scene.file).not.toContain('title-logo');
+    expect(scene.html, scene.file).not.toContain('../logo/logo.png');
     expect(scene.html, scene.file).not.toContain('class="identity" logo');
   }
 });
@@ -133,33 +133,28 @@ for (const scene of scenes) {
         );
       }
       const card = await page.locator('.title-field').boundingBox();
-      const logo = await page.locator('.title-logo').boundingBox();
       const title = await page.locator('h1').boundingBox();
-      if (!(card && logo && title)) {
-        throw new Error(`${scene.file}: missing title card, brand mark or title`);
+      if (!(card && title)) {
+        throw new Error(`${scene.file}: missing title card or title`);
       }
-      expect([card.x, card.y, card.width, card.height], scene.file).toEqual(
-        map.titleField.map((value: number) => expect.closeTo(value, 0)),
-      );
-      // The mark is the tallest element, so its equal margins define the card.
-      const logoMargin = logo.y - card.y;
-      expect(
-        Math.abs(logoMargin - (card.y + card.height - (logo.y + logo.height))),
-        scene.file,
-      ).toBeLessThan(1);
-      expect(logo.x - card.x, scene.file).toBeCloseTo(32, 1);
-      expect(logo.width, scene.file).toBeCloseTo(logo.height, 1);
-      const logoRadii = await page
-        .locator('.title-logo')
-        .evaluate((element) => getComputedStyle(element).borderTopLeftRadius);
-      expect(Number.parseFloat(logoRadii), scene.file).toBeGreaterThan(0);
+      expect(card.x, scene.file).toBeCloseTo(map.titleField[0], 0);
+      expect(card.y, scene.file).toBeCloseTo(map.titleField[1], 0);
+      expect(card.height, scene.file).toBeCloseTo(map.titleField[3], 0);
+      // The plate is content-sized: it hugs the word instead of filling the grid column.
+      expect(card.width, scene.file).toBeLessThan(map.titleField[2]);
+      expect(card.width, scene.file).toBeGreaterThan(title.width);
+      // 44 px of padding on each side of the word.
+      expect(card.width - title.width, scene.file).toBeCloseTo(88, 0);
+      // The word starts at the plate's inner edge.
+      expect(title.x, scene.file).toBeCloseTo(card.x + 44, 0);
+      const titleFont = await page
+        .locator('h1')
+        .evaluate((element) => getComputedStyle(element).fontSize);
+      expect(Number.parseFloat(titleFont), scene.file).toBeCloseTo(map.titleSize, 0);
       const cardRadii = await page
         .locator('.title-field')
         .evaluate((element) => getComputedStyle(element).borderTopLeftRadius);
-      // Both orientations keep the same corner-to-height ratio.
-      expect(Number.parseFloat(cardRadii) / card.height, scene.file).toBeCloseTo(0.22, 1);
-      // The word starts after the mark and never collides with it.
-      expect(title.x, scene.file).toBeGreaterThan(logo.x + logo.width);
+      expect(Number.parseFloat(cardRadii), scene.file).toBeCloseTo(24, 0);
       // Unbounded 400 draws its x-height band 0.34375em below the line box and 0.55em tall:
       // the plate and the mark share that band's centre, so the letters are not optically low.
       const fontSize = map.titleSize;

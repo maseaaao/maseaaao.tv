@@ -37,9 +37,9 @@ body {
   inset: auto 0 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0;
   width: 100%;
-  padding: 0 16px 16px;
+  padding: 0;
   margin: 0;
 }
 #log > div {
@@ -47,13 +47,14 @@ body {
   display: block;
   flex: none;
   min-width: 0;
-  padding: 16px 20px;
+  padding: 14px 24px;
   margin: 0;
   overflow: hidden;
   text-shadow: none;
-  background: var(--cm-surface);
-  border: 1px solid var(--cm-line);
-  border-radius: 14px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(33, 33, 32, 0.1);
+  border-radius: 0;
   box-shadow: none;
   animation:
     slideInSoft var(--motion-enter) var(--motion-ease-spring) forwards,
@@ -81,7 +82,7 @@ body {
   padding: 0;
   margin: 0;
   font-family: var(--font-display);
-  font-size: 0.65em;
+  font-size: 0.84em;
   font-weight: 400;
   line-height: 1.45;
   color: var(--cm-accent) !important;
@@ -121,7 +122,7 @@ body {
 #log .message {
   display: block;
   min-width: 0;
-  margin: 12px 0 0;
+  margin: 6px 0 0;
   font-family: Arial, sans-serif;
   font-size: 1em;
   font-weight: 400;
@@ -130,20 +131,16 @@ body {
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
-#log > div.host {
-  border-color: var(--cm-accent);
-}
 #log > div.host .meta {
   max-width: none;
-  padding: 12px 20px;
-  margin: -16px -20px 0;
+  padding: 8px 24px;
+  margin: -14px -24px 0;
   color: var(--cm-surface) !important;
-  background: var(--cm-accent);
+  background: var(--cm-text);
 }
 #log > div.mention {
-  padding-inline-start: 17px;
-  border-color: var(--cm-accent);
-  border-inline-start-width: 4px;
+  padding-inline-start: 20px;
+  border-inline-start: 4px solid var(--cm-accent);
 }
 #log .colon {
   display: none;
