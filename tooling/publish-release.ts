@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { formatReleaseNotes, type ReleaseCommit } from './release-notes.ts';
 
 const DIGIT_RE_2 = /^v[1-9]\d*$/;
 const DIGIT_RE_2_2 = /^[1-9]\d*$/;
@@ -10,6 +11,7 @@ const NEWLINE_SPLIT_RE = /\r?\n/;
 const WORD_WORD_RE = /^[\w.-]+\/[\w.-]+$/;
 
 const marker = '<!-- maseaaao:auto-release -->';
+const notesVersion = '<!-- maseaaao:release-notes:v1 -->';
 interface Result {
   status: number | null;
   stderr: string;
@@ -67,6 +69,54 @@ function verifyDraft(
   ) {
     throw new Error('Draft asset verification failed');
   }
+}
+
+interface ReleaseComparison {
+  commits: ReleaseCommit[];
+  total_commits: number;
+}
+type ReleaseApi = <T>(endpoint: string, ...args: string[]) => T;
+
+function generateChangelog(options: {
+  api: ReleaseApi;
+  fields: string[];
+  managed: Release[];
+  number: string;
+  repo: string;
+  sha: string;
+  tag: string;
+}): string {
+  const { api, fields, managed, number, repo, sha, tag } = options;
+  // Compare published tags, not workflow run numbers: skipped numbers and direct pushes count.
+  const previous = managed
+    .filter((item) => !item.draft && DIGIT_RE_2.test(item.tag_name))
+    .filter((item) => BigInt(item.tag_name.slice(1)) < BigInt(number))
+    .sort((a, b) => {
+      const left = BigInt(a.tag_name.slice(1));
+      const right = BigInt(b.tag_name.slice(1));
+      if (left < right) {
+        return -1;
+      }
+      if (left > right) {
+        return 1;
+      }
+      return 0;
+    })
+    .at(-1);
+  if (!previous) {
+    const notes = api<{ body: string }>('releases/generate-notes', '--method', 'POST', ...fields);
+    return notes.body || 'Первый выпуск проекта.';
+  }
+  const pages = api<ReleaseComparison[]>(
+    'compare/' + previous.tag_name + '...' + sha + '?per_page=100',
+    '--paginate',
+    '--slurp',
+  );
+  const commits = pages.flatMap((page) => page.commits);
+  if (pages.length === 0 || commits.length < pages[0].total_commits) {
+    throw new Error('Incomplete commit comparison; refusing to publish partial changelog');
+  }
+  return formatReleaseNotes({ commits, previousTag: previous.tag_name, repo, tag });
 }
 
 /** Update only our unpublished candidate. Publishing and creating Git refs are manual. */
@@ -151,13 +201,13 @@ export function publishRelease(options: {
     };
   });
   const fields = ['--raw-field', `tag_name=${tag}`, '--raw-field', `target_commitish=${sha}`];
-  const notes = api<{ body: string }>('releases/generate-notes', '--method', 'POST', ...fields);
+  const notesBody = generateChangelog({ api, fields, managed, number, repo, sha, tag });
   const payload = [
     ...fields,
     '--raw-field',
     `name=${tag}`,
     '--raw-field',
-    `body=${marker}\n\n${notes.body}`,
+    `body=${marker}\n${notesVersion}\n\n${notesBody}`,
     '--field',
     'prerelease=false',
   ];
