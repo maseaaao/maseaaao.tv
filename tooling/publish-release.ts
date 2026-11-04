@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { formatReleaseNotes, type ReleaseCommit } from './release-notes.ts';
 
 const DIGIT_RE_2 = /^v[1-9]\d*$/;
 const DIGIT_RE_2_2 = /^[1-9]\d*$/;
@@ -10,6 +11,7 @@ const NEWLINE_SPLIT_RE = /\r?\n/;
 const WORD_WORD_RE = /^[\w.-]+\/[\w.-]+$/;
 
 const marker = '<!-- maseaaao:auto-release -->';
+const notesVersion = '<!-- maseaaao:release-notes:v1 -->';
 interface Result {
   status: number | null;
   stderr: string;
@@ -151,13 +153,43 @@ export function publishRelease(options: {
     };
   });
   const fields = ['--raw-field', `tag_name=${tag}`, '--raw-field', `target_commitish=${sha}`];
-  const notes = api<{ body: string }>('releases/generate-notes', '--method', 'POST', ...fields);
+  // Compare from the latest published managed tag, not from the previous workflow run.
+  // This captures direct pushes and gaps in the vN sequence as well as merged PRs.
+  const previous = managed
+    .filter((item) => !item.draft && DIGIT_RE_2.test(item.tag_name))
+    .filter((item) => BigInt(item.tag_name.slice(1)) < BigInt(number))
+    .sort((a, b) => {
+      const left = BigInt(a.tag_name.slice(1));
+      const right = BigInt(b.tag_name.slice(1));
+      return left < right ? -1 : left > right ? 1 : 0;
+    })
+    .at(-1);
+  let notesBody: string;
+  if (previous) {
+    interface Comparison {
+      total_commits: number;
+      commits: ReleaseCommit[];
+    }
+    const pages = api<Comparison[]>(
+      'compare/' + previous.tag_name + '...' + sha + '?per_page=100',
+      '--paginate',
+      '--slurp',
+    );
+    const commits = pages.flatMap((page) => page.commits);
+    if (pages.length === 0 || commits.length < pages[0].total_commits) {
+      throw new Error('Incomplete commit comparison; refusing to publish partial changelog');
+    }
+    notesBody = formatReleaseNotes({ repo, tag, previousTag: previous.tag_name, commits });
+  } else {
+    const notes = api<{ body: string }>('releases/generate-notes', '--method', 'POST', ...fields);
+    notesBody = notes.body || 'Первый выпуск проекта.';
+  }
   const payload = [
     ...fields,
     '--raw-field',
     `name=${tag}`,
     '--raw-field',
-    `body=${marker}\n\n${notes.body}`,
+    `body=${marker}\n${notesVersion}\n\n${notesBody}`,
     '--field',
     'prerelease=false',
   ];
