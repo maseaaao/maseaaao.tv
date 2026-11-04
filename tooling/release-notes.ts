@@ -5,13 +5,20 @@ export interface ReleaseCommit {
   sha: string;
 }
 
-type Category = 'Новые возможности' | 'Исправления' | 'Улучшения' | 'Технические изменения' | 'Прочие изменения';
+type Category =
+  | 'Новые возможности'
+  | 'Исправления'
+  | 'Улучшения'
+  | 'Технические изменения'
+  | 'Прочие изменения';
 
-const COMMIT_TYPE = /^(feat|fix|perf|refactor|style|design|artwork|widgets|obs|integrations|docs|test|chore|ci|build)(?:\(([^)]+)\))?!?:\s*(.+)$/i;
+const COMMIT_TYPE =
+  /^(feat|fix|perf|refactor|style|design|artwork|widgets|obs|integrations|docs|test|chore|ci|build)(?:\(([^)]+)\))?!?:\s*(.+)$/i;
 const COMMIT_SHA = /^[a-f0-9]{40}$/;
 const RELEASE_TAG = /^v[1-9]\d*$/;
 const REPO_NAME = /^[\w.-]+\/[\w.-]+$/;
 const MERGE_COMMIT = /^Merge pull request #\d+\b/;
+const NEWLINE_SPLIT = /\r?\n/;
 const CATEGORIES: Category[] = [
   'Новые возможности',
   'Исправления',
@@ -67,7 +74,7 @@ export function formatReleaseNotes(options: {
     if (!COMMIT_SHA.test(item.sha)) {
       throw new Error('Invalid compared commit SHA');
     }
-    const subject = item.commit.message.split(/\r?\n/, 1)[0]?.trim();
+    const subject = item.commit.message.split(NEWLINE_SPLIT, 1)[0]?.trim();
     if (!subject || MERGE_COMMIT.test(subject) || seen.has(subject)) {
       continue;
     }
@@ -77,7 +84,16 @@ export function formatReleaseNotes(options: {
     const scope = parsed?.[2] ? '`' + escapeMarkdown(parsed[2]) + '`' : '';
     const title = escapeMarkdown(parsed?.[3] ?? subject);
     const label = scope ? scope + ': ' + title : title;
-    const line = '- ' + label + ' ([`' + item.sha.slice(0, 7) + '`](https://github.com/' + repo + '/commit/' + item.sha + '))';
+    const line =
+      '- ' +
+      label +
+      ' ([`' +
+      item.sha.slice(0, 7) +
+      '`](https://github.com/' +
+      repo +
+      '/commit/' +
+      item.sha +
+      '))';
     grouped.set(category, [...(grouped.get(category) ?? []), line]);
   }
 
@@ -88,6 +104,13 @@ export function formatReleaseNotes(options: {
   if (sections.length === 0) {
     sections.push('Изменений в коммитах относительно предыдущего релиза нет.');
   }
-  sections.push('**Полный список изменений:** https://github.com/' + repo + '/compare/' + previousTag + '...' + tag);
+  sections.push(
+    '**Полный список изменений:** https://github.com/' +
+      repo +
+      '/compare/' +
+      previousTag +
+      '...' +
+      tag,
+  );
   return sections.join('\n\n');
 }
