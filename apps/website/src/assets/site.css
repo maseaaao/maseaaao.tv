@@ -721,9 +721,9 @@ button:focus-visible,
   padding: 40px;
 }
 .stage__inner {
-  container-type: inline-size;
   width: 100%;
   max-width: 840px;
+  container-type: inline-size;
 }
 .stage h1 {
   margin: 0;
