@@ -25,110 +25,152 @@ const history: HistoryEntry[] = [
   {
     tag: 'v23',
     sections: [
-      { title: 'Новые возможности', changes: [
-        'Добавлены Twitch-плеер на главной странице, LIVE-статус и чат ([#5](https://github.com/maseaaao/maseaaao.tv/pull/5), [#6](https://github.com/maseaaao/maseaaao.tv/pull/6)).',
-        'Добавлены OBS-сцены и анимации интерфейсов ([#8](https://github.com/maseaaao/maseaaao.tv/pull/8), [#12](https://github.com/maseaaao/maseaaao.tv/pull/12)).',
-        'Добавлен звуковой файл для цензуры ([#2](https://github.com/maseaaao/maseaaao.tv/pull/2)).',
-      ] },
-      { title: 'Улучшения', changes: [
-        'Переработаны лендинг, стили, тексты, доступность и SEO ([#4](https://github.com/maseaaao/maseaaao.tv/pull/4), [#7](https://github.com/maseaaao/maseaaao.tv/pull/7), [#8](https://github.com/maseaaao/maseaaao.tv/pull/8)).',
-        'Унифицированы пакеты дизайна и сборка монорепозитория ([#10](https://github.com/maseaaao/maseaaao.tv/pull/10)).',
-      ] },
+      {
+        title: 'Новые возможности',
+        changes: [
+          'Добавлены Twitch-плеер на главной странице, LIVE-статус и чат ([#5](https://github.com/maseaaao/maseaaao.tv/pull/5), [#6](https://github.com/maseaaao/maseaaao.tv/pull/6)).',
+          'Добавлены OBS-сцены и анимации интерфейсов ([#8](https://github.com/maseaaao/maseaaao.tv/pull/8), [#12](https://github.com/maseaaao/maseaaao.tv/pull/12)).',
+          'Добавлен звуковой файл для цензуры ([#2](https://github.com/maseaaao/maseaaao.tv/pull/2)).',
+        ],
+      },
+      {
+        title: 'Улучшения',
+        changes: [
+          'Переработаны лендинг, стили, тексты, доступность и SEO ([#4](https://github.com/maseaaao/maseaaao.tv/pull/4), [#7](https://github.com/maseaaao/maseaaao.tv/pull/7), [#8](https://github.com/maseaaao/maseaaao.tv/pull/8)).',
+          'Унифицированы пакеты дизайна и сборка монорепозитория ([#10](https://github.com/maseaaao/maseaaao.tv/pull/10)).',
+        ],
+      },
     ],
   },
   {
     tag: 'v25',
     previousTag: 'v23',
     sections: [
-      { title: 'Технические изменения', changes: [
-        'Перестроен выпуск релизов: CI, управляемый черновик, проверка перед публикацией и раздельные сценарии деплоя ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/475c93d7cccae20bc18a6de7494e4836329026c3)).',
-      ] },
+      {
+        title: 'Технические изменения',
+        changes: [
+          'Перестроен выпуск релизов: CI, управляемый черновик, проверка перед публикацией и раздельные сценарии деплоя ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/475c93d7cccae20bc18a6de7494e4836329026c3)).',
+        ],
+      },
     ],
   },
   {
     tag: 'v26',
     previousTag: 'v25',
     sections: [
-      { title: 'Исправления', changes: [
-        'Домен maseaaao.tv закреплён в настройках маршрутов Cloudflare Worker, чтобы развёртывание не сбрасывало его привязку ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/33961514ab13ba5e56d4cbe6b337a486aca29581)).',
-      ] },
+      {
+        title: 'Исправления',
+        changes: [
+          'Домен maseaaao.tv закреплён в настройках маршрутов Cloudflare Worker, чтобы развёртывание не сбрасывало его привязку ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/33961514ab13ba5e56d4cbe6b337a486aca29581)).',
+        ],
+      },
     ],
   },
   {
     tag: 'v33',
     previousTag: 'v26',
     sections: [
-      { title: 'Исправления', changes: [
-        'Устранены подтверждённые проблемы, выявленные полным аудитом проекта, включая обработку обновлений Twitch, интеграции и окружение разработки ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/1e031c7ff24dee034f5cc6658161eadc485f87f6), [#14](https://github.com/maseaaao/maseaaao.tv/pull/14)).',
-        'Восстановлена полоса с никнеймом в игровых OBS-сценах ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/a9819f074937c3348a5c3ab4b6a251e1a2c5306e)).',
-      ] },
-      { title: 'Улучшения', changes: [
-        'Переработано размещение донатов, камеры и социальных элементов в OBS-сценах ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/9d377f4b)).',
-        'Обновлены оформление и проверки проекта по результатам ревью ([сравнение](https://github.com/maseaaao/maseaaao.tv/compare/v26...v33)).',
-      ] },
+      {
+        title: 'Исправления',
+        changes: [
+          'Устранены подтверждённые проблемы, выявленные полным аудитом проекта, включая обработку обновлений Twitch, интеграции и окружение разработки ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/1e031c7ff24dee034f5cc6658161eadc485f87f6), [#14](https://github.com/maseaaao/maseaaao.tv/pull/14)).',
+          'Восстановлена полоса с никнеймом в игровых OBS-сценах ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/a9819f074937c3348a5c3ab4b6a251e1a2c5306e)).',
+        ],
+      },
+      {
+        title: 'Улучшения',
+        changes: [
+          'Переработано размещение донатов, камеры и социальных элементов в OBS-сценах ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/9d377f4b)).',
+          'Обновлены оформление и проверки проекта по результатам ревью ([сравнение](https://github.com/maseaaao/maseaaao.tv/compare/v26...v33)).',
+        ],
+      },
     ],
   },
   {
     tag: 'v34',
     previousTag: 'v33',
     sections: [
-      { title: 'Улучшения', changes: [
-        'Доработано оформление OBS-сцен и док-панели Stream Info ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/ed225991e1c91648cad66cd8876b35916bae83ee)).',
-      ] },
+      {
+        title: 'Улучшения',
+        changes: [
+          'Доработано оформление OBS-сцен и док-панели Stream Info ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/ed225991e1c91648cad66cd8876b35916bae83ee)).',
+        ],
+      },
     ],
   },
   {
     tag: 'v35',
     previousTag: 'v34',
     sections: [
-      { title: 'Улучшения', changes: [
-        'Унифицированы палитра, типографика и анимации интерфейсов ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/e3e4de27)).',
-        'Обновлены логотип, сцены и панели Twitch в рамках фирменной палитры ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/728fe8ce)).',
-        'Доработаны виджет социальных сетей, CSS для провайдеров и шаблон с токеном `$s` ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/f50d5e31)).',
-      ] },
-      { title: 'Технические изменения', changes: [
-        'Обновлены интеграции проверки OBS и управления микрофоном ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/9d86b3d5)).',
-      ] },
+      {
+        title: 'Улучшения',
+        changes: [
+          'Унифицированы палитра, типографика и анимации интерфейсов ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/e3e4de27)).',
+          'Обновлены логотип, сцены и панели Twitch в рамках фирменной палитры ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/728fe8ce)).',
+          'Доработаны виджет социальных сетей, CSS для провайдеров и шаблон с токеном `$s` ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/f50d5e31)).',
+        ],
+      },
+      {
+        title: 'Технические изменения',
+        changes: [
+          'Обновлены интеграции проверки OBS и управления микрофоном ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/9d86b3d5)).',
+        ],
+      },
     ],
   },
   {
     tag: 'v36',
     previousTag: 'v35',
     sections: [
-      { title: 'Улучшения', changes: [
-        'Основной синий цвет бренда изменён на `#1616D9` ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/2ceb9bd3)).',
-        'Переработаны hover-состояния кнопок и иконки платформ на лендинге ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/56c9a13f)).',
-      ] },
+      {
+        title: 'Улучшения',
+        changes: [
+          'Основной синий цвет бренда изменён на `#1616D9` ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/2ceb9bd3)).',
+          'Переработаны hover-состояния кнопок и иконки платформ на лендинге ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/56c9a13f)).',
+        ],
+      },
     ],
   },
   {
     tag: 'v37',
     previousTag: 'v36',
     sections: [
-      { title: 'Исправления', changes: [
-        'Исправлена контрастность текста на тёмных поверхностях при наведении ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/ac32856c272a433f1593037da8e7734194235938)).',
-      ] },
+      {
+        title: 'Исправления',
+        changes: [
+          'Исправлена контрастность текста на тёмных поверхностях при наведении ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/ac32856c272a433f1593037da8e7734194235938)).',
+        ],
+      },
     ],
   },
   {
     tag: 'v38',
     previousTag: 'v37',
     sections: [
-      { title: 'Новые возможности', changes: [
-        'Добавлены цели по подписчикам Twitch ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/9889decd20fe071a570b62379a2b057d970148c4)).',
-      ] },
-      { title: 'Улучшения', changes: [
-        'Приведены к единому виду макеты стрима и связанные виджеты ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/9889decd20fe071a570b62379a2b057d970148c4)).',
-      ] },
+      {
+        title: 'Новые возможности',
+        changes: [
+          'Добавлены цели по подписчикам Twitch ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/9889decd20fe071a570b62379a2b057d970148c4)).',
+        ],
+      },
+      {
+        title: 'Улучшения',
+        changes: [
+          'Приведены к единому виду макеты стрима и связанные виджеты ([коммит](https://github.com/maseaaao/maseaaao.tv/commit/9889decd20fe071a570b62379a2b057d970148c4)).',
+        ],
+      },
     ],
   },
   {
     tag: 'v39',
     previousTag: 'v38',
     sections: [
-      { title: 'Исправления', changes: [
-        'Исправлен выход содержимого лендинга за границы на промежуточных ширинах экрана ([#15](https://github.com/maseaaao/maseaaao.tv/pull/15)).',
-      ] },
+      {
+        title: 'Исправления',
+        changes: [
+          'Исправлен выход содержимого лендинга за границы на промежуточных ширинах экрана ([#15](https://github.com/maseaaao/maseaaao.tv/pull/15)).',
+        ],
+      },
     ],
   },
 ];
