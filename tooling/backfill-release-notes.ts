@@ -1,5 +1,6 @@
 /** One-time, idempotent migration of the ten pre-standard published release descriptions. */
 import { spawnSync } from 'node:child_process';
+import { setTimeout as sleep } from 'node:timers/promises';
 
 interface Section {
   changes: string[];
@@ -21,6 +22,7 @@ interface Release {
 const repo = 'maseaaao/maseaaao.tv';
 const marker = '<!-- maseaaao:auto-release -->';
 const notesVersion = '<!-- maseaaao:release-notes:v1 -->';
+const TRANSIENT_GH_ERROR_RE = /HTTP 50[234]|unexpected end of JSON input/i;
 const history: HistoryEntry[] = [
   {
     sections: [
@@ -192,12 +194,19 @@ function isRelease(value: unknown): value is Release {
   );
 }
 
-function gh(args: string[]): string {
+async function gh(args: string[], attempt = 0): Promise<string> {
   const result = spawnSync('gh', args, { encoding: 'utf8' });
-  if (result.status !== 0) {
-    throw new Error(result.stderr || 'GitHub CLI failed');
+  if (result.status === 0) {
+    return result.stdout;
   }
-  return result.stdout;
+  const error = result.stderr || 'GitHub CLI failed';
+  if (!TRANSIENT_GH_ERROR_RE.test(error) || attempt >= 5) {
+    throw new Error(error);
+  }
+  // The same PATCH body can be submitted again if the previous response was lost.
+  console.warn('Temporary GitHub API error; retrying request (' + (attempt + 1) + '/5).');
+  await sleep((attempt + 1) * 2000);
+  return gh(args, attempt + 1);
 }
 
 function formatNotes(entry: HistoryEntry): string {
@@ -215,12 +224,48 @@ function formatNotes(entry: HistoryEntry): string {
   return marker + '\n' + notesVersion + '\n\n' + sections.join('\n\n');
 }
 
+async function updateHistory(releases: Release[], index = 0, updated = 0): Promise<void> {
+  const entry = history[index];
+  if (!entry) {
+    console.log('Historical release notes updated: ' + updated + '/' + history.length);
+    return;
+  }
+  const release = releases.find((item) => item.tag_name === entry.tag);
+  if (!release || release.draft || release.prerelease || !release.body?.includes(marker)) {
+    throw new Error('Unexpected historical release state: ' + entry.tag);
+  }
+  if (release.body.includes(notesVersion)) {
+    return updateHistory(releases, index + 1, updated);
+  }
+  const body = formatNotes(entry);
+  const response: unknown = JSON.parse(
+    await gh([
+      'api',
+      'repos/' + repo + '/releases/' + release.id,
+      '--method',
+      'PATCH',
+      '--raw-field',
+      'body=' + body,
+    ]),
+  );
+  if (
+    !isRelease(response) ||
+    response.body !== body ||
+    response.tag_name !== entry.tag ||
+    response.draft
+  ) {
+    throw new Error('Release update verification failed: ' + entry.tag);
+  }
+  console.log('Updated historical release ' + entry.tag);
+  return updateHistory(releases, index + 1, updated + 1);
+}
+
 if (import.meta.main) {
   if (process.env.GITHUB_REPOSITORY !== repo) {
     throw new Error('Backfill is restricted to ' + repo);
   }
   const raw: unknown = JSON.parse(
-    gh(['api', 'repos/' + repo + '/releases?per_page=100', '--paginate', '--slurp']),
+    await gh(['api', 'repos/' + repo + '/releases?per_page=100', '--paginate', '--slurp']),
   );
   if (!Array.isArray(raw)) {
     throw new Error('Unexpected release list response');
@@ -231,36 +276,5 @@ if (import.meta.main) {
     }
     return page.filter(isRelease);
   });
-  let updated = 0;
-  for (const entry of history) {
-    const release = releases.find((item) => item.tag_name === entry.tag);
-    if (!release || release.draft || release.prerelease || !release.body?.includes(marker)) {
-      throw new Error('Unexpected historical release state: ' + entry.tag);
-    }
-    if (release.body.includes(notesVersion)) {
-      continue;
-    }
-    const body = formatNotes(entry);
-    const response: unknown = JSON.parse(
-      gh([
-        'api',
-        'repos/' + repo + '/releases/' + release.id,
-        '--method',
-        'PATCH',
-        '--raw-field',
-        'body=' + body,
-      ]),
-    );
-    if (
-      !isRelease(response) ||
-      response.body !== body ||
-      response.tag_name !== entry.tag ||
-      response.draft
-    ) {
-      throw new Error('Release update verification failed: ' + entry.tag);
-    }
-    updated += 1;
-    console.log('Updated historical release ' + entry.tag);
-  }
-  console.log('Historical release notes updated: ' + updated + '/' + history.length);
+  await updateHistory(releases);
 }
