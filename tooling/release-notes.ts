@@ -74,20 +74,20 @@ export function formatReleaseNotes(options: {
     seen.add(subject);
     const parsed = subject.match(COMMIT_TYPE);
     const category = categoryFor(parsed?.[1]);
-    const scope = parsed?.[2] ? `\`\${escapeMarkdown(parsed[2])}\`\` : '';
+    const scope = parsed?.[2] ? '`' + escapeMarkdown(parsed[2]) + '`' : '';
     const title = escapeMarkdown(parsed?.[3] ?? subject);
-    const label = scope ? `\${scope}: \${title}` : title;
-    const line = `- \${label} ([\`\${item.sha.slice(0, 7)}\`](https://github.com/\${repo}/commit/\${item.sha}))`;
+    const label = scope ? scope + ': ' + title : title;
+    const line = '- ' + label + ' ([`' + item.sha.slice(0, 7) + '`](https://github.com/' + repo + '/commit/' + item.sha + '))';
     grouped.set(category, [...(grouped.get(category) ?? []), line]);
   }
 
   const sections = CATEGORIES.flatMap((category) => {
     const changes = grouped.get(category);
-    return changes?.length ? [`## \${category}\n\${changes.join('\n')}`] : [];
+    return changes?.length ? ['## ' + category + '\n' + changes.join('\n')] : [];
   });
   if (sections.length === 0) {
     sections.push('Изменений в коммитах относительно предыдущего релиза нет.');
   }
-  sections.push(`**Полный список изменений:** https://github.com/\${repo}/compare/\${previousTag}...\${tag}`);
+  sections.push('**Полный список изменений:** https://github.com/' + repo + '/compare/' + previousTag + '...' + tag);
   return sections.join('\n\n');
 }
