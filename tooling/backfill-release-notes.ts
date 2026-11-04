@@ -193,11 +193,21 @@ function isRelease(value: unknown): value is Release {
 }
 
 function gh(args: string[]): string {
-  const result = spawnSync('gh', args, { encoding: 'utf8' });
-  if (result.status !== 0) {
-    throw new Error(result.stderr || 'GitHub CLI failed');
+  let lastError = 'GitHub CLI failed';
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const result = spawnSync('gh', args, { encoding: 'utf8' });
+    if (result.status === 0) {
+      return result.stdout;
+    }
+    lastError = result.stderr || lastError;
+    // PATCH is idempotent: retrying the exact body is safe even if the response was lost.
+    if (!/HTTP 50[234]|unexpected end of JSON input/i.test(lastError) || attempt === 5) {
+      break;
+    }
+    console.warn('Temporary GitHub API error; retrying request (' + (attempt + 1) + '/5).');
+    Bun.sleepSync((attempt + 1) * 2000);
   }
-  return result.stdout;
+  throw new Error(lastError);
 }
 
 function formatNotes(entry: HistoryEntry): string {
