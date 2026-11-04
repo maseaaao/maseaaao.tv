@@ -71,6 +71,54 @@ function verifyDraft(
   }
 }
 
+interface ReleaseComparison {
+  commits: ReleaseCommit[];
+  total_commits: number;
+}
+type ReleaseApi = <T>(endpoint: string, ...args: string[]) => T;
+
+function generateChangelog(options: {
+  api: ReleaseApi;
+  fields: string[];
+  managed: Release[];
+  number: string;
+  repo: string;
+  sha: string;
+  tag: string;
+}): string {
+  const { api, fields, managed, number, repo, sha, tag } = options;
+  // Compare published tags, not workflow run numbers: skipped numbers and direct pushes count.
+  const previous = managed
+    .filter((item) => !item.draft && DIGIT_RE_2.test(item.tag_name))
+    .filter((item) => BigInt(item.tag_name.slice(1)) < BigInt(number))
+    .sort((a, b) => {
+      const left = BigInt(a.tag_name.slice(1));
+      const right = BigInt(b.tag_name.slice(1));
+      if (left < right) {
+        return -1;
+      }
+      if (left > right) {
+        return 1;
+      }
+      return 0;
+    })
+    .at(-1);
+  if (!previous) {
+    const notes = api<{ body: string }>('releases/generate-notes', '--method', 'POST', ...fields);
+    return notes.body || 'Первый выпуск проекта.';
+  }
+  const pages = api<ReleaseComparison[]>(
+    'compare/' + previous.tag_name + '...' + sha + '?per_page=100',
+    '--paginate',
+    '--slurp',
+  );
+  const commits = pages.flatMap((page) => page.commits);
+  if (pages.length === 0 || commits.length < pages[0].total_commits) {
+    throw new Error('Incomplete commit comparison; refusing to publish partial changelog');
+  }
+  return formatReleaseNotes({ commits, previousTag: previous.tag_name, repo, tag });
+}
+
 /** Update only our unpublished candidate. Publishing and creating Git refs are manual. */
 export function publishRelease(options: {
   number: string;
@@ -153,37 +201,7 @@ export function publishRelease(options: {
     };
   });
   const fields = ['--raw-field', `tag_name=${tag}`, '--raw-field', `target_commitish=${sha}`];
-  // Compare from the latest published managed tag, not from the previous workflow run.
-  // This captures direct pushes and gaps in the vN sequence as well as merged PRs.
-  const previous = managed
-    .filter((item) => !item.draft && DIGIT_RE_2.test(item.tag_name))
-    .filter((item) => BigInt(item.tag_name.slice(1)) < BigInt(number))
-    .sort((a, b) => {
-      const left = BigInt(a.tag_name.slice(1));
-      const right = BigInt(b.tag_name.slice(1));
-      return left < right ? -1 : left > right ? 1 : 0;
-    })
-    .at(-1);
-  let notesBody: string;
-  if (previous) {
-    interface Comparison {
-      total_commits: number;
-      commits: ReleaseCommit[];
-    }
-    const pages = api<Comparison[]>(
-      'compare/' + previous.tag_name + '...' + sha + '?per_page=100',
-      '--paginate',
-      '--slurp',
-    );
-    const commits = pages.flatMap((page) => page.commits);
-    if (pages.length === 0 || commits.length < pages[0].total_commits) {
-      throw new Error('Incomplete commit comparison; refusing to publish partial changelog');
-    }
-    notesBody = formatReleaseNotes({ repo, tag, previousTag: previous.tag_name, commits });
-  } else {
-    const notes = api<{ body: string }>('releases/generate-notes', '--method', 'POST', ...fields);
-    notesBody = notes.body || 'Первый выпуск проекта.';
-  }
+  const notesBody = generateChangelog({ api, fields, managed, number, repo, sha, tag });
   const payload = [
     ...fields,
     '--raw-field',
