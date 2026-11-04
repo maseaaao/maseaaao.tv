@@ -4,6 +4,7 @@ on:
     branches: [ main ]
     paths:
       - .github/workflows/backfill-release-notes.yml
+      - tooling/backfill-release-notes.ts
   workflow_dispatch:
 permissions:
   contents: read
