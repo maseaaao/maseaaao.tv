@@ -202,11 +202,15 @@ function gh(args: string[]): string {
 
 function formatNotes(entry: HistoryEntry): string {
   const sections = entry.sections.map(
-    (section) => '## ' + section.title + '\n' + section.changes.map((item) => '- ' + item).join('\n'),
+    (section) =>
+      '## ' + section.title + '\n' + section.changes.map((item) => '- ' + item).join('\n'),
   );
-  const url = 'https://github.com/' + repo + (entry.previousTag
-    ? '/compare/' + entry.previousTag + '...' + entry.tag
-    : '/commits/' + entry.tag);
+  const url =
+    'https://github.com/' +
+    repo +
+    (entry.previousTag
+      ? '/compare/' + entry.previousTag + '...' + entry.tag
+      : '/commits/' + entry.tag);
   sections.push('**Полный список изменений:** ' + url);
   return marker + '\n' + notesVersion + '\n\n' + sections.join('\n\n');
 }
@@ -215,12 +219,14 @@ if (import.meta.main) {
   if (process.env.GITHUB_REPOSITORY !== repo) {
     throw new Error('Backfill is restricted to ' + repo);
   }
-  const raw: unknown = JSON.parse(gh(['api', 'repos/' + repo + '/releases?per_page=100', '--paginate', '--slurp']));
+  const raw: unknown = JSON.parse(
+    gh(['api', 'repos/' + repo + '/releases?per_page=100', '--paginate', '--slurp']),
+  );
   if (!Array.isArray(raw)) {
     throw new Error('Unexpected release list response');
   }
   const releases: Release[] = raw.flatMap((page: unknown) => {
-    if (!Array.isArray(page) || !page.every(isRelease)) {
+    if (!(Array.isArray(page) && page.every(isRelease))) {
       throw new Error('Unexpected release page response');
     }
     return page.filter(isRelease);
@@ -236,9 +242,21 @@ if (import.meta.main) {
     }
     const body = formatNotes(entry);
     const response: unknown = JSON.parse(
-      gh(['api', 'repos/' + repo + '/releases/' + release.id, '--method', 'PATCH', '--raw-field', 'body=' + body]),
+      gh([
+        'api',
+        'repos/' + repo + '/releases/' + release.id,
+        '--method',
+        'PATCH',
+        '--raw-field',
+        'body=' + body,
+      ]),
     );
-    if (!isRelease(response) || response.body !== body || response.tag_name !== entry.tag || response.draft) {
+    if (
+      !isRelease(response) ||
+      response.body !== body ||
+      response.tag_name !== entry.tag ||
+      response.draft
+    ) {
       throw new Error('Release update verification failed: ' + entry.tag);
     }
     updated += 1;
