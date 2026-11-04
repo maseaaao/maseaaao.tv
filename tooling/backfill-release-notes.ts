@@ -1,5 +1,6 @@
 /** One-time, idempotent migration of the ten pre-standard published release descriptions. */
 import { spawnSync } from 'node:child_process';
+import { setTimeout as sleep } from 'node:timers/promises';
 
 interface Section {
   changes: string[];
@@ -21,6 +22,7 @@ interface Release {
 const repo = 'maseaaao/maseaaao.tv';
 const marker = '<!-- maseaaao:auto-release -->';
 const notesVersion = '<!-- maseaaao:release-notes:v1 -->';
+const TRANSIENT_GH_ERROR_RE = /HTTP 50[234]|unexpected end of JSON input/i;
 const history: HistoryEntry[] = [
   {
     sections: [
@@ -192,20 +194,20 @@ function isRelease(value: unknown): value is Release {
   );
 }
 
-function gh(args: string[]): string {
+async function gh(args: string[]): Promise<string> {
   let lastError = 'GitHub CLI failed';
-  for (let attempt = 0; attempt < 6; attempt++) {
+  for (let attempt = 0; attempt < 6; attempt += 1) {
     const result = spawnSync('gh', args, { encoding: 'utf8' });
     if (result.status === 0) {
       return result.stdout;
     }
     lastError = result.stderr || lastError;
     // PATCH is idempotent: retrying the exact body is safe even if the response was lost.
-    if (!/HTTP 50[234]|unexpected end of JSON input/i.test(lastError) || attempt === 5) {
+    if (!TRANSIENT_GH_ERROR_RE.test(lastError) || attempt === 5) {
       break;
     }
     console.warn('Temporary GitHub API error; retrying request (' + (attempt + 1) + '/5).');
-    Bun.sleepSync((attempt + 1) * 2000);
+    await sleep((attempt + 1) * 2000);
   }
   throw new Error(lastError);
 }
@@ -230,7 +232,7 @@ if (import.meta.main) {
     throw new Error('Backfill is restricted to ' + repo);
   }
   const raw: unknown = JSON.parse(
-    gh(['api', 'repos/' + repo + '/releases?per_page=100', '--paginate', '--slurp']),
+    await gh(['api', 'repos/' + repo + '/releases?per_page=100', '--paginate', '--slurp']),
   );
   if (!Array.isArray(raw)) {
     throw new Error('Unexpected release list response');
@@ -252,7 +254,7 @@ if (import.meta.main) {
     }
     const body = formatNotes(entry);
     const response: unknown = JSON.parse(
-      gh([
+      await gh([
         'api',
         'repos/' + repo + '/releases/' + release.id,
         '--method',
