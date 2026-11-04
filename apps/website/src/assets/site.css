@@ -760,6 +760,11 @@ button:focus-visible,
   letter-spacing: -0.025em;
   text-decoration: none;
   border-radius: 12px;
+  transition:
+    color var(--motion-feedback) var(--motion-ease-state),
+    background-color var(--motion-feedback) var(--motion-ease-state),
+    border-color var(--motion-feedback) var(--motion-ease-state),
+    transform var(--motion-enter) var(--motion-ease-spring);
 }
 .cta--primary {
   min-width: 336px;
@@ -773,6 +778,32 @@ button:focus-visible,
 }
 .stage a:focus-visible {
   outline-color: var(--color-surface);
+}
+.cta:active {
+  color: var(--color-action-text);
+  background: var(--color-action-surface);
+  border-color: var(--color-action-surface);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .stage h1,
+  .stage__rule,
+  .stage__actions {
+    animation: motion-rise-in var(--motion-scene) var(--motion-ease-enter)
+      backwards;
+  }
+  .stage__rule {
+    animation-delay: 30ms;
+  }
+  .stage__actions {
+    animation-delay: 60ms;
+  }
+  .sheet {
+    animation: motion-fade-in var(--motion-scene) var(--motion-ease-enter);
+  }
+  .cta:active {
+    transform: translateY(1px) scale(var(--motion-press-scale));
+    transition-duration: var(--motion-press);
+  }
 }
 @media (hover: hover) {
   .cta--primary:hover,
@@ -805,6 +836,7 @@ button:focus-visible,
   color: var(--color-text);
   text-decoration: none;
   border-bottom: 1px solid var(--color-border);
+  transition: color var(--motion-feedback) var(--motion-ease-state);
 }
 .index-row:last-child {
   border-bottom: 0;
@@ -834,10 +866,31 @@ button:focus-visible,
 .index-row__out {
   font-size: 13px;
   color: var(--color-muted);
+  transition:
+    color var(--motion-feedback) var(--motion-ease-state),
+    transform var(--motion-feedback) var(--motion-ease-spring);
+}
+.index-row:active {
+  color: var(--color-brand);
+}
+.index-row:active .index-row__out {
+  color: var(--color-brand);
 }
 @media (hover: hover) {
-  .index-row:hover {
+  .index-row:hover,
+  .index-row:hover .index-row__out {
     color: var(--color-brand);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .index-row:active .index-row__out {
+    transform: translate(3px, -3px);
+    transition-duration: var(--motion-press);
+  }
+  @media (hover: hover) {
+    .index-row:hover .index-row__out {
+      transform: translate(3px, -3px);
+    }
   }
 }
 .contact {
