@@ -194,22 +194,19 @@ function isRelease(value: unknown): value is Release {
   );
 }
 
-async function gh(args: string[]): Promise<string> {
-  let lastError = 'GitHub CLI failed';
-  for (let attempt = 0; attempt < 6; attempt += 1) {
-    const result = spawnSync('gh', args, { encoding: 'utf8' });
-    if (result.status === 0) {
-      return result.stdout;
-    }
-    lastError = result.stderr || lastError;
-    // PATCH is idempotent: retrying the exact body is safe even if the response was lost.
-    if (!TRANSIENT_GH_ERROR_RE.test(lastError) || attempt === 5) {
-      break;
-    }
-    console.warn('Temporary GitHub API error; retrying request (' + (attempt + 1) + '/5).');
-    await sleep((attempt + 1) * 2000);
+async function gh(args: string[], attempt = 0): Promise<string> {
+  const result = spawnSync('gh', args, { encoding: 'utf8' });
+  if (result.status === 0) {
+    return result.stdout;
   }
-  throw new Error(lastError);
+  const error = result.stderr || 'GitHub CLI failed';
+  if (!TRANSIENT_GH_ERROR_RE.test(error) || attempt >= 5) {
+    throw new Error(error);
+  }
+  // The same PATCH body can be submitted again if the previous response was lost.
+  console.warn('Temporary GitHub API error; retrying request (' + (attempt + 1) + '/5).');
+  await sleep((attempt + 1) * 2000);
+  return gh(args, attempt + 1);
 }
 
 function formatNotes(entry: HistoryEntry): string {
@@ -225,6 +222,42 @@ function formatNotes(entry: HistoryEntry): string {
       : '/commits/' + entry.tag);
   sections.push('**Полный список изменений:** ' + url);
   return marker + '\n' + notesVersion + '\n\n' + sections.join('\n\n');
+}
+
+async function updateHistory(releases: Release[], index = 0, updated = 0): Promise<void> {
+  const entry = history[index];
+  if (!entry) {
+    console.log('Historical release notes updated: ' + updated + '/' + history.length);
+    return;
+  }
+  const release = releases.find((item) => item.tag_name === entry.tag);
+  if (!release || release.draft || release.prerelease || !release.body?.includes(marker)) {
+    throw new Error('Unexpected historical release state: ' + entry.tag);
+  }
+  if (release.body.includes(notesVersion)) {
+    return updateHistory(releases, index + 1, updated);
+  }
+  const body = formatNotes(entry);
+  const response: unknown = JSON.parse(
+    await gh([
+      'api',
+      'repos/' + repo + '/releases/' + release.id,
+      '--method',
+      'PATCH',
+      '--raw-field',
+      'body=' + body,
+    ]),
+  );
+  if (
+    !isRelease(response) ||
+    response.body !== body ||
+    response.tag_name !== entry.tag ||
+    response.draft
+  ) {
+    throw new Error('Release update verification failed: ' + entry.tag);
+  }
+  console.log('Updated historical release ' + entry.tag);
+  return updateHistory(releases, index + 1, updated + 1);
 }
 
 if (import.meta.main) {
@@ -243,36 +276,5 @@ if (import.meta.main) {
     }
     return page.filter(isRelease);
   });
-  let updated = 0;
-  for (const entry of history) {
-    const release = releases.find((item) => item.tag_name === entry.tag);
-    if (!release || release.draft || release.prerelease || !release.body?.includes(marker)) {
-      throw new Error('Unexpected historical release state: ' + entry.tag);
-    }
-    if (release.body.includes(notesVersion)) {
-      continue;
-    }
-    const body = formatNotes(entry);
-    const response: unknown = JSON.parse(
-      await gh([
-        'api',
-        'repos/' + repo + '/releases/' + release.id,
-        '--method',
-        'PATCH',
-        '--raw-field',
-        'body=' + body,
-      ]),
-    );
-    if (
-      !isRelease(response) ||
-      response.body !== body ||
-      response.tag_name !== entry.tag ||
-      response.draft
-    ) {
-      throw new Error('Release update verification failed: ' + entry.tag);
-    }
-    updated += 1;
-    console.log('Updated historical release ' + entry.tag);
-  }
-  console.log('Historical release notes updated: ' + updated + '/' + history.length);
+  await updateHistory(releases);
 }
