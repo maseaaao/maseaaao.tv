@@ -10,7 +10,7 @@ public class CPHInline
     // ОБЯЗАТЕЛЬНО поменяй на точные названия из OBS.
     private const string MicInputName = "1️⃣МИКРО";
     private const string CameraSourceName = "КАМЕРА";
-    private static readonly string AlertSoundPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "maseaaao.tv", "integrations", "streamerbot", "obs-health", "health-warning.mp3");
+    private static readonly string AlertSoundPath = ResolveAlertSoundPath();
     private static string CompanionBaseUrl { get { return CompanionEndpoint.Get(); } }
     private const string TelegramSendActionName = "Telegram | SEND";
     // ВАЖНО: запускай этот Action каждые 10 секунд.
@@ -45,6 +45,22 @@ public class CPHInline
     private const int InternalGoodChecksRequired = 2;
     // При сохраняющейся проблеме повторяем звук не чаще чем раз в 20 секунд.
     private const int SoundRepeatSeconds = 20;
+    // Тишина в миксе OBS: тревога после 3,5 минут без звука и напоминание с тем же шагом.
+    private const int AudioSilenceSeconds = 210;
+    // -50 dBFS: речь и музыка выше, а шумовой фон устройства — ниже.
+    private const double AudioAudiblePeakDb = -50.0;
+    // Замер 1,2 секунды каждые 10 секунд ловит и речь, и короткие звуки игры.
+    private const int AudioSampleMilliseconds = 1200;
+    // Случайный щелчок не снимает тревогу: нужно три подряд слышимых замера.
+    private const int AudioGoodChecksRequired = 3;
+    // Замер недоступен — сообщаем только после трёх сбоев подряд.
+    private const int AudioProbeBadChecksRequired = 3;
+    // Звук тревоги сам попадает в микшер OBS; его отголосок не считается эфирным звуком.
+    private const int AudioAlertIgnoreSeconds = 8;
+    // Подставной замер для офлайн-проверки; в Streamer.bot остаётся null.
+    internal static Func<int, ObsHealthAudio.AudioMeterResult> AudioMeterOverride;
+    // Подставной файл звука для офлайн-проверки; в Streamer.bot остаётся null.
+    internal static string AlertSoundOverride;
     public bool Execute()
     {
         try
@@ -97,6 +113,7 @@ public class CPHInline
             StringBuilder problemMessages = new StringBuilder();
             int problemCount = 0;
             CheckMicrophone(problemCodes, problemMessages, ref problemCount);
+            CheckAudio(problemCodes, problemMessages, ref problemCount, GetUnixTimeSeconds());
             CheckNetwork(streamStatus, problemCodes, problemMessages, ref problemCount);
             CheckRenderAndEncoder(problemCodes, problemMessages, ref problemCount);
             string cameraProblem = CheckCamera(runNumber);
@@ -134,6 +151,75 @@ public class CPHInline
         {
             AddProblem(problemCodes, problemMessages, ref problemCount, "MIC", "Микрофон выключен");
         }
+    }
+
+    private void CheckAudio(StringBuilder problemCodes, StringBuilder problemMessages, ref int problemCount, long now)
+    {
+        ObsHealthAudio.AudioMeterResult sample = AudioMeterOverride != null
+            ? AudioMeterOverride(AudioSampleMilliseconds)
+            : ObsHealthAudio.ObsAudioMeter.Sample(AudioSampleMilliseconds);
+        if (!sample.Success)
+        {
+            CPH.SetGlobalVar("obs.health.audio.goodChecks", 0, false);
+            int failures = UpdateConsecutiveCounter("obs.health.audio.probeFailures", true);
+            if (failures < AudioProbeBadChecksRequired)
+            {
+                return;
+            }
+
+            string probeProblem = "Звук: проверка уровня недоступна (" + sample.Error + ")";
+            CPH.SetGlobalVar("obs.health.audio.probeProblem", probeProblem, false);
+            AddProblem(problemCodes, problemMessages, ref problemCount, "AUDIOPROBE", probeProblem);
+            return;
+        }
+
+        CPH.SetGlobalVar("obs.health.audio.probeFailures", 0, false);
+        CPH.SetGlobalVar("obs.health.audio.probeProblem", string.Empty, false);
+        long ignoreUntil = CPH.GetGlobalVar<long>("obs.health.audio.ignoreUntil", false);
+        bool audible = sample.PeakDb >= AudioAudiblePeakDb && now >= ignoreUntil;
+        if (audible)
+        {
+            CPH.SetGlobalVar("obs.health.audio.lastAudibleAt", now, false);
+        }
+
+        long lastAudibleAt = CPH.GetGlobalVar<long>("obs.health.audio.lastAudibleAt", false);
+        if (lastAudibleAt <= 0)
+        {
+            // Начало эфира: отсчёт тишины стартует с первого замера, а не с нуля эпохи.
+            lastAudibleAt = now;
+            CPH.SetGlobalVar("obs.health.audio.lastAudibleAt", now, false);
+        }
+
+        if (!CPH.GetGlobalVar<bool>("obs.health.audio.problemActive", false))
+        {
+            CPH.SetGlobalVar("obs.health.audio.goodChecks", 0, false);
+            if (now - lastAudibleAt < AudioSilenceSeconds)
+            {
+                return;
+            }
+
+            CPH.SetGlobalVar("obs.health.audio.problemActive", true, false);
+        }
+        else if (audible)
+        {
+            int goodChecks = UpdateConsecutiveCounter("obs.health.audio.goodChecks", true);
+            if (goodChecks >= AudioGoodChecksRequired)
+            {
+                CPH.SetGlobalVar("obs.health.audio.problemActive", false, false);
+                CPH.SetGlobalVar("obs.health.audio.goodChecks", 0, false);
+                return;
+            }
+
+            AddProblem(problemCodes, problemMessages, ref problemCount, "AUDIO", "Звук: восстановление подтверждается (" + goodChecks.ToString(CultureInfo.InvariantCulture) + "/" + AudioGoodChecksRequired.ToString(CultureInfo.InvariantCulture) + ")");
+            return;
+        }
+        else
+        {
+            CPH.SetGlobalVar("obs.health.audio.goodChecks", 0, false);
+        }
+
+        int silenceMinutes = (int)Math.Max(1, Math.Round((now - lastAudibleAt) / 60.0));
+        AddProblem(problemCodes, problemMessages, ref problemCount, "AUDIO", "Звук: в эфире тишина " + silenceMinutes.ToString(CultureInfo.InvariantCulture) + " мин");
     }
 
     private void CheckNetwork(string streamStatus, StringBuilder problemCodes, StringBuilder problemMessages, ref int problemCount)
@@ -398,16 +484,24 @@ public class CPHInline
         bool previouslyHealthy = string.IsNullOrWhiteSpace(previousSignature);
         bool currentlyHealthy = string.IsNullOrWhiteSpace(signature);
         bool healthBoundaryChanged = previouslyHealthy != currentlyHealthy;
-        if (healthBoundaryChanged)
+        long now = GetUnixTimeSeconds();
+        bool audioProblem = HasProblemCode(signature, "AUDIO");
+        long lastTelegramAt = CPH.GetGlobalVar<long>("obs.health.lastTelegramAt", false);
+        // Пока в эфире тишина, напоминаем в Telegram раз в 3,5 минуты: молчание
+        // бывает намеренным, но пропустить два часа без звука нельзя.
+        bool telegramRepeatDue = problemCount > 0 && audioProblem && (lastTelegramAt <= 0 || now - lastTelegramAt >= AudioSilenceSeconds);
+        if (healthBoundaryChanged || telegramRepeatDue)
         {
             SendHealthTelegramUpdate(currentlyHealthy, messages);
+            CPH.SetGlobalVar("obs.health.lastTelegramAt", now, false);
         }
 
         CPH.SetGlobalVar("obs.health.signature", signature, false);
         bool soundEnabled = GetSoundEnabled();
-        long now = GetUnixTimeSeconds();
         long lastSoundAt = CPH.GetGlobalVar<long>("obs.health.lastSoundAt", false);
-        bool soundCooldownElapsed = lastSoundAt <= 0 || now - lastSoundAt >= SoundRepeatSeconds;
+        // Тишина — единственная проблема: звук раз в 3,5 минуты, а не каждые 20 секунд.
+        int soundRepeatSeconds = string.Equals(signature, "AUDIO", StringComparison.Ordinal) ? AudioSilenceSeconds : SoundRepeatSeconds;
+        bool soundCooldownElapsed = lastSoundAt <= 0 || now - lastSoundAt >= soundRepeatSeconds;
         bool shouldPlaySound = problemCount > 0 && soundEnabled && soundCooldownElapsed;
         if (!currentlyHealthy && previouslyHealthy)
         {
@@ -419,6 +513,8 @@ public class CPHInline
             if (File.Exists(AlertSoundPath))
             {
                 CPH.PlaySound(AlertSoundPath, 0.3f, false, "obs-health-warning", true);
+                // Тревога звучит в микшере OBS; этот хвост не должен выглядеть как звук эфира.
+                CPH.SetGlobalVar("obs.health.audio.ignoreUntil", now + AudioAlertIgnoreSeconds, false);
             }
             else
             {
@@ -529,6 +625,25 @@ public class CPHInline
         problemCount++;
     }
 
+    private bool HasProblemCode(string signature, string code)
+    {
+        if (string.IsNullOrEmpty(signature))
+        {
+            return false;
+        }
+
+        string[] codes = signature.Split('|');
+        for (int index = 0; index < codes.Length; index++)
+        {
+            if (string.Equals(codes[index], code, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private void PublishCompanionState(string state, string label, bool soundEnabled)
     {
         SetCompanionVariableIfChanged("obs_health_state", state);
@@ -608,6 +723,32 @@ public class CPHInline
         return string.Equals(stored, "true", StringComparison.OrdinalIgnoreCase);
     }
 
+    // Комплект windows-integrations распаковывают и рядом со Streamer.bot, и в профиль
+    // пользователя: ищем звук в известных местах, а не в одном жёстком пути.
+    private static string ResolveAlertSoundPath()
+    {
+        if (!string.IsNullOrEmpty(AlertSoundOverride))
+        {
+            return AlertSoundOverride;
+        }
+
+        string[] candidates =
+        {
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "maseaaao.tv", "integrations", "streamerbot", "obs-health", "health-warning.mp3"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Projects", "maseaaao.tv", "dist", "windows-integrations", "actions", "obs-health", "health-warning.mp3"),
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "maseaaao.tv", "dist", "windows-integrations", "actions", "obs-health", "health-warning.mp3")
+        };
+        for (int index = 0; index < candidates.Length; index++)
+        {
+            if (File.Exists(candidates[index]))
+            {
+                return candidates[index];
+            }
+        }
+
+        return candidates[0];
+    }
+
     private void ResetRuntimeMetrics()
     {
         string[] variables =
@@ -640,6 +781,13 @@ public class CPHInline
             "obs.health.internal.badChecks",
             "obs.health.internal.goodChecks",
             "obs.health.internal.problemActive",
+            "obs.health.audio.lastAudibleAt",
+            "obs.health.audio.ignoreUntil",
+            "obs.health.audio.probeFailures",
+            "obs.health.audio.probeProblem",
+            "obs.health.audio.problemActive",
+            "obs.health.audio.goodChecks",
+            "obs.health.lastTelegramAt",
             "obs.health.lastSoundAt"
         };
         for (int index = 0; index < variables.Length; index++)

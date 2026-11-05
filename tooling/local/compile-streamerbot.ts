@@ -34,6 +34,7 @@ const sources = {
   ObsHealth: [
     'integrations/streamerbot/obs-health/Check.cs',
     'integrations/streamerbot/obs-health/CompanionEndpoint.cs',
+    'integrations/streamerbot/obs-health/AudioMeter.cs',
   ],
   ObsHealthSound: [
     'integrations/streamerbot/obs-health/SoundToggle.cs',

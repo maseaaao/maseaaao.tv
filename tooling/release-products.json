@@ -208,6 +208,10 @@
           "target": "actions/obs-health/CompanionEndpoint.cs"
         },
         {
+          "source": "dist/windows-integrations/actions/obs-health/AudioMeter.cs",
+          "target": "actions/obs-health/AudioMeter.cs"
+        },
+        {
           "source": "dist/windows-integrations/actions/obs-health/SoundToggle.cs",
           "target": "actions/obs-health/SoundToggle.cs"
         }

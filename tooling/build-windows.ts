@@ -52,6 +52,7 @@ const files = [
     'integrations/streamerbot/obs-health/CompanionEndpoint.cs',
     'actions/obs-health/CompanionEndpoint.cs',
   ],
+  ['integrations/streamerbot/obs-health/AudioMeter.cs', 'actions/obs-health/AudioMeter.cs'],
   ['integrations/streamerbot/obs-health/SoundToggle.cs', 'actions/obs-health/SoundToggle.cs'],
 ] as const;
 
