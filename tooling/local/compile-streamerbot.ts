@@ -31,6 +31,10 @@ const sources = {
     'integrations/streamerbot/obs-health/CompanionEndpoint.cs',
   ],
   DonationWatcher: ['integrations/streamerbot/donationalerts/DonationAlertsWatcher.cs'],
+  DroidCamToggle: [
+    'integrations/streamerbot/droidcam/DroidCamToggle.cs',
+    'integrations/streamerbot/obs-health/CompanionEndpoint.cs',
+  ],
   ObsHealth: [
     'integrations/streamerbot/obs-health/Check.cs',
     'integrations/streamerbot/obs-health/CompanionEndpoint.cs',
