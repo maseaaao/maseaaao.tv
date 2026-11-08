@@ -12,6 +12,7 @@ const actionName = params.get('action') || 'Creator Goal';
 const socketUrl = params.get('ws') || 'ws://127.0.0.1:8080';
 
 const strip = document.querySelector<HTMLElement>('.strip');
+const goalDivider = document.querySelector<HTMLElement>('.divider--goal');
 const count = document.querySelector<HTMLElement>('.goal-count');
 const currentText = document.querySelector<HTMLElement>('.goal-current');
 const targetText = document.querySelector<HTMLElement>('.goal-target');
@@ -35,6 +36,9 @@ function render(goal: Goal | null): void {
   const active = Boolean(goal && Number.isFinite(goal.target) && goal.target > 0);
   if (count) {
     count.hidden = !active || layout;
+  }
+  if (goalDivider) {
+    goalDivider.hidden = !active || layout;
   }
   if (line) {
     line.hidden = !active || layout;

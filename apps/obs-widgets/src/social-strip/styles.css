@@ -29,9 +29,11 @@ body {
   justify-content: center;
   width: 100%;
   height: 100%;
+  padding: 0 10px;
   color: var(--color-brand);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
+  isolation: isolate;
 }
 .logos {
   display: flex;
@@ -46,8 +48,9 @@ body {
   flex: none;
   width: auto;
   /* Иконки держат постоянную долю от никнейма, поэтому во всех источниках OBS
-     полоса выглядит одинаково; 80% не дают иконке выйти за высоту полосы. */
-  height: min(calc(var(--social-name-size) * 1.1), 80%);
+     полоса выглядит одинаково; 68% оставляют воздух сверху и снизу, чтобы
+     иконки не читались как обрезанные краем полосы. */
+  height: min(calc(var(--social-name-size) * 1), 68%);
   aspect-ratio: 1;
   opacity: var(--social-icon-opacity);
 }
@@ -86,7 +89,7 @@ body {
 
 @media (480px <= width < 540px) {
   .strip {
-    --social-name-size: 30px;
+    --social-name-size: 28px;
   }
 }
 
@@ -105,9 +108,9 @@ body {
 /* Цель Twitch: счётчик живёт в полосе, блок — на статусных сценах. */
 .goal-count {
   flex: none;
-  margin-left: -2px;
+  margin-left: 0;
   font:
-    400 calc(var(--social-name-size) * 0.62) / 1 Arial,
+    600 calc(var(--social-name-size) * 0.68) / 1 Arial,
     sans-serif;
   font-variant-numeric: tabular-nums;
   color: var(--color-text);
@@ -115,24 +118,36 @@ body {
   white-space: nowrap;
 }
 .goal-count .goal-target {
+  font-weight: 400;
   color: var(--color-muted);
 }
+/* Прогресс — заливка самой полосы, а не линия по нижнему краю: линия
+   проходила вплотную под иконками и читалась как их обрезка. */
 .goal-line {
   position: absolute;
-  inset: auto 0 0;
-  height: 2px;
-  background: color-mix(in srgb, var(--color-brand) 16%, transparent);
+  inset: 0 auto 0 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  background: transparent;
 }
 .goal-line i {
   display: block;
   width: 0;
   height: 100%;
-  background: var(--color-brand);
+  background: color-mix(in srgb, var(--color-brand) 13%, transparent);
+  transition: width 400ms ease-out;
 }
-@media (min-height: 80px) {
-  .goal-line {
-    height: 3px;
+@media (prefers-reduced-motion: reduce) {
+  .goal-line i {
+    transition: none;
   }
+}
+.strip > :not(.goal-line) {
+  position: relative;
+  z-index: 1;
 }
 .goal-block {
   display: flex;
@@ -145,7 +160,8 @@ body {
 .strip[hidden],
 .goal-block[hidden],
 .goal-count[hidden],
-.goal-line[hidden] {
+.goal-line[hidden],
+.divider[hidden] {
   display: none;
 }
 .goal-block__top {

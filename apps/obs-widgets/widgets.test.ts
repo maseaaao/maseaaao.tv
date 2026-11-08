@@ -315,6 +315,12 @@ test('goal strip shows the follower goal and progress', async () => {
       return line ? element.getBoundingClientRect().width / line.getBoundingClientRect().width : 0;
     });
     expect(progress).toBeCloseTo(0.9, 2);
+    const fill = await page.locator('.goal-line').boundingBox();
+    expect(fill?.height).toBeGreaterThan(30);
+    expect(
+      await page.locator('.goal-count').evaluate((element) => getComputedStyle(element).fontWeight),
+    ).toBe('600');
+    expect(await page.locator('.divider--goal').isVisible()).toBe(true);
     expect(await page.locator('.goal-block').isHidden()).toBe(true);
   } finally {
     await page.close();
@@ -346,6 +352,7 @@ test('goal stays hidden without the goal flag', async () => {
   try {
     await page.goto(`${server.resolvedUrls?.local[0]}src/social-strip/index.html`);
     expect(await page.locator('.goal-count').isHidden()).toBe(true);
+    expect(await page.locator('.divider--goal').isHidden()).toBe(true);
     expect(await page.locator('.goal-line').isHidden()).toBe(true);
     expect(await page.locator('.goal-block').isHidden()).toBe(true);
   } finally {
