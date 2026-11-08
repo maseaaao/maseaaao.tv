@@ -38,7 +38,7 @@ public class FakeArtworkHttp : HttpMessageHandler
 {
     public string Category = "1";
     public bool Fail, NoArt, NoCover;
-    public int Requests;
+    public int Requests, ImageRequests, IgdbRequests;
     public byte[] Image;
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellation)
     {
@@ -50,13 +50,17 @@ public class FakeArtworkHttp : HttpMessageHandler
         else if (url.Host == "id.twitch.tv") body = "{\"access_token\":\"fake-app-token\",\"expires_in\":3600}";
         else if (url.Host == "api.igdb.com")
         {
+            IgdbRequests++;
             if (Fail) return Task.FromResult(new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
             if (url.AbsolutePath.EndsWith("/games"))
                 body = NoCover ? "[{\"id\":123}]" : "[{\"id\":123,\"cover\":{\"image_id\":\"test_cover\"}}]";
             else body = NoArt ? "[]" : "[{\"image_id\":\"test_art\",\"width\":2560,\"height\":1440}]";
         }
         else if (url.Host == "images.igdb.com")
+        {
+            ImageRequests++;
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(Image) });
+        }
         else throw new Exception("External service not stubbed");
         return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(body) });
     }
@@ -64,6 +68,12 @@ public class FakeArtworkHttp : HttpMessageHandler
 internal static class TestCategoryArtwork
 {
     private static void Assert(bool value, string message) { if (!value) throw new Exception(message); }
+    private static void ResetCache()
+    {
+        const BindingFlags flags = BindingFlags.Static | BindingFlags.NonPublic;
+        typeof(CPHInline).GetField("LastCategory", flags).SetValue(null, null);
+        typeof(CPHInline).GetField("LastFile", flags).SetValue(null, null);
+    }
     public static void Main()
     {
         string directory = Path.Combine(Path.GetTempPath(), "artwork-test-" + Guid.NewGuid());
@@ -81,28 +91,44 @@ internal static class TestCategoryArtwork
             var cph = new FakeArtworkCPH();
             var code = new CPHInline { CPH = cph };
             Assert(code.Execute(), "artwork refresh failed");
-            Assert(cph.Image.EndsWith("category-1.jpg"), "category image not installed");
+            Assert(cph.Image.EndsWith("category-1-poster.jpg"), "poster not installed");
             using (var image = Image.FromFile(cph.Image)) Assert(image.Width == 2560 && image.Height == 1440, "output is not 1440p 16:9");
             byte[] poster = File.ReadAllBytes(cph.Image);
             int requests = http.Requests;
             Assert(code.Execute() && http.Requests == requests + 1, "unchanged category downloaded artwork again");
+            ResetCache();
+            int images = http.ImageRequests;
+            Assert(code.Execute() && http.ImageRequests == images && cph.Image.EndsWith("category-1-poster.jpg"), "restart re-downloaded the cached poster");
+            File.SetLastWriteTimeUtc(cph.Image, DateTime.UtcNow.AddDays(-8));
+            ResetCache();
+            int stale = http.ImageRequests;
+            Assert(code.Execute() && http.ImageRequests > stale, "stale poster was not refreshed");
+            string cached = cph.Image;
+            File.SetLastWriteTimeUtc(cached, DateTime.UtcNow.AddDays(-8));
+            ResetCache();
+            http.Fail = true;
+            Assert(code.Execute() && cph.Image == cached, "failed refresh dropped the cached poster");
+            http.Fail = false;
             http.Category = "2"; http.Fail = true;
+            ResetCache();
             Assert(!code.Execute() && cph.Image == placeholder, "failed category change left old game artwork");
             http.Fail = false;
-            Assert(code.Execute() && cph.Image.EndsWith("category-2.jpg"), "failed refresh did not retry");
+            Assert(code.Execute() && cph.Image.EndsWith("category-2-poster.jpg"), "failed refresh did not retry");
             http.Category = "3"; http.NoArt = true;
             Assert(code.Execute() && cph.Image == placeholder, "missing art did not use placeholder");
             http.NoArt = false; http.NoCover = true; http.Category = "4";
-            Assert(code.Execute() && cph.Image.EndsWith("category-4.jpg"), "missing cover broke the poster");
+            ResetCache();
+            Assert(code.Execute() && cph.Image.EndsWith("category-4-poster.jpg"), "missing cover broke the poster");
             CPHInline.StyleOverride = () => "art";
             http.Category = "5";
-            Assert(code.Execute() && cph.Image.EndsWith("category-5.jpg"), "art style failed");
+            ResetCache();
+            Assert(code.Execute() && cph.Image.EndsWith("category-5-art.jpg"), "art style failed");
             using (var image = Image.FromFile(cph.Image)) Assert(image.Width == 2560 && image.Height == 1440, "art style is not 1440p 16:9");
             byte[] plain = File.ReadAllBytes(cph.Image);
             Assert(Convert.ToBase64String(poster) != Convert.ToBase64String(plain), "poster style did not compose the cover");
             CPHInline.StyleOverride = null;
             Assert(CPHInline.SelectArtwork(JArray.Parse("[{\"image_id\":\"portrait\",\"width\":1440,\"height\":2560},{\"image_id\":\"small\",\"width\":640,\"height\":360}]")) == null, "portrait or undersized art accepted");
-            Console.WriteLine("PASS artwork: poster with cover, art style, cover fallback, 1440p 16:9, cache, category change, failure, retry, fallback and minimum resolution");
+            Console.WriteLine("PASS artwork: poster with cover, art style, weekly cache, restart reuse, stale refresh, cached fallback, category change, failure and minimum resolution");
         }
         finally { Directory.Delete(directory, true); }
     }

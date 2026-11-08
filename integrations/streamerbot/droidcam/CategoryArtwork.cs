@@ -21,7 +21,9 @@ public class CPHInline
     private static string AppToken;
     private static DateTime TokenExpires;
     private static string LastCategory;
-    private static DateTime LastSuccess;
+    private static string LastFile;
+    private static DateTime RetryAfter;
+    private static readonly TimeSpan CacheAge = TimeSpan.FromDays(7);
     private static bool Prepared;
     internal static string AssetDirectoryOverride;
     internal static Func<string, string> CredentialOverride;
@@ -45,38 +47,74 @@ public class CPHInline
                 if (broadcaster == null) return false;
                 var channel = First(GetTwitch("channels?broadcaster_id=" + Uri.EscapeDataString(broadcaster.UserId)));
                 category = (string)channel["game_id"] ?? "";
-                if (category == LastCategory && DateTime.UtcNow - LastSuccess < TimeSpan.FromHours(6)) return true;
-                string imageId = null, coverId = null;
-                if (!string.IsNullOrEmpty(category))
+                string placeholder = Path.Combine(DirectoryPath, "cam-pug.jpg");
+                if (string.IsNullOrEmpty(category))
                 {
-                    var game = First(GetTwitch("games?id=" + Uri.EscapeDataString(category)));
-                    long igdb;
-                    if (long.TryParse((string)game["igdb_id"], out igdb) && igdb > 0)
+                    Use(placeholder, category);
+                    return true;
+                }
+                // Готовый постер лежит на диске: перезапуск и таймер не качают его заново.
+                string cached = Path.Combine(DirectoryPath, "category-" + category + "-" + Style() + ".jpg");
+                bool fresh = Fresh(cached);
+                if (category == LastCategory && cached == LastFile && (fresh || DateTime.UtcNow < RetryAfter)) return true;
+                if (!fresh)
+                {
+                    try
                     {
-                        imageId = FindArtwork(igdb);
-                        coverId = FindCover(igdb);
+                        if (!Download(category, cached))
+                        {
+                            Use(placeholder, category);
+                            return true;
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        RetryAfter = DateTime.UtcNow.AddMinutes(30);
+                        if (!File.Exists(cached))
+                        {
+                            Use(placeholder, category);
+                            CPH.LogWarn("Category artwork unavailable; check the IGDB credentials, network and OBS image source.");
+                            return false;
+                        }
+                        CPH.LogWarn("Category artwork refresh failed; the cached poster is kept.");
                     }
                 }
-                string file = Path.Combine(DirectoryPath, "cam-pug.jpg");
-                if (imageId != null)
-                {
-                    file = Path.Combine(DirectoryPath, "category-" + category + ".jpg");
-                    DownloadArtwork(imageId, coverId, file);
-                }
-                SetImage(file);
-                LastCategory = category;
-                LastSuccess = DateTime.UtcNow;
+                Use(cached, category);
                 return true;
             }
             catch (Exception)
             {
                 // A failed category change must never leave the previous game's image on screen.
                 if (category != LastCategory)
-                    try { SetImage(Path.Combine(DirectoryPath, "cam-pug.jpg")); } catch (Exception) { }
+                    try { Use(Path.Combine(DirectoryPath, "cam-pug.jpg"), category); } catch (Exception) { }
                 CPH.LogWarn("Category artwork unavailable; check the IGDB credentials, network and OBS image source.");
                 return false;
             }
         }
+    }
+
+    private void Use(string file, string category)
+    {
+        if (file != LastFile) SetImage(file);
+        LastCategory = category;
+        LastFile = file;
+    }
+    private static bool Fresh(string file)
+    {
+        if (!File.Exists(file)) return false;
+        var info = new FileInfo(file);
+        return info.Length > 0 && DateTime.UtcNow - info.LastWriteTimeUtc < CacheAge;
+    }
+    // false — у категории нет подходящего арта; сетевые ошибки бросают исключение.
+    private bool Download(string category, string destination)
+    {
+        var game = First(GetTwitch("games?id=" + Uri.EscapeDataString(category)));
+        long igdb;
+        if (!long.TryParse((string)game["igdb_id"], out igdb) || igdb <= 0) return false;
+        string imageId = FindArtwork(igdb);
+        if (imageId == null) return false;
+        DownloadArtwork(imageId, FindCover(igdb), destination);
+        return Fresh(destination);
     }
 
     private JObject ReadObs(string method, JObject data)
