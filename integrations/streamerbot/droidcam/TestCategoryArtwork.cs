@@ -37,7 +37,7 @@ public class FakeArtworkCPH
 public class FakeArtworkHttp : HttpMessageHandler
 {
     public string Category = "1";
-    public bool Fail, NoArt;
+    public bool Fail, NoArt, NoCover;
     public int Requests;
     public byte[] Image;
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellation)
@@ -51,7 +51,9 @@ public class FakeArtworkHttp : HttpMessageHandler
         else if (url.Host == "api.igdb.com")
         {
             if (Fail) return Task.FromResult(new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
-            body = NoArt ? "[]" : "[{\"image_id\":\"test_art\",\"width\":2560,\"height\":1440}]";
+            if (url.AbsolutePath.EndsWith("/games"))
+                body = NoCover ? "[{\"id\":123}]" : "[{\"id\":123,\"cover\":{\"image_id\":\"test_cover\"}}]";
+            else body = NoArt ? "[]" : "[{\"image_id\":\"test_art\",\"width\":2560,\"height\":1440}]";
         }
         else if (url.Host == "images.igdb.com")
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(Image) });
@@ -81,6 +83,7 @@ internal static class TestCategoryArtwork
             Assert(code.Execute(), "artwork refresh failed");
             Assert(cph.Image.EndsWith("category-1.jpg"), "category image not installed");
             using (var image = Image.FromFile(cph.Image)) Assert(image.Width == 2560 && image.Height == 1440, "output is not 1440p 16:9");
+            byte[] poster = File.ReadAllBytes(cph.Image);
             int requests = http.Requests;
             Assert(code.Execute() && http.Requests == requests + 1, "unchanged category downloaded artwork again");
             http.Category = "2"; http.Fail = true;
@@ -89,8 +92,17 @@ internal static class TestCategoryArtwork
             Assert(code.Execute() && cph.Image.EndsWith("category-2.jpg"), "failed refresh did not retry");
             http.Category = "3"; http.NoArt = true;
             Assert(code.Execute() && cph.Image == placeholder, "missing art did not use placeholder");
+            http.NoArt = false; http.NoCover = true; http.Category = "4";
+            Assert(code.Execute() && cph.Image.EndsWith("category-4.jpg"), "missing cover broke the poster");
+            CPHInline.StyleOverride = () => "art";
+            http.Category = "5";
+            Assert(code.Execute() && cph.Image.EndsWith("category-5.jpg"), "art style failed");
+            using (var image = Image.FromFile(cph.Image)) Assert(image.Width == 2560 && image.Height == 1440, "art style is not 1440p 16:9");
+            byte[] plain = File.ReadAllBytes(cph.Image);
+            Assert(Convert.ToBase64String(poster) != Convert.ToBase64String(plain), "poster style did not compose the cover");
+            CPHInline.StyleOverride = null;
             Assert(CPHInline.SelectArtwork(JArray.Parse("[{\"image_id\":\"portrait\",\"width\":1440,\"height\":2560},{\"image_id\":\"small\",\"width\":640,\"height\":360}]")) == null, "portrait or undersized art accepted");
-            Console.WriteLine("PASS artwork: 1440p 16:9, cache, category change, failure, retry, fallback and minimum resolution");
+            Console.WriteLine("PASS artwork: poster with cover, art style, cover fallback, 1440p 16:9, cache, category change, failure, retry, fallback and minimum resolution");
         }
         finally { Directory.Delete(directory, true); }
     }
