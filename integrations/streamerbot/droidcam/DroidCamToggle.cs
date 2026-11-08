@@ -5,8 +5,11 @@ using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-// Import with obs-health/CompanionEndpoint.cs into one Execute C# Code sub-action.
+// Import with CameraPresentation.cs and obs-health/CompanionEndpoint.cs into one Execute C# Code sub-action.
 public class CPHInline
+#if CAMERA_TESTS
+    : Streamer.bot.Plugin.Interface.CPHInlineBase
+#endif
 {
     // Источник DroidCam и его source-clone в коллекции obsmainscenes.
     private const string CameraUuid = "7503a63b-3929-46b3-9a95-cf61ccca44e2";
@@ -56,14 +59,20 @@ public class CPHInline
                 bool anyVisible = false;
                 foreach (JObject item in items) anyVisible |= Required<bool>(item, "enabled");
                 bool on = !(anyVisible && ReadActivated());
+                var presentation = new CameraPresentation(Read);
+                presentation.Prepare(ListScenes());
                 if (on)
                 {
                     // Сначала показываем элементы: скрытый вход не запускает видео даже после активации.
                     SetVisible(items, true);
                     SetActivated(true);
+                    presentation.Apply(true);
                 }
                 else
                 {
+                    presentation.Apply(false);
+                    // Move finishes the collapse before the video input is released.
+                    System.Threading.Thread.Sleep(CameraPresentation.Duration + 100);
                     SetActivated(false);
                     SetVisible(items, false);
                 }

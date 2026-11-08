@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFramework>net481</TargetFramework>
+    <LangVersion>latest</LangVersion><EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DefineConstants>ARTWORK_TESTS</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="[1.0.3]" PrivateAssets="All" />
+    <Reference Include="Newtonsoft.Json"><HintPath>$(STREAMERBOT_ROOT)/Newtonsoft.Json.dll</HintPath></Reference>
+    <Reference Include="System.Net.Http" /><Reference Include="System.Drawing" />
+    <Compile Include="CategoryArtwork.cs" /><Compile Include="CameraPresentation.cs" /><Compile Include="TestCategoryArtwork.cs" />
+  </ItemGroup>
+</Project>

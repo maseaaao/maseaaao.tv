@@ -6,6 +6,14 @@ import { fileURLToPath } from 'node:url';
 const root = new URL('../', import.meta.url);
 const output = new URL('dist/windows-integrations/', root);
 const files = [
+  ['integrations/streamerbot/droidcam/CategoryArtwork.cs', 'actions/droidcam/CategoryArtwork.cs'],
+  ['integrations/streamerbot/droidcam/DroidCamToggle.cs', 'actions/droidcam/DroidCamToggle.cs'],
+  [
+    'integrations/streamerbot/droidcam/CameraPresentation.cs',
+    'actions/droidcam/CameraPresentation.cs',
+  ],
+  ['integrations/streamerbot/droidcam/cam-pug.jpg', 'actions/droidcam/cam-pug.jpg'],
+  ['integrations/streamerbot/droidcam/README.md', 'actions/droidcam/README.md'],
   ['integrations/companion/start-companion.ts', 'start-companion.ts'],
   ['integrations/companion/companion-processes.wsf', 'companion-processes.wsf'],
   ['tooling/local/check-stream-stack-cli.ts', 'diagnostics/check-stream-stack-cli.ts'],
@@ -62,4 +70,5 @@ for (const [source, target] of files) {
   mkdirSync(dirname(fileURLToPath(destination)), { recursive: true });
   copyFileSync(new URL(source, root), destination);
 }
+await import('./local/build-camera-import.ts');
 console.log(`Windows integrations: ${files.length} files → ${fileURLToPath(output)}`);

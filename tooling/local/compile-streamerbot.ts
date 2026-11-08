@@ -19,6 +19,10 @@ const STREAMERDOTBOTDOT_TWITCH_NEWTONSOFT_YOUTUBE_RE =
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const sources = {
+  CategoryArtwork: [
+    'integrations/streamerbot/droidcam/CategoryArtwork.cs',
+    'integrations/streamerbot/droidcam/CameraPresentation.cs',
+  ],
   ChatNotification: ['integrations/streamerbot/chat-sound/Action.cs'],
   DonationAlerts: [
     'integrations/streamerbot/donationalerts/DonationAlertsIntegration.cs',
@@ -33,6 +37,7 @@ const sources = {
   DonationWatcher: ['integrations/streamerbot/donationalerts/DonationAlertsWatcher.cs'],
   DroidCamToggle: [
     'integrations/streamerbot/droidcam/DroidCamToggle.cs',
+    'integrations/streamerbot/droidcam/CameraPresentation.cs',
     'integrations/streamerbot/obs-health/CompanionEndpoint.cs',
   ],
   ObsHealth: [
@@ -74,6 +79,12 @@ if (!references.includes('Streamer.bot.Plugin.Interface.dll')) {
 const staging = mkdtempSync(join(tmpdir(), 'streamerbot-compile-'));
 try {
   for (const [name, files] of Object.entries(sources)) {
+    if (
+      process.argv.includes('--only') &&
+      !process.argv.slice(process.argv.indexOf('--only') + 1).includes(name)
+    ) {
+      continue;
+    }
     const directory = join(staging, name);
     mkdirSync(directory);
     for (const [index, source] of files.entries()) {
@@ -94,7 +105,7 @@ try {
     const project = join(directory, `${name}.csproj`);
     writeFileSync(
       project,
-      '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net481</TargetFramework><LangVersion>latest</LangVersion><GenerateAssemblyInfo>false</GenerateAssemblyInfo></PropertyGroup><ItemGroup><PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="[1.0.3]" PrivateAssets="All" /><Reference Include="System.Web" /><Reference Include="System.Net.Http" /><Reference Include="Microsoft.CSharp" />' +
+      '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net481</TargetFramework><LangVersion>latest</LangVersion><GenerateAssemblyInfo>false</GenerateAssemblyInfo></PropertyGroup><ItemGroup><PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="[1.0.3]" PrivateAssets="All" /><Reference Include="System.Web" /><Reference Include="System.Net.Http" /><Reference Include="System.Drawing" /><Reference Include="Microsoft.CSharp" />' +
         items +
         '</ItemGroup></Project>',
     );

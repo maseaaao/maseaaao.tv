@@ -1,0 +1,97 @@
+using System;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
+
+namespace Streamer.bot.Plugin.Interface
+{
+    public class CPHInlineBase { public FakeArtworkCPH CPH; }
+}
+public class TestBroadcaster { public string UserId = "test"; }
+public class FakeArtworkCPH
+{
+    public string TwitchClientId { get { return "fake-client"; } }
+    public string TwitchOAuthToken { get { return "fake-user-token"; } }
+    public string Image;
+    public TestBroadcaster TwitchGetBroadcaster() { return new TestBroadcaster(); }
+    public void LogWarn(string message) { }
+    public string ObsSendRaw(string method, string json, int connection)
+    {
+        var data = JObject.Parse(json);
+        switch (method)
+        {
+            case "GetCanvasList": return "{\"canvases\":[]}";
+            case "GetSceneList": return "{\"scenes\":[]}";
+            case "SetInputSettings": Image = (string)data["inputSettings"]["file"]; return "{}";
+            case "GetInputSettings": return new JObject { ["inputSettings"] = new JObject { ["file"] = Image } }.ToString();
+            default: throw new Exception("Unexpected OBS request");
+        }
+    }
+}
+public class FakeArtworkHttp : HttpMessageHandler
+{
+    public string Category = "1";
+    public bool Fail, NoArt;
+    public int Requests;
+    public byte[] Image;
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellation)
+    {
+        Requests++;
+        var url = request.RequestUri;
+        string body;
+        if (url.Host == "api.twitch.tv")
+            body = url.AbsolutePath.EndsWith("channels") ? "{\"data\":[{\"game_id\":\"" + Category + "\"}]}" : "{\"data\":[{\"igdb_id\":\"123\"}]}";
+        else if (url.Host == "id.twitch.tv") body = "{\"access_token\":\"fake-app-token\",\"expires_in\":3600}";
+        else if (url.Host == "api.igdb.com")
+        {
+            if (Fail) return Task.FromResult(new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
+            body = NoArt ? "[]" : "[{\"image_id\":\"test_art\",\"width\":2560,\"height\":1440}]";
+        }
+        else if (url.Host == "images.igdb.com")
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(Image) });
+        else throw new Exception("External service not stubbed");
+        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(body) });
+    }
+}
+internal static class TestCategoryArtwork
+{
+    private static void Assert(bool value, string message) { if (!value) throw new Exception(message); }
+    public static void Main()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "artwork-test-" + Guid.NewGuid());
+        Directory.CreateDirectory(directory);
+        try
+        {
+            var http = new FakeArtworkHttp();
+            using (var bitmap = new Bitmap(2560, 1440))
+            using (var stream = new MemoryStream()) { bitmap.Save(stream, ImageFormat.Jpeg); http.Image = stream.ToArray(); }
+            string placeholder = Path.Combine(directory, "cam-pug.jpg");
+            File.WriteAllBytes(placeholder, http.Image);
+            CPHInline.AssetDirectoryOverride = directory;
+            CPHInline.CredentialOverride = name => "fake-credential";
+            typeof(CPHInline).GetField("Http", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, new HttpClient(http));
+            var cph = new FakeArtworkCPH();
+            var code = new CPHInline { CPH = cph };
+            Assert(code.Execute(), "artwork refresh failed");
+            Assert(cph.Image.EndsWith("category-1.jpg"), "category image not installed");
+            using (var image = Image.FromFile(cph.Image)) Assert(image.Width == 2560 && image.Height == 1440, "output is not 1440p 16:9");
+            int requests = http.Requests;
+            Assert(code.Execute() && http.Requests == requests + 1, "unchanged category downloaded artwork again");
+            http.Category = "2"; http.Fail = true;
+            Assert(!code.Execute() && cph.Image == placeholder, "failed category change left old game artwork");
+            http.Fail = false;
+            Assert(code.Execute() && cph.Image.EndsWith("category-2.jpg"), "failed refresh did not retry");
+            http.Category = "3"; http.NoArt = true;
+            Assert(code.Execute() && cph.Image == placeholder, "missing art did not use placeholder");
+            Assert(CPHInline.SelectArtwork(JArray.Parse("[{\"image_id\":\"portrait\",\"width\":1440,\"height\":2560},{\"image_id\":\"small\",\"width\":640,\"height\":360}]")) == null, "portrait or undersized art accepted");
+            Console.WriteLine("PASS artwork: 1440p 16:9, cache, category change, failure, retry, fallback and minimum resolution");
+        }
+        finally { Directory.Delete(directory, true); }
+    }
+}

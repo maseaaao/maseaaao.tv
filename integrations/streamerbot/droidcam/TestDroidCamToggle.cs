@@ -212,6 +212,7 @@ public class TestDroidCamToggle
 
     public static void Main()
     {
+        TestCameraPresentation.Run();
         MockFeedback();
         TurnOff(); Console.WriteLine("PASS off: deactivate then hide every camera item");
         TurnOn(); Console.WriteLine("PASS on: show every camera item then activate");

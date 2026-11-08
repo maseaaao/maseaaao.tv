@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net481</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DefineConstants>CAMERA_TESTS</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="[1.0.3]" PrivateAssets="All" />
+    <Reference Include="Newtonsoft.Json"><HintPath>$(STREAMERBOT_ROOT)/Newtonsoft.Json.dll</HintPath></Reference>
+    <Reference Include="System.Net.Http" />
+    <Compile Include="TestDroidCamToggle.cs" />
+    <Compile Include="TestCameraPresentation.cs" />
+    <Compile Include="CameraPresentation.cs" />
+    <Compile Include="../obs-health/CompanionEndpoint.cs" />
+    <Compile Include="DroidCamToggle.cs" />
+  </ItemGroup>
+</Project>
