@@ -1,11 +1,16 @@
 # yaml-language-server: $schema=https://lefthook.dev/schema.json
-lefthook: 'PATH="${BUN_INSTALL:-$HOME/.bun}/bin:$PATH" bun run --bun lefthook'
+# Do not add a top-level `lefthook:` command with a quoted PATH assignment:
+# lefthook 2.2.2 wraps it in `test -n "..."`, which fails with
+# "test: too many arguments". The generated hook finds the local binary itself.
 
 pre-commit:
   parallel: true
   commands:
     biome:
-      run: bun run --bun biome check --error-on-warnings --no-errors-on-unmatched {staged_files}
+      # Biome 2.6 reads the staged set from Git itself; no file list hits the
+      # Windows command-line limit. Lefthook would batch {staged_files}, but
+      # this avoids the list entirely.
+      run: bun run --bun biome check --staged --error-on-warnings --no-errors-on-unmatched
     whitespace:
       run: git diff --cached --check
 
