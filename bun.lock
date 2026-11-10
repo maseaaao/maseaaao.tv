@@ -27,6 +27,19 @@
         "vite": "catalog:",
       },
     },
+    "apps/moderation-dock": {
+      "name": "@maseaaao/moderation-dock",
+      "version": "1.0.0",
+      "dependencies": {
+        "@maseaaao/design": "workspace:*",
+      },
+      "devDependencies": {
+        "@maseaaao/build-config": "workspace:*",
+        "@types/bun": "catalog:",
+        "typescript": "catalog:",
+        "vite": "catalog:",
+      },
+    },
     "apps/obs-widgets": {
       "name": "@maseaaao/obs-widgets",
       "version": "1.0.0",
@@ -435,6 +448,8 @@
     "@maseaaao/design": ["@maseaaao/design@workspace:packages/design"],
 
     "@maseaaao/dev-launcher": ["@maseaaao/dev-launcher@workspace:apps/dev-launcher"],
+
+    "@maseaaao/moderation-dock": ["@maseaaao/moderation-dock@workspace:apps/moderation-dock"],
 
     "@maseaaao/obs-widgets": ["@maseaaao/obs-widgets@workspace:apps/obs-widgets"],
 

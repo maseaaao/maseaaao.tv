@@ -36,6 +36,11 @@ bun run sync:local --product stream-info --obs-root <каталог-OBS>
 `OBS Studio → Streaming Stopped` для того же соединения OBS. Событие остановки
 сразу сбрасывает тревогу, даже если OBS закрывают до следующего тика таймера.
 DonationAlerts требует приватную глобальную `daClientSecret`.
+ИИ-модерация донатов устанавливается отдельно: Action `AI Moderation` с Execute Code
+`AI Moderation Engine`, блокирующей очередью `AI Moderation Worker` и триггером
+`Streamer.bot Started`; веб-панель — `http://127.0.0.1:7480/`, в OBS добавляется
+Custom Browser Dock `МОДЕРАЦИЯ`. Подробные шаги, аргументы ручного Action и замена
+штатного виджета — в [README интеграции](../integrations/streamerbot/donationalerts/README.md).
 
 [Сборка, настройки и импорт Companion](../integrations/companion/README.md).
 Запуск в Windows, с явно заданной установкой Streamer.bot:

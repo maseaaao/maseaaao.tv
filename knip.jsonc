@@ -28,6 +28,12 @@
       // This config requires the build's social-strip mode; analyze it statically.
       "vite": false
     },
+    "apps/moderation-dock": {
+      "entry": ["vite.config.ts", "src/main.ts"],
+      // Used by src/styles.css.
+      "ignoreDependencies": ["@maseaaao/design"],
+      "vite": false
+    },
     "apps/stream-info": {
       "entry": [
         "scripts/verify*-live.ts",

@@ -1,0 +1,20 @@
+{
+  "name": "@maseaaao/moderation-dock",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun --bun vite build --configLoader native",
+    "check": "tsc --noEmit",
+    "dev": "bun --bun vite --configLoader native --host 127.0.0.1"
+  },
+  "dependencies": {
+    "@maseaaao/design": "workspace:*"
+  },
+  "devDependencies": {
+    "@maseaaao/build-config": "workspace:*",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}

@@ -29,7 +29,7 @@ const sources = {
     'integrations/streamerbot/donationalerts/WebSocketMessages.cs',
   ],
   DonationAuthorization: ['integrations/streamerbot/donationalerts/DonationAlertsAuthorization.cs'],
-  DonationChat: ['integrations/streamerbot/donationalerts/DonationChat.cs'],
+  DonationGate: ['integrations/streamerbot/donationalerts/DonationGate.cs'],
   DonationToggle: [
     'integrations/streamerbot/donationalerts/DonationAlertsToggle.cs',
     'integrations/streamerbot/obs-health/CompanionEndpoint.cs',
@@ -40,6 +40,16 @@ const sources = {
     'integrations/streamerbot/droidcam/CameraPresentation.cs',
     'integrations/streamerbot/obs-health/CompanionEndpoint.cs',
   ],
+  ModerationControl: ['integrations/streamerbot/donationalerts/ModerationControl.cs'],
+  ModerationHost: [
+    'integrations/streamerbot/donationalerts/ModerationEngine.cs',
+    'integrations/streamerbot/donationalerts/ModerationFiles.cs',
+    'integrations/streamerbot/donationalerts/ModerationOutput.cs',
+    'integrations/streamerbot/donationalerts/ModerationHistory.cs',
+    'integrations/streamerbot/donationalerts/ModerationWebServer.cs',
+    'integrations/streamerbot/donationalerts/ModerationHost.cs',
+  ],
+  ModerationUI: ['integrations/streamerbot/donationalerts/ModerationUI.cs'],
   ObsHealth: [
     'integrations/streamerbot/obs-health/Check.cs',
     'integrations/streamerbot/obs-health/CompanionEndpoint.cs',
@@ -105,7 +115,7 @@ try {
     const project = join(directory, `${name}.csproj`);
     writeFileSync(
       project,
-      '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net481</TargetFramework><LangVersion>latest</LangVersion><GenerateAssemblyInfo>false</GenerateAssemblyInfo></PropertyGroup><ItemGroup><PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="[1.0.3]" PrivateAssets="All" /><Reference Include="System.Web" /><Reference Include="System.Net.Http" /><Reference Include="System.Drawing" /><Reference Include="Microsoft.CSharp" />' +
+      '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net481</TargetFramework><LangVersion>latest</LangVersion><GenerateAssemblyInfo>false</GenerateAssemblyInfo></PropertyGroup><ItemGroup><PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="[1.0.3]" PrivateAssets="All" /><Reference Include="System.Web" /><Reference Include="System.Net.Http" /><Reference Include="System.Drawing" /><Reference Include="System.Windows.Forms" /><Reference Include="System.Security" /><Reference Include="Microsoft.CSharp" />' +
         items +
         '</ItemGroup></Project>',
     );

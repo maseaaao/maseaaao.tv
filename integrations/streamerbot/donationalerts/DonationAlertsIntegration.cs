@@ -228,6 +228,7 @@ public class CPHInline
 
         CPH.SetArgument("daName", Donation["name"]);
         CPH.SetArgument("daUsername", username);
+        CPH.SetArgument("daId", Donation["id"]);
         CPH.SetArgument("daType", type);
         CPH.SetArgument("daAmount", Donation["amount"]);
         CPH.SetArgument("daCurrency", Donation["currency"]);

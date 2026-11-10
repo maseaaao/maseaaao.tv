@@ -42,8 +42,40 @@ const files = [
     'actions/donationalerts/DonationAlertsToggle.cs',
   ],
   [
-    'integrations/streamerbot/donationalerts/DonationChat.cs',
-    'actions/donationalerts/DonationChat.cs',
+    'integrations/streamerbot/donationalerts/DonationGate.cs',
+    'actions/donationalerts/DonationGate.cs',
+  ],
+  [
+    'integrations/streamerbot/donationalerts/ModerationEngine.cs',
+    'actions/donationalerts/ModerationEngine.cs',
+  ],
+  [
+    'integrations/streamerbot/donationalerts/ModerationFiles.cs',
+    'actions/donationalerts/ModerationFiles.cs',
+  ],
+  [
+    'integrations/streamerbot/donationalerts/ModerationHost.cs',
+    'actions/donationalerts/ModerationHost.cs',
+  ],
+  [
+    'integrations/streamerbot/donationalerts/ModerationOutput.cs',
+    'actions/donationalerts/ModerationOutput.cs',
+  ],
+  [
+    'integrations/streamerbot/donationalerts/ModerationHistory.cs',
+    'actions/donationalerts/ModerationHistory.cs',
+  ],
+  [
+    'integrations/streamerbot/donationalerts/ModerationWebServer.cs',
+    'actions/donationalerts/ModerationWebServer.cs',
+  ],
+  [
+    'integrations/streamerbot/donationalerts/ModerationUI.cs',
+    'actions/donationalerts/ModerationUI.cs',
+  ],
+  [
+    'integrations/streamerbot/donationalerts/ModerationControl.cs',
+    'actions/donationalerts/ModerationControl.cs',
   ],
   ['integrations/streamerbot/donationalerts/LICENSE', 'actions/donationalerts/LICENSE'],
   ['integrations/streamerbot/donationalerts/README.md', 'actions/donationalerts/README.md'],
