@@ -1,6 +1,8 @@
 {
   "name": "maseaaao-tv",
   "compatibility_date": "2026-01-15",
+  // Live donor panel: only /live/* goes through the Worker; the rest is static assets.
+  "main": "./apps/website/src/worker.ts",
   // Custom domain must be owned by the Worker config: deploys overwrite the
   // remote configuration, and without it the binding gets silently dropped.
   "routes": [
@@ -14,8 +16,16 @@
   ],
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "404-page"
+    "not_found_handling": "404-page",
+    "run_worker_first": ["/live/*", "/site-link", "/site-link/"]
   },
+  "rules": [
+    {
+      "type": "Text",
+      "globs": ["**/site-link/index.html"],
+      "fallthrough": true
+    }
+  ],
   "observability": {
     "logs": {
       "enabled": true,

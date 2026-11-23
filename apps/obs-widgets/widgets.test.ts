@@ -59,6 +59,33 @@ test.each([
   }
 });
 
+test.each([
+  [480, 36, 24],
+  [640, 55, 32],
+  [720, 88, 36],
+  [1080, 55, 48],
+  [1280, 65, 48],
+])('site link %i×%i shows only the site at %i px', async (width, height, size) => {
+  const page = await browser.newPage({ viewport: { height, width } });
+  try {
+    await page.goto(`${server.resolvedUrls?.local[0]}src/site-link/index.html`);
+    const site = page.locator('.site');
+    expect(await site.textContent()).toBe('maseaaao.tv');
+    expect(await site.evaluate((el) => getComputedStyle(el).fontSize)).toBe(`${size}px`);
+    expect(await page.locator('svg').count()).toBe(0);
+    const bounds = await site.boundingBox();
+    expect(bounds).not.toBeNull();
+    if (!bounds) {
+      throw new Error('Missing site link');
+    }
+    expect(bounds.y).toBeGreaterThanOrEqual(0);
+    expect(bounds.y + bounds.height).toBeLessThanOrEqual(height);
+    expect(await site.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
+  } finally {
+    await page.close();
+  }
+});
+
 test('accent typography stays Unbounded 400 while the brand nickname uses 600', async () => {
   const page = await browser.newPage();
   try {

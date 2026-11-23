@@ -12,6 +12,7 @@
     "build": "bun ../../tooling/build-widgets.ts",
     "check": "tsc --noEmit && tsc -p tsconfig.tools.json && tsc -p tsconfig.tests.json",
     "dev": "bun --bun vite --configLoader native --mode social-strip --host 127.0.0.1",
+    "dev:site": "bun --bun vite --configLoader native --mode site-link --host 127.0.0.1",
     "test": "bun test"
   },
   "dependencies": {

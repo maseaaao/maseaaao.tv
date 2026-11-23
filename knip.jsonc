@@ -5,7 +5,9 @@
       "entry": [
         "integrations/companion/start-companion.ts",
         "integrations/companion/shared/test-*.ts"
-      ]
+      ],
+      // Deploy scripts invoke the binary by path under Bun to avoid bunx --bun on Windows.
+      "ignoreDependencies": ["wrangler"]
     },
     "tooling": {
       "entry": [
@@ -14,6 +16,8 @@
         "local/compile-streamerbot.ts",
         // Helper for manual OBS provider CSS deployment, not a test fixture.
         "local/obs-provider-css.ts",
+        // Builds a standalone styled DonationAlerts page for hosts without custom CSS.
+        "local/build-donors-html.ts",
         "artwork/generate-qr-with-logo.ts"
       ]
     },

@@ -1,0 +1,14 @@
+{
+  "name": "maseaaao-donors",
+  "main": "./apps/website/src/donor-worker.ts",
+  "compatibility_date": "2026-01-15",
+  "workers_dev": true,
+  // The built provider CSS is bundled into the Worker as text.
+  "rules": [
+    {
+      "type": "Text",
+      "globs": ["**/donationalerts-stream-stats.css"],
+      "fallthrough": true
+    }
+  ]
+}

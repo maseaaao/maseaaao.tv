@@ -9,11 +9,14 @@ const root = fileURLToPath(new URL('../apps/obs-widgets/', import.meta.url));
 const source = path.join(root, 'src');
 const output = fileURLToPath(new URL('../dist/obs-widgets/', import.meta.url));
 await rm(output, { force: true, recursive: true });
-await build({
-  configFile: path.join(root, 'vite.config.ts'),
-  configLoader: 'native',
-  mode: 'social-strip',
-});
+for (const mode of ['social-strip', 'site-link']) {
+  // biome-ignore lint/performance/noAwaitInLoops: Builds share one Vite pipeline and must run sequentially.
+  await build({
+    configFile: path.join(root, 'vite.config.ts'),
+    configLoader: 'native',
+    mode,
+  });
+}
 const license = (
   await readFile(new URL(import.meta.resolve('@maseaaao/design/license')), 'utf8')
 ).replace(/\r\n?/g, '\n');

@@ -3,7 +3,7 @@ import { standaloneConfig } from '@maseaaao/build-config';
 import { defineConfig } from 'vite';
 
 export default defineConfig(({ mode: product }) => {
-  if (product !== 'social-strip') {
+  if (!['social-strip', 'site-link'].includes(product)) {
     throw new Error('Unknown standalone widget');
   }
   const root = fileURLToPath(new URL('./src/' + product, import.meta.url));

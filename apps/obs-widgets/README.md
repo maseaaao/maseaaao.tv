@@ -11,9 +11,13 @@ bun run build:widgets
 | Ресурс                                                         | Подключение                       |
 | -------------------------------------------------------------- | --------------------------------- |
 | `social-strip/index.html`                                      | Локальный браузерный источник OBS |
+| `site-link/index.html`                                         | Локальный браузерный источник OBS |
 | `streamlabs-chat/chat-box.html`, `chat-box.css`, `chat-box.js` | Поля HTML, CSS и JS в Streamlabs  |
 | `streamlabs-chat/donationalerts-alerts.css`                    | CSS оповещений DonationAlerts     |
 | `donors/donationalerts-stream-stats.css`                       | CSS статистики DonationAlerts     |
+
+`site-link` — только адрес `maseaaao.tv`: без иконок соцсетей и счётчика цели.
+Размеры источника те же, что у соцполосы; фон прозрачный, плашка светлая.
 
 Соцполоса автономна и во всех сценах выглядит одинаково: без скруглений.
 Высота горизонтальной полосы уменьшена, размер текста сохранён.
@@ -42,6 +46,39 @@ CSS провайдеров содержит встроенные шрифт и �
 
 Сборка не обновляет OBS и аккаунты провайдеров. Для копирования локальных
 ресурсов и отдельной установки provider CSS см. [подключение](../../docs/local-installation.md).
+
+## Страница для хостов без Custom CSS
+
+DonationAlerts не отдаёт CORS-заголовки, а стили в чужой iframe не попадают.
+Для TikTok LIVE Studio и похожих хостов страница собирается локально:
+
+```bash
+bun run build:widgets
+bun tooling/local/build-donors-html.ts
+```
+
+Ссылку на виджет одной строкой положите в `.runtime/da-donors.url` — каталог
+игнорируется git. Скрипт пишет `.runtime/da-donors/stream-stats.html` с собранным
+CSS и текущими донатами. `--watch` обновляет `data.js` каждые 15 секунд, страница
+подхватывает его без перезапуска. Если Link-источник TikTok не принимает `file://`,
+запустите с `--serve` и укажите `http://127.0.0.1:7411/stream-stats.html`.
+
+Живая страница отдаётся отдельным Worker-ом `maseaaao-donors` на workers.dev,
+а `https://maseaaao.tv/live/da/top` отвечает редиректом на него. Это обходит
+ограничение Cloudflare: запросы из зоны `maseaaao.tv` к DonationAlerts падают
+с 525, а с workers.dev те же запросы проходят.
+
+```bash
+bun run build:widgets
+bun run build:website
+bun run prepare:cloudflare
+bunx wrangler secret put DA_WIDGET_URL --config wrangler.donors.jsonc
+bun run deploy:website
+```
+
+`deploy:website` сначала обновляет donor Worker, затем сайт. Токен живёт только
+в секрете donor Worker и не попадает в HTML или репозиторий. Страница закрыта
+от индексации, но адрес публичный: данные видны всем, кто его откроет.
 
 [Общие правила оформления](../../docs/design.md).
 
