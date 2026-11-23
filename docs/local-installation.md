@@ -25,48 +25,24 @@ bun run sync:local --product stream-info --obs-root <каталог-OBS>
 `--apply` копирует ресурсы с резервной копией в `Streamer.bot/backup/monorepo-sync-*`.
 Настройки приложений и C# она не обновляет.
 
-## Streamer.bot и Companion
+## Streamer.bot и Stream Deck
 
 Перед импортом сохраните штатные экспорты. C# обновляйте в существующих Actions,
 сохраняя ID, и компилируйте Execute Code внутри Streamer.bot.
-Для Stream Info используйте `dist/stream-info/streamerbot-import.txt`: HTML не заменяет API.
-Звуки лежат рядом с C# в `integrations/streamerbot/chat-sound/` и `obs-health/`;
-пути в C# рассчитаны на checkout рядом с папкой Streamer.bot.
-У `OBS | HEALTH | Check` нужны оба триггера: таймер каждые 10 секунд и
-`OBS Studio → Streaming Stopped` для того же соединения OBS. Событие остановки
-сразу сбрасывает тревогу, даже если OBS закрывают до следующего тика таймера.
-DonationAlerts требует приватную глобальную `daClientSecret`.
-ИИ-модерация донатов устанавливается отдельно: Action `AI Moderation` с Execute Code
-`AI Moderation Engine`, блокирующей очередью `AI Moderation Worker` и триггером
-`Streamer.bot Started`; веб-панель — `http://127.0.0.1:7480/`, в OBS добавляется
-Custom Browser Dock `МОДЕРАЦИЯ`. Подробные шаги, аргументы ручного Action и замена
-штатного виджета — в [README интеграции](../integrations/streamerbot/donationalerts/README.md).
-
-[Сборка, настройки и импорт Companion](../integrations/companion/README.md).
-Запуск в Windows, с явно заданной установкой Streamer.bot:
-
-```text
-bun integrations/companion/start-companion.ts --streamerbot-root <путь>
-bun tooling/local/check-stream-stack-cli.ts --streamerbot-root <путь>
-```
-
-Запускателю нужны Windows Bun, штатный Windows Script Host/WMI и соседний
-`companion-processes.wsf`; сам Companion использует комплектный Node.
-`--open-admin` открывает панель после готовности. Вместо пути можно задать `STREAMERBOT_ROOT`.
-Диагностика читает состояние и записывает отчёт в
-`logs/stream-stack-latest.json` установки Streamer.bot; JSON-интерфейс — `check-stream-stack.ts`.
+Для Stream Info используйте `dist/stream-info/streamerbot-import.txt`: HTML не заменяет
+API; док редактирует Twitch и YouTube, а YouTube — только во время эфира.
+Звук чата лежит рядом с C# в `integrations/streamerbot/chat-sound/`; путь в C#
+рассчитан на checkout рядом с папкой Streamer.bot.
+Действия для Stream Deck — в `integrations/streamerbot/stream-deck/`, жизненный
+цикл YouTube-записи — в `integrations/streamerbot/vod/`.
+DonationAlerts требует приватную глобальную `daClientSecret`. Визуальные алерты и
+голосовые донаты показывает нативный виджет DonationAlerts; Streamer.bot отправляет
+сообщение в чат через `DonationHandler_Default`. AI-модерация и сервер
+`127.0.0.1:7480` удалены; источники `ДОНАТ` и `ДОНАТЕРЫ` используют нативные
+ссылки виджетов. Подробности — в
+[README интеграции](../integrations/streamerbot/donationalerts/README.md).
 
 C# можно проверить командой `bun tooling/local/compile-streamerbot.ts` с
 `STREAMERBOT_ROOT`, против DLL установленного приложения; это не заменяет Execute Code.
 Не выполняйте Actions ради проверки и не редактируйте живые базы.
-Для отката верните ресурсы из backup, C# и модули — через штатное восстановление.
-
-Папка данных Companion может храниться отдельно от Streamer.bot. Задайте
-`COMPANION_CONFIG_DIR` с абсолютным путём к ней для запускателя и диагностики.
-`STREAMERBOT_ROOT` или `--streamerbot-root` задаёт установленный Streamer.bot;
-это другой каталог. Если `COMPANION_CONFIG_DIR` не задан, сохраняется прежний
-путь `custom/companion/data` внутри Streamer.bot. Отчёт диагностики записывается
-в `logs/stream-stack-latest.json` установки Streamer.bot.
-
-Для штатного `Companion.exe` задайте также `COMPANION_CONFIG_BASEDIR` с тем же
-прямым путём к данным. Не используйте архивную базу вместо текущей конфигурации.
+Для отката верните ресурсы из backup и C# через штатное восстановление.

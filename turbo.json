@@ -77,96 +77,23 @@
       ],
       "outputs": ["$TURBO_ROOT$/dist/obs-widgets/**"]
     },
-    "@maseaaao/tooling#build:diagnostics": {
-      "inputs": [
-        "$TURBO_ROOT$/tooling/local/**",
-        "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
-        "!$TURBO_ROOT$/**/.DS_Store"
-      ],
-      "outputs": ["$TURBO_ROOT$/dist/diagnostics/**"]
-    },
     "@maseaaao/tooling#build:windows": {
       "inputs": [
         "$TURBO_ROOT$/tooling/build-windows.ts",
         "$TURBO_ROOT$/tooling/local/**",
         "$TURBO_ROOT$/tooling/windows/**",
         "$TURBO_ROOT$/integrations/**",
-        "!$TURBO_ROOT$/integrations/companion/*/main.js",
-        "!$TURBO_ROOT$/integrations/companion/*/*.exe",
-        "!$TURBO_ROOT$/integrations/companion/*/*.dll",
-        "!$TURBO_ROOT$/integrations/companion/*/*.pdb",
-        "!$TURBO_ROOT$/integrations/companion/*/*.exe.config",
-        "!$TURBO_ROOT$/integrations/companion/*/*.tgz",
-        "!$TURBO_ROOT$/integrations/companion/*/install.json",
-        "!$TURBO_ROOT$/integrations/companion/*/request.json",
-        "!$TURBO_ROOT$/integrations/companion/shared/lib/**",
         "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
         "!$TURBO_ROOT$/**/.DS_Store"
       ],
-      "outputs": ["$TURBO_ROOT$/dist/windows-integrations/**"],
-      "dependsOn": ["@maseaaao/tooling#build:diagnostics"]
-    },
-    "@maseaaao/tooling#build:companion": {
-      "inputs": [
-        "$TURBO_ROOT$/integrations/companion/**",
-        "$TURBO_ROOT$/Directory.Build.props",
-        "$TURBO_ROOT$/NuGet.Config",
-        "$TURBO_ROOT$/global.json",
-        "!$TURBO_ROOT$/integrations/companion/*/main.js",
-        "!$TURBO_ROOT$/integrations/companion/*/*.exe",
-        "!$TURBO_ROOT$/integrations/companion/*/*.dll",
-        "!$TURBO_ROOT$/integrations/companion/*/*.pdb",
-        "!$TURBO_ROOT$/integrations/companion/*/*.exe.config",
-        "!$TURBO_ROOT$/integrations/companion/*/*.tgz",
-        "!$TURBO_ROOT$/integrations/companion/*/install.json",
-        "!$TURBO_ROOT$/integrations/companion/*/request.json",
-        "!$TURBO_ROOT$/integrations/companion/shared/lib/**",
-        "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
-        "!$TURBO_ROOT$/**/.DS_Store"
-      ],
-      "outputs": [
-        "$TURBO_ROOT$/dist/companion/**",
-        "!$TURBO_ROOT$/dist/companion/**/*.tgz",
-        "!$TURBO_ROOT$/dist/companion/**/request.json",
-        "!$TURBO_ROOT$/dist/companion/**/install.json"
-      ]
-    },
-    "@maseaaao/tooling#package:companion": {
-      "inputs": [
-        "$TURBO_ROOT$/integrations/companion/**",
-        "$TURBO_ROOT$/Directory.Build.props",
-        "$TURBO_ROOT$/NuGet.Config",
-        "$TURBO_ROOT$/global.json",
-        "$TURBO_ROOT$/dist/companion/**",
-        "!$TURBO_ROOT$/dist/companion/**/*.tgz",
-        "!$TURBO_ROOT$/dist/companion/**/request.json",
-        "!$TURBO_ROOT$/dist/companion/**/install.json",
-        "!$TURBO_ROOT$/integrations/companion/*/main.js",
-        "!$TURBO_ROOT$/integrations/companion/*/*.exe",
-        "!$TURBO_ROOT$/integrations/companion/*/*.dll",
-        "!$TURBO_ROOT$/integrations/companion/*/*.pdb",
-        "!$TURBO_ROOT$/integrations/companion/*/*.exe.config",
-        "!$TURBO_ROOT$/integrations/companion/*/*.tgz",
-        "!$TURBO_ROOT$/integrations/companion/*/install.json",
-        "!$TURBO_ROOT$/integrations/companion/*/request.json",
-        "!$TURBO_ROOT$/integrations/companion/shared/lib/**",
-        "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
-        "!$TURBO_ROOT$/**/.DS_Store"
-      ],
-      "outputs": [
-        "$TURBO_ROOT$/dist/companion/**/*.tgz",
-        "$TURBO_ROOT$/dist/companion/**/request.json",
-        "$TURBO_ROOT$/dist/companion/**/install.json"
-      ]
+      "outputs": ["$TURBO_ROOT$/dist/windows-integrations/**"]
     },
     "@maseaaao/tooling#check:knip": {
       "inputs": [
         "$TURBO_ROOT$/**",
         "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
         "!$TURBO_ROOT$/{dist,build}/**",
-        "!$TURBO_ROOT$/**/.DS_Store",
-        "!$TURBO_ROOT$/integrations/companion/*/{main.js,*.exe,*.dll,*.tgz,*.exe.config,*.pdb,install.json,request.json}",
-        "!$TURBO_ROOT$/integrations/companion/shared/lib/**"
+        "!$TURBO_ROOT$/**/.DS_Store"
       ],
       "outputs": []
     },
@@ -176,21 +103,8 @@
         "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
         "!$TURBO_ROOT$/{dist,build}/**",
         "!$TURBO_ROOT$/**/.DS_Store",
-        "!$TURBO_ROOT$/integrations/companion/*/{main.js,*.exe,*.dll,*.tgz,*.exe.config,*.pdb,install.json,request.json}",
-        "!$TURBO_ROOT$/integrations/companion/shared/lib/**",
         "$TURBO_ROOT$/dist/stream-info/**",
         "$TURBO_ROOT$/dist/.cache/stream-info/**"
-      ],
-      "outputs": []
-    },
-    "@maseaaao/tooling#test:companion": {
-      "inputs": [
-        "$TURBO_ROOT$/**",
-        "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
-        "!$TURBO_ROOT$/{dist,build}/**",
-        "!$TURBO_ROOT$/**/.DS_Store",
-        "!$TURBO_ROOT$/integrations/companion/*/{main.js,*.exe,*.dll,*.tgz,*.exe.config,*.pdb,install.json,request.json}",
-        "!$TURBO_ROOT$/integrations/companion/shared/lib/**"
       ],
       "outputs": []
     },
@@ -199,9 +113,7 @@
         "$TURBO_ROOT$/**",
         "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
         "!$TURBO_ROOT$/{dist,build}/**",
-        "!$TURBO_ROOT$/**/.DS_Store",
-        "!$TURBO_ROOT$/integrations/companion/*/{main.js,*.exe,*.dll,*.tgz,*.exe.config,*.pdb,install.json,request.json}",
-        "!$TURBO_ROOT$/integrations/companion/shared/lib/**"
+        "!$TURBO_ROOT$/**/.DS_Store"
       ],
       "outputs": []
     },
@@ -237,9 +149,7 @@
         "$TURBO_ROOT$/**",
         "!$TURBO_ROOT$/**/{node_modules,.git,.turbo,.runtime,.build-cache,bin,obj,__pycache__,.playwright-cli}/**",
         "!$TURBO_ROOT$/{dist,build}/**",
-        "!$TURBO_ROOT$/**/.DS_Store",
-        "!$TURBO_ROOT$/integrations/companion/*/{main.js,*.exe,*.dll,*.tgz,*.exe.config,*.pdb,install.json,request.json}",
-        "!$TURBO_ROOT$/integrations/companion/shared/lib/**"
+        "!$TURBO_ROOT$/**/.DS_Store"
       ],
       "outputs": []
     },

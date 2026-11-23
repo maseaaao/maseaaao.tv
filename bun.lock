@@ -27,19 +27,6 @@
         "vite": "catalog:",
       },
     },
-    "apps/moderation-dock": {
-      "name": "@maseaaao/moderation-dock",
-      "version": "1.0.0",
-      "dependencies": {
-        "@maseaaao/design": "workspace:*",
-      },
-      "devDependencies": {
-        "@maseaaao/build-config": "workspace:*",
-        "@types/bun": "catalog:",
-        "typescript": "catalog:",
-        "vite": "catalog:",
-      },
-    },
     "apps/obs-widgets": {
       "name": "@maseaaao/obs-widgets",
       "version": "1.0.0",
@@ -126,26 +113,6 @@
         "@maseaaao/design": "workspace:*",
       },
     },
-    "integrations/companion/system-microphone": {
-      "name": "companion-module-local-system-microphone",
-      "version": "1.3.2",
-      "dependencies": {
-        "@companion-module/base": "catalog:",
-      },
-      "devDependencies": {
-        "esbuild": "catalog:",
-      },
-    },
-    "integrations/companion/voice-control": {
-      "name": "companion-module-local-voice-control",
-      "version": "1.1.1",
-      "dependencies": {
-        "@companion-module/base": "catalog:",
-      },
-      "devDependencies": {
-        "esbuild": "catalog:",
-      },
-    },
     "packages/build-config": {
       "name": "@maseaaao/build-config",
       "version": "1.0.0",
@@ -212,7 +179,6 @@
   "catalog": {
     "@11ty/eleventy-img": "7.1.1",
     "@biomejs/biome": "2.6.3",
-    "@companion-module/base": "2.2.1",
     "@sinonjs/fake-timers": "15.4.0",
     "@streamerbot/client": "2.0.1",
     "@types/bun": "1.4.4",
@@ -221,7 +187,6 @@
     "@types/postcss-import": "14.0.3",
     "@types/postcss-url": "10.0.4",
     "@types/qrcode": "1.5.6",
-    "esbuild": "0.28.2",
     "fflate": "0.8.3",
     "jsdom": "30.1.3",
     "jsonc-parser": "3.3.1",
@@ -304,8 +269,6 @@
     "@cloudflare/workerd-linux-arm64": ["@cloudflare/workerd-linux-arm64@1.20261019.1", "", { "os": "linux", "cpu": "arm64" }, "sha512-75PVtJOwfjScQ53sbLtQXI7D8yP1c21t+WEUPaYbqkzaz4ZqfR5wAd+zuWs8G5Q7kOj2SQIvEfY5Sn8Y+UVrnA=="],
 
     "@cloudflare/workerd-windows-64": ["@cloudflare/workerd-windows-64@1.20261019.1", "", { "os": "win32", "cpu": "x64" }, "sha512-z49fvKTETMCnG6wnMcQwxx9CpryFceiKz04FRjq26EkhCyzRNJ6c3UXhyZz3r5f1CXnnBZc5DcU8ZouPkUJCqw=="],
-
-    "@companion-module/base": ["@companion-module/base@2.2.1", "", { "dependencies": { "colord": "^2.10.0", "zod": "^4.6.5" } }, "sha512-tJc3uLtA9rF9Lgda5TzJj/STEPDdbNqz3teRnCvkfaaqJgKlnhviK6I+x+FCYEBkxFtSLaqYz67jjRolRtiZvQ=="],
 
     "@cspotcode/source-map-support": ["@cspotcode/source-map-support@0.8.1", "", { "dependencies": { "@jridgewell/trace-mapping": "0.3.9" } }, "sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw=="],
 
@@ -448,8 +411,6 @@
     "@maseaaao/design": ["@maseaaao/design@workspace:packages/design"],
 
     "@maseaaao/dev-launcher": ["@maseaaao/dev-launcher@workspace:apps/dev-launcher"],
-
-    "@maseaaao/moderation-dock": ["@maseaaao/moderation-dock@workspace:apps/moderation-dock"],
 
     "@maseaaao/obs-widgets": ["@maseaaao/obs-widgets@workspace:apps/obs-widgets"],
 
@@ -709,13 +670,7 @@
 
     "color-name": ["color-name@1.1.4", "", {}, "sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA=="],
 
-    "colord": ["colord@2.10.0", "", {}, "sha512-AidJptpBJmjTclAp9BkLwJi0T93fo5epJnbaZslpg6QVzpHjAiveF55mE9AcUJiGMqRHgMDY8soMsQtuNYMHfw=="],
-
     "commander": ["commander@15.0.0", "", {}, "sha512-z67u4ZhzCL/Tydu1lJARtEZYWbWaN7oYLHbsuzocr6y4N6WZAagG3RQ4FW61V1/0+jImpj293XfrcYnd1qxtPg=="],
-
-    "companion-module-local-system-microphone": ["companion-module-local-system-microphone@workspace:integrations/companion/system-microphone"],
-
-    "companion-module-local-voice-control": ["companion-module-local-voice-control@workspace:integrations/companion/voice-control"],
 
     "concat-map": ["concat-map@0.0.1", "", {}, "sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg=="],
 

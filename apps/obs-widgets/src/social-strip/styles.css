@@ -20,7 +20,7 @@ body {
   background: transparent;
 }
 .strip {
-  --social-name-size: clamp(26px, 5vw, 48px);
+  --social-name-size: clamp(24px, 3.8vw, 48px);
 
   position: relative;
   display: flex;
@@ -38,7 +38,7 @@ body {
 .logos {
   display: flex;
   flex: none;
-  gap: 16px;
+  gap: 18px;
   align-items: center;
   height: 100%;
   padding: 0 4px;
@@ -52,6 +52,7 @@ body {
      иконки не читались как обрезанные краем полосы. */
   height: min(calc(var(--social-name-size) * 1), 68%);
   aspect-ratio: 1;
+  overflow: visible;
   opacity: var(--social-icon-opacity);
 }
 .name {
@@ -59,7 +60,7 @@ body {
     var(--font-nickname-weight) var(--social-name-size) / 1.1
     var(--font-nickname);
   color: var(--color-text);
-  letter-spacing: -0.5px;
+  letter-spacing: -0.2px;
 }
 .divider {
   width: 1px;

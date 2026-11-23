@@ -37,10 +37,9 @@ function cleanOutputs(name: string) {
     return;
   }
   const [, task] = entry;
-  if ('dependsOn' in task) {
-    for (const dependency of task.dependsOn) {
-      cleanOutputs(dependency);
-    }
+  const dependencies = (task as { dependsOn?: string[] }).dependsOn ?? [];
+  for (const dependency of dependencies) {
+    cleanOutputs(dependency);
   }
   const outputs = task.outputs.map((pattern) => pattern.replace('$TURBO_ROOT$/', ''));
   const excluded = outputs

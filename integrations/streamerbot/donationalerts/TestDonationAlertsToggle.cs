@@ -1,11 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
 namespace Streamer.bot.Plugin.Interface
@@ -29,6 +24,8 @@ public class FakeToggleCPH
     public string Collection = "test";
     public string FailOnce;
     public bool IgnoreWrites;
+    public string Title = "";
+    public int State = -1;
     public static JObject Item(int id, bool enabled)
     {
         return new JObject { ["sourceUuid"] = Input, ["sourceName"] = "8️⃣ДОНАТЫ", ["sceneItemId"] = id, ["sceneItemEnabled"] = enabled, ["isGroup"] = false };
@@ -36,6 +33,16 @@ public class FakeToggleCPH
     public T GetGlobalVar<T>(string name, bool persist) { if (!persist) throw new Exception("State must persist"); object value; return Globals.TryGetValue(name, out value) ? (T)value : default(T); }
     public void SetGlobalVar<T>(string name, T value, bool persist) { if (!persist) throw new Exception("State must persist"); Globals[name] = value; }
     public void LogWarn(string message) { }
+    public void StreamDeckSetTitle(string buttonId, string text)
+    {
+        if (buttonId != "da_toggle") throw new Exception("Wrong Stream Deck button ID");
+        Title = text;
+    }
+    public void StreamDeckSetState(string buttonId, int state)
+    {
+        if (buttonId != "da_toggle") throw new Exception("Wrong Stream Deck button ID");
+        State = state;
+    }
     public string ObsSendRaw(string method, string json, int connection)
     {
         if (connection != 0) throw new Exception("Unexpected OBS connection");
@@ -69,38 +76,12 @@ public class FakeToggleCPH
     static void CheckInput(JObject data) { if ((string)data["inputUuid"] != Input) throw new Exception("Wrong input UUID"); }
 }
 
-public class FakeCompanionHttp : HttpMessageHandler
-{
-    public readonly Dictionary<string, string> Values = new Dictionary<string, string>();
-    public bool Fail;
-    public int Posts;
-    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellation)
-    {
-        if (request.RequestUri.Authority != "192.168.31.225:8000") throw new Exception("Wrong configured Companion endpoint");
-        if (Fail) return Task.FromResult(new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
-        string key = request.RequestUri.AbsolutePath;
-        if (request.Method == HttpMethod.Post) { Values[key] = request.Content.ReadAsStringAsync().Result; Posts++; }
-        string value;
-        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(Values.TryGetValue(key, out value) ? value : "") });
-    }
-}
-
 public class TestDonationAlertsToggle
 {
-    static FakeCompanionHttp Feedback;
-    static void MockFeedback()
+    static void Label(FakeToggleCPH cph, string expected, string blocked)
     {
-        Feedback = new FakeCompanionHttp();
-        typeof(CompanionEndpoint).GetField("cached", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, "http://192.168.31.225:8000");
-        typeof(CompanionEndpoint).GetField("checkedAt", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, DateTime.UtcNow);
-        var field = typeof(CPHInline).GetField("Http", BindingFlags.Static | BindingFlags.NonPublic);
-        if (field != null) field.SetValue(null, new HttpClient(Feedback));
-    }
-    static void Label(string expected, string blocked)
-    {
-        string value;
-        Assert(Feedback.Values.TryGetValue("/api/custom-variable/da_alerts_label/value", out value) && value == "ДОНАТЫ\n" + expected, "verified Companion label " + expected);
-        Assert(Feedback.Values.TryGetValue("/api/custom-variable/da_alerts_blocked/value", out value) && value == blocked, "Companion blocked " + blocked);
+        Assert(cph.Title == "ДОНАТЫ\n" + expected, "Stream Deck label " + expected);
+        Assert(cph.State == (blocked == "1" ? 1 : 0), "Stream Deck blocked state " + blocked);
     }
     static void Assert(bool value, string message) { if (!value) throw new Exception(message); }
     static CPHInline Code(FakeToggleCPH cph) { return new CPHInline { CPH = cph }; }
@@ -132,36 +113,33 @@ public class TestDonationAlertsToggle
     }
     static void FeedbackStates()
     {
-        MockFeedback();
         var cph = new FakeToggleCPH();
-        Assert(Code(cph).Execute(), "panic with feedback"); Label("ВЫКЛ", "1");
-        Assert(Code(cph).Execute(), "restore with feedback"); Label("ВКЛ", "0");
+        Assert(Code(cph).Execute(), "panic with feedback"); Label(cph, "ВЫКЛ", "1");
+        Assert(Code(cph).Execute(), "restore with feedback"); Label(cph, "ВКЛ", "0");
         cph.FailOnce = "GetSceneList";
-        Assert(!Code(cph).Execute(), "OBS failure"); Label("ОШИБКА", "1");
+        Assert(!Code(cph).Execute(), "OBS failure"); Label(cph, "ОШИБКА", "1");
     }
     static void InitFeedback()
     {
-        MockFeedback();
         var cph = new FakeToggleCPH();
         var init = typeof(CPHInline).GetMethod("Init");
         Assert(init != null, "read-only Init feedback sync exists");
-        init.Invoke(Code(cph), null); Label("ВКЛ", "0");
+        init.Invoke(Code(cph), null); Label(cph, "ВКЛ", "0");
         Assert(cph.Writes.Count == 0 && cph.Globals.Count == 0, "Init never mutates OBS or persistent state");
         Assert(Code(cph).Execute(), "panic before Init");
         int writes = cph.Writes.Count;
-        init.Invoke(Code(cph), null); Label("ВЫКЛ", "1");
+        init.Invoke(Code(cph), null); Label(cph, "ВЫКЛ", "1");
         Assert(cph.Writes.Count == writes, "blocked Init never mutates OBS");
         cph.Muted = false;
-        init.Invoke(Code(cph), null); Label("ОШИБКА", "1");
+        init.Invoke(Code(cph), null); Label(cph, "ОШИБКА", "1");
         Assert(cph.Writes.Count == writes, "inconsistent Init only reports error");
     }
     public static void Main()
     {
-        MockFeedback();
         Panic(); Console.WriteLine("PASS panic: mute + NONE before all visibility writes; persistent snapshot");
         Restore(); Console.WriteLine("PASS restore: original mixed visibility and audio after host recreation");
         SilentFailure(); Console.WriteLine("PASS silent OBS failure: readback rejects ignored writes; recovery retained");
-        FeedbackStates(); Console.WriteLine("PASS feedback: configured endpoint; OFF/ON/ERROR labels and blocked values");
+        FeedbackStates(); Console.WriteLine("PASS feedback: OFF/ON/ERROR labels and blocked values");
         InitFeedback(); Console.WriteLine("PASS Init: read-only state sync and inconsistent-state warning");
     }
 }

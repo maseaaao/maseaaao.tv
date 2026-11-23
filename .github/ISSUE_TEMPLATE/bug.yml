@@ -16,7 +16,7 @@ body:
     id: environment
     attributes:
       label: Окружение
-      description: ОС и версии используемых OBS, Streamer.bot, Companion или браузера.
+      description: ОС и версии используемых OBS, Streamer.bot, Stream Deck или браузера.
     validations:
       required: true
   - type: textarea

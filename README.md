@@ -1,28 +1,28 @@
 # maseaaao.tv
 
 Сайт, оформление OBS и инструменты стрима. Windows-комплект доступен целиком
-и отдельными ZIP продуктов для ручной установки; OBS, Streamer.bot и Companion
+и отдельными ZIP продуктов для ручной установки; OBS, Streamer.bot и Stream Deck
 устанавливаются отдельно.
 
 ## С чего начать
 
 - [Установка и обновление Windows-комплекта](docs/windows-releases.md).
 - [Подключение из исходников](docs/local-installation.md).
+- [Мониторинг эфира готовыми средствами](docs/stream-monitoring.md).
 - [Дизайн и экспорт изображений](docs/design.md).
 - [Движение и анимации](docs/motion.md).
 
 ## Продукты
 
-| Продукт                                       | Назначение                                           |
-| --------------------------------------------- | ---------------------------------------------------- |
-| [Website](apps/website/README.md)             | Статический сайт и Stream Checker                    |
-| [Stream Info](apps/stream-info/README.md)     | Док OBS для названия, категории и тегов Twitch       |
-| [Tuna](apps/tuna-widget/README.md)            | Музыкальный виджет OBS                               |
-| [OBS widgets](apps/obs-widgets/README.md)     | Соцполоса, чат и оформление DonationAlerts           |
-| [Companion](integrations/companion/README.md) | SystemMicrophone, VoiceStream и запускатель          |
-| [Streamer.bot](integrations/README.md)        | C# Actions и звуки                                   |
-| [Artwork](artwork/README.md)                  | Логотип, сцены, баннеры, панели и обои               |
-| [UI Gallery](apps/ui-gallery/README.md)       | Локальная витрина общих компонентов и дизайн-токенов |
+| Продукт                                   | Назначение                                             |
+| ----------------------------------------- | ------------------------------------------------------ |
+| [Website](apps/website/README.md)         | Статический сайт и Stream Checker                      |
+| [Stream Info](apps/stream-info/README.md) | Док OBS для названия, категории и тегов Twitch/YouTube |
+| [Tuna](apps/tuna-widget/README.md)        | Музыкальный виджет OBS                                 |
+| [OBS widgets](apps/obs-widgets/README.md) | Соцполоса, чат и оформление DonationAlerts             |
+| [Streamer.bot](integrations/README.md)    | C# Actions и звуки                                     |
+| [Artwork](artwork/README.md)              | Логотип, сцены, баннеры, панели и обои                 |
+| [UI Gallery](apps/ui-gallery/README.md)   | Локальная витрина общих компонентов и дизайн-токенов   |
 
 ## Разработка
 
@@ -40,7 +40,7 @@ Verify и Release выполняются в Linux (`ubuntu-24.04`); локаль
 Код приложений, сборки, инструментов и тестов пишется на TypeScript.
 Biome запрещает исходники `.js`, `.jsx`, `.mjs` и `.cjs`; `bun run check:types`
 строго проверяет типы всех этих частей. JavaScript допускается только в результатах
-сборки для браузеров, провайдеров и Companion, не как редактируемый исходник.
+сборки для браузеров и провайдеров, не как редактируемый исходник.
 
 ```bash
 bun install --frozen-lockfile
@@ -51,9 +51,7 @@ bun run test
 ```
 
 В Linux CI Chromium устанавливается с системными зависимостями через
-`bun run browser:install --with-deps`. Для упаковки Companion `tar` должен
-поддерживать используемые скриптом параметры; при проблемах с путями или
-форматом архива в Windows проверяйте упаковку и готовые TGZ в Linux CI.
+`bun run browser:install --with-deps`.
 
 `bun install` автоматически подключает Lefthook через корневой `postinstall`.
 В CI и вне Git-клона установка хуков пропускается.
@@ -84,13 +82,10 @@ Lefthook запускается через Bun без отдельного Node.
 | `bun run build:ui`           | Собирает автономную витрину в `dist/ui-gallery/index.html`                     |
 | `bun run render:all`         | Готовит HTML artwork, экспортирует и оптимизирует изображения                  |
 | `bun run full`               | Выполняет экспорт, затем сборку приложений; каждый продукт один раз            |
-| `bun run build:companion`    | Собирает модули Companion                                                      |
-| `bun run package:companion`  | Упаковывает готовые модули Companion в TGZ                                     |
 | `bun run prepare:cloudflare` | Добавляет только маршруты и правила публикации в готовый `dist/`, без сборки   |
 | `bun run check`              | Запускает линтеры и проверки типов и исходников без сборки                     |
-| `bun run test`               | Запускает внутренние тесты Artwork, OBS widgets, Stream Info, Tuna и Companion |
+| `bun run test`               | Запускает внутренние тесты Artwork, OBS widgets, Stream Info и Tuna            |
 | `bun run test:csharp`        | Вручную запускает C#-тесты Stream Info; нужен .NET SDK 8                       |
-| `bun run verify:companion`   | Проверяет готовые TGZ Companion без сборки и упаковки                          |
 
 `bun run dev` запускает общий dev-запускатель: оно открывает страницу с меню
 (Website, Stream Info, Tuna, OBS Widgets, UI Gallery, Artwork), выбранный проект
@@ -103,11 +98,11 @@ Lefthook запускается через Bun без отдельного Node.
 Stream Info и Tuna открываются с `?demo=1`, с тестовыми данными без подключения
 к реальным сервисам. Для рабочего подключения откройте их отдельной ссылкой и удалите
 `demo=1` из адреса;
-C# Actions и Companion запускателем не запускаются.
+C# Actions не запускаются.
 
 Внешних тестов репозитория и тестовой обвязки для сборок, релизов и вёрстки нет.
 Тесты внутри продуктов, пакетов и `artwork` сохраняются; `bun run test` запускает
-внутренние тесты Artwork, OBS widgets, Stream Info, Tuna и Companion.
+внутренние тесты Artwork, OBS widgets, Stream Info и Tuna.
 C#-тесты Stream Info сохранены, но запускаются только вручную через
 `bun run test:csharp`: общий `test` и CI их не вызывают.
 `check` не требует готовых результатов и не запускает сборку или экспорт.
@@ -126,7 +121,7 @@ C#-тесты Stream Info сохранены, но запускаются тол
 Удаление `.turbo/cache` очищает локальный кеш. Корневые команды запускают задачи
 workspace-пакетов через Turbo; общие операции находятся в `tooling/package.json`.
 Для прямого запуска без кеша используйте скрипт нужного workspace. Проверки исходников
-репозитория и готовых TGZ Companion, экспорт отдельных групп и команды
+репозитория, экспорт отдельных групп и команды
 установки, синхронизации и публикации всегда выполняются непосредственно.
 Проверки и тесты не восстанавливают и не собирают продукты вместо команды сборки.
 В CI сохраняются кеши скачанных Bun/NuGet-пакетов и результатов задач;
@@ -153,8 +148,8 @@ Push в `main` после успешных проверок обновляет �
 затем сайт автоматически деплоится из той же сборки. [Подробности](docs/windows-releases.md#выпуск-для-разработчика).
 
 Все результаты сборки находятся в корневом `dist/`: `website/`, `stream-info/`,
-`tuna-widget/`, `obs-widgets/`, `artwork/`, `companion/`, `diagnostics/`,
-`windows-integrations/`, `ui-gallery/` и `release/`.
+`tuna-widget/`, `obs-widgets/`, `artwork/`, `windows-integrations/`,
+`ui-gallery/` и `release/`.
 Промежуточные файлы сборок — в `dist/.cache/`; каждая команда очищает только свой
 каталог, не результаты соседних продуктов. В `dist/artwork/html/` — автономные HTML,
 в `dist/artwork/<группа>/` — изображения. Весь `dist/` исключён из Git.
@@ -163,7 +158,7 @@ Push в `main` после успешных проверок обновляет �
 Общие пакеты переиспользуются в исходниках, необходимые файлы включаются в сборки.
 После чистого checkout сначала выполните `bun run full`: готовых изображений
 больше нет в Git. Затем приложения можно пересобирать без повторного экспорта.
-Требуемые среды и сервисы (OBS, Streamer.bot, Companion, Tuna) остаются внешними;
+Требуемые среды и сервисы (OBS, Streamer.bot, Stream Deck, Tuna) остаются внешними;
 независимость каталога не заменяет их установку и настройку подключения.
 
 [Правила работы](AGENTS.md) · [Участие](CONTRIBUTING.md) ·

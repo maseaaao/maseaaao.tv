@@ -49,11 +49,7 @@ function action(id: string, name: string, codeId: string, source: string, trigge
     triggers,
   };
 }
-const toggle = combine([
-  'droidcam/DroidCamToggle.cs',
-  'droidcam/CameraPresentation.cs',
-  'obs-health/CompanionEndpoint.cs',
-]);
+const toggle = combine(['droidcam/DroidCamToggle.cs', 'droidcam/CameraPresentation.cs']);
 const artwork = combine(['droidcam/CategoryArtwork.cs', 'droidcam/CameraPresentation.cs']);
 const timerId = '6e1d83fa-5c7b-4587-b8e5-d10d9785d9e7';
 const exported = {
@@ -130,4 +126,4 @@ writeFileSync(
   resolve(output, 'streamerbot-import.sb'),
   Buffer.concat([Buffer.from('SBAE'), compressed]).toString('base64'),
 );
-console.log('Generated OBS Camera Presentation import. Existing Companion Action ID preserved.');
+console.log('Generated OBS Camera Presentation import. Existing Action ID preserved.');

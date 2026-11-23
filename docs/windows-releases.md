@@ -4,7 +4,7 @@
 `maseaaao-<продукт>-N.zip` и общий `SHA256SUMS` с хешами всех ZIP.
 В каждом архиве — продукт или весь комплект, лицензии и эта инструкция как `INSTALL.md`.
 Структура папок одинакова: отдельный архив можно распаковать рядом с другими продуктами.
-OBS, Streamer.bot и Companion устанавливаются отдельно; рабочие базы, настройки
+OBS, Streamer.bot и Stream Deck устанавливаются отдельно; рабочие базы, настройки
 и токены в комплект не входят. Обновлятора нет.
 
 ## Установка и обновление
@@ -19,7 +19,6 @@ OBS, Streamer.bot и Companion устанавливаются отдельно; 
 
    Отдельные архивы: `maseaaao-stream-info-N.zip`, `maseaaao-tuna-widget-N.zip`,
    `maseaaao-obs-widgets-N.zip`, `maseaaao-artwork-N.zip`,
-   `maseaaao-system-microphone-N.zip`, `maseaaao-voice-stream-N.zip`,
    `maseaaao-windows-integrations-N.zip` и `maseaaao-website-N.zip`.
 
 2. Распакуйте ZIP в новый пустой каталог Windows. Сохраните прежний комплект,
@@ -38,8 +37,7 @@ OBS, Streamer.bot и Companion устанавливаются отдельно; 
 | Tuna                 | `tuna-widget/obs-tuna-widget.html` — браузерный источник                                   |
 | OBS widgets          | `obs-widgets/social-strip/`; HTML/CSS/JS провайдеров устанавливаются в их интерфейсах      |
 | Artwork              | Изображения в `artwork/`                                                                   |
-| Companion            | TGZ из `system-microphone/` и `voice-stream/`                                              |
-| Windows integrations | `windows-integrations/README.md`, запускатель, `diagnostics/`, C# и звуки в `actions/`     |
+| Windows integrations | `windows-integrations/README.md`, C# и звуки в `actions/`                                  |
 | Website              | `website/` — статические файлы; распаковка не публикует сайт                               |
 
 Stream Info API импортируется отдельно из `stream-info/streamerbot-import.txt`.
@@ -47,29 +45,15 @@ Stream Info API импортируется отдельно из `stream-info/st
 Execute Code. Пути к звукам настройте на MP3 в `windows-integrations/actions/`.
 Секрет DonationAlerts храните в приватной переменной `daClientSecret` Streamer.bot.
 
-Перед импортом Companion проверьте `dataFlow=capture|render` и endpoint ID
-SystemMicrophone; у VoiceStream — два разных UUID включённых Actions запуска/остановки.
-При недостающих настройках остановите обновление. Импортируйте TGZ и выберите версии
-в существующих соединениях, сохранив ID, кнопки, feedback и секреты.
-Сверьте `moduleVersionId`, состояние и журнал без запуска звука или эфира.
-
-Для запускателя и диагностики нужен Windows Bun; Companion использует комплектный Node:
-
-```text
-bun windows-integrations/start-companion.ts --streamerbot-root <полный-путь>
-bun windows-integrations/diagnostics/check-stream-stack-cli.ts --streamerbot-root <полный-путь>
-```
-
-Запускателю нужны Windows Script Host/WMI и соседний `companion-processes.wsf`.
-Ошибка проверки процесса блокирует запуск. Диагностика сохраняет отчёт в
-`custom/maintenance/stream-stack-latest.json` установки Streamer.bot.
+C# Actions импортируются вручную в существующие Actions с сохранением ID и
+компиляцией Execute Code. Запускателя и диагностики Companion в комплекте больше нет.
 Не редактируйте живые базы и настройки на диске при работающем приложении.
 
 ## Откат
 
 Верните прежнюю папку или пути ресурсов через интерфейсы приложений.
-Отдельно верните C# в прежние Actions и версии модулей в тех же соединениях;
-при необходимости восстановите совместимый штатный экспорт.
+Отдельно верните C# в прежние Actions; при необходимости восстановите
+совместимый штатный экспорт.
 Возврат файлов не откатывает импорт. Не копируйте базу поверх работающего приложения.
 
 ## Выпуск для разработчика
@@ -81,7 +65,7 @@ bun windows-integrations/diagnostics/check-stream-stack-cli.ts --streamerbot-roo
 
 Номер `N` — `github.run_number` workflow `Release`. Пропуски допустимы;
 повторный запуск того же run использует тот же номер. Все версии продуктов
-в сборке — `2.0.N`, включая manifest и TGZ Companion. Подготовка меняет только
+в сборке — `2.0.N`. Подготовка меняет только
 рабочую копию CI после frozen install: отдельных bump-коммитов и изменений
 `bun.lock` нет. Номер `vN` относится ко всему комплекту.
 
@@ -106,18 +90,13 @@ workflow `Normalize historical release notes` при добавлении его
 обновление метаданных и вложений GitHub не является одной атомарной операцией.
 
 Для локальной подготовки без публикации можно использовать Windows; нужны Bun
-из `.bun-version`, .NET SDK 8, совместимый `tar` и Chromium. Упаковка Companion
-зависит от реализации `tar`; при проблемах в Windows проверяйте её в Linux CI.
-Используйте свободный номер:
+из `.bun-version`, .NET SDK 8 и Chromium. Используйте свободный номер:
 
 ```bash
 bun tooling/prepare-release.ts 42
 bun run full
-bun run build:companion
-bun run package:companion
 bun run check
 bun run test
-bun run verify:companion
 bun tooling/bundle-release.ts v42
 ```
 

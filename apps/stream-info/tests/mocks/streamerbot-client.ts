@@ -24,8 +24,13 @@ const presetAction: ActionShape = {
 
 function defaultState() {
   return {
-    apiVersion: 5,
-    templates: { configured: true, subtitle: 'Старт', twitchTemplate: '🔴 $s| !tg' },
+    apiVersion: 6,
+    templates: {
+      configured: true,
+      subtitle: 'Старт',
+      twitchTemplate: '🔴 $s| !tg',
+      youtubeTemplate: '🔴 $s| !tw',
+    },
     twitch: {
       accountName: 'Twitch account',
       categoryId: '493057',
@@ -35,7 +40,19 @@ function defaultState() {
       live: true,
       login: 'tester',
       tags: ['PUBG'],
-      title: 'Twitch title',
+      title: '🔴 Старт| !tg',
+    },
+    youtube: {
+      accountName: 'YouTube account',
+      broadcastId: 'broadcast-id',
+      categoryId: '20',
+      categoryName: 'Видеоигры',
+      channelId: 'channel-id',
+      connected: true,
+      live: true,
+      status: 'live',
+      tags: ['PUBG'],
+      title: '🔴 Старт| !tw',
     },
   };
 }
@@ -157,7 +174,7 @@ export class StreamerbotClient {
     if (command === 'searchTwitchCategories') {
       data = { results: [{ id: '493057', imageUrl: '', name: 'PUBG: BATTLEGROUNDS' }] };
     }
-    if (command === 'updateTwitch') {
+    if (command === 'updateTwitch' || command === 'updateYouTube') {
       data = { fields: { category: true, tags: true, title: true } };
     }
     if (command === 'saveTemplates') {
@@ -165,11 +182,12 @@ export class StreamerbotClient {
         configured: true,
         subtitle: textValue(payload.subtitle),
         twitchTemplate: textValue(payload.twitchTemplate),
+        youtubeTemplate: textValue(payload.youtubeTemplate),
       };
       data = { templates: mockStreamerbot.state.templates };
     }
     const response = {
-      apiVersion: 5,
+      apiVersion: 6,
       command,
       data,
       error: null,

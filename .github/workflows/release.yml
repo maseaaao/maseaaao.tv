@@ -33,16 +33,11 @@ jobs:
       - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
         with:
           dotnet-version: 8.0.x
-          cache: true
-          cache-dependency-path: integrations/companion/*/packages.lock.json
       - run: bun run browser:install --with-deps
       - run: bun run full
       - run: bun run build:ui
-      - run: bun run build:companion
-      - run: bun run package:companion
       - run: bun run check
       - run: bun run test
-      - run: bun run verify:companion
       - name: Prepare Cloudflare metadata without rebuilding products
         run: bun run prepare:cloudflare
       - name: Archive the verified browser products

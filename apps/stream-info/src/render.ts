@@ -10,8 +10,15 @@ import { createStreamInfo, type Notice, type PresetAction } from './controller';
 import { type AppIcon, anyIcon, uiIcon } from './icons';
 import { t } from './messages';
 import { subscribe } from './reactive';
-import { isTemplateValid, splitTemplate, TEMPLATE_TOKEN, templateHasToken } from './templates';
-import type { TwitchCategory } from './types';
+import {
+  GAME_TOKEN,
+  isTemplateValid,
+  splitTemplate,
+  TEMPLATE_TOKEN,
+  templateHasToken,
+} from './templates';
+import type { AllForm, Platform, TwitchCategory } from './types';
+import { YOUTUBE_CATEGORIES } from './youtube-categories';
 
 export interface Dock {
   dispose: () => void;
@@ -605,17 +612,21 @@ interface TemplateField {
   update: (template: string, disabled: boolean, error: string | null) => void;
 }
 
-function buildTemplateField(onInput: (value: string) => void): TemplateField {
+function buildTemplateField(
+  platform: 'twitch' | 'youtube',
+  onInput: (value: string) => void,
+): TemplateField {
+  const inputId = platform === 'twitch' ? 'template-field-input' : 'template-field-input-youtube';
   const root = el('div', 'template-input');
   const label = el('label');
-  label.setAttribute('for', 'template-field-input');
-  setText(label, t('twitchTemplate'));
+  label.setAttribute('for', inputId);
+  setText(label, t(platform === 'twitch' ? 'twitchTemplate' : 'youtubeTemplate'));
   const editor = el('div', 'template-input__editor');
   const highlight = el('div', 'template-input__highlight');
   highlight.setAttribute('aria-hidden', 'true');
   const input = el('input');
   input.name = 'template';
-  input.id = 'template-field-input';
+  input.id = inputId;
   input.autocomplete = 'off';
   input.spellcheck = false;
   input.addEventListener('input', () => onInput(input.value));
@@ -626,7 +637,7 @@ function buildTemplateField(onInput: (value: string) => void): TemplateField {
     highlight.scrollLeft = input.scrollLeft;
   });
   const errorLine = el('p', 'template-input__error');
-  errorLine.id = 'template-field-error';
+  errorLine.id = platform === 'twitch' ? 'template-field-error' : 'template-field-error-youtube';
   editor.append(highlight, input);
   root.append(label, editor);
 
@@ -644,8 +655,11 @@ function buildTemplateField(onInput: (value: string) => void): TemplateField {
       if (!part) {
         continue;
       }
-      if (part === TEMPLATE_TOKEN) {
+      if (part === TEMPLATE_TOKEN || part === GAME_TOKEN) {
         const mark = el('mark');
+        if (part === GAME_TOKEN) {
+          mark.className = 'template-game-token';
+        }
         setText(mark, part);
         next.push(mark);
       } else {
@@ -677,7 +691,12 @@ function buildTemplateField(onInput: (value: string) => void): TemplateField {
       }
       // Без токена название некуда подставлять: подпись сразу показывает,
       // какой токен ожидается, а поле получает состояние ошибки.
-      setText(label, templateHasToken(template) ? t('twitchTemplate') : t('twitchTemplateToken'));
+      setText(
+        label,
+        templateHasToken(template)
+          ? t(platform === 'twitch' ? 'twitchTemplate' : 'youtubeTemplate')
+          : t(platform === 'twitch' ? 'twitchTemplateToken' : 'youtubeTemplateToken'),
+      );
       syncHighlight(template);
       setAttribute(input, 'disabled', disabled);
       syncEditorClasses(disabled, errorText);
@@ -687,7 +706,11 @@ function buildTemplateField(onInput: (value: string) => void): TemplateField {
         }
         setText(errorLine, errorText);
         setAttribute(input, 'aria-invalid', 'true');
-        setAttribute(input, 'aria-describedby', 'template-field-error');
+        setAttribute(
+          input,
+          'aria-describedby',
+          platform === 'twitch' ? 'template-field-error' : 'template-field-error-youtube',
+        );
       } else {
         removeError();
         setAttribute(input, 'aria-invalid', null);
@@ -943,34 +966,199 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
   }
 
   // Content region ----------------------------------------------------------
-  let card: HTMLElement;
-  let cardAccountName: HTMLElement;
-  let cardBadge: HTMLSpanElement;
-  let cardBadgeText: Text;
-  let cardLoadingNote: HTMLElement;
-  let cardEditor: HTMLElement;
   let subtitleField: Field;
-  let templateField: TemplateField;
-  let previewSpan: HTMLElement;
-  let counterText: HTMLElement;
+  let subtitleError: HTMLElement;
   let templateDirty: HTMLElement;
-  let tagList: HTMLElement;
-  let tagField: Field;
-  let titleError: HTMLElement;
-  let tagError: HTMLElement;
-  let addTagButton: HTMLButtonElement;
-  let categorySearch: ReturnType<typeof buildCategorySearch>;
-  let accountWarning: HTMLElement;
-  let presetCount: HTMLElement;
+  let sharedTagList: HTMLElement;
+  let sharedTagField: Field;
+  let sharedAddTag: HTMLButtonElement;
+  let sharedTagError: HTMLElement;
+  let twitchEditor: PlatformEditor;
+  let youtubeEditor: PlatformEditor;
+  let presetsSection: HTMLElement;
   let presetList: HTMLElement;
   let presetHint: HTMLElement;
-  let cardSection: HTMLElement;
+  let presetCount: HTMLElement;
+  let cardBusy = false;
   const presetNodes = new Map<
     string,
     { node: HTMLButtonElement; label: HTMLSpanElement; shown: string }
   >();
   const chipNodes = new Map<string, HTMLElement>();
-  let cardBusy = false;
+
+  interface PlatformEditor {
+    accountName: HTMLElement;
+    badge: HTMLSpanElement;
+    badgeText: Text;
+    categoryError: HTMLElement;
+    categorySearch: ReturnType<typeof buildCategorySearch> | null;
+    categorySelect: HTMLSelectElement | null;
+    counter: HTMLElement;
+    editor: HTMLFieldSetElement;
+    fullMode: HTMLButtonElement;
+    fullTitle: Field;
+    loadingNote: HTMLElement;
+    platform: Platform;
+    preview: HTMLElement;
+    root: HTMLElement;
+    subtitleMode: HTMLButtonElement;
+    template: TemplateField;
+    titleError: HTMLElement;
+    warning: HTMLElement;
+  }
+
+  function platformName(platform: Platform): string {
+    return platform === 'twitch' ? 'Twitch' : 'YouTube';
+  }
+
+  function formTitle(form: AllForm, platform: Platform): string {
+    return platform === 'twitch' ? form.twitchTitle : form.youtubeTitle;
+  }
+
+  function formTitleMode(form: AllForm, platform: Platform): 'subtitle' | 'full' {
+    return platform === 'twitch' ? form.twitchTitleMode : form.youtubeTitleMode;
+  }
+
+  function buildYouTubeCategorySelect(): {
+    root: HTMLDivElement;
+    select: HTMLSelectElement;
+  } {
+    const root = el('div', 'field-input');
+    const label = el('label', 'field-input__label');
+    label.setAttribute('for', 'youtube-category-select');
+    setText(label, t('category'));
+    const select = el('select', 'field-input__control');
+    select.id = 'youtube-category-select';
+    const placeholder = el('option');
+    placeholder.value = '';
+    placeholder.disabled = true;
+    setText(placeholder, t('categoryPlaceholder'));
+    select.append(placeholder);
+    for (const category of YOUTUBE_CATEGORIES) {
+      const option = el('option');
+      option.value = category.name;
+      setText(option, category.name);
+      select.append(option);
+    }
+    select.addEventListener('change', () => controller.setYouTubeCategory(select.value));
+    root.append(label, select);
+    return { root, select };
+  }
+
+  function buildPlatformEditor(platform: Platform): PlatformEditor {
+    const root = el('section', 'platform-card dock-section');
+    root.dataset.platform = platform;
+    root.setAttribute('aria-label', platformName(platform));
+
+    const heading = el('header', 'card-heading');
+    const accountHeading = el('div', 'account-heading');
+    accountHeading.append(icon(platform, 'account-icon'));
+    const accountTexts = el('div');
+    const accountName = el('h2', 'account-name');
+    accountTexts.append(accountName);
+    accountHeading.append(accountTexts);
+    const badge = el('span', 'live-status-badge');
+    badge.setAttribute('role', 'status');
+    const badgeDot = el('span', 'live-status-badge__dot');
+    badgeDot.setAttribute('aria-hidden', 'true');
+    const badgeText = document.createTextNode('');
+    badge.append(badgeDot, badgeText);
+    heading.append(accountHeading, badge);
+    root.append(heading);
+
+    const loadingNote = el('p', 'field-note');
+    loadingNote.setAttribute('role', 'status');
+
+    const editor = el('fieldset', 'inline-editor');
+    const legend = el('legend', 'sr-only');
+    setText(legend, `${t('editInfo')} ${platformName(platform)}`);
+    editor.append(legend);
+
+    const template = buildTemplateField(platform, (value) =>
+      controller.setTemplate(platform, value),
+    );
+
+    const modeRow = el('div', 'title-mode');
+    modeRow.setAttribute('role', 'group');
+    setAttribute(modeRow, 'aria-label', t('title'));
+    const subtitleMode = el('button', 'title-mode__button');
+    subtitleMode.type = 'button';
+    setText(subtitleMode, t('byTemplate'));
+    const fullMode = el('button', 'title-mode__button');
+    fullMode.type = 'button';
+    setText(fullMode, t('fullTitle'));
+    subtitleMode.addEventListener('click', () => controller.setTitleMode(platform, 'subtitle'));
+    fullMode.addEventListener('click', () => controller.setTitleMode(platform, 'full'));
+    modeRow.append(subtitleMode, fullMode);
+
+    const fullTitle = buildField({
+      id: `${platform}-full-title-input`,
+      label: t('fullTitle'),
+    });
+    fullTitle.input.name = 'title';
+    fullTitle.input.autocomplete = 'off';
+    fullTitle.input.addEventListener('input', () => {
+      controller.setTitle(platform, fullTitle.input.value);
+    });
+
+    const preview = el('div', 'title-preview');
+    const previewNote = el('span', 'field-note');
+    setText(previewNote, t('finalTitle'));
+    const previewHolder = el('strong');
+    const previewText = el('span', 'template-preview-text');
+    previewHolder.append(previewText);
+    const counter = el('span', 'counter');
+    const titlePrefix = platform === 'twitch' ? '' : 'youtube-';
+    counter.id = `${titlePrefix}title-counter`;
+    const titleError = el('p', 'field-error');
+    titleError.id = `${titlePrefix}title-error`;
+    fullTitle.input.setAttribute(
+      'aria-describedby',
+      `${titlePrefix}title-counter ${titlePrefix}title-error`,
+    );
+    fullTitle.root.append(titleError);
+    preview.append(previewNote, previewHolder, counter);
+
+    editor.append(preview, modeRow, fullTitle.root);
+
+    let categorySearch: ReturnType<typeof buildCategorySearch> | null = null;
+    let categorySelect: HTMLSelectElement | null = null;
+    if (platform === 'twitch') {
+      const searchHolder = buildCategorySearch('twitch-category', searchHooks);
+      categorySearch = searchHolder;
+      editor.append(searchHolder.root);
+    } else {
+      const category = buildYouTubeCategorySelect();
+      categorySelect = category.select;
+      editor.append(category.root);
+    }
+    const categoryError = el('p', 'field-error');
+    editor.append(categoryError);
+
+    const warning = el('p', 'account-warning');
+    root.append(loadingNote, template.root, editor, warning);
+
+    return {
+      accountName,
+      badge,
+      badgeText,
+      categoryError,
+      categorySearch,
+      categorySelect,
+      counter,
+      editor,
+      fullMode,
+      fullTitle,
+      loadingNote,
+      platform,
+      preview: previewText,
+      root,
+      subtitleMode,
+      template,
+      titleError,
+      warning,
+    };
+  }
 
   const searchHooks: SearchHooks = {
     onChoose: (id) => controller.chooseCategory(id),
@@ -982,41 +1170,13 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
 
   function buildContent(): HTMLElement {
     const root = el('main', 'content');
-    card = el('section', 'platform-card dock-section');
-    card.setAttribute('data-platform', 'twitch');
-    card.setAttribute('aria-label', 'Twitch');
 
-    const heading = el('header', 'card-heading');
-    const accountHeading = el('div', 'account-heading');
-    accountHeading.append(icon('twitch', 'account-icon'));
-    const accountTexts = el('div');
-    // Подписи платформы нет: заголовок карточки — никнейм подключённого
-    // аккаунта (его идентичность передаёт иконка Twitch).
-    cardAccountName = el('h2', 'account-name');
-    accountTexts.append(cardAccountName);
-    accountHeading.append(accountTexts);
-    const badge = el('span', 'live-status-badge');
-    cardBadge = badge;
-    badge.setAttribute('role', 'status');
-    const badgeDot = el('span', 'live-status-badge__dot');
-    badgeDot.setAttribute('aria-hidden', 'true');
-    cardBadgeText = document.createTextNode('');
-    badge.append(badgeDot, cardBadgeText);
-    heading.append(accountHeading, badge);
-    card.append(heading);
-
-    cardLoadingNote = el('p', 'field-note');
-    cardLoadingNote.setAttribute('role', 'status');
-
-    cardEditor = el('fieldset', 'inline-editor');
-    const legend = el('legend', 'sr-only');
-    setText(legend, `${t('editInfo')} Twitch`);
-    cardEditor.append(legend);
-
-    const titleFields = el('div', 'title-fields');
+    const shared = el('section', 'shared-title dock-section');
+    const sharedTitle = el('h2');
+    setText(sharedTitle, 'Общее название');
     subtitleField = buildField({
       id: 'subtitle-input',
-      label: 'Название',
+      label: t('title'),
       placeholder: t('subtitleExample'),
     });
     subtitleField.input.name = 'title';
@@ -1024,84 +1184,62 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
     subtitleField.input.addEventListener('input', () => {
       controller.setSubtitle(subtitleField.input.value);
     });
-    templateField = buildTemplateField((value) => controller.setTemplate(value));
-    titleFields.append(subtitleField.root, templateField.root);
-
-    const preview = el('div', 'title-preview');
-    const previewNote = el('span', 'field-note');
-    setText(previewNote, t('finalTitle'));
-    const previewHolder = el('strong');
-    previewSpan = el('span', 'template-preview-text');
-    previewHolder.append(previewSpan);
-    counterText = el('span', 'counter');
-    counterText.id = 'title-counter';
-    titleError = el('p', 'field-error');
-    titleError.id = 'title-error';
-    subtitleField.input.setAttribute('aria-describedby', 'title-counter title-error');
-    subtitleField.root.append(titleError);
-    preview.append(previewNote, previewHolder, counterText);
-
+    subtitleError = el('p', 'field-error');
+    subtitleError.id = 'subtitle-error';
+    subtitleField.root.append(subtitleError);
+    subtitleField.input.setAttribute('aria-describedby', 'subtitle-error');
     templateDirty = el('p', 'template-dirty');
     templateDirty.setAttribute('role', 'status');
-    cardEditor.append(titleFields, preview, templateDirty);
 
-    const searchHolder = buildCategorySearch('category', searchHooks);
-    categorySearch = searchHolder;
-    cardEditor.append(searchHolder.root);
-
-    const tagEditor = el('div', 'tag-editor');
-    tagField = buildField({
+    const tagsTitle = el('h3');
+    setText(tagsTitle, 'Теги');
+    const tagEditor = el('div', 'tag-editor shared-tags');
+    sharedTagField = buildField({
       id: 'tag-draft-input',
       label: t('addTag'),
       placeholder: 'Например, Русский',
     });
-    tagField.input.addEventListener('input', () => {
-      controller.setTagDraft(tagField.input.value);
+    sharedTagField.input.addEventListener('input', () => {
+      controller.setTagDraft(sharedTagField.input.value);
     });
-    tagField.input.addEventListener('keydown', (event: Event) => {
+    sharedTagField.input.addEventListener('keydown', (event: Event) => {
       const key = event as KeyboardEvent;
       const form = state.allForm;
-      if (key.isComposing || cardBusy) {
+      if (key.isComposing || cardBusy || !form) {
         return;
       }
       if (key.key === 'Enter' || key.key === ',') {
         key.preventDefault();
         controller.addTag();
-      } else if (
-        key.key === 'Backspace' &&
-        form &&
-        !form.twitchTagDraft &&
-        form.twitchTags.length
-      ) {
+      } else if (key.key === 'Backspace' && !form.tagDraft && form.tags.length) {
         key.preventDefault();
-        controller.removeTag(form.twitchTags.length - 1);
+        controller.removeTag(form.tags.length - 1);
       }
     });
-    tagList = el('div', 'tag-list');
-    tagList.setAttribute('role', 'group');
-    setAttribute(tagList, 'aria-label', 'Выбранные теги');
+    sharedTagList = el('div', 'tag-list');
+    sharedTagList.setAttribute('role', 'group');
+    setAttribute(sharedTagList, 'aria-label', 'Выбранные теги');
     const tagEntry = el('div', 'tag-entry');
-    const addTag = appButton('secondary', { ariaLabel: 'Добавить тег', label: 'Добавить' });
-    addTagButton = addTag.root;
-    addTagButton.addEventListener('click', () => {
+    const addTagButton = appButton('secondary', { ariaLabel: t('addTag'), label: 'Добавить' });
+    sharedAddTag = addTagButton.root;
+    sharedAddTag.addEventListener('click', () => {
       controller.addTag();
-      tagField.input.focus();
+      sharedTagField.input.focus();
     });
-    tagEntry.append(tagField.root, addTagButton);
+    tagEntry.append(sharedTagField.root, sharedAddTag);
     const tagHint = el('p', 'field-note');
-    tagHint.id = 'tag-hint';
-    setText(tagHint, 'Нажмите Enter или «Добавить», затем примените изменения.');
-    tagError = el('p', 'field-error');
-    tagError.id = 'tag-error';
-    tagField.input.setAttribute('aria-describedby', 'tag-hint tag-error');
-    tagEditor.append(tagEntry, tagHint, tagError, tagList);
-    accountWarning = el('p', 'account-warning');
-    cardEditor.append(tagEditor, accountWarning);
-    card.append(cardEditor);
+    setText(tagHint, 'Одинаковые для Twitch и YouTube: до 10 тегов, до 25 символов, без пробелов.');
+    sharedTagError = el('p', 'field-error');
+    sharedTagError.id = 'tag-error';
+    sharedTagField.input.setAttribute('aria-describedby', 'tag-error');
+    tagEditor.append(tagEntry, tagHint, sharedTagError, sharedTagList);
+    shared.append(sharedTitle, subtitleField.root, templateDirty, tagsTitle, tagEditor);
 
-    const details = el('details', 'preset-panel dock-section');
-    details.open = true;
-    cardSection = details;
+    twitchEditor = buildPlatformEditor('twitch');
+    youtubeEditor = buildPlatformEditor('youtube');
+
+    presetsSection = el('details', 'preset-panel dock-section');
+    (presetsSection as HTMLDetailsElement).open = true;
     const summary = el('summary', 'panel-heading preset-summary');
     const presetsTitle = el('h2');
     presetsTitle.id = 'presets-title';
@@ -1112,11 +1250,12 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
     presetHint = el('p', 'panel-hint');
     presetHint.innerHTML =
       'Добавьте Action в группу <code>STREAM INFO</code> и назовите его <code>PRESET | Название игры</code>.';
-    details.append(summary, presetList, presetHint);
+    presetsSection.append(summary, presetList, presetHint);
 
-    root.append(card, cardSection);
+    root.append(shared, twitchEditor.root, youtubeEditor.root, presetsSection);
     return root;
   }
+
   function appendIconToLink(link: HTMLAnchorElement, name: AppIcon): void {
     const iconBox = el('span', 'app-button__icon');
     iconBox.setAttribute('aria-hidden', 'true');
@@ -1147,8 +1286,8 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
       chip.append(chipLabel, removeButton);
       setText(chipLabel, label);
       removeButton.addEventListener('click', () => {
-        const form = state.allForm;
-        const index = form?.twitchTags.indexOf(label) ?? -1;
+        const tags = state.allForm?.tags ?? [];
+        const index = tags.indexOf(label);
         if (index >= 0) {
           controller.removeTag(index);
         }
@@ -1193,38 +1332,6 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
     return cached.node;
   }
 
-  function syncTagsAndCategory(): void {
-    const form = state.allForm;
-    const tags = form?.twitchTags ?? [];
-    const removable = !cardBusy;
-    const chips = tags.map((tag) => chipNode(tag, removable));
-    syncChildren(tagList, chips);
-    patchField(tagField, form?.twitchTagDraft ?? '', cardBusy);
-    addTagButton.disabled = cardBusy || !form?.twitchTagDraft.trim();
-    const tagMessages: string[] = [
-      t('twitchTagsTooMany'),
-      t('twitchTagsInvalid'),
-      t('twitchTagsDuplicate'),
-    ];
-    const tagErrors = controller.errors().filter((message) => tagMessages.includes(message));
-    setText(tagError, tagErrors.join(' '));
-    setAttribute(tagField.input, 'aria-invalid', tagErrors.length > 0);
-    if (form) {
-      categorySearch.update({
-        disabled: cardBusy,
-        error: search.searchError,
-        hasMore: search.searchHasMore,
-        limit: search.visibleCategories,
-        loading: search.twitchSearching,
-        partial: search.searchPartial,
-        query: form.twitchCategoryQuery,
-        results: state.twitchResults,
-        selected: form.twitchCategory,
-        warnings: search.searchWarnings,
-      });
-    }
-  }
-
   function syncPresets(): void {
     setText(presetCount, String(state.presetActions.length));
     const presetActions = [...state.presetActions];
@@ -1239,7 +1346,7 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
     }
     if (presetActions.length) {
       if (!presetList.isConnected) {
-        cardSection.insertBefore(presetList, presetHint);
+        presetsSection.insertBefore(presetList, presetHint);
       }
       syncChildren(
         presetList,
@@ -1249,106 +1356,264 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
     } else {
       presetList.remove();
       if (!presetHint.isConnected) {
-        cardSection.append(presetHint);
+        presetsSection.append(presetHint);
       }
     }
   }
 
-  function syncTitleEditor(): void {
-    const available = controller.platformAvailable('twitch');
-    const form = state.allForm;
-    patchField(subtitleField, form?.subtitle ?? '', cardBusy);
-    const template = state.templateDraft.twitchTemplate;
-    templateField.update(
-      template,
-      cardBusy,
-      isTemplateValid(template) ? null : t('templateValidation'),
-    );
-    const final = controller.title();
-    if (previewSpan.textContent !== finalPreview(template, form?.subtitle ?? '')) {
-      previewSpan.replaceChildren(...previewNodes(template, form?.subtitle ?? ''));
-    }
-    setText(counterText, `${final.length} / 140`);
-    const titleMessages: string[] = [t('twitchTitleRequired'), t('twitchTitleTooLong')];
-    const titleErrors = controller.errors().filter((message) => titleMessages.includes(message));
-    setText(titleError, titleErrors.join(' '));
-    setAttribute(subtitleField.input, 'aria-invalid', titleErrors.length > 0);
-    if (final.length > 140 !== counterText.classList.contains('invalid')) {
-      counterText.classList.toggle('invalid', final.length > 140);
-    }
-    setText(templateDirty, state.templatesDirty ? t('templatesUnsaved') : '');
-    if (!available) {
-      if (!accountWarning.isConnected) {
-        cardEditor.append(accountWarning);
-      }
-      setText(accountWarning, t('accountNotConnected'));
-    } else if (accountWarning.isConnected) {
-      accountWarning.remove();
-    }
+  function tokenValue(token: string, subtitle: string, gameName: string): string {
+    return token === GAME_TOKEN ? gameName.trim() : subtitle.trim();
   }
 
-  function syncCardLoading(loading: boolean): void {
-    if (loading) {
-      if (!cardLoadingNote.isConnected) {
-        card.insertBefore(cardLoadingNote, cardEditor);
-      }
-      setText(cardLoadingNote, t('updating'));
-    } else if (cardLoadingNote.isConnected) {
-      cardLoadingNote.remove();
-    }
+  function finalPreview(template: string, subtitle: string, gameName: string): string {
+    return splitTemplate(template)
+      .map((part) =>
+        part === TEMPLATE_TOKEN || part === GAME_TOKEN
+          ? tokenValue(part, subtitle, gameName) || part
+          : part,
+      )
+      .join('');
   }
 
-  function syncContent(): void {
-    const { stream } = state;
-    if (!stream) {
-      return;
-    }
-    cardBusy = controller.busy();
-    const status = controller.cardStatus('twitch');
-    const effect = state.cardEffects.twitch;
-    const loading = controller.platformLoading('twitch');
-    card.className = composeClass('platform-card dock-section', [
-      status,
-      state.cardErrors.twitch ? 'card-error' : '',
-      effect ? `card-${effect}` : '',
-    ]);
-    setAttribute(card, 'aria-busy', loading);
-    setText(cardAccountName, stream.twitch.accountName || t('accountNotConnected'));
-    cardBadge.className = `live-status-badge live-status-badge--${status}`;
-    const badgeLabel = t(badgeMessage(status));
-    if (cardBadgeText.data !== badgeLabel) {
-      cardBadgeText.data = badgeLabel;
-    }
-    syncCardLoading(loading);
-    setAttribute(cardEditor, 'disabled', cardBusy);
-    syncTitleEditor();
-    syncTagsAndCategory();
-    syncPresets();
-  }
-
-  function finalPreview(template: string, subtitle: string): string {
-    const value = subtitle.trim();
-    const parts = template.split(TEMPLATE_TOKEN);
-    const separator = value || TEMPLATE_TOKEN;
-    return parts.join(separator);
-  }
-
-  function previewNodes(template: string, subtitle: string): Node[] {
+  function previewNodes(template: string, subtitle: string, gameName: string): Node[] {
     const nodes: Node[] = [];
-    const value = subtitle.trim();
-    const parts = template.split(TEMPLATE_TOKEN);
-    for (const [index, part] of parts.entries()) {
-      if (part) {
-        nodes.push(document.createTextNode(part));
+    for (const part of splitTemplate(template)) {
+      if (!part) {
+        continue;
       }
-      if (index < parts.length - 1) {
+      if (part === TEMPLATE_TOKEN || part === GAME_TOKEN) {
+        const value = tokenValue(part, subtitle, gameName);
         const mark = document.createElement('mark');
         mark.className = value ? 'template-value' : 'template-token';
-        setText(mark, value || TEMPLATE_TOKEN);
+        setText(mark, value || part);
         nodes.push(mark);
+      } else {
+        nodes.push(document.createTextNode(part));
       }
     }
     return nodes;
+  }
+
+  function platformEditable(platform: Platform, form: AllForm | null): boolean {
+    const enabled = platform === 'twitch' ? settings.twitchEnabled : settings.youtubeEnabled;
+    return Boolean(form) && !cardBusy && enabled && controller.platformAvailable(platform);
+  }
+
+  function templateFor(platform: Platform): string {
+    return platform === 'twitch'
+      ? state.templateDraft.twitchTemplate
+      : state.templateDraft.youtubeTemplate;
+  }
+
+  function templateError(platform: Platform, template: string): string | null {
+    if (isTemplateValid(template)) {
+      return null;
+    }
+    return t(platform === 'twitch' ? 'twitchTemplateValidation' : 'youtubeTemplateValidation');
+  }
+
+  function sharedTagMessages(): string[] {
+    return [
+      t('twitchTagsTooMany'),
+      t('twitchTagsInvalid'),
+      t('twitchTagsDuplicate'),
+      t('youtubeTagsTooLong'),
+    ];
+  }
+
+  function titleMessagesFor(platform: Platform): string[] {
+    return platform === 'twitch'
+      ? [t('twitchTitleRequired'), t('twitchTitleTooLong')]
+      : [t('youtubeTitleRequired'), t('youtubeTitleTooLong'), t('youtubeTitleInvalid')];
+  }
+
+  function titleLimit(platform: Platform): number {
+    return platform === 'twitch' ? 140 : 100;
+  }
+
+  function syncSharedTags(): void {
+    const form = state.allForm;
+    const tags = form?.tags ?? [];
+    const editable =
+      Boolean(form) &&
+      !cardBusy &&
+      (controller.platformAvailable('twitch') || controller.platformAvailable('youtube'));
+    syncChildren(
+      sharedTagList,
+      tags.map((tag) => chipNode(tag, editable)),
+    );
+    patchField(sharedTagField, form?.tagDraft ?? '', !editable);
+    sharedAddTag.disabled = !(editable && form?.tagDraft.trim());
+    const tagErrors = controller
+      .errors()
+      .filter((message) => sharedTagMessages().includes(message));
+    setText(sharedTagError, tagErrors.join(' '));
+    setAttribute(sharedTagField.input, 'aria-invalid', tagErrors.length > 0);
+  }
+
+  function syncTitle(editor: PlatformEditor, form: AllForm | null): void {
+    const { platform } = editor;
+    const editable = platformEditable(platform, form);
+    const template = templateFor(platform);
+    editor.template.update(template, cardBusy, templateError(platform, template));
+    const finalTitle = form ? controller.title(platform) : '';
+    const gameName = state.stream?.twitch.categoryName ?? '';
+    if (editor.preview.textContent !== finalPreview(template, form?.subtitle ?? '', gameName)) {
+      editor.preview.replaceChildren(...previewNodes(template, form?.subtitle ?? '', gameName));
+    }
+    const limit = titleLimit(platform);
+    setText(editor.counter, `${finalTitle.length} / ${limit}`);
+    if (finalTitle.length > limit !== editor.counter.classList.contains('invalid')) {
+      editor.counter.classList.toggle('invalid', finalTitle.length > limit);
+    }
+    const mode = form ? formTitleMode(form, platform) : 'subtitle';
+    editor.subtitleMode.setAttribute('aria-pressed', String(mode === 'subtitle'));
+    editor.fullMode.setAttribute('aria-pressed', String(mode === 'full'));
+    editor.subtitleMode.disabled = !editable;
+    editor.fullMode.disabled = !editable;
+    editor.fullTitle.root.hidden = mode !== 'full';
+    patchField(editor.fullTitle, form ? formTitle(form, platform) : '', !editable);
+    const titleErrors = controller
+      .errors()
+      .filter((message) => titleMessagesFor(platform).includes(message));
+    setText(editor.titleError, titleErrors.join(' '));
+    setAttribute(editor.fullTitle.input, 'aria-invalid', titleErrors.length > 0);
+  }
+
+  function syncYouTubeCategory(
+    select: HTMLSelectElement,
+    form: AllForm | null,
+    editable: boolean,
+  ): void {
+    if (!form) {
+      return;
+    }
+    const wanted = form.youtubeCategoryName;
+    if (wanted && !Array.from(select.options).some((option) => option.value === wanted)) {
+      const option = el('option');
+      option.value = wanted;
+      setText(option, wanted);
+      select.append(option);
+    }
+    if (select.value !== wanted) {
+      select.value = wanted;
+    }
+    select.disabled = !editable;
+  }
+
+  function syncCategory(editor: PlatformEditor, form: AllForm | null): void {
+    const { platform } = editor;
+    const editable = platformEditable(platform, form);
+    if (editor.categorySearch) {
+      editor.categorySearch.update({
+        disabled: !editable,
+        error: search.searchError,
+        hasMore: search.searchHasMore,
+        limit: search.visibleCategories,
+        loading: search.twitchSearching,
+        partial: search.searchPartial,
+        query: form?.twitchCategoryQuery ?? '',
+        results: state.twitchResults,
+        selected: form?.twitchCategory ?? null,
+        warnings: search.searchWarnings,
+      });
+    }
+    if (editor.categorySelect) {
+      syncYouTubeCategory(editor.categorySelect, form, editable);
+    }
+    const categoryMessages =
+      platform === 'youtube' ? [t('categorySelectionRequired', { platform: 'YouTube' })] : [];
+    const categoryErrors = controller
+      .errors()
+      .filter((message) => categoryMessages.includes(message));
+    setText(editor.categoryError, categoryErrors.join(' '));
+  }
+
+  function syncEditorLoading(editor: PlatformEditor, loading: boolean): void {
+    if (loading) {
+      if (!editor.loadingNote.isConnected) {
+        editor.root.insertBefore(editor.loadingNote, editor.editor);
+      }
+      setText(editor.loadingNote, t('updating'));
+    } else if (editor.loadingNote.isConnected) {
+      editor.loadingNote.remove();
+    }
+  }
+
+  function warningFor(platform: Platform, enabled: boolean): string {
+    const info = state.stream?.[platform];
+    if (!enabled) {
+      return t('platformDisabled');
+    }
+    if (!info?.connected) {
+      return t('accountNotConnected');
+    }
+    return platform === 'youtube' && !info.live ? t('youtubeNotStarted') : '';
+  }
+
+  function syncEditorWarning(editor: PlatformEditor, warning: string): void {
+    if (!warning) {
+      editor.warning.remove();
+      return;
+    }
+    if (!editor.warning.isConnected) {
+      editor.root.append(editor.warning);
+    }
+    setText(editor.warning, warning);
+  }
+
+  function syncPlatformEditor(editor: PlatformEditor): void {
+    const { platform } = editor;
+    const form = state.allForm;
+    const info = state.stream?.[platform];
+    const enabled = platform === 'twitch' ? settings.twitchEnabled : settings.youtubeEnabled;
+    const loading = controller.platformLoading(platform);
+    const status = controller.cardStatus(platform);
+    const effect = state.cardEffects[platform];
+    editor.root.className = composeClass('platform-card dock-section', [
+      status,
+      state.cardErrors[platform] ? 'card-error' : '',
+      effect ? `card-${effect}` : '',
+      enabled ? '' : 'platform-card--disabled',
+    ]);
+    setAttribute(editor.root, 'aria-busy', loading);
+    setText(editor.accountName, info?.accountName || t('accountNotConnected'));
+    editor.badge.className = `live-status-badge live-status-badge--${status}`;
+    const badgeLabel = t(badgeMessage(status));
+    if (editor.badgeText.data !== badgeLabel) {
+      editor.badgeText.data = badgeLabel;
+    }
+    syncEditorLoading(editor, loading);
+    const editable = platformEditable(platform, form);
+    setAttribute(editor.editor, 'disabled', !editable);
+    syncTitle(editor, form);
+    syncCategory(editor, form);
+    syncEditorWarning(editor, warningFor(platform, enabled));
+  }
+
+  function syncContent(): void {
+    if (!(state.stream && state.allForm)) {
+      return;
+    }
+    cardBusy = controller.busy();
+    patchField(subtitleField, state.allForm.subtitle, cardBusy);
+    const titleMessages = [
+      t('twitchTitleRequired'),
+      t('twitchTitleTooLong'),
+      t('youtubeTitleRequired'),
+      t('youtubeTitleTooLong'),
+      t('youtubeTitleInvalid'),
+    ];
+    const titleErrors = Array.from(
+      new Set(controller.errors().filter((message) => titleMessages.includes(message))),
+    );
+    setText(subtitleError, titleErrors.join(' '));
+    setAttribute(subtitleField.input, 'aria-invalid', titleErrors.length > 0);
+    setText(templateDirty, state.templatesDirty ? t('templatesUnsaved') : '');
+    syncSharedTags();
+    syncPlatformEditor(twitchEditor);
+    syncPlatformEditor(youtubeEditor);
+    syncPresets();
   }
 
   function patchLink(link: HTMLAnchorElement, href: string | null): void {
@@ -1444,8 +1709,17 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
       !state.allDirty && state.allSaveResult ? 'is-saved' : '',
     ]);
     const errors = controller.errors();
+    const templatesChanged =
+      state.templatesDirty ||
+      (state.allForm?.subtitle.trim() ?? '') !== controller.settings.lastSubtitle;
     applyButton.disabled =
-      errors.length > 0 || controller.busy() || !controller.platformAvailable('twitch');
+      errors.length > 0 ||
+      controller.busy() ||
+      !(
+        controller.platformAvailable('twitch') ||
+        controller.platformAvailable('youtube') ||
+        templatesChanged
+      );
     applyButton.className = composeClass('app-button app-button--press app-button--primary', [
       state.allSaving ? 'app-button--loading' : '',
     ]);
@@ -1799,15 +2073,36 @@ export function initDock(host: Element, options: DockOptions = {}): Dock {
   // Render pass -----------------------------------------------------------------
   function syncHeaderLinks(): void {
     const login = state.stream?.twitch.login || '';
-    patchLink(streamLink, login ? `https://www.twitch.tv/${encodeURIComponent(login)}` : null);
+    if (login) {
+      patchLink(streamLink, `https://www.twitch.tv/${encodeURIComponent(login)}`);
+      patchLink(
+        dashboardLink,
+        `https://dashboard.twitch.tv/u/${encodeURIComponent(login)}/stream-manager`,
+      );
+      setAttribute(streamLink, 'hidden', false);
+      setAttribute(dashboardLink, 'hidden', false);
+      return;
+    }
+    const youtube = state.stream?.youtube;
+    const broadcastId = youtube?.broadcastId || '';
+    const channelId = youtube?.channelId || '';
     patchLink(
-      dashboardLink,
-      login ? `https://dashboard.twitch.tv/u/${encodeURIComponent(login)}/stream-manager` : null,
+      streamLink,
+      broadcastId ? `https://www.youtube.com/watch?v=${encodeURIComponent(broadcastId)}` : null,
     );
-    // Без логина ссылки некуда вести: скрываем их, чтобы не оставлять в шапке
+    let dashboardHref: string | null = null;
+    if (broadcastId) {
+      dashboardHref = `https://studio.youtube.com/video/${encodeURIComponent(broadcastId)}/livestreaming`;
+    } else if (channelId) {
+      dashboardHref = `https://studio.youtube.com/channel/${encodeURIComponent(channelId)}/livestreaming/dashboard`;
+    } else if (youtube?.connected) {
+      dashboardHref = 'https://studio.youtube.com/';
+    }
+    patchLink(dashboardLink, dashboardHref);
+    // Без аккаунта ссылки некуда вести: скрываем их, чтобы не оставлять в шапке
     // нерабочие кнопки.
-    setAttribute(streamLink, 'hidden', !login);
-    setAttribute(dashboardLink, 'hidden', !login);
+    setAttribute(streamLink, 'hidden', !broadcastId);
+    setAttribute(dashboardLink, 'hidden', !(broadcastId || channelId || youtube?.connected));
   }
 
   function render(): void {

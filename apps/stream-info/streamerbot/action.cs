@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 
 public class CPHInline
 {
-    private const int ApiVersion = 5;
+    private const int ApiVersion = 6;
     private static readonly ShortLivedCache<JObject> StateCache =
         new ShortLivedCache<JObject>(TimeSpan.FromSeconds(5));
     private static readonly TwitchCategorySearchService CategorySearch = new TwitchCategorySearchService();
@@ -21,13 +21,23 @@ public class CPHInline
     private const string ReplyEvent = "stream_info_api_response";
     // Токен подстановки названия в шаблоне: короткий, чтобы не загромождать шаблон.
     private const string TemplateToken = "$s";
+    // Текущая категория Twitch для повтора игры в YouTube.
+    private const string GameToken = "$g";
     // Шаблоны, сохранённые до перехода на `$s`, продолжают работать.
     private const string LegacyTemplateToken = "%subtitle%";
     private const string DefaultTwitchTemplate = "🔴 $s| !tg !yt !tw !donate";
+    private const string DefaultYouTubeTemplate = "🔴 $g | $s| !tg !yt !tw !donate";
     private const string TwitchTemplateKey = "stream_info.template.twitch";
+    private const string YouTubeTemplateKey = "stream_info.template.youtube";
     private const string SubtitleKey = "stream_info.template.subtitle";
     private const string TwitchCategoryKey = "stream_info.preset.twitchCategoryId";
+    private const string YouTubeCategoryKey = "stream_info.preset.youtubeCategoryName";
+    private const string SharedTagsKey = "stream_info.preset.tagsJson";
     private const string TwitchTagsKey = "stream_info.preset.twitchTagsJson";
+    private const string YouTubeTagsKey = "stream_info.preset.youtubeTagsJson";
+    private const string AutomaticYouTubeCommand = "applyYouTubeStart";
+    // Every YouTube stream starts in Gaming; tags are copied from Twitch.
+    private const string YouTubeStartCategory = "Видеоигры";
 
     public bool Execute()
     {
@@ -40,11 +50,16 @@ public class CPHInline
             CPH.TryGetArg("requestId", out requestId);
             CPH.TryGetArg("payloadJson", out string payloadJson);
 
+            // The native trigger is YouTube Broadcast Started, so an execution
+            // without a command is the automatic start-metadata path.
+            if (string.IsNullOrWhiteSpace(command) && string.IsNullOrWhiteSpace(requestId))
+                command = AutomaticYouTubeCommand;
             if (string.IsNullOrWhiteSpace(command))
                 throw new InvalidOperationException("Команда не указана.");
             bool shouldReply = !string.IsNullOrWhiteSpace(requestId);
             if (!shouldReply &&
-                !string.Equals(command, "applyPreset", StringComparison.Ordinal))
+                !string.Equals(command, "applyPreset", StringComparison.Ordinal) &&
+                !string.Equals(command, AutomaticYouTubeCommand, StringComparison.Ordinal))
                 throw new InvalidOperationException("requestId не указан.");
 
             JObject payload = string.IsNullOrWhiteSpace(payloadJson) ? new JObject() : JObject.Parse(payloadJson);
@@ -61,11 +76,17 @@ public class CPHInline
                 case "updateTwitch":
                     data = UpdateTwitch(payload);
                     break;
+                case "updateYouTube":
+                    data = UpdateYouTube(payload);
+                    break;
                 case "saveTemplates":
                     data = SaveTemplates(payload);
                     break;
                 case "applyPreset":
                     data = ApplyPreset();
+                    break;
+                case AutomaticYouTubeCommand:
+                    data = ApplyYouTubeStart();
                     break;
                 default:
                     throw new InvalidOperationException("Неизвестная команда: " + command);
@@ -75,7 +96,9 @@ public class CPHInline
             if (shouldReply)
                 Reply(requestId, command, ok, data, ok ? null : "Не все поля удалось изменить.");
             else if (!ok)
-                CPH.LogError("[STREAM INFO | API] Пресет применён не полностью.");
+                CPH.LogError(string.Equals(command, AutomaticYouTubeCommand, StringComparison.Ordinal)
+                    ? "[STREAM INFO | API] Стартовые параметры YouTube применены не полностью."
+                    : "[STREAM INFO | API] Пресет применён не полностью.");
         }
         catch (Exception ex)
         {
@@ -99,6 +122,7 @@ public class CPHInline
         {
             ["apiVersion"] = ApiVersion,
             ["twitch"] = GetTwitchState(),
+            ["youtube"] = GetYouTubeState(),
             ["templates"] = GetTemplates()
         };
     }
@@ -106,12 +130,14 @@ public class CPHInline
     private JObject GetTemplates()
     {
         string twitchTemplate = MigrateLegacyToken(CPH.GetGlobalVar<string>(TwitchTemplateKey, true));
+        string youtubeTemplate = MigrateLegacyToken(CPH.GetGlobalVar<string>(YouTubeTemplateKey, true));
         string subtitle = CPH.GetGlobalVar<string>(SubtitleKey, true);
-        bool configured = twitchTemplate != null || subtitle != null;
+        bool configured = twitchTemplate != null || youtubeTemplate != null || subtitle != null;
 
         return new JObject
         {
             ["twitchTemplate"] = string.IsNullOrWhiteSpace(twitchTemplate) ? DefaultTwitchTemplate : twitchTemplate,
+            ["youtubeTemplate"] = string.IsNullOrWhiteSpace(youtubeTemplate) ? DefaultYouTubeTemplate : youtubeTemplate,
             ["subtitle"] = subtitle ?? "",
             ["configured"] = configured
         };
@@ -119,11 +145,20 @@ public class CPHInline
 
     private JObject SaveTemplates(JObject payload)
     {
-        string twitchTemplate = MigrateLegacyToken(payload.Value<string>("twitchTemplate")) ?? DefaultTwitchTemplate;
+        string twitchTemplate = payload["twitchTemplate"] == null
+            ? CPH.GetGlobalVar<string>(TwitchTemplateKey, true)
+            : payload.Value<string>("twitchTemplate");
+        string youtubeTemplate = payload["youtubeTemplate"] == null
+            ? CPH.GetGlobalVar<string>(YouTubeTemplateKey, true)
+            : payload.Value<string>("youtubeTemplate");
+        twitchTemplate = MigrateLegacyToken(twitchTemplate) ?? DefaultTwitchTemplate;
+        youtubeTemplate = MigrateLegacyToken(youtubeTemplate) ?? DefaultYouTubeTemplate;
         string subtitle = (payload.Value<string>("subtitle") ?? "").Trim();
 
         Ensure(HasExactlyOneSubtitle(twitchTemplate), "Шаблон Twitch: нужен ровно один " + TemplateToken + ".");
+        Ensure(HasExactlyOneSubtitle(youtubeTemplate), "Шаблон YouTube: нужен ровно один " + TemplateToken + ".");
         CPH.SetGlobalVar(TwitchTemplateKey, twitchTemplate, true);
+        CPH.SetGlobalVar(YouTubeTemplateKey, youtubeTemplate, true);
         CPH.SetGlobalVar(SubtitleKey, subtitle, true);
         StateCache.Invalidate();
 
@@ -135,18 +170,83 @@ public class CPHInline
         JObject templates = GetTemplates();
         var platforms = new JObject();
         bool allOk = true;
+        string twitchCategory = CPH.GetGlobalVar<string>(TwitchCategoryKey, true);
+        string gameName = "";
+        try
+        {
+            gameName = !string.IsNullOrWhiteSpace(twitchCategory)
+                ? GetTwitchCategoryName(twitchCategory)
+                : GetTwitchState().Value<string>("categoryName") ?? "";
+        }
+        catch (Exception ex)
+        {
+            CPH.LogVerbose("[STREAM INFO | API] Twitch category unavailable for template: " + ex.Message);
+        }
 
         JObject twitchPayload = new JObject
         {
-            ["title"] = TitleFromTemplate(templates.Value<string>("twitchTemplate"), templates.Value<string>("subtitle"))
+            ["title"] = TitleFromTemplate(templates.Value<string>("twitchTemplate"), templates.Value<string>("subtitle"), gameName)
         };
-        string twitchCategory = CPH.GetGlobalVar<string>(TwitchCategoryKey, true);
         if (!string.IsNullOrWhiteSpace(twitchCategory)) twitchPayload["categoryId"] = twitchCategory;
-        JArray twitchTags = GetPresetTags(TwitchTagsKey);
+        JArray twitchTags = GetPresetTags(SharedTagsKey) ?? GetPresetTags(TwitchTagsKey);
         if (twitchTags != null) twitchPayload["tags"] = twitchTags;
         AddPresetResult(platforms, "twitch", twitchPayload, UpdateTwitch, ref allOk);
 
+        JObject youtubePayload = new JObject
+        {
+            ["title"] = TitleFromTemplate(templates.Value<string>("youtubeTemplate"), templates.Value<string>("subtitle"), gameName)
+        };
+        string youtubeCategory = CPH.GetGlobalVar<string>(YouTubeCategoryKey, true);
+        if (!string.IsNullOrWhiteSpace(youtubeCategory)) youtubePayload["categoryName"] = youtubeCategory;
+        JArray youtubeTags = GetPresetTags(SharedTagsKey) ?? GetPresetTags(YouTubeTagsKey);
+        if (youtubeTags != null) youtubePayload["tags"] = youtubeTags;
+        try
+        {
+            var broadcast = CPH.YouTubeGetLatestMonitoredBroadcast();
+            bool live = broadcast != null && string.Equals(broadcast.Status, "live", StringComparison.OrdinalIgnoreCase);
+            if (live)
+                AddPresetResult(platforms, "youtube", youtubePayload, UpdateYouTube, ref allOk);
+            else
+                platforms["youtube"] = new JObject { ["ok"] = true, ["skipped"] = true };
+        }
+        catch (Exception ex)
+        {
+            platforms["youtube"] = new JObject { ["ok"] = false, ["error"] = ex.Message };
+            allOk = false;
+        }
+
         return new JObject { ["ok"] = allOk, ["platforms"] = platforms };
+    }
+
+    private JObject ApplyYouTubeStart()
+    {
+        JObject result = AutomaticYouTubePolicy.RunWhenReady(
+            () =>
+            {
+                var broadcast = CPH.YouTubeGetLatestMonitoredBroadcast();
+                return broadcast != null &&
+                    string.Equals(broadcast.Status, "live", StringComparison.OrdinalIgnoreCase);
+            },
+            () => System.Threading.Thread.Sleep(1000),
+            () =>
+            {
+                var payload = new JObject { ["categoryName"] = YouTubeStartCategory };
+                try
+                {
+                    JObject twitch = GetTwitchState();
+                    JArray tags = twitch["tags"] as JArray;
+                    if (twitch.Value<bool>("connected") && tags != null && tags.Count > 0)
+                        payload["tags"] = tags.DeepClone();
+                }
+                catch (Exception ex)
+                {
+                    CPH.LogVerbose("[STREAM INFO | API] Twitch tags unavailable for YouTube start: " + ex.Message);
+                }
+                return UpdateYouTube(payload);
+            });
+        if (result.Value<bool>("ok"))
+            CPH.LogInfo("[STREAM INFO | API] YouTube start metadata applied.");
+        return result;
     }
 
     private void AddPresetResult(JObject platforms, string platform, JObject payload, Func<JObject, JObject> update, ref bool allOk)
@@ -189,18 +289,33 @@ public class CPHInline
         return first >= 0 && source.IndexOf(TemplateToken, first + TemplateToken.Length, StringComparison.Ordinal) < 0;
     }
 
-    private static string TitleFromTemplate(string template, string subtitle)
+    private static string TitleFromTemplate(string template, string subtitle, string gameName)
     {
-        string source = template ?? "";
-        string value = (subtitle ?? "").Trim();
-        int marker = source.IndexOf(TemplateToken, StringComparison.Ordinal);
-        if (marker < 0) return source.Trim();
-        string before = source.Substring(0, marker);
-        string after = source.Substring(marker + TemplateToken.Length);
-        if (value.Length > 0) return (before + value + after).Trim();
-        if (before.Length > 0 && after.Length > 0 && char.IsWhiteSpace(before[before.Length - 1]) && char.IsWhiteSpace(after[0]))
-            return (before.Substring(0, before.Length - 1) + after).Trim();
-        return (before + after).Trim();
+        string value = ReplaceTemplateToken(template ?? "", GameToken, gameName);
+        return ReplaceTemplateToken(value, TemplateToken, subtitle).Trim();
+    }
+
+    private static string ReplaceTemplateToken(string template, string token, string rawValue)
+    {
+        string value = (rawValue ?? "").Trim();
+        if (value.Length > 0)
+            return template.Replace(token, value);
+
+        string result = template;
+        int marker = result.IndexOf(token, StringComparison.Ordinal);
+        while (marker >= 0)
+        {
+            string before = result.Substring(0, marker);
+            string after = result.Substring(marker + token.Length);
+            // Removing an empty token may remove one adjacent whitespace
+            // character, but never normalizes unrelated template text.
+            result = before.Length > 0 && after.Length > 0 &&
+                char.IsWhiteSpace(before[before.Length - 1]) && char.IsWhiteSpace(after[0])
+                ? before.Substring(0, before.Length - 1) + after
+                : before + after;
+            marker = result.IndexOf(token, StringComparison.Ordinal);
+        }
+        return result;
     }
 
     private JObject GetTwitchState()
@@ -245,6 +360,51 @@ public class CPHInline
         catch (Exception ex)
         {
             CPH.LogVerbose("[STREAM INFO | API] Twitch unavailable: " + ex.Message);
+            return new JObject { ["connected"] = false, ["live"] = false };
+        }
+    }
+
+    private JObject GetYouTubeState()
+    {
+        // Streamer.bot can throw before returning null when YouTube has never
+        // been authenticated. A missing platform stays a normal state.
+        try
+        {
+            var broadcaster = CPH.YouTubeGetBroadcaster();
+            var broadcast = CPH.YouTubeGetLatestMonitoredBroadcast();
+            bool live = broadcast != null && string.Equals(broadcast.Status, "live", StringComparison.OrdinalIgnoreCase);
+            string channelId = broadcaster == null ? "" : broadcaster.UserId ?? "";
+            if (string.IsNullOrWhiteSpace(channelId) && broadcast != null)
+                channelId = broadcast.ChannelId ?? "";
+
+            if (broadcast == null)
+            {
+                return new JObject
+                {
+                    ["connected"] = broadcaster != null,
+                    ["live"] = false,
+                    ["accountName"] = broadcaster == null ? "" : broadcaster.UserName ?? "",
+                    ["channelId"] = channelId
+                };
+            }
+
+            return new JObject
+            {
+                ["connected"] = broadcaster != null,
+                ["accountName"] = broadcaster == null ? "" : broadcaster.UserName ?? "",
+                ["channelId"] = channelId,
+                ["live"] = live,
+                ["broadcastId"] = broadcast.Id ?? "",
+                ["status"] = broadcast.Status ?? "",
+                ["title"] = broadcast.Title ?? "",
+                ["categoryId"] = broadcast.CategoryId ?? "",
+                ["categoryName"] = broadcast.CategoryName ?? "",
+                ["tags"] = new JArray((broadcast.Tags ?? new List<string>()).ToArray())
+            };
+        }
+        catch (Exception ex)
+        {
+            CPH.LogVerbose("[STREAM INFO | API] YouTube unavailable: " + ex.Message);
             return new JObject { ["connected"] = false, ["live"] = false };
         }
     }
@@ -341,6 +501,69 @@ public class CPHInline
         }
     }
 
+    private JObject UpdateYouTube(JObject payload)
+    {
+        var broadcast = CPH.YouTubeGetLatestMonitoredBroadcast();
+        if (broadcast == null || !string.Equals(broadcast.Status, "live", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Стрим YouTube должен быть запущен.");
+
+        Ensure(payload["title"] != null || payload["categoryName"] != null || payload["tags"] != null,
+            "Нет изменений YouTube для сохранения.");
+        JObject fields = new JObject();
+        bool allOk = true;
+        string pendingField = null;
+        try
+        {
+            if (payload["title"] != null)
+            {
+                pendingField = "title";
+                string title = payload.Value<string>("title");
+                Ensure(!string.IsNullOrWhiteSpace(title) && title.Length <= 100 && !title.Contains("<") && !title.Contains(">"),
+                    "Название YouTube должно содержать до 100 символов и не включать < или >.");
+                bool result = CPH.YouTubeSetTitle(title, broadcast.Id);
+                fields["title"] = result;
+                allOk &= result;
+            }
+            if (payload["categoryName"] != null)
+            {
+                pendingField = "category";
+                string categoryName = payload.Value<string>("categoryName");
+                Ensure(!string.IsNullOrWhiteSpace(categoryName), "Не выбрана категория YouTube.");
+                bool result = CPH.YouTubeSetCategory(categoryName, broadcast.Id);
+                fields["category"] = result;
+                allOk &= result;
+            }
+            if (payload["tags"] != null)
+            {
+                pendingField = "tags";
+                List<string> tags = ReadTags(payload["tags"]);
+                Ensure(string.Join(",", tags).Length <= 500, "Общий размер тегов YouTube не может превышать 500 символов.");
+                bool cleared = CPH.YouTubeClearTags(broadcast.Id);
+                bool added = cleared && (tags.Count == 0 || CPH.YouTubeAddTags(tags, broadcast.Id));
+                bool result = cleared && added;
+                fields["tags"] = result;
+                allOk &= result;
+            }
+            return new JObject { ["ok"] = allOk, ["fields"] = fields };
+        }
+        catch (Exception ex)
+        {
+            // A failed call may have changed YouTube before throwing. Preserve
+            // completed fields and report the uncertain field without retrying it.
+            return new JObject
+            {
+                ["ok"] = false,
+                ["fields"] = fields,
+                ["failedField"] = pendingField,
+                ["error"] = ex.Message
+            };
+        }
+        finally
+        {
+            StateCache.Invalidate();
+        }
+    }
+
     private JObject TwitchGet(string path)
     {
         string token = CPH.TwitchOAuthToken;
@@ -369,6 +592,15 @@ public class CPHInline
 
         JObject game = FirstData(TwitchGet("games?id=" + Uri.EscapeDataString(categoryId)));
         return game == null ? "" : NormalizeBoxArt(game.Value<string>("box_art_url") ?? "");
+    }
+
+    private string GetTwitchCategoryName(string categoryId)
+    {
+        if (string.IsNullOrWhiteSpace(categoryId))
+            return "";
+
+        JObject game = FirstData(TwitchGet("games?id=" + Uri.EscapeDataString(categoryId)));
+        return game == null ? "" : game.Value<string>("name") ?? "";
     }
 
     private static JObject FirstData(JObject response)

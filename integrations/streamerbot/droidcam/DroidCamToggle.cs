@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Net.Http;
-using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-// Import with CameraPresentation.cs and obs-health/CompanionEndpoint.cs into one Execute C# Code sub-action.
+// Кнопка Stream Deck: включить/выключить DroidCam в OBS.
 public class CPHInline
 #if CAMERA_TESTS
     : Streamer.bot.Plugin.Interface.CPHInlineBase
@@ -15,28 +13,15 @@ public class CPHInline
     private const string CameraUuid = "7503a63b-3929-46b3-9a95-cf61ccca44e2";
     private const string CloneUuid = "665bdddb-f41e-468e-a18d-252c85cdbec5";
     private static readonly object Gate = new object();
-    private static HttpClient Http = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
 
-    // Обратная связь: droidcam_state = 1/0, droidcam_label = подпись кнопки.
     private void Feedback(bool? on)
     {
         try
         {
-            SetVariable("droidcam_state", on == true ? "1" : "0");
-            SetVariable("droidcam_label", on == null ? "📷\nОШИБКА" : on == true ? "📷\nВКЛ" : "📷\nВЫКЛ");
+            CPH.StreamDeckSetTitle("droidcam_toggle", on == null ? "📷\nОШИБКА" : on == true ? "📷\nВКЛ" : "📷\nВЫКЛ");
+            CPH.StreamDeckSetState("droidcam_toggle", on == true ? 1 : 0);
         }
-        catch (Exception) { CPH.LogWarn("DroidCam Companion feedback unavailable; OBS state was not changed by feedback failure."); }
-    }
-    private static void SetVariable(string name, string value)
-    {
-        string url = CompanionEndpoint.Get().TrimEnd('/') + "/api/custom-variable/" + name + "/value";
-        using (var content = new StringContent(value, Encoding.UTF8, "text/plain"))
-        using (var response = Http.PostAsync(url, content).GetAwaiter().GetResult()) response.EnsureSuccessStatusCode();
-        using (var response = Http.GetAsync(url).GetAwaiter().GetResult())
-        {
-            response.EnsureSuccessStatusCode();
-            if (response.Content.ReadAsStringAsync().GetAwaiter().GetResult() != value) throw new InvalidOperationException("Companion feedback readback mismatch.");
-        }
+        catch (Exception ex) { CPH.LogWarn("Stream Deck feedback unavailable: " + ex.Message); }
     }
 
     public void Init()

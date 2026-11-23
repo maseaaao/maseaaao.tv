@@ -1,39 +1,24 @@
 using System;
 using System.Collections.Generic;
-using System.Net.Http;
-using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-// Import with obs-health/CompanionEndpoint.cs into one Execute C# Code sub-action.
+// Кнопка Stream Deck: скрыть/показать все алерты DonationAlerts в OBS.
 public class CPHInline
 {
     private const string InputUuid = "2f2c20ab-4450-4c45-b1a1-dc6a5eb236f5";
     private const string SnapshotKey = "donationalerts.panic.snapshot.v1";
     private const string NoMonitoring = "OBS_MONITORING_TYPE_NONE";
     private static readonly object Gate = new object();
-    private static HttpClient Http = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
 
     private void Feedback(bool blocked, bool error = false)
     {
         try
         {
-            if (blocked) SetVariable("da_alerts_blocked", "1");
-            SetVariable("da_alerts_label", "ДОНАТЫ\n" + (error ? "ОШИБКА" : blocked ? "ВЫКЛ" : "ВКЛ"));
-            if (!blocked) SetVariable("da_alerts_blocked", "0");
+            CPH.StreamDeckSetTitle("da_toggle", error ? "ДОНАТЫ\nОШИБКА" : blocked ? "ДОНАТЫ\nВЫКЛ" : "ДОНАТЫ\nВКЛ");
+            CPH.StreamDeckSetState("da_toggle", (blocked || error) ? 1 : 0);
         }
-        catch (Exception) { CPH.LogWarn("DonationAlerts Companion feedback unavailable; OBS state was not changed by feedback failure."); }
-    }
-    private static void SetVariable(string name, string value)
-    {
-        string url = CompanionEndpoint.Get().TrimEnd('/') + "/api/custom-variable/" + name + "/value";
-        using (var content = new StringContent(value, Encoding.UTF8, "text/plain"))
-        using (var response = Http.PostAsync(url, content).GetAwaiter().GetResult()) response.EnsureSuccessStatusCode();
-        using (var response = Http.GetAsync(url).GetAwaiter().GetResult())
-        {
-            response.EnsureSuccessStatusCode();
-            if (response.Content.ReadAsStringAsync().GetAwaiter().GetResult() != value) throw new InvalidOperationException("Companion feedback readback mismatch.");
-        }
+        catch (Exception ex) { CPH.LogWarn("Stream Deck feedback unavailable: " + ex.Message); }
     }
 
     public void Init()

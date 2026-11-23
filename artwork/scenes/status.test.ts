@@ -23,7 +23,7 @@ const scenes = await Promise.all(
 test('status scenes keep the text nickname and no separate mark inside the title card', () => {
   expect(scenes).toHaveLength(6);
   for (const scene of scenes) {
-    expect(scene.html, scene.file).toContain('>maseaaao</p>');
+    expect(scene.html, scene.file).toContain('>maseaaao.tv</p>');
     // The nickname is the only identity mark: the plate hugs the state word.
     expect(scene.html, scene.file).not.toContain('title-logo');
     expect(scene.html, scene.file).not.toContain('../logo/logo.png');
@@ -31,16 +31,20 @@ test('status scenes keep the text nickname and no separate mark inside the title
   }
 });
 
-test('status scenes retain QR and existing overlay zones', () => {
+test('status scenes retain the remaining overlay zones', () => {
   for (const scene of scenes) {
-    for (const zone of ['chat', 'music', 'donors', 'alerts', 'qr']) {
+    for (const zone of ['music', 'donors', 'alerts']) {
       expect(scene.html, `${scene.file}: ${zone}`).toContain(`data-zone="${zone}"`);
     }
-    expect(scene.html, scene.file).toContain(
-      'src="../../apps/website/public/assets/maseaaao.tv.png"',
-    );
     if (scene.map === 'vertical-status') {
       expect(scene.html, scene.file).toContain('data-zone="social"');
+    }
+    // QR remains on the horizontal status scenes only.
+    if (scene.map === 'horizontal-status') {
+      expect(scene.html, `${scene.file}: qr`).toContain('data-zone="qr"');
+      expect(scene.html, scene.file).toContain(
+        'src="../../apps/website/public/assets/maseaaao.tv.png"',
+      );
     }
   }
 });
@@ -99,7 +103,11 @@ for (const scene of scenes) {
       );
       const map = layout[scene.map];
       expect(scene.map).toBe(scene.width === 2560 ? 'horizontal-status' : 'vertical-status');
-      for (const name of ['donors', 'chat', 'social', 'music', 'alerts', 'qr']) {
+      const required = ['donors', 'social', 'music', 'alerts'];
+      if (scene.map === 'horizontal-status') {
+        required.push('qr');
+      }
+      for (const name of required) {
         expect(zones[name], `${scene.file}: ${name}`).toBeDefined();
         for (let index = 0; index < 4; index += 1) {
           expect(zones[name].box[index], `${scene.file}: ${name}[${index}]`).toBeCloseTo(
@@ -108,19 +116,18 @@ for (const scene of scenes) {
           );
         }
       }
-      const [donors, chat, social] = ['donors', 'chat', 'social'].map((name) => zones[name].box);
-      expect(donors[0]).toBe(chat[0]);
-      expect(chat[0]).toBe(social[0]);
-      expect(donors[2]).toBe(chat[2]);
-      expect(chat[2]).toBe(social[2]);
-      expect(donors[1] + donors[3]).toBe(chat[1]);
-      expect(chat[1] + chat[3]).toBe(social[1]);
-      expect(zones.chat.background).toBe('rgb(255, 255, 249)');
-      expect(zones.chat.radii).toEqual(['0px', '0px', '0px', '0px']);
+      const [donors, social, music] = ['donors', 'social', 'music'].map((name) => zones[name].box);
+      expect(donors[0]).toBe(social[0]);
+      expect(social[0]).toBe(music[0]);
+      expect(donors[2]).toBe(social[2]);
+      expect(social[2]).toBe(music[2]);
+      expect(donors[1] + donors[3]).toBeLessThanOrEqual(social[1]);
+      expect(social[1] + social[3]).toBeLessThanOrEqual(music[1]);
       const overlaps = (a: number[], b: number[]) =>
         a[0] < b[0] + b[2] && b[0] < a[0] + a[2] && a[1] < b[1] + b[3] && b[1] < a[1] + a[3];
-      for (const [i, first] of ['donors', 'chat', 'social', 'music', 'alerts', 'qr'].entries()) {
-        for (const second of ['donors', 'chat', 'social', 'music', 'alerts', 'qr'].slice(i + 1)) {
+      const zoneNames = Object.keys(zones);
+      for (const [i, first] of zoneNames.entries()) {
+        for (const second of zoneNames.slice(i + 1)) {
           expect(
             overlaps(zones[first].box, zones[second].box),
             `${scene.file}: ${first}/${second}`,

@@ -29,43 +29,26 @@ const sources = {
     'integrations/streamerbot/donationalerts/WebSocketMessages.cs',
   ],
   DonationAuthorization: ['integrations/streamerbot/donationalerts/DonationAlertsAuthorization.cs'],
-  DonationGate: ['integrations/streamerbot/donationalerts/DonationGate.cs'],
-  DonationToggle: [
-    'integrations/streamerbot/donationalerts/DonationAlertsToggle.cs',
-    'integrations/streamerbot/obs-health/CompanionEndpoint.cs',
-  ],
+  DonationDefault: ['integrations/streamerbot/donationalerts/DonationHandler_Default.cs'],
+  DonationToggle: ['integrations/streamerbot/donationalerts/DonationAlertsToggle.cs'],
   DonationWatcher: ['integrations/streamerbot/donationalerts/DonationAlertsWatcher.cs'],
   DroidCamToggle: [
     'integrations/streamerbot/droidcam/DroidCamToggle.cs',
     'integrations/streamerbot/droidcam/CameraPresentation.cs',
-    'integrations/streamerbot/obs-health/CompanionEndpoint.cs',
   ],
-  ModerationControl: ['integrations/streamerbot/donationalerts/ModerationControl.cs'],
-  ModerationHost: [
-    'integrations/streamerbot/donationalerts/ModerationEngine.cs',
-    'integrations/streamerbot/donationalerts/ModerationFiles.cs',
-    'integrations/streamerbot/donationalerts/ModerationOutput.cs',
-    'integrations/streamerbot/donationalerts/ModerationHistory.cs',
-    'integrations/streamerbot/donationalerts/ModerationWebServer.cs',
-    'integrations/streamerbot/donationalerts/ModerationHost.cs',
-  ],
-  ModerationUI: ['integrations/streamerbot/donationalerts/ModerationUI.cs'],
-  ObsHealth: [
-    'integrations/streamerbot/obs-health/Check.cs',
-    'integrations/streamerbot/obs-health/CompanionEndpoint.cs',
-    'integrations/streamerbot/obs-health/AudioMeter.cs',
-  ],
-  ObsHealthSound: [
-    'integrations/streamerbot/obs-health/SoundToggle.cs',
-    'integrations/streamerbot/obs-health/CompanionEndpoint.cs',
-  ],
+  StreamDeckRecord: ['integrations/streamerbot/stream-deck/RecordToggle.cs'],
+  StreamDeckReplay: ['integrations/streamerbot/stream-deck/ReplaySave.cs'],
+  StreamDeckStream: ['integrations/streamerbot/stream-deck/StreamToggle.cs'],
+  StreamDeckVod: ['integrations/streamerbot/stream-deck/VodStudio.cs'],
   StreamInfo: [
     'apps/stream-info/streamerbot/action.cs',
     'apps/stream-info/streamerbot/state-cache-policy.cs',
+    'apps/stream-info/streamerbot/automatic-youtube-policy.cs',
     'apps/stream-info/streamerbot/category-search-transport.cs',
     'apps/stream-info/streamerbot/category-search-service.cs',
     'apps/stream-info/streamerbot/category-search-policy.cs',
   ],
+  VodLifecycle: ['integrations/streamerbot/vod/VodLifecycle.cs'],
 };
 const escapeXml = (text: string) =>
   text

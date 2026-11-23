@@ -8,16 +8,18 @@
 }
 .wallpaper-icon {
   display: block;
-  width: 640px;
-  height: 640px;
+  /* 640px at 3840×2160; keeps the same share of the canvas at 1920×1080. */
+  width: min(16.6666667vw, 29.6296296vh);
+  height: min(16.6666667vw, 29.6296296vh);
   overflow: visible;
-  transform: translateY(-24px);
+  transform: translateY(-1.1111111vh);
 }
 
 @media (orientation: portrait) {
   .wallpaper-icon {
-    width: 820px;
-    height: 820px;
-    transform: translateY(-72px);
+    /* 820px at 2160×3840; keeps the same share of the canvas at 1080×1920. */
+    width: min(37.962963vw, 21.3541667vh);
+    height: min(37.962963vw, 21.3541667vh);
+    transform: translateY(-1.875vh);
   }
 }

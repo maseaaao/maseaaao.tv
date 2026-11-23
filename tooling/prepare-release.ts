@@ -51,10 +51,6 @@ for (const product of catalog.products) {
       throw new Error(`Missing product version: ${manifest}`);
     }
   }
-  const companion = safe(`${product.path}/companion/manifest.json`);
-  if (existsSync(companion)) {
-    files.add(companion);
-  }
 }
 // Validate every input before changing any file.
 const updates = [...files].map((file) => {

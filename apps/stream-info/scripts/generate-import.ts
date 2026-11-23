@@ -11,6 +11,7 @@ const packageMetadata: { version: string } = JSON.parse(
 const sources = [
   'action.cs',
   'state-cache-policy.cs',
+  'automatic-youtube-policy.cs',
   'category-search-policy.cs',
   'category-search-service.cs',
   'category-search-transport.cs',
@@ -40,7 +41,7 @@ const action = {
     {
       byteCode: Buffer.from(actionSource, 'utf8').toString('base64'),
       delayStart: false,
-      description: 'Internal API for change-info-streamer-bot.html',
+      description: 'Twitch and YouTube API for change-info-streamer-bot.html',
       enabled: true,
       id: '008b1b1d-569b-4534-bf65-cd51d54fa826',
       index: 0,
@@ -70,7 +71,16 @@ const action = {
   name: 'STREAM INFO | API',
   queue: null,
   randomAction: false,
-  triggers: [],
+  triggers: [
+    {
+      enabled: true,
+      exclusions: [],
+      // YouTube -> Broadcast -> Started. Numeric type is the stable
+      // Streamer.bot 1.0.x export representation.
+      id: '5f9a1464-3571-4a20-b5ba-0c350db9c15a',
+      type: 4001,
+    },
+  ],
 };
 
 const exported = {
@@ -86,7 +96,8 @@ const exported = {
   meta: {
     author: 'change-info-streamer-bot',
     autoRunAction: null,
-    description: 'Twitch API for the standalone Stream Info HTML.',
+    description:
+      'Twitch and YouTube API for Stream Info with YouTube start tags and Gaming category.',
     minimumVersion: MINIMUM_COMPATIBLE_VERSION,
     name: 'STREAM INFO | API',
     version: packageMetadata.version,

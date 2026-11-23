@@ -132,10 +132,22 @@ try {
       2160,
     );
     await render(
+      'artwork/wallpapers/desktop-4k.html',
+      'artwork/wallpapers/desktop-1080p.png',
+      1920,
+      1080,
+    );
+    await render(
       'artwork/wallpapers/portrait-4k.html',
       'artwork/wallpapers/portrait-4k.png',
       2160,
       3840,
+    );
+    await render(
+      'artwork/wallpapers/portrait-4k.html',
+      'artwork/wallpapers/portrait-1080p.png',
+      1080,
+      1920,
     );
   }
 } finally {

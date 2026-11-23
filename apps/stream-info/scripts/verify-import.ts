@@ -47,12 +47,18 @@ if (payload.data?.actions?.length !== 1 || payload.data.actions[0]?.name !== 'ST
 }
 
 const [action] = payload.data.actions;
-if (action.triggers?.length !== 0) {
-  throw new Error('STREAM INFO | API must not contain broadcast triggers.');
+if (action.triggers?.length !== 1 || action.triggers[0]?.type !== 4001) {
+  throw new Error('STREAM INFO | API must contain exactly the YouTube Broadcast Started trigger.');
+}
+if (action.triggers[0]?.enabled !== true) {
+  throw new Error('STREAM INFO | API YouTube trigger must be enabled.');
 }
 const source = Buffer.from(action.actions?.[0]?.byteCode ?? '', 'base64').toString('utf8');
-if (!source.includes('UpdateTwitch') || /youtube/i.test(source)) {
-  throw new Error('STREAM INFO | API must contain only Twitch support.');
+if (!(source.includes('UpdateTwitch') && source.includes('UpdateYouTube'))) {
+  throw new Error('STREAM INFO | API must contain Twitch and YouTube support.');
+}
+if (!(source.includes('ApplyYouTubeStart') && source.includes('GameToken'))) {
+  throw new Error('STREAM INFO | API must contain YouTube start and $g template support.');
 }
 console.log(
   `Verified Streamer.bot import: minimum ${requiredVersion}, exported from ${payload.exportedFrom}.`,

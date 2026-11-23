@@ -99,14 +99,7 @@ if (values['validate-catalog']) {
   const version = tag.slice(1);
   const productVersion = `2.0.${version}`;
   if (values.build) {
-    for (const script of [
-      'full',
-      'build:companion',
-      'package:companion',
-      'check',
-      'test',
-      'verify:companion',
-    ]) {
+    for (const script of ['full', 'check', 'test']) {
       const command = `bun run ${script}`;
       console.log(`==> ${command}`);
       execSync(command, { cwd: root, stdio: 'inherit', timeout: 600_000 });

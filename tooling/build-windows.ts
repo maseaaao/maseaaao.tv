@@ -1,4 +1,4 @@
-// Preserve the Windows runtime sources and include the bundled storage diagnostic.
+// Preserve the Windows runtime sources and Action files for manual import.
 import { copyFileSync, mkdirSync, rmSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,14 +14,6 @@ const files = [
   ],
   ['integrations/streamerbot/droidcam/cam-pug.jpg', 'actions/droidcam/cam-pug.jpg'],
   ['integrations/streamerbot/droidcam/README.md', 'actions/droidcam/README.md'],
-  ['integrations/companion/start-companion.ts', 'start-companion.ts'],
-  ['integrations/companion/companion-processes.wsf', 'companion-processes.wsf'],
-  ['tooling/local/check-stream-stack-cli.ts', 'diagnostics/check-stream-stack-cli.ts'],
-  ['tooling/local/check-stream-stack.ts', 'diagnostics/check-stream-stack.ts'],
-  ['tooling/local/action-targets.ts', 'diagnostics/action-targets.ts'],
-  ['tooling/local/companion-storage.ts', 'diagnostics/companion-storage.ts'],
-  ['tooling/local/diagnostic-types.ts', 'diagnostics/diagnostic-types.ts'],
-  ['dist/diagnostics/compare-companion-storage.mjs', 'diagnostics/compare-companion-storage.mjs'],
   ['tooling/windows/runtime-README.md', 'README.md'],
   ['integrations/streamerbot/chat-sound/Action.cs', 'actions/chat-sound/Action.cs'],
   ['integrations/streamerbot/chat-sound/notif.mp3', 'actions/chat-sound/notif.mp3'],
@@ -42,40 +34,8 @@ const files = [
     'actions/donationalerts/DonationAlertsToggle.cs',
   ],
   [
-    'integrations/streamerbot/donationalerts/DonationGate.cs',
-    'actions/donationalerts/DonationGate.cs',
-  ],
-  [
-    'integrations/streamerbot/donationalerts/ModerationEngine.cs',
-    'actions/donationalerts/ModerationEngine.cs',
-  ],
-  [
-    'integrations/streamerbot/donationalerts/ModerationFiles.cs',
-    'actions/donationalerts/ModerationFiles.cs',
-  ],
-  [
-    'integrations/streamerbot/donationalerts/ModerationHost.cs',
-    'actions/donationalerts/ModerationHost.cs',
-  ],
-  [
-    'integrations/streamerbot/donationalerts/ModerationOutput.cs',
-    'actions/donationalerts/ModerationOutput.cs',
-  ],
-  [
-    'integrations/streamerbot/donationalerts/ModerationHistory.cs',
-    'actions/donationalerts/ModerationHistory.cs',
-  ],
-  [
-    'integrations/streamerbot/donationalerts/ModerationWebServer.cs',
-    'actions/donationalerts/ModerationWebServer.cs',
-  ],
-  [
-    'integrations/streamerbot/donationalerts/ModerationUI.cs',
-    'actions/donationalerts/ModerationUI.cs',
-  ],
-  [
-    'integrations/streamerbot/donationalerts/ModerationControl.cs',
-    'actions/donationalerts/ModerationControl.cs',
+    'integrations/streamerbot/donationalerts/DonationHandler_Default.cs',
+    'actions/donationalerts/DonationHandler_Default.cs',
   ],
   ['integrations/streamerbot/donationalerts/LICENSE', 'actions/donationalerts/LICENSE'],
   ['integrations/streamerbot/donationalerts/README.md', 'actions/donationalerts/README.md'],
@@ -83,17 +43,11 @@ const files = [
     'integrations/streamerbot/donationalerts/WebSocketMessages.cs',
     'actions/donationalerts/WebSocketMessages.cs',
   ],
-  ['integrations/streamerbot/obs-health/Check.cs', 'actions/obs-health/Check.cs'],
-  [
-    'integrations/streamerbot/obs-health/health-warning.mp3',
-    'actions/obs-health/health-warning.mp3',
-  ],
-  [
-    'integrations/streamerbot/obs-health/CompanionEndpoint.cs',
-    'actions/obs-health/CompanionEndpoint.cs',
-  ],
-  ['integrations/streamerbot/obs-health/AudioMeter.cs', 'actions/obs-health/AudioMeter.cs'],
-  ['integrations/streamerbot/obs-health/SoundToggle.cs', 'actions/obs-health/SoundToggle.cs'],
+  ['integrations/streamerbot/stream-deck/StreamToggle.cs', 'actions/stream-deck/StreamToggle.cs'],
+  ['integrations/streamerbot/stream-deck/RecordToggle.cs', 'actions/stream-deck/RecordToggle.cs'],
+  ['integrations/streamerbot/stream-deck/ReplaySave.cs', 'actions/stream-deck/ReplaySave.cs'],
+  ['integrations/streamerbot/stream-deck/VodStudio.cs', 'actions/stream-deck/VodStudio.cs'],
+  ['integrations/streamerbot/vod/VodLifecycle.cs', 'actions/vod/VodLifecycle.cs'],
 ] as const;
 
 rmSync(output, { force: true, recursive: true });

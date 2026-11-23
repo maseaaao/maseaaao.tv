@@ -86,71 +86,9 @@
       "extensions": [".png", ".webp", ".jpg", ".jpeg", ".ico", ".svg"]
     },
     {
-      "id": "system-microphone",
-      "path": "integrations/companion/system-microphone",
-      "files": [
-        {
-          "source": "dist/companion/system-microphone/local-system-microphone-{version}.tgz",
-          "target": "local-system-microphone-{version}.tgz"
-        }
-      ],
-      "build": "bun run --filter ./integrations/companion/system-microphone build && bun run --filter ./integrations/companion/system-microphone package",
-      "browser": false,
-      "dotnet": true,
-      "activation": "Package downloaded only. Export Companion settings, import TGZ and select the version in existing connections.",
-      "requires": {}
-    },
-    {
-      "id": "voice-stream",
-      "path": "integrations/companion/voice-control",
-      "files": [
-        {
-          "source": "dist/companion/voice-control/local-voice-stream-{version}.tgz",
-          "target": "local-voice-stream-{version}.tgz"
-        }
-      ],
-      "build": "bun run --filter ./integrations/companion/voice-control build && bun run --filter ./integrations/companion/voice-control package",
-      "browser": false,
-      "dotnet": true,
-      "activation": "Package downloaded only. Export Companion settings, import TGZ and select the version in existing connections.",
-      "requires": {}
-    },
-    {
       "id": "windows-integrations",
       "path": "tooling/windows",
       "files": [
-        {
-          "source": "dist/windows-integrations/start-companion.ts",
-          "target": "start-companion.ts"
-        },
-        {
-          "source": "dist/windows-integrations/companion-processes.wsf",
-          "target": "companion-processes.wsf"
-        },
-        {
-          "source": "dist/windows-integrations/diagnostics/check-stream-stack-cli.ts",
-          "target": "diagnostics/check-stream-stack-cli.ts"
-        },
-        {
-          "source": "dist/windows-integrations/diagnostics/check-stream-stack.ts",
-          "target": "diagnostics/check-stream-stack.ts"
-        },
-        {
-          "source": "dist/windows-integrations/diagnostics/action-targets.ts",
-          "target": "diagnostics/action-targets.ts"
-        },
-        {
-          "source": "dist/windows-integrations/diagnostics/companion-storage.ts",
-          "target": "diagnostics/companion-storage.ts"
-        },
-        {
-          "source": "dist/windows-integrations/diagnostics/diagnostic-types.ts",
-          "target": "diagnostics/diagnostic-types.ts"
-        },
-        {
-          "source": "dist/windows-integrations/diagnostics/compare-companion-storage.mjs",
-          "target": "diagnostics/compare-companion-storage.mjs"
-        },
         {
           "source": "dist/windows-integrations/README.md",
           "target": "README.md"
@@ -180,46 +118,6 @@
           "target": "actions/donationalerts/DonationAlertsToggle.cs"
         },
         {
-          "source": "dist/windows-integrations/actions/donationalerts/DonationGate.cs",
-          "target": "actions/donationalerts/DonationGate.cs"
-        },
-        {
-          "source": "dist/windows-integrations/actions/donationalerts/ModerationEngine.cs",
-          "target": "actions/donationalerts/ModerationEngine.cs"
-        },
-        {
-          "source": "dist/windows-integrations/actions/donationalerts/ModerationFiles.cs",
-          "target": "actions/donationalerts/ModerationFiles.cs"
-        },
-        {
-          "source": "dist/windows-integrations/actions/donationalerts/ModerationHost.cs",
-          "target": "actions/donationalerts/ModerationHost.cs"
-        },
-        {
-          "source": "dist/windows-integrations/actions/donationalerts/ModerationOutput.cs",
-          "target": "actions/donationalerts/ModerationOutput.cs"
-        },
-        {
-          "source": "dist/windows-integrations/actions/donationalerts/ModerationHistory.cs",
-          "target": "actions/donationalerts/ModerationHistory.cs"
-        },
-        {
-          "source": "dist/windows-integrations/actions/donationalerts/ModerationWebServer.cs",
-          "target": "actions/donationalerts/ModerationWebServer.cs"
-        },
-        {
-          "source": "dist/windows-integrations/actions/donationalerts/ModerationUI.cs",
-          "target": "actions/donationalerts/ModerationUI.cs"
-        },
-        {
-          "source": "dist/windows-integrations/actions/donationalerts/ModerationControl.cs",
-          "target": "actions/donationalerts/ModerationControl.cs"
-        },
-        {
-          "source": "dist/moderation-dock/index.html",
-          "target": "custom/moderation/index.html"
-        },
-        {
           "source": "dist/windows-integrations/actions/donationalerts/LICENSE",
           "target": "actions/donationalerts/LICENSE"
         },
@@ -232,30 +130,34 @@
           "target": "actions/donationalerts/WebSocketMessages.cs"
         },
         {
-          "source": "dist/windows-integrations/actions/obs-health/Check.cs",
-          "target": "actions/obs-health/Check.cs"
+          "source": "dist/windows-integrations/actions/donationalerts/DonationHandler_Default.cs",
+          "target": "actions/donationalerts/DonationHandler_Default.cs"
         },
         {
-          "source": "dist/windows-integrations/actions/obs-health/health-warning.mp3",
-          "target": "actions/obs-health/health-warning.mp3"
+          "source": "dist/windows-integrations/actions/stream-deck/StreamToggle.cs",
+          "target": "actions/stream-deck/StreamToggle.cs"
         },
         {
-          "source": "dist/windows-integrations/actions/obs-health/CompanionEndpoint.cs",
-          "target": "actions/obs-health/CompanionEndpoint.cs"
+          "source": "dist/windows-integrations/actions/stream-deck/RecordToggle.cs",
+          "target": "actions/stream-deck/RecordToggle.cs"
         },
         {
-          "source": "dist/windows-integrations/actions/obs-health/AudioMeter.cs",
-          "target": "actions/obs-health/AudioMeter.cs"
+          "source": "dist/windows-integrations/actions/stream-deck/ReplaySave.cs",
+          "target": "actions/stream-deck/ReplaySave.cs"
         },
         {
-          "source": "dist/windows-integrations/actions/obs-health/SoundToggle.cs",
-          "target": "actions/obs-health/SoundToggle.cs"
+          "source": "dist/windows-integrations/actions/stream-deck/VodStudio.cs",
+          "target": "actions/stream-deck/VodStudio.cs"
+        },
+        {
+          "source": "dist/windows-integrations/actions/vod/VodLifecycle.cs",
+          "target": "actions/vod/VodLifecycle.cs"
         }
       ],
-      "build": "bun run build:moderation && bun run build:windows && bun tooling/bundle-release.ts --validate-catalog",
+      "build": "bun run build:windows && bun tooling/bundle-release.ts --validate-catalog",
       "browser": false,
       "dotnet": false,
-      "activation": "Set STREAMERBOT_ROOT explicitly. Update launcher and Action paths once; no automatic application reconfiguration.",
+      "activation": "Import the C# actions manually. No automatic application reconfiguration.",
       "requires": {},
       "versionFile": "tooling/windows/version.json"
     },

@@ -82,6 +82,9 @@ function roleText(role: 'status' | 'alert', text: string): HTMLElement | null {
 function options(): HTMLButtonElement[] {
   return Array.from(document.querySelectorAll<HTMLButtonElement>('[role="option"]'));
 }
+function platformCard(platform: 'Twitch' | 'YouTube'): HTMLElement {
+  return required(document.querySelector<HTMLElement>(`section[aria-label="${platform}"]`));
+}
 function categoryOption(index = 0): HTMLButtonElement {
   return required(options()[index]);
 }
@@ -124,7 +127,7 @@ interface ControlledAction {
 // Keep the existing client mock, but separate transport ACK from CodeEvent.
 // Install before mounting so each client retains its own registered event handler.
 function controlActions(
-  command: 'saveTemplates' | 'updateTwitch' | 'runPreset',
+  command: 'saveTemplates' | 'updateTwitch' | 'updateYouTube' | 'runPreset',
 ): ControlledAction[] {
   type Client = InstanceType<typeof StreamerbotClient>;
   type Handler = Parameters<Client['on']>[1];
@@ -163,7 +166,7 @@ function controlActions(
           required(handlers.get(this))({
             data: {
               args: {
-                apiVersion: 5,
+                apiVersion: 6,
                 command: textValue(args.command),
                 data: {},
                 error: null,
@@ -183,7 +186,12 @@ function controlActions(
 function savedTemplateResponse(template: string): Record<string, unknown> {
   return {
     data: {
-      templates: { configured: true, subtitle: 'Старт', twitchTemplate: template },
+      templates: {
+        configured: true,
+        subtitle: 'Старт',
+        twitchTemplate: template,
+        youtubeTemplate: '🔴 $s| !tw',
+      },
     },
   };
 }
@@ -930,19 +938,23 @@ describe('Stream Info DOM interactions', () => {
   it('uses availability as well as selection and gives Twitch the correct unavailable reason', async () => {
     mockStreamerbot.state.twitch.connected = false;
     await boot();
-    expect(button('Применить изменения').disabled).toBe(true);
-    expect(button('Применить изменения').disabled).toBe(true);
-    expect(required(document.querySelectorAll('.inline-editor')[0]).textContent).toContain(
+    // YouTube is still live, so the combined save stays available for it.
+    expect(button('Применить изменения').disabled).toBe(false);
+    expect(required(document.querySelector('section[aria-label="Twitch"]')).textContent).toContain(
       'Аккаунт не подключён',
     );
+    mockStreamerbot.state.youtube.connected = false;
+    await click('Обновить данные');
+    await flush();
+    expect(button('Применить изменения').disabled).toBe(true);
   });
 
   it('renders stream editors directly on the main page without editor modals', async () => {
     await boot();
     expect(buttons('Изменить всё')[0] ?? null).toBeNull();
     expect(buttons('Изменить Twitch')[0] ?? null).toBeNull();
-    expect(document.querySelectorAll('.inline-editor')).toHaveLength(1);
-    expect(buttons('По шаблону')).toHaveLength(0);
+    expect(document.querySelectorAll('.inline-editor')).toHaveLength(2);
+    expect(buttons('По шаблону')).toHaveLength(2);
     await setValue('Название', 'Inline Twitch title');
     expect(document.querySelector('[role="dialog"]')).toBeNull();
     expect(queryField('Название')?.value).toBe('Inline Twitch title');
@@ -1512,8 +1524,8 @@ describe('Stream Info DOM interactions', () => {
     await boot();
     const title = await setValue('Название', 'x'.repeat(141));
     expect(title.getAttribute('aria-invalid')).toBe('true');
-    expect(title.getAttribute('aria-describedby')).toContain('title-error');
-    expect(document.getElementById('title-error')?.textContent).toContain('140');
+    expect(title.getAttribute('aria-describedby')).toContain('subtitle-error');
+    expect(document.getElementById('subtitle-error')?.textContent).toContain('140');
     const tag = await setValue('Добавить тег', 'Invalid tag');
     await click('Добавить тег');
     expect(tag.getAttribute('aria-invalid')).toBe('true');
@@ -1524,7 +1536,7 @@ describe('Stream Info DOM interactions', () => {
     await click('Удалить тег: Invalid tag');
     expect(title.hasAttribute('aria-invalid')).toBe(false);
     expect(tag.hasAttribute('aria-invalid')).toBe(false);
-    expect(document.getElementById('title-error')?.textContent).toBe('');
+    expect(document.getElementById('subtitle-error')?.textContent).toBe('');
     expect(document.getElementById('tag-error')?.textContent).toBe('');
     expect(button('Применить изменения').disabled).toBe(false);
   });
@@ -1651,20 +1663,124 @@ describe('Stream Info DOM interactions', () => {
     expect(commands()).toEqual(['getState']);
   });
 
-  it('renders a single platform and sends only its metadata and template', async () => {
+  it('edits YouTube title and category while shared tags reach both platforms', async () => {
     await boot();
-    expect(document.querySelectorAll('.platform-card')).toHaveLength(1);
-    await setValue('Название', 'Twitch only');
+    const youtube = platformCard('YouTube');
+    const full = required(
+      Array.from(youtube.querySelectorAll('button')).find(
+        (candidate) => candidate.textContent === 'Полное название',
+      ),
+    );
+    full.click();
+    await nextTick();
+    const title = required(youtube.querySelector<HTMLInputElement>('input[name="title"]'));
+    title.value = 'YouTube only';
+    title.dispatchEvent(new Event('input', { bubbles: true }));
+    await nextTick();
+    const select = required(youtube.querySelector('select'));
+    select.value = 'Музыка';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    await nextTick();
+    const tag = field('Добавить тег');
+    tag.value = 'гайд';
+    tag.dispatchEvent(new Event('input', { bubbles: true }));
+    await nextTick();
+    await click('Добавить тег');
+    await click('Применить изменения');
+    await flush();
+    const youtubeUpdate = mockStreamerbot.actionCalls.find(
+      (call) => call.args.command === 'updateYouTube',
+    );
+    expect(JSON.parse(textValue(youtubeUpdate?.args.payloadJson))).toMatchObject({
+      categoryName: 'Музыка',
+      tags: ['PUBG', 'гайд'],
+      title: 'YouTube only',
+    });
+    const twitchUpdate = mockStreamerbot.actionCalls.find(
+      (call) => call.args.command === 'updateTwitch',
+    );
+    expect(JSON.parse(textValue(twitchUpdate?.args.payloadJson))).toEqual({
+      tags: ['PUBG', 'гайд'],
+    });
+  });
+
+  it('uses the current Twitch category through $g in the YouTube template', async () => {
+    await boot();
+    await setValue('Шаблон YouTube', '$g | $s');
+    await setValue('Название', 'Рейтинг');
+    await click('Применить изменения');
+    await flush();
+    const update = mockStreamerbot.actionCalls.find(
+      (call) => call.args.command === 'updateYouTube',
+    );
+    expect(JSON.parse(textValue(update?.args.payloadJson))).toMatchObject({
+      title: 'PUBG: BATTLEGROUNDS | Рейтинг',
+    });
+  });
+
+  it('starts the YouTube category list with Gaming', async () => {
+    await boot();
+    const categoryOptions = Array.from(platformCard('YouTube').querySelectorAll('select option'));
+    expect(categoryOptions[1]?.textContent).toBe('Видеоигры');
+  });
+
+  it('disables YouTube editing until its broadcast is live', async () => {
+    mockStreamerbot.state.youtube.live = false;
+    mockStreamerbot.state.youtube.broadcastId = '';
+    await boot();
+    const youtube = platformCard('YouTube');
+    expect(youtube.textContent).toContain('YouTube не в эфире');
+    expect(youtube.querySelector('fieldset')?.hasAttribute('disabled')).toBe(true);
+    expect(button('Применить изменения').disabled).toBe(false);
+  });
+
+  it('rejects an invalid YouTube template before saving', async () => {
+    await boot();
+    await setValue('Шаблон YouTube', 'Без токена');
+    expect(button('Применить изменения').disabled).toBe(true);
+  });
+
+  it('saves templates even while both platforms are offline', async () => {
+    mockStreamerbot.state.twitch.connected = false;
+    mockStreamerbot.state.youtube.connected = false;
+    mockStreamerbot.state.youtube.live = false;
+    mockStreamerbot.state.youtube.broadcastId = '';
+    await boot();
+    await setValue('Шаблон Twitch', 'Offline $s');
+    expect(button('Применить изменения').disabled).toBe(false);
+    await click('Применить изменения');
+    await flush();
+    const save = mockStreamerbot.actionCalls.find((call) => call.args.command === 'saveTemplates');
+    expect(parseRecord(textValue(save?.args.payloadJson))).toMatchObject({
+      twitchTemplate: 'Offline $s',
+      youtubeTemplate: '🔴 $s| !tw',
+    });
+    expect(
+      mockStreamerbot.actionCalls.some(
+        (call) => call.args.command === 'updateTwitch' || call.args.command === 'updateYouTube',
+      ),
+    ).toBe(false);
+  });
+
+  it('renders both platforms and sends metadata and templates for both', async () => {
+    await boot();
+    expect(document.querySelectorAll('.platform-card')).toHaveLength(2);
     await setValue('Название', 'Updated');
     await click('Применить изменения');
     await flush();
     const calls = mockStreamerbot.actionCalls.filter((call) => call.args.command !== 'getState');
-    expect(calls.map((call) => call.args.command)).toEqual(['saveTemplates', 'updateTwitch']);
+    expect(calls.map((call) => call.args.command)).toEqual([
+      'saveTemplates',
+      'updateTwitch',
+      'updateYouTube',
+    ]);
     expect(Object.keys(parseRecord(textValue(calls[0]?.args.payloadJson))).sort()).toEqual([
       'subtitle',
       'twitchTemplate',
+      'youtubeTemplate',
     ]);
     expect(Object.keys(parseRecord(textValue(calls[1]?.args.payloadJson)))).toEqual(['title']);
+    expect(Object.keys(parseRecord(textValue(calls[2]?.args.payloadJson)))).toEqual(['title']);
   });
 
   it('renders showcase data without opening a Streamer.bot connection in demo mode', async () => {

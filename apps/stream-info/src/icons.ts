@@ -16,6 +16,7 @@ import sun from 'lucide-static/icons/sun.svg?raw';
 import warning from 'lucide-static/icons/triangle-alert.svg?raw';
 import close from 'lucide-static/icons/x.svg?raw';
 import twitch from 'simple-icons/icons/twitch.svg?raw';
+import youtube from 'simple-icons/icons/youtube.svg?raw';
 
 const SVGBOUNDARY_RE = /<svg\b([^>]*)>/;
 const TITLE_TITLE_RE = /<title>.*?<\/title>/;
@@ -40,7 +41,7 @@ const uiSources = {
   warning,
 } as const;
 
-const brandSources = { twitch } as const;
+const brandSources = { twitch, youtube } as const;
 
 export type UiIcon = keyof typeof uiSources;
 export type BrandIcon = keyof typeof brandSources;
@@ -60,8 +61,8 @@ function decorate(source: string, className: string): string {
 export type AppIcon = UiIcon | BrandIcon;
 
 export function anyIcon(name: AppIcon): string {
-  if (name === 'twitch') {
-    return brandIcon('twitch');
+  if (name === 'twitch' || name === 'youtube') {
+    return brandIcon(name);
   }
   return uiIcon(name);
 }

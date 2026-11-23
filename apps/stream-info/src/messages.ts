@@ -13,6 +13,7 @@ const messages = {
   category: 'Категория',
   categoryMore: 'Показать ещё',
   categoryPartial: 'Результаты неполные.',
+  categoryPlaceholder: 'Выберите категорию',
   categoryResultCount: 'Результатов: {count}',
   categoryRetry: 'Повторить поиск',
   categorySearch: 'Начните вводить название или ID',
@@ -100,6 +101,7 @@ const messages = {
   twitchTagsTooMany: 'Twitch: максимум 10 тегов.',
   twitchTemplate: 'Шаблон Twitch',
   twitchTemplateToken: 'Шаблон Twitch ($s)',
+  twitchTemplateValidation: 'Шаблон Twitch: нужен ровно один $s.',
   twitchTitleRequired: 'Название Twitch обязательно.',
   twitchTitleTooLong: 'Название Twitch: максимум 140 символов.',
   unchanged: 'Нет изменений',
@@ -108,6 +110,17 @@ const messages = {
   updated: 'Обновлено:',
   updateFailed: 'Не удалось изменить {platform}',
   updating: 'Выполняется обновление',
+  youtubeChangesFailed: 'Изменения YouTube не применены.',
+  youtubeNotStarted:
+    'YouTube не в эфире. Запустите трансляцию, чтобы менять название, категорию и теги.',
+  youtubeTagsInvalid: 'Теги YouTube не должны повторяться.',
+  youtubeTagsTooLong: 'Общий размер тегов YouTube — до 500 символов.',
+  youtubeTemplate: 'Шаблон YouTube',
+  youtubeTemplateToken: 'Шаблон YouTube ($s)',
+  youtubeTemplateValidation: 'Шаблон YouTube: нужен ровно один $s.',
+  youtubeTitleInvalid: 'Название YouTube не должно содержать < или >.',
+  youtubeTitleRequired: 'Название YouTube обязательно.',
+  youtubeTitleTooLong: 'Название YouTube: максимум 100 символов.',
 } as const;
 
 export function t(
