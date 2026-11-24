@@ -721,7 +721,6 @@ button:focus-visible,
 }
 .stage__inner {
   width: 100%;
-  max-width: 840px;
   container-type: inline-size;
 }
 .stage h1 {
@@ -734,6 +733,7 @@ button:focus-visible,
   letter-spacing: -0.06em;
   white-space: nowrap;
 }
+/* Полоса тянется по всей ширине сцены, а не только под ником. */
 .stage__rule {
   height: 1px;
   margin-top: clamp(20px, 3vw, 32px);
@@ -744,6 +744,7 @@ button:focus-visible,
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+  max-width: 840px;
   margin-top: clamp(24px, 4vw, 48px);
 }
 .stage__actions > .cta {
@@ -1046,8 +1047,13 @@ button:focus-visible,
     min-height: 100svh;
   }
   .stage {
+    --stage-pad: clamp(24px, 5vw, 40px);
     align-items: flex-start;
-    padding: 36px clamp(24px, 5vw, 40px) 28px;
+    padding: 36px var(--stage-pad) 28px;
+  }
+  /* На телефоне полоса выходит к краям экрана. */
+  .stage__rule {
+    margin-inline: calc(-1 * var(--stage-pad));
   }
   .sheet {
     align-self: stretch;
