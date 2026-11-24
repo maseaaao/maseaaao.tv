@@ -12,7 +12,7 @@ const files = [
     'integrations/streamerbot/droidcam/CameraPresentation.cs',
     'actions/droidcam/CameraPresentation.cs',
   ],
-  ['integrations/streamerbot/droidcam/cam-pug.jpg', 'actions/droidcam/cam-pug.jpg'],
+  ['integrations/streamerbot/droidcam/cam-pug.webp', 'actions/droidcam/cam-pug.webp'],
   ['integrations/streamerbot/droidcam/README.md', 'actions/droidcam/README.md'],
   ['tooling/windows/runtime-README.md', 'README.md'],
   ['integrations/streamerbot/chat-sound/Action.cs', 'actions/chat-sound/Action.cs'],

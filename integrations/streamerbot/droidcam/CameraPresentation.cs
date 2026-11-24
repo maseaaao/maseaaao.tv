@@ -110,8 +110,8 @@ public sealed class CameraPresentation
     private int EnsureUnderlay(string scene, string name, JObject camera, JArray items)
     {
         foreach (JObject item in items) if ((string)item["sourceName"] == name) return (int)item["sceneItemId"];
-        string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "custom", "assets", "camera", "cam-pug.jpg");
-        if (!File.Exists(path)) throw new FileNotFoundException("Install custom/assets/camera/cam-pug.jpg before configuring camera presentation.");
+        string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "custom", "assets", "camera", "cam-pug.webp");
+        if (!File.Exists(path)) throw new FileNotFoundException("Install custom/assets/camera/cam-pug.webp before configuring camera presentation.");
         int id;
         bool exists = false;
         foreach (JObject input in (JArray)Obs("GetInputList", new JObject())["inputs"]) if ((string)input["inputName"] == name) exists = true;

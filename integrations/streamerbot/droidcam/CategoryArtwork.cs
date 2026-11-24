@@ -47,7 +47,7 @@ public class CPHInline
                 if (broadcaster == null) return false;
                 var channel = First(GetTwitch("channels?broadcaster_id=" + Uri.EscapeDataString(broadcaster.UserId)));
                 category = (string)channel["game_id"] ?? "";
-                string placeholder = Path.Combine(DirectoryPath, "cam-pug.jpg");
+                string placeholder = Path.Combine(DirectoryPath, "cam-pug.webp");
                 if (string.IsNullOrEmpty(category))
                 {
                     Use(placeholder, category);
@@ -86,7 +86,7 @@ public class CPHInline
             {
                 // A failed category change must never leave the previous game's image on screen.
                 if (category != LastCategory)
-                    try { Use(Path.Combine(DirectoryPath, "cam-pug.jpg"), category); } catch (Exception) { }
+                    try { Use(Path.Combine(DirectoryPath, "cam-pug.webp"), category); } catch (Exception) { }
                 CPH.LogWarn("Category artwork unavailable; check the IGDB credentials, network and OBS image source.");
                 return false;
             }

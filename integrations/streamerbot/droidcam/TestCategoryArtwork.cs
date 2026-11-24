@@ -83,7 +83,7 @@ internal static class TestCategoryArtwork
             var http = new FakeArtworkHttp();
             using (var bitmap = new Bitmap(2560, 1440))
             using (var stream = new MemoryStream()) { bitmap.Save(stream, ImageFormat.Jpeg); http.Image = stream.ToArray(); }
-            string placeholder = Path.Combine(directory, "cam-pug.jpg");
+            string placeholder = Path.Combine(directory, "cam-pug.webp");
             File.WriteAllBytes(placeholder, http.Image);
             CPHInline.AssetDirectoryOverride = directory;
             CPHInline.CredentialOverride = name => "fake-credential";
