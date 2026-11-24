@@ -711,7 +711,6 @@ button:focus-visible,
   grid-template-columns: minmax(0, 1fr) clamp(400px, 42%, 560px);
   width: 100%;
   min-height: 100svh;
-  padding: 24px;
   background: var(--color-canvas);
 }
 .stage {
@@ -740,11 +739,16 @@ button:focus-visible,
   margin-top: clamp(20px, 3vw, 32px);
   background: color-mix(in srgb, var(--color-surface) 30%, transparent);
 }
+/* Кнопки делят строку, пока им хватает места; иначе встают друг под другом. */
 .stage__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
   margin-top: clamp(24px, 4vw, 48px);
+}
+.stage__actions > .cta {
+  flex: 1 1 224px;
+  min-width: min(100%, 224px);
 }
 .cta {
   display: inline-flex;
@@ -766,10 +770,51 @@ button:focus-visible,
     border-color var(--motion-feedback) var(--motion-ease-state),
     transform var(--motion-enter) var(--motion-ease-spring);
 }
-.cta--primary {
-  min-width: 336px;
+/* Двойная кнопка эфира: подпись одна, платформы — по краям формы. */
+.watch {
+  display: flex;
+  flex: 1 1 346px;
+  min-width: min(100%, 346px);
   color: var(--color-text);
   background: var(--color-surface);
+  border-radius: 12px;
+}
+.watch__main,
+.watch__alt {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  min-height: 84px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1;
+  color: inherit;
+  letter-spacing: -0.025em;
+  text-decoration: none;
+  transition:
+    color var(--motion-feedback) var(--motion-ease-state),
+    background-color var(--motion-feedback) var(--motion-ease-state);
+}
+.watch__main {
+  flex: 1;
+  padding: 0 26px;
+  border-radius: 12px 0 0 12px;
+}
+.watch__alt {
+  padding: 0 22px;
+  border-radius: 0 12px 12px 0;
+  box-shadow: inset 1px 0 0 var(--color-border);
+}
+.watch__label {
+  white-space: nowrap;
+}
+.watch__icon {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  fill: currentcolor;
 }
 .cta--ghost {
   min-width: 224px;
@@ -779,7 +824,9 @@ button:focus-visible,
 .stage a:focus-visible {
   outline-color: var(--color-surface);
 }
-.cta:active {
+.cta:active,
+.watch__main:active,
+.watch__alt:active {
   color: var(--color-action-text);
   background: var(--color-action-surface);
   border-color: var(--color-action-surface);
@@ -804,10 +851,15 @@ button:focus-visible,
     transform: translateY(1px) scale(var(--motion-press-scale));
     transition-duration: var(--motion-press);
   }
+  .watch__main:active,
+  .watch__alt:active {
+    transform: translateY(1px) scale(var(--motion-press-scale));
+  }
 }
 @media (hover: hover) {
-  .cta--primary:hover,
-  .cta--ghost:hover {
+  .cta--ghost:hover,
+  .watch__alt:hover,
+  .watch__main:hover {
     color: var(--color-action-text);
     background: var(--color-action-surface);
     border-color: var(--color-action-surface);
@@ -816,11 +868,11 @@ button:focus-visible,
 .sheet {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  align-self: center;
   min-width: 0;
-  padding: 32px 48px 24px;
+  padding: 28px 40px 24px;
   background: var(--color-surface);
-  border-radius: 24px;
+  border-radius: 24px 0 0 24px;
 }
 .index {
   display: flex;
@@ -909,17 +961,29 @@ button:focus-visible,
 }
 .contact__links {
   display: grid;
-  gap: 4px;
 }
+/* Строка целиком — цель клика: высота 44 px и вся ширина панели. */
 .contact__links a {
-  font-family: var(--font-body);
-  font-size: 15px;
-  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  font-family: var(--font-display);
+  font-size: 17px;
+  line-height: 1.4;
   color: var(--color-brand);
-  text-underline-offset: 0.18em;
+  letter-spacing: -0.02em;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.34em;
+  transition: color var(--motion-feedback) var(--motion-ease-state);
+}
+@media (hover: hover) {
+  .contact__links a:hover {
+    color: var(--color-text);
+  }
 }
 .domain {
-  margin-top: 18px;
+  padding-top: 18px;
+  margin-top: auto;
   font-family: var(--font-body);
   font-size: 10px;
   color: var(--color-muted);
@@ -928,30 +992,44 @@ button:focus-visible,
 }
 @container (width <= 572px) {
   .stage__actions {
-    flex-direction: column;
     gap: 10px;
   }
   .cta {
-    width: 100%;
-    min-width: 0;
     min-height: 64px;
     font-size: 17px;
+  }
+  .watch__main,
+  .watch__alt {
+    min-height: 64px;
+    font-size: 16px;
+  }
+  .watch__main {
+    gap: 8px;
+    padding: 0 14px;
+  }
+  .watch__alt {
+    padding: 0 16px;
+  }
+  .watch__icon {
+    width: 20px;
+    height: 20px;
   }
 }
 @media (width <= 1024px) {
   .landing {
+    grid-template-rows: auto 1fr;
     grid-template-columns: minmax(0, 1fr);
-    gap: 12px;
-    min-height: 0;
-    padding: 12px;
+    gap: 0;
+    min-height: 100svh;
   }
   .stage {
     align-items: flex-start;
     padding: 16px 8px 20px;
   }
   .sheet {
-    padding: 12px 20px 24px;
-    border-radius: 18px;
+    align-self: stretch;
+    padding: 8px 20px 24px;
+    border-radius: 18px 18px 0 0;
   }
   .index-row {
     min-height: 62px;
@@ -962,7 +1040,9 @@ button:focus-visible,
 }
 @media (forced-colors: active) {
   .cta,
-  .index-row {
+  .index-row,
+  .watch__main,
+  .watch__alt {
     border: 1px solid ButtonText;
   }
 }
