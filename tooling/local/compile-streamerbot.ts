@@ -39,6 +39,7 @@ const sources = {
   StreamDeckRecord: ['integrations/streamerbot/stream-deck/RecordToggle.cs'],
   StreamDeckReplay: ['integrations/streamerbot/stream-deck/ReplaySave.cs'],
   StreamDeckStream: ['integrations/streamerbot/stream-deck/StreamToggle.cs'],
+  StreamDeckTwitchClip: ['integrations/streamerbot/stream-deck/TwitchClip.cs'],
   StreamDeckVod: ['integrations/streamerbot/stream-deck/VodStudio.cs'],
   StreamInfo: [
     'apps/stream-info/streamerbot/action.cs',
