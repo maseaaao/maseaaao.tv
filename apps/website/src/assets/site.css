@@ -890,9 +890,6 @@ button:focus-visible,
   border-bottom: 1px solid var(--color-border);
   transition: color var(--motion-feedback) var(--motion-ease-state);
 }
-.index-row:last-child {
-  border-bottom: 0;
-}
 .row__icon {
   display: block;
   width: 20px;
@@ -945,10 +942,10 @@ button:focus-visible,
     }
   }
 }
+/* Линия ряда TikTok закрывает список; отдельная полоса над контактами
+   дублировала её и давала двойной отступ. */
 .contact {
   padding-top: 24px;
-  margin-top: 28px;
-  border-top: 1px solid var(--color-border);
 }
 .contact__label {
   margin: 0 0 8px;
@@ -981,14 +978,40 @@ button:focus-visible,
     color: var(--color-text);
   }
 }
-.domain {
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
   padding-top: 18px;
   margin-top: auto;
+}
+.domain {
   font-family: var(--font-body);
   font-size: 10px;
   color: var(--color-muted);
   text-transform: uppercase;
   letter-spacing: 0.18em;
+}
+.foot__mark {
+  flex: none;
+  width: 11px;
+  height: 11px;
+  color: var(--color-brand);
+  fill: currentcolor;
+}
+.foot__link {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--color-muted);
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  transition: color var(--motion-feedback) var(--motion-ease-state);
+}
+@media (hover: hover) {
+  .foot__link:hover {
+    color: var(--color-brand);
+  }
 }
 @container (width <= 572px) {
   .stage__actions {
@@ -1015,7 +1038,7 @@ button:focus-visible,
     height: 20px;
   }
 }
-@media (width <= 1024px) {
+@media (width <= 900px) {
   .landing {
     grid-template-rows: auto 1fr;
     grid-template-columns: minmax(0, 1fr);
@@ -1024,11 +1047,11 @@ button:focus-visible,
   }
   .stage {
     align-items: flex-start;
-    padding: 16px 8px 20px;
+    padding: 36px clamp(24px, 5vw, 40px) 28px;
   }
   .sheet {
     align-self: stretch;
-    padding: 8px 20px 24px;
+    padding: 12px clamp(24px, 5vw, 40px) 24px;
     border-radius: 18px 18px 0 0;
   }
   .index-row {
@@ -1036,6 +1059,14 @@ button:focus-visible,
   }
   .index-row__name {
     font-size: 17px;
+  }
+  /* На высокой странице контакты и подпись прижимаются к нижнему краю,
+     а свободное место остаётся между списком и контактами. */
+  .contact {
+    margin-top: auto;
+  }
+  .foot {
+    margin-top: 0;
   }
 }
 @media (forced-colors: active) {
