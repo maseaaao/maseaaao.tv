@@ -29,7 +29,7 @@ for (const name of ['maseaaao']) {
   // biome-ignore lint/performance/noAwaitInLoops: Process assets sequentially to bound Chromium and image encoder memory.
   const image = await sharp(logo)
     .resize(1920, 540, { background: { alpha: 0, b: 19, g: 17, r: 17 }, fit: 'contain' })
-    .webp({ lossless: true })
+    .webp({ effort: 6, quality: 98 })
     .toBuffer();
   await fs.writeFile(path.join(output, name + '.webp'), image);
 }
@@ -54,7 +54,7 @@ for (const size of [1024, 512, 256]) {
   if (size === 1024) {
     await fs.writeFile(
       path.join(output, 'logo-circle.webp'),
-      await sharp(circle).webp({ lossless: true }).toBuffer(),
+      await sharp(circle).webp({ effort: 6, quality: 98 }).toBuffer(),
     );
   }
 }

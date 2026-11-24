@@ -9,13 +9,15 @@ HTML/CSS композиций — исходники; корневые `dist/art
 | --------------------------------- | -------------------------------------------------------------------------- |
 | `bun run build:artwork`           | Автономные HTML в `dist/artwork/html`, без растров                         |
 | `bun run render:logo`             | Производные аватара и QR со знаком в центре                                |
-| `bun run render:scenes`           | Сцены OBS из `scenes/layout.json`                                          |
+| `bun run render:scenes`           | Сцены OBS из `scenes/layout.json` и статичный блок соцсетей                |
 | `bun run render:artwork <группа>` | `banners`, `panels`, `wallpapers`, `brand` или `favicon`; без группы — все |
 | `bun run render:all`              | Полный экспорт изображений                                                 |
 | `bun run --cwd artwork test`      | Внутренние тесты сцен и геометрии без экспорта                             |
 
-Обои экспортируются в двух размерах: `desktop-4k.png` / `desktop-1080p.png` и
-`portrait-4k.png` / `portrait-1080p.png`; композиция масштабируется вместе с холстом.
+Обои экспортируются в размерах 4K и 2K, каждый в WebP и JPEG: `desktop-4k.webp` /
+`desktop-4k.jpeg`, `desktop-2k.webp` / `desktop-2k.jpeg`, `portrait-4k.webp` /
+`portrait-4k.jpeg`, `portrait-2k.webp` / `portrait-2k.jpeg`; композиция масштабируется
+вместе с холстом.
 Рендер готовит HTML сам; `--prepared` пропускает подготовку, если она уже выполнена.
 `dist/artwork/brand/website` — источник изображений сайта для `build:website`.
 `logo/mark.svg` — векторный мастер знака 512×512. Заливки прописаны конкретными

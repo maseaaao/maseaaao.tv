@@ -8,7 +8,7 @@
 }
 .wallpaper-icon {
   display: block;
-  /* 640px at 3840×2160; keeps the same share of the canvas at 1920×1080. */
+  /* 640px at 3840×2160; keeps the same share of the canvas at 2048×1152. */
   width: min(16.6666667vw, 29.6296296vh);
   height: min(16.6666667vw, 29.6296296vh);
   overflow: visible;
@@ -17,7 +17,7 @@
 
 @media (orientation: portrait) {
   .wallpaper-icon {
-    /* 820px at 2160×3840; keeps the same share of the canvas at 1080×1920. */
+    /* 820px at 2160×3840; keeps the same share of the canvas at 1152×2048. */
     width: min(37.962963vw, 21.3541667vh);
     height: min(37.962963vw, 21.3541667vh);
     transform: translateY(-1.875vh);

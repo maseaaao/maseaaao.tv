@@ -125,30 +125,24 @@ try {
     await fs.unlink(path.join(root, 'dist/artwork/brand/website/icon-master.png'));
   }
   if (requested === 'all' || requested === 'wallpapers') {
-    await render(
-      'artwork/wallpapers/desktop-4k.html',
-      'artwork/wallpapers/desktop-4k.png',
-      3840,
-      2160,
-    );
-    await render(
-      'artwork/wallpapers/desktop-4k.html',
-      'artwork/wallpapers/desktop-1080p.png',
-      1920,
-      1080,
-    );
-    await render(
-      'artwork/wallpapers/portrait-4k.html',
-      'artwork/wallpapers/portrait-4k.png',
-      2160,
-      3840,
-    );
-    await render(
-      'artwork/wallpapers/portrait-4k.html',
-      'artwork/wallpapers/portrait-1080p.png',
-      1080,
-      1920,
-    );
+    await fs.rm(path.join(root, 'dist/artwork/wallpapers'), { force: true, recursive: true });
+    for (const [html, name, width, height] of [
+      ['desktop-4k.html', 'desktop-4k', 3840, 2160],
+      ['desktop-4k.html', 'desktop-2k', 2048, 1152],
+      ['portrait-4k.html', 'portrait-4k', 2160, 3840],
+      ['portrait-4k.html', 'portrait-2k', 1152, 2048],
+    ] as const) {
+      for (const format of ['webp', 'jpeg'] as const) {
+        // biome-ignore lint/performance/noAwaitInLoops: Process assets sequentially to bound Chromium and image encoder memory.
+        await render(
+          'artwork/wallpapers/' + html,
+          'artwork/wallpapers/' + name + '.' + format,
+          width,
+          height,
+          format,
+        );
+      }
+    }
   }
 } finally {
   await browser.close();

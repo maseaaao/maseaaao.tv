@@ -83,6 +83,15 @@
       "copy": ""
     }
   ],
+  "blocks": [
+    {
+      "name": "social",
+      "file": "blocks/social-strip.html",
+      "rendered": "social-1080x55.webp",
+      "width": 1080,
+      "height": 55
+    }
+  ],
   "horizontal": {
     "canvas": [2560, 1440],
     "chat": [1740, 330, 640, 640],

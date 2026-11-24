@@ -27,6 +27,21 @@ test('social source viewports match every planned scene without stretching or st
   });
 });
 
+test('social block image follows the horizontal camera viewport', () => {
+  expect(layout.blocks).toEqual([
+    {
+      file: 'blocks/social-strip.html',
+      height: 55,
+      name: 'social',
+      rendered: 'social-1080x55.webp',
+      width: 1080,
+    },
+  ]);
+  expect([layout.blocks[0].width, layout.blocks[0].height]).toEqual(
+    layout.socialSources['horizontal-camera'].viewport,
+  );
+});
+
 test('root test includes artwork and widget tests without a build or export', async () => {
   const root = JSON.parse(await readFile(`${import.meta.dir}/../../package.json`, 'utf8'));
   expect(root.scripts.test).toContain('test:artwork');

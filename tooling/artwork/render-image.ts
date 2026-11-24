@@ -83,7 +83,7 @@ export async function renderImage(
           .jpeg({ chromaSubsampling: '4:4:4', quality: 92 });
       }
       if (format === 'webp') {
-        return image.webp({ effort: 6, lossless: true });
+        return image.webp({ effort: 6, quality: 98 });
       }
       return image.png();
     })().toBuffer();

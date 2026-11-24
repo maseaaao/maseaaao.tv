@@ -19,7 +19,12 @@ export async function buildArtwork() {
   }
   const source = path.join(root, 'artwork');
   const output = path.join(root, 'dist/artwork/html');
-  const pages: { budgets: { html: number; js: number }; output: string; source: string }[] = [];
+  const pages: {
+    budgets: { html: number; js: number };
+    output: string;
+    root: string;
+    source: string;
+  }[] = [];
   for (const directory of [
     'scenes',
     'banners',
@@ -35,10 +40,18 @@ export async function buildArtwork() {
       pages.push({
         budgets: { html: 4_000_000, js: 2_000_000 },
         output: `${directory}/${name}`,
+        root: source,
         source: `${directory}/${name}`,
       });
     }
   }
+  // Static render of the social strip shares the widget source instead of a copy.
+  pages.push({
+    budgets: { html: 4_000_000, js: 2_000_000 },
+    output: 'blocks/social-strip.html',
+    root: path.join(root, 'apps/obs-widgets/src/social-strip'),
+    source: 'index.html',
+  });
   await rm(output, { force: true, recursive: true });
   for (const page of pages) {
     const temporary = path.join(root, 'dist/.cache/artwork-pages', page.output);
@@ -47,12 +60,12 @@ export async function buildArtwork() {
         budgets: page.budgets,
         fileName: path.basename(page.output),
         outDir: temporary,
-        root: source,
+        root: page.root,
       });
     config.build = {
       ...config.build,
       modulePreload: false,
-      rollupOptions: { input: path.join(source, page.source) },
+      rollupOptions: { input: path.join(page.root, page.source) },
     };
     // biome-ignore lint/performance/noAwaitInLoops: Process assets sequentially to bound Chromium and image encoder memory.
     await build({ ...config, configFile: false });

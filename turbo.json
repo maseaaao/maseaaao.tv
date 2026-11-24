@@ -134,6 +134,7 @@
       "inputs": [
         "$TURBO_ROOT$/artwork/**",
         "!$TURBO_ROOT$/artwork/package.json",
+        "$TURBO_ROOT$/apps/obs-widgets/src/social-strip/**",
         "$TURBO_ROOT$/packages/design/**",
         "$TURBO_ROOT$/packages/build-config/**",
         "$TURBO_ROOT$/tooling/build-artwork.ts",
@@ -157,6 +158,7 @@
       "inputs": [
         "$TURBO_ROOT$/artwork/**",
         "!$TURBO_ROOT$/artwork/package.json",
+        "$TURBO_ROOT$/apps/obs-widgets/src/social-strip/**",
         "$TURBO_ROOT$/packages/design/**",
         "$TURBO_ROOT$/packages/build-config/**",
         "$TURBO_ROOT$/tooling/build-artwork.ts",
