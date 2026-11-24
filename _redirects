@@ -18,14 +18,37 @@
 /tools/ /website/tools/ 200
 /widgets/social-strip/ /obs-widgets/social-strip/ 200
 
-# Product resources and additional pages; keep the website fallback last.
+# Website files. Static rules stay above the first splat, and there is
+# deliberately no `/* /website/:splat 200` fallback: its splat is matched
+# ahead of the product namespaces (/ui/*, /scenes/*, /widgets/* ...), which
+# silently turned every product asset URL into a 404.
+/favicon.ico /website/favicon.ico 200
+/favicon-16x16.png /website/favicon-16x16.png 200
+/favicon-32x32.png /website/favicon-32x32.png 200
+/favicon-48x48.png /website/favicon-48x48.png 200
+/apple-touch-icon.png /website/apple-touch-icon.png 200
+/apple-touch-icon-1024x1024.png /website/apple-touch-icon-1024x1024.png 200
+/android-chrome-512x512.png /website/android-chrome-512x512.png 200
+/manifest.webmanifest /website/manifest.webmanifest 200
+/og-image.jpg /website/og-image.jpg 200
+/robots.txt /website/robots.txt 200
+/sitemap.xml /website/sitemap.xml 200
+/check /website/check 200
+/docs /website/docs 200
+
 # Normalize HTML URLs before rewriting, so redirects never expose dist paths.
 /*.html /:splat 307
 /*/index /:splat/ 307
 /*/ /:splat 307
+
+# Product resources and additional pages.
 /ui/* /ui-gallery/:splat 200
 /scenes/* /artwork/html/scenes/:splat 200
 /stream-info/* /stream-info/:splat 200
 /tuna/* /tuna-widget/:splat 200
 /widgets/* /obs-widgets/:splat 200
-/* /website/:splat 200
+/tools/* /website/tools/:splat 200
+/assets/* /website/assets/:splat 200
+/bundles/* /website/bundles/:splat 200
+/licenses/* /website/licenses/:splat 200
+/.well-known/* /website/.well-known/:splat 200
