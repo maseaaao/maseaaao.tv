@@ -987,7 +987,8 @@ button:focus-visible,
   padding-top: 18px;
   margin-top: auto;
 }
-.domain {
+.domain,
+.foot__link {
   font-family: var(--font-body);
   font-size: 10px;
   color: var(--color-muted);
@@ -1002,10 +1003,6 @@ button:focus-visible,
   fill: currentcolor;
 }
 .foot__link {
-  font-family: var(--font-body);
-  font-size: 11px;
-  color: var(--color-muted);
-  letter-spacing: 0.01em;
   text-decoration: none;
   transition: color var(--motion-feedback) var(--motion-ease-state);
 }
