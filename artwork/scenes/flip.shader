@@ -1,11 +1,5 @@
-// 180-degree flip for OBS "User-defined shader" (obs-shaderfilter).
-uniform bool horizontal = true;
-uniform bool vertical = true;
-
+// Rotates the OBS source 180 degrees.
 float4 mainImage(VertData v_in) : TARGET
 {
-    float2 uv = v_in.uv;
-    if (horizontal) uv.x = 1.0 - uv.x;
-    if (vertical)   uv.y = 1.0 - uv.y;
-    return image.Sample(textureSampler, uv);
+    return image.Sample(textureSampler, 1.0 - v_in.uv);
 }
